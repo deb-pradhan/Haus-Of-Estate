@@ -1,0 +1,283 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  BUYER
+  AGENT
+  ADMIN
+}
+
+enum PropertyType {
+  APARTMENT
+  VILLA
+  TOWNHOUSE
+  PENTHOUSE
+  LAND
+}
+
+enum ListingType {
+  SALE
+  RENT
+  OFF_PLAN
+}
+
+enum PropertyStatus {
+  DRAFT
+  ACTIVE
+  UNDER_OFFER
+  SOLD
+  RENTED
+}
+
+enum ViewingStatus {
+  REQUESTED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum OfferStatus {
+  OPEN
+  COUNTERED
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum ReviewType {
+  POST_VIEWING
+  POST_DEAL
+}
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  name           String
+  phone          String?
+  avatar         String?
+  role           UserRole @default(BUYER)
+  passwordHash   String
+  emailVerified  Boolean  @default(false)
+  savedListings  String[] @default([])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  agentProfile    AgentProfile?
+  sentMessages    Message[]       @relation("SentMessages")
+  buyerThreads    MessageThread[] @relation("BuyerThreads")
+  viewingRequests ViewingRequest[] @relation("BuyerViewings")
+  buyerOffers     Offer[]         @relation("BuyerOffers")
+  writtenReviews  Review[]        @relation("WrittenReviews")
+  notifications   Notification[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model AgentProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agency          String
+  bio             String   @default("")
+  languages       String[] @default([])
+  specializations String[] @default([])
+  responseTime    String   @default("< 1 hr")
+  dealsCompleted  Int      @default(0)
+  rating          Float    @default(0)
+  reviewCount     Int      @default(0)
+  verified        Boolean  @default(false)
+
+  listings        Property[]
+  agentThreads    MessageThread[] @relation("AgentThreads")
+  agentViewings   ViewingRequest[] @relation("AgentViewings")
+  agentOffers     Offer[]          @relation("AgentOffers")
+  receivedReviews Review[]         @relation("AgentReviews")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Property {
+  id           String         @id @default(cuid())
+  title        String
+  slug         String         @unique
+  description  String
+  price        Float
+  currency     String         @default("AED")
+  propertyType PropertyType
+  listingType  ListingType
+  bedrooms     Int
+  bathrooms    Int
+  area         Float
+  areaUnit     String         @default("sqft")
+  status       PropertyStatus @default(DRAFT)
+  verified     Boolean        @default(false)
+  featured     Boolean        @default(false)
+
+  locationArea     String
+  locationCity     String   @default("Dubai")
+  locationBuilding String?
+  locationLat      Float?
+  locationLng      Float?
+
+  videoUrl   String?
+  images     String[] @default([])
+  thumbnail  String?
+
+  features String[] @default([])
+
+  agentId String
+  agent   AgentProfile @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  messageThreads  MessageThread[]
+  viewingRequests ViewingRequest[]
+  offers          Offer[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+  @@index([status])
+  @@index([agentId])
+  @@index([propertyType])
+  @@index([listingType])
+  @@index([locationArea])
+  @@index([price])
+}
+
+model MessageThread {
+  id         String @id @default(cuid())
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  buyerId    String
+  buyer      User   @relation("BuyerThreads", fields: [buyerId], references: [id], onDelete: Cascade)
+  agentId    String
+  agent      AgentProfile @relation("AgentThreads", fields: [agentId], references: [id], onDelete: Cascade)
+
+  messages Message[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([propertyId, buyerId, agentId])
+  @@index([buyerId])
+  @@index([agentId])
+}
+
+model Message {
+  id       String @id @default(cuid())
+  threadId String
+  thread   MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  senderId String
+  sender   User   @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  content  String
+  read     Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([threadId])
+  @@index([senderId])
+}
+
+model ViewingRequest {
+  id         String        @id @default(cuid())
+  propertyId String
+  property   Property      @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  buyerId    String
+  buyer      User          @relation("BuyerViewings", fields: [buyerId], references: [id], onDelete: Cascade)
+  agentId    String
+  agent      AgentProfile  @relation("AgentViewings", fields: [agentId], references: [id], onDelete: Cascade)
+
+  preferredSlots String[]
+  confirmedSlot  DateTime?
+  status         ViewingStatus @default(REQUESTED)
+  notes          String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([propertyId])
+  @@index([buyerId])
+  @@index([agentId])
+  @@index([status])
+}
+
+model Offer {
+  id         String      @id @default(cuid())
+  propertyId String
+  property   Property    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  buyerId    String
+  buyer      User        @relation("BuyerOffers", fields: [buyerId], references: [id], onDelete: Cascade)
+  agentId    String
+  agent      AgentProfile @relation("AgentOffers", fields: [agentId], references: [id], onDelete: Cascade)
+
+  amount   Float
+  currency String      @default("AED")
+  terms    String?
+  status   OfferStatus @default(OPEN)
+
+  events OfferEvent[]
+
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  updatedAt DateTime @updatedAt
+
+  @@index([propertyId])
+  @@index([buyerId])
+  @@index([agentId])
+  @@index([status])
+}
+
+model OfferEvent {
+  id      String @id @default(cuid())
+  offerId String
+  offer   Offer  @relation(fields: [offerId], references: [id], onDelete: Cascade)
+
+  type    String
+  amount  Float?
+  terms   String?
+  by      String
+
+  createdAt DateTime @default(now())
+
+  @@index([offerId])
+}
+
+model Review {
+  id         String     @id @default(cuid())
+  agentId    String
+  agent      AgentProfile @relation("AgentReviews", fields: [agentId], references: [id], onDelete: Cascade)
+  reviewerId String
+  reviewer   User       @relation("WrittenReviews", fields: [reviewerId], references: [id], onDelete: Cascade)
+
+  rating Int
+  text   String
+  type   ReviewType
+
+  createdAt DateTime @default(now())
+
+  @@index([agentId])
+  @@index([reviewerId])
+}
+
+model Notification {
+  id     String  @id @default(cuid())
+  userId String
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title   String
+  body    String
+  link    String?
+  read    Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([read])
+}

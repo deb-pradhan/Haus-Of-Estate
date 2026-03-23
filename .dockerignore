@@ -1,0 +1,10 @@
+node_modules
+.next
+.git
+*.md
+.env*
+!env.example
+prisma/migrations
+terminals
+*.txt
+test_dubai_api.py

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Haus of Estate — Virtual Business Card</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --hoe-color-bg-canvas: #ECE8E0;
+      --hoe-color-bg-surface: #FFFFFF;
+      --hoe-color-bg-subtle: #F7F5F1;
+      --hoe-color-brand-700: #1F4F2F;
+      --hoe-color-brand-600: #275E3B;
+      --hoe-color-gold-500: #A88D63;
+      --hoe-color-text-primary: #1E1F21;
+      --hoe-color-text-secondary: #4D5257;
+      --hoe-color-text-muted: #747A80;
+      --hoe-color-border-default: #DDE1E6;
+      --hoe-color-link: #2A5B8D;
+      --hoe-radius-md: 12px;
+      --hoe-motion-base: 180ms;
+      --hoe-motion-slow: 280ms;
+      --hoe-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--hoe-color-bg-canvas);
+      font-family: 'Inter', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      padding: 24px;
+      gap: 32px;
+    }
+
+    .card-scene {
+      perspective: 1000px;
+      width: 400px;
+      height: 260px;
+      cursor: pointer;
+    }
+
+    .card {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.6s var(--hoe-ease-standard);
+      border-radius: var(--hoe-radius-md);
+    }
+
+    .card-scene:hover .card,
+    .card-scene.flipped .card {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      border-radius: var(--hoe-radius-md);
+      overflow: hidden;
+    }
+
+    /* ── FRONT ── */
+    .card-front {
+      background: var(--hoe-color-bg-canvas);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 28px;
+      border: 1px solid var(--hoe-color-border-default);
+    }
+
+    .monogram {
+      width: 140px;
+      height: auto;
+      margin-bottom: 16px;
+      object-fit: contain;
+    }
+
+    .card-name {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-weight: 500;
+      font-size: 22px;
+      color: var(--hoe-color-text-primary);
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+
+    .gold-rule {
+      width: 40px;
+      height: 1.5px;
+      background: var(--hoe-color-gold-500);
+      margin: 10px 0;
+      border-radius: 1px;
+    }
+
+    .card-role {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--hoe-color-text-secondary);
+    }
+
+    .card-tagline {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-style: italic;
+      font-size: 12px;
+      color: var(--hoe-color-text-muted);
+      margin-top: 14px;
+    }
+
+    /* ── BACK ── */
+    .card-back {
+      background: var(--hoe-color-brand-700);
+      transform: rotateY(180deg);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 28px 32px;
+      position: relative;
+    }
+
+    .card-back::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 140px;
+      height: 140px;
+      background: url("logo.png") center/contain no-repeat;
+      opacity: 0.08;
+      filter: brightness(10);
+    }
+
+    .back-brand {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-weight: 500;
+      font-size: 16px;
+      color: var(--hoe-color-gold-500);
+      letter-spacing: 0.04em;
+      margin-bottom: 16px;
+    }
+
+    .back-details {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .back-details a,
+    .back-details span {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.85);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: color var(--hoe-motion-base) var(--hoe-ease-standard);
+    }
+
+    .back-details a:hover {
+      color: var(--hoe-color-gold-500);
+    }
+
+    .back-details svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+      opacity: 0.6;
+    }
+
+    .back-cta {
+      margin-top: 16px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--hoe-color-gold-500);
+      text-decoration: none;
+      transition: opacity var(--hoe-motion-base) var(--hoe-ease-standard);
+    }
+
+    .back-cta:hover { opacity: 0.75; }
+
+    .back-cta svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    /* ── HINT ── */
+    .hint {
+      font-size: 12px;
+      color: var(--hoe-color-text-muted);
+      text-align: center;
+      animation: fade-pulse 2.4s ease-in-out infinite;
+    }
+
+    @keyframes fade-pulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+
+    /* ── SAVE BUTTON ── */
+    .save-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: var(--hoe-color-brand-700);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      transition: background var(--hoe-motion-base) var(--hoe-ease-standard),
+                  transform var(--hoe-motion-base) var(--hoe-ease-standard);
+    }
+
+    .save-btn:hover {
+      background: var(--hoe-color-brand-600);
+    }
+
+    .save-btn:active {
+      transform: translateY(1px);
+    }
+
+    .save-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 420px) {
+      .card-scene {
+        width: 100%;
+        max-width: 340px;
+        height: 200px;
+      }
+
+      .card-front { padding: 24px 20px; }
+      .card-back { padding: 24px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .card { transition: none; }
+      .hint { animation: none; opacity: 0.7; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card-scene" onclick="this.classList.toggle('flipped')">
+    <div class="card">
+
+      <!-- FRONT -->
+      <div class="card-face card-front">
+        <img class="monogram" src="logo.png" alt="Haus of Estate">
+        <span class="card-name">Sonia Baig</span>
+        <div class="gold-rule"></div>
+        <span class="card-role">Senior Property Advisor</span>
+        <span class="card-tagline">Property, with proof.</span>
+      </div>
+
+      <!-- BACK -->
+      <div class="card-face card-back">
+        <span class="back-brand">Haus of Estate</span>
+        <div class="back-details">
+          <a href="tel:+971501234567">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+            +971 50 123 4567
+          </a>
+          <a href="mailto:sonia@hausofestate.com">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-8.97 5.7a1.94 1.94 0 01-2.06 0L2 7"/></svg>
+            sonia@hausofestate.com
+          </a>
+          <a href="https://hausofestate.com" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+            hausofestate.com
+          </a>
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Dubai, UAE
+          </span>
+        </div>
+        <a href="https://hausofestate.com/book" class="back-cta">
+          Book a Verified Viewing
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <p class="hint">Hover or tap to flip</p>
+
+  <button class="save-btn" onclick="downloadVCard()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Save Contact
+  </button>
+
+  <script>
+    function downloadVCard() {
+      const vcard = [
+        'BEGIN:VCARD',
+        'VERSION:3.0',
+        'FN:Sonia Baig',
+        'ORG:Haus of Estate',
+        'TITLE:Senior Property Advisor',
+        'TEL;TYPE=CELL:+971501234567',
+        'EMAIL:sonia@hausofestate.com',
+        'URL:https://hausofestate.com',
+        'ADR;TYPE=WORK:;;Dubai;;;UAE',
+        'NOTE:Property\\, with proof.',
+        'END:VCARD'
+      ].join('\n');
+
+      const blob = new Blob([vcard], { type: 'text/vcard' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Sonia_Baig_HausOfEstate.vcf';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+
+</body>
+</html>
