@@ -43,7 +43,7 @@ export default function HomePage() {
                 asChild
                 size="lg"
                 variant="outline"
-                className="border-white/20 text-white hover:bg-white/10 hover:text-white"
+                className="border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white"
               >
                 <Link href="#how-it-works">How It Works</Link>
               </Button>
@@ -183,7 +183,7 @@ export default function HomePage() {
               asChild
               size="lg"
               variant="outline"
-              className="border-white/20 text-white hover:bg-white/10 hover:text-white"
+              className="border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white"
             >
               <Link href="/search">Browse Properties</Link>
             </Button>

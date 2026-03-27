@@ -26,6 +26,10 @@ export const metadata: Metadata = {
     "verified listings",
     "buy property Dubai",
   ],
+  icons: {
+    icon: "/Vector-1.svg",
+    apple: "/Vector-1.svg",
+  },
 };
 
 export default function RootLayout({

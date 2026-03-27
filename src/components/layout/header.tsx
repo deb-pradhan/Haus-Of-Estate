@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
@@ -32,13 +33,15 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-surface/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-estate-700">
-            <span className="text-sm font-bold text-white">H</span>
-          </div>
-          <span className="hidden font-serif text-xl font-semibold tracking-tight text-estate-700 sm:block">
-            Haus of Estate
-          </span>
+        <Link href="/" className="flex items-center gap-3">
+          <Image
+            src="/Frame 18.svg"
+            alt="Haus of Estate"
+            width={120}
+            height={64}
+            className="h-7 w-auto md:h-8"
+            priority
+          />
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex">

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function AuthLayout({
   children,
@@ -8,13 +9,15 @@ export default function AuthLayout({
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-canvas px-4">
       <div className="mb-8 text-center">
-        <Link href="/" className="inline-flex items-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-estate-700">
-            <span className="text-sm font-bold text-white">H</span>
-          </div>
-          <span className="font-serif text-2xl font-semibold text-estate-700">
-            Haus of Estate
-          </span>
+        <Link href="/" className="inline-block">
+          <Image
+            src="/Frame 16-1.svg"
+            alt="Haus of Estate"
+            width={160}
+            height={86}
+            className="h-10 w-auto"
+            priority
+          />
         </Link>
       </div>
       {children}

@@ -1,0 +1,9 @@
+.logo {
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.logoSymbol {
+  display: block;
+  flex-shrink: 0;
+}

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 const footerLinks = {
@@ -26,13 +27,14 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-12 md:px-6">
         <div className="grid gap-8 md:grid-cols-4">
           <div>
-            <div className="mb-4 flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">
-                <span className="text-xs font-bold text-white">H</span>
-              </div>
-              <span className="font-serif text-lg font-semibold text-white">
-                Haus of Estate
-              </span>
+            <div className="mb-4">
+              <Image
+                src="/Frame 16-2.svg"
+                alt="Haus of Estate"
+                width={120}
+                height={64}
+                className="h-21 w-auto brightness-0 invert"
+              />
             </div>
             <p className="text-sm leading-relaxed text-white/60">
               Property, with proof. The UAE&apos;s transaction-first real estate
