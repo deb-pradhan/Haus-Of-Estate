@@ -4,89 +4,87 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import {
-  Search,
-  MessageSquare,
-  Heart,
-  User,
-  Menu,
-  X,
-  CalendarCheck,
-} from "lucide-react";
+import { Menu, X, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Badge } from "@/components/ui/badge";
+import { useLeadModals } from "@/components/lead-modal";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/", label: "Discover" },
-  { href: "/search", label: "Search" },
-  { href: "/saved", label: "Saved", icon: Heart },
-  { href: "/messages", label: "Messages", icon: MessageSquare, badge: 1 },
-  { href: "/viewings", label: "Viewings", icon: CalendarCheck },
+  { href: "/", label: "Home" },
+  { href: "/#about", label: "About" },
+  { href: "/#services", label: "Services" },
+  { href: "/#contact", label: "Contact" },
 ];
 
 export function Header() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { openAccount } = useLeadModals();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-surface/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-[#DDE1E6] bg-surface/95 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
         <Link href="/" className="flex items-center gap-3">
           <Image
-            src="/Frame 18.svg"
+            src="/logo.svg"
             alt="Haus of Estate"
-            width={120}
-            height={64}
+            width={140}
+            height={36}
             className="h-7 w-auto md:h-8"
             priority
           />
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "relative flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                pathname === item.href
-                  ? "bg-estate-700/10 text-estate-700"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {item.icon && <item.icon className="h-4 w-4" />}
-              {item.label}
-              {item.badge && (
-                <Badge
-                  variant="destructive"
-                  className="ml-0.5 h-5 min-w-5 px-1.5 text-[10px]"
+          {navItems.map((item) => {
+            const isHome = item.href === "/";
+            const isActive = isHome ? pathname === "/" : false;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "group relative flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-[120ms] ease-[cubic-bezier(0.2,0,0,1)]",
+                  isActive
+                    ? "bg-[#1F4F2F]/10 text-[#1F4F2F]"
+                    : "text-[#4D5257] hover:bg-[#F7F5F1] hover:text-[#1E1F21] hover:shadow-[0_1px_2px_rgba(0,0,0,0.06)]",
+                )}
+              >
+                <span
+                  className={cn(
+                    "transition-transform duration-[120ms] ease-[cubic-bezier(0.2,0,0,1)] group-hover:scale-[1.02]",
+                    isActive && "scale-[1.02]",
+                  )}
                 >
-                  {item.badge}
-                </Badge>
-              )}
-            </Link>
-          ))}
+                  {item.label}
+                </span>
+              </Link>
+            );
+          })}
         </nav>
 
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="hidden md:flex" asChild>
-            <Link href="/search">
-              <Search className="h-4 w-4" />
-            </Link>
-          </Button>
+        <div className="flex items-center gap-3">
+          <span className="hidden text-xs text-[#4D5257] md:block">
+            <span className="font-medium text-[#1E1F21]">+971 XX XXX XXXX</span>
+          </span>
 
-          <Button asChild size="sm" className="hidden md:flex">
-            <Link href="/auth/login">
-              <User className="mr-1.5 h-4 w-4" />
-              Sign In
-            </Link>
+          <Button
+            onClick={openAccount}
+            size="sm"
+            className="hidden bg-[#1F4F2F] text-white hover:bg-[#275E3B] active:bg-[#1a4530] md:flex transition-all duration-[120ms] ease-[cubic-bezier(0.2,0,0,1)] shadow-[0_1px_3px_rgba(31,79,47,0.3)] hover:shadow-[0_4px_12px_rgba(31,79,47,0.25)] hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <User className="mr-1.5 h-4 w-4" />
+            Sign In
           </Button>
 
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden text-[#1E1F21] hover:bg-[#F7F5F1] hover:text-[#1F4F2F] transition-all duration-[120ms]"
+              >
                 {mobileOpen ? (
                   <X className="h-5 w-5" />
                 ) : (
@@ -96,33 +94,42 @@ export function Header() {
             </SheetTrigger>
             <SheetContent side="right" className="w-72 p-0">
               <div className="flex flex-col gap-1 p-4 pt-12">
-                {navItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setMobileOpen(false)}
-                    className={cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                      pathname === item.href
-                        ? "bg-estate-700/10 text-estate-700"
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    {item.icon && <item.icon className="h-4 w-4" />}
-                    {item.label}
-                    {item.badge && (
-                      <Badge variant="destructive" className="ml-auto h-5 min-w-5 px-1.5 text-[10px]">
-                        {item.badge}
-                      </Badge>
-                    )}
-                  </Link>
-                ))}
-                <div className="my-2 h-px bg-border" />
-                <Button asChild className="w-full">
-                  <Link href="/auth/login" onClick={() => setMobileOpen(false)}>
-                    <User className="mr-1.5 h-4 w-4" />
-                    Sign In
-                  </Link>
+                {navItems.map((item) => {
+                  const isHome = item.href === "/";
+                  const isActive = isHome ? pathname === "/" : false;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMobileOpen(false)}
+                      className={cn(
+                        "group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-[120ms] ease-[cubic-bezier(0.2,0,0,1)]",
+                        isActive
+                          ? "bg-[#1F4F2F]/10 text-[#1F4F2F]"
+                          : "text-[#4D5257] hover:bg-[#F7F5F1] hover:text-[#1E1F21]",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "transition-transform duration-[120ms] ease-[cubic-bezier(0.2,0,0,1)] group-hover:translate-x-0.5",
+                          isActive && "translate-x-0.5",
+                        )}
+                      >
+                        {item.label}
+                      </span>
+                    </Link>
+                  );
+                })}
+                <div className="my-2 h-px bg-[#DDE1E6]" />
+                <Button
+                  onClick={() => {
+                    openAccount();
+                    setMobileOpen(false);
+                  }}
+                  className="w-full bg-[#1F4F2F] text-white hover:bg-[#275E3B] active:bg-[#1a4530] transition-all duration-[120ms] ease-[cubic-bezier(0.2,0,0,1)]"
+                >
+                  <User className="mr-1.5 h-4 w-4" />
+                  Sign In
                 </Button>
               </div>
             </SheetContent>

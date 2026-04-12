@@ -55,18 +55,20 @@ enum ReviewType {
 }
 
 model User {
-  id             String   @id @default(cuid())
-  email          String   @unique
+  id             String    @id @default(cuid())
+  email          String    @unique
   name           String
   phone          String?
   avatar         String?
-  role           UserRole @default(BUYER)
-  passwordHash   String
-  emailVerified  Boolean  @default(false)
-  savedListings  String[] @default([])
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  role           UserRole  @default(BUYER)
+  passwordHash   String?
+  emailVerified  Boolean   @default(false)
+  savedListings  String[]  @default([])
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
+  accounts        Account[]
+  sessions        Session[]
   agentProfile    AgentProfile?
   sentMessages    Message[]       @relation("SentMessages")
   buyerThreads    MessageThread[] @relation("BuyerThreads")
@@ -74,6 +76,7 @@ model User {
   buyerOffers     Offer[]         @relation("BuyerOffers")
   writtenReviews  Review[]        @relation("WrittenReviews")
   notifications   Notification[]
+  leads           Lead[]
 
   @@index([email])
   @@index([role])
@@ -280,4 +283,77 @@ model Notification {
 
   @@index([userId])
   @@index([read])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Lead {
+  id           String    @id @default(cuid())
+  email        String
+  firstName    String
+  surname      String?
+  phone        String?
+  intent       String
+  market       String?
+  buyOrRent    String?
+  useType      String?
+  bedrooms     String?
+  area         String?
+  sellOrRent   String?
+  propertyType String?
+  location     String?
+  size         String?
+  viewType     String?
+  urgency      String?
+  budget       String?
+  timeline     String?
+  score        Int       @default(0)
+  tier         String?
+  routing      String?
+  consentGiven Boolean   @default(false)
+  source       String?
+  userId       String?
+  user         User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  notifiedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([email])
+  @@index([tier])
+  @@index([routing])
+  @@index([createdAt])
 }

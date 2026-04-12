@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { User, Mail, Lock, ArrowRight } from "lucide-react";
+import { signIn } from "next-auth/react";
+import { User, Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,17 +14,65 @@ import { Separator } from "@/components/ui/separator";
 export default function RegisterPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [error, setError] = useState("");
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
 
   const update = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [field]: e.target.value }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+
+    if (form.password !== form.confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+    if (form.password.length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
+    }
+
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1000));
-    setLoading(false);
-    router.push("/");
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          password: form.password,
+          intent: "buyer",
+          consentGiven: true,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error ?? "Registration failed");
+        setLoading(false);
+        return;
+      }
+
+      // Auto sign-in after registration
+      await signIn("credentials", {
+        email: form.email,
+        password: form.password,
+        redirect: false,
+      });
+
+      router.push("/");
+      router.refresh();
+    } catch {
+      setError("Something went wrong. Please try again.");
+      setLoading(false);
+    }
   };
 
   return (
@@ -37,6 +86,11 @@ export default function RegisterPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+              {error}
+            </div>
+          )}
           <div>
             <Label htmlFor="name">Full Name</Label>
             <div className="relative mt-1.5">
@@ -47,6 +101,7 @@ export default function RegisterPage() {
                 value={form.name}
                 onChange={update("name")}
                 className="pl-9"
+                autoComplete="name"
                 required
               />
             </div>
@@ -63,6 +118,7 @@ export default function RegisterPage() {
                 value={form.email}
                 onChange={update("email")}
                 className="pl-9"
+                autoComplete="email"
                 required
               />
             </div>
@@ -79,6 +135,7 @@ export default function RegisterPage() {
                 value={form.password}
                 onChange={update("password")}
                 className="pl-9"
+                autoComplete="new-password"
                 required
                 minLength={8}
               />
@@ -88,9 +145,36 @@ export default function RegisterPage() {
             </p>
           </div>
 
+          <div>
+            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <div className="relative mt-1.5">
+              <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="Confirm your password"
+                value={form.confirmPassword}
+                onChange={update("confirmPassword")}
+                className="pl-9"
+                autoComplete="new-password"
+                required
+                minLength={8}
+              />
+            </div>
+          </div>
+
           <Button type="submit" className="w-full" size="lg" disabled={loading}>
-            {loading ? "Creating account..." : "Create Account"}
-            {!loading && <ArrowRight className="ml-1.5 h-4 w-4" />}
+            {loading ? (
+              <div className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Creating account...
+              </div>
+            ) : (
+              <>
+                Create Account
+                <ArrowRight className="ml-1.5 h-4 w-4" />
+              </>
+            )}
           </Button>
         </form>
 
@@ -130,8 +214,8 @@ export default function RegisterPage() {
 
         <p className="mt-4 text-center text-[10px] text-muted-foreground">
           By creating an account, you agree to our{" "}
-          <Link href="#" className="underline">Terms of Service</Link> and{" "}
-          <Link href="#" className="underline">Privacy Policy</Link>.
+          <Link href="/legal/terms-of-service" className="underline">Terms of Service</Link> and{" "}
+          <Link href="/legal/privacy-policy" className="underline">Privacy Policy</Link>.
         </p>
       </CardContent>
     </Card>
