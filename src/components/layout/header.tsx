@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/", label: "Home" },
+  { href: "/blog", label: "Blog" },
   { href: "/#about", label: "About" },
   { href: "/#services", label: "Services" },
   { href: "/#contact", label: "Contact" },
@@ -38,8 +39,9 @@ export function Header() {
 
         <nav className="hidden items-center gap-1 md:flex">
           {navItems.map((item) => {
-            const isHome = item.href === "/";
-            const isActive = isHome ? pathname === "/" : false;
+            const isActive = item.href === "/" 
+              ? pathname === "/" 
+              : pathname.startsWith(item.href);
             return (
               <Link
                 key={item.href}
@@ -96,7 +98,8 @@ export function Header() {
               <div className="flex flex-col gap-1 p-4 pt-12">
                 {navItems.map((item) => {
                   const isHome = item.href === "/";
-                  const isActive = isHome ? pathname === "/" : false;
+                  const isBlog = item.href === "/blog";
+                  const isActive = isHome ? pathname === "/" : pathname.startsWith(isBlog ? "/blog" : "/") && isBlog ? true : false;
                   return (
                     <Link
                       key={item.href}
@@ -104,7 +107,7 @@ export function Header() {
                       onClick={() => setMobileOpen(false)}
                       className={cn(
                         "group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-[120ms] ease-[cubic-bezier(0.2,0,0,1)]",
-                        isActive
+                        pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
                           ? "bg-[#1F4F2F]/10 text-[#1F4F2F]"
                           : "text-[#4D5257] hover:bg-[#F7F5F1] hover:text-[#1E1F21]",
                       )}
@@ -112,7 +115,7 @@ export function Header() {
                       <span
                         className={cn(
                           "transition-transform duration-[120ms] ease-[cubic-bezier(0.2,0,0,1)] group-hover:translate-x-0.5",
-                          isActive && "translate-x-0.5",
+                          pathname === item.href && "translate-x-0.5",
                         )}
                       >
                         {item.label}
