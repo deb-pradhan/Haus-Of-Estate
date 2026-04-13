@@ -12,6 +12,7 @@ import {
   Check,
   ChevronDown,
   Clock,
+  User,
   Users,
   Building2,
   Globe,
@@ -208,7 +209,6 @@ const AGENTS = [
     title: "Property Consultant",
     specialisation: "Bali & Southeast Asia",
     experience: "8+ years",
-    photo: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&q=80",
     markets: ["Bali", "Thailand", "Singapore"],
     calendly: "https://calendly.com/hausofestate-sonia",
   },
@@ -217,7 +217,6 @@ const AGENTS = [
     title: "Property Consultant",
     specialisation: "Dubai & UK",
     experience: "10+ years",
-    photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80",
     markets: ["Dubai", "UK", "UAE"],
     calendly: "https://calendly.com/hausofestate-besh",
   },
@@ -254,12 +253,12 @@ function BookACall() {
             <div key={agent.name} className="group relative">
               <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-lg transition-shadow duration-300 hover:shadow-xl">
                 <div className="relative h-64">
-                  <Image
-                    src={agent.photo}
-                    alt={agent.name}
-                    fill
-                    className="object-cover object-top"
-                  />
+                  <div className="absolute inset-0 bg-gradient-to-br from-estate-600 to-estate-800" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="rounded-full bg-white/10 p-6 backdrop-blur-sm">
+                      <User className="h-20 w-20 text-white/80" />
+                    </div>
+                  </div>
                   <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                   <div className="absolute bottom-4 left-4 right-4">
                     <p className="font-serif text-2xl font-semibold text-white">{agent.name}</p>
