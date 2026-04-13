@@ -67,10 +67,6 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <span className="hidden text-xs text-[#4D5257] md:block">
-            <span className="font-medium text-[#1E1F21]">+971 XX XXX XXXX</span>
-          </span>
-
           <Button
             onClick={openAccount}
             size="sm"

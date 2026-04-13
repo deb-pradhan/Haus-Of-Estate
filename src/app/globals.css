@@ -211,6 +211,107 @@
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
+
+  /* ─── Marquee ─────────────────────────────────────────────────────── */
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  .animate-marquee {
+    animation: marquee 30s linear infinite;
+  }
+  .animate-marquee:hover {
+    animation-play-state: paused;
+  }
+
+  /* ─── Float / drift ─────────────────────────────────────────────── */
+  @keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    33% { transform: translateY(-12px) rotate(1deg); }
+    66% { transform: translateY(-6px) rotate(-1deg); }
+  }
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  /* ─── Pulse ring ────────────────────────────────────────────────── */
+  @keyframes pulse-ring {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(1.6); opacity: 0; }
+  }
+  .animate-pulse-ring::before {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: inherit;
+    border: 2px solid currentColor;
+    animation: pulse-ring 1.5s ease-out infinite;
+  }
+
+  /* ─── Fade up on scroll ─────────────────────────────────────────── */
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fade-up {
+    animation: fade-up 0.6s cubic-bezier(0.2, 0, 0, 1) forwards;
+  }
+  .opacity-0-init {
+    opacity: 0;
+  }
+
+  /* ─── Bounce ────────────────────────────────────────────────────── */
+  @keyframes bounce-gentle {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(6px); }
+  }
+  .animate-bounce-gentle {
+    animation: bounce-gentle 2s ease-in-out infinite;
+  }
+
+  /* ─── Shimmer / shimmer effect ───────────────────────────────────── */
+  @keyframes shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+  .animate-shimmer {
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.25) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  /* ─── Gradient drift ────────────────────────────────────────────── */
+  @keyframes gradient-drift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  /* ─── Scale in ──────────────────────────────────────────────────── */
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.92); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .animate-scale-in {
+    animation: scale-in 0.4s cubic-bezier(0.2, 0, 0, 1) forwards;
+  }
+
+  /* ─── Spin slow ─────────────────────────────────────────────────── */
+  @keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .animate-spin-slow {
+    animation: spin-slow 8s linear infinite;
+  }
+
+  /* ─── Slide in from right ───────────────────────────────────────── */
+  @keyframes slide-in-right {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  .animate-slide-in-right {
+    animation: slide-in-right 0.5s cubic-bezier(0.2, 0, 0, 1) forwards;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
