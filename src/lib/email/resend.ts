@@ -1,12 +1,25 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resend: Resend | null = null;
+
+function getResend(): Resend | null {
+  if (!resend) {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey || apiKey === "re_xxx") {
+      return null;
+    }
+    resend = new Resend(apiKey);
+  }
+  return resend;
+}
 
 const FROM = "Haus of Estate <noreply@hausofestate.com>";
 const ADMIN = process.env.ADMIN_EMAIL ?? "admin@hausofestate.com";
 
 export async function sendWelcomeEmail(to: string, name: string) {
-  return resend.emails.send({
+  const client = getResend();
+  if (!client) return { success: true, mock: true };
+  return client.emails.send({
     from: FROM,
     to,
     subject: "Welcome to Haus of Estate",
@@ -21,7 +34,9 @@ export async function sendLoginAlertEmail(
   name: string,
   device: string
 ) {
-  return resend.emails.send({
+  const client = getResend();
+  if (!client) return { success: true, mock: true };
+  return client.emails.send({
     from: FROM,
     to,
     subject: "New login to your Haus of Estate account",
@@ -42,7 +57,9 @@ export async function sendLeadNotificationToAdmin(lead: {
 }) {
   const tierEmoji =
     lead.tier === "hot" ? "🔥" : lead.tier === "warm" ? "📈" : "🌱";
-  return resend.emails.send({
+  const client = getResend();
+  if (!client) return { success: true, mock: true };
+  return client.emails.send({
     from: FROM,
     to: ADMIN,
     subject: `${tierEmoji} New ${(lead.tier ?? "unknown").toUpperCase()} Lead: ${lead.firstName} (${lead.intent}) — Score: ${lead.score}`,
