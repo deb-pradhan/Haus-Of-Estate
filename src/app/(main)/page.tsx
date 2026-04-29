@@ -533,6 +533,7 @@ const TEAM_AVATARS = [
 
 function CTABanner() {
   const { ref, visible } = useScrollReveal();
+  const { openBuyer } = useLeadModals();
 
   return (
     <section
@@ -575,6 +576,7 @@ function CTABanner() {
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Button
             size="lg"
+            onClick={openBuyer}
             className="relative overflow-hidden bg-gold-500 text-white hover:bg-gold-400 shadow-lg shadow-gold-500/20"
           >
             <span className="absolute inset-0 animate-shimmer" />

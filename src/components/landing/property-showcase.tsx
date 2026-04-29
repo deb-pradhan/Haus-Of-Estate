@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { Bed, Bath, MapPin, ArrowRight, Eye } from "lucide-react";
+import { Bed, Bath, MapPin, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLeadModals } from "@/components/lead-modal/modal-context";
 
 interface Property {
   id: string;
@@ -77,7 +78,7 @@ const STATUS_CONFIG = {
   },
 };
 
-function PropertyCard({ property }: { property: Property }) {
+function PropertyCard({ property, onEnquire }: { property: Property; onEnquire: () => void }) {
   const config = STATUS_CONFIG[property.status];
 
   return (
@@ -95,12 +96,6 @@ function PropertyCard({ property }: { property: Property }) {
           <span className={`rounded-full ${config.badgeClass} px-3 py-1 text-xs font-semibold text-white shadow-sm`}>
             {config.label}
           </span>
-        </div>
-        {/* Hover overlay */}
-        <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors duration-300 group-hover:bg-black/30">
-          <button className="flex items-center gap-2 rounded-full bg-white/95 px-4 py-2 text-sm font-semibold text-estate-700 opacity-0 shadow-lg transition-all duration-300 group-hover:opacity-100">
-            <Eye className="h-4 w-4" /> Quick View
-          </button>
         </div>
       </div>
 
@@ -136,6 +131,7 @@ function PropertyCard({ property }: { property: Property }) {
           </div>
           <Button
             size="sm"
+            onClick={onEnquire}
             className="bg-estate-700 text-white hover:bg-estate-600"
           >
             Enquire <ArrowRight className="ml-1 h-3 w-3" />
@@ -147,33 +143,36 @@ function PropertyCard({ property }: { property: Property }) {
 }
 
 export function PropertyShowcase() {
+  const { openBuyer } = useLeadModals();
+
   return (
     <section className="px-4 py-16 md:px-6 md:py-24">
       <div className="mx-auto max-w-7xl">
         <div className="mb-10 text-center">
           <p className="mb-2 font-serif text-sm font-medium uppercase tracking-widest text-gold-500">
-            Featured Properties
+            Featured Case Studies
           </p>
           <h2 className="font-serif text-3xl font-medium text-estate-700 md:text-4xl">
             Real properties. Real results.
           </h2>
           <p className="mt-2 text-base text-muted-foreground">
-            A selection of what we've helped our clients achieve across three continents.
+            A selection of what we've helped our clients secure across three continents.
           </p>
         </div>
 
         <div className="grid gap-6 md:grid-cols-3">
           {PROPERTIES.map((property) => (
-            <PropertyCard key={property.id} property={property} />
+            <PropertyCard key={property.id} property={property} onEnquire={openBuyer} />
           ))}
         </div>
 
         <div className="mt-8 text-center">
           <Button
             variant="outline"
+            onClick={openBuyer}
             className="border-estate-700 text-estate-700 hover:bg-estate-700/5"
           >
-            View All Properties <ArrowRight className="ml-1.5 h-4 w-4" />
+            Find me something like this <ArrowRight className="ml-1.5 h-4 w-4" />
           </Button>
         </div>
       </div>

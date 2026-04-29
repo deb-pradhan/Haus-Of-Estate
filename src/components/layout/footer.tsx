@@ -8,36 +8,10 @@ import { useLeadModals } from "@/components/lead-modal/modal-context";
 const WHATSAPP_NUMBER = "+971 58 560 7033";
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g, "")}`;
 
+// Only include socials with real URLs. Instagram / LinkedIn / X were
+// previously rendered as href="#" placeholders — re-add here when the
+// brand has live handles to point at.
 const SOCIAL_LINKS = [
-  {
-    name: "Instagram",
-    href: "#",
-    icon: (
-      <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current">
-        <rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="none" stroke="currentColor" strokeWidth="2" />
-        <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" strokeWidth="2" />
-        <circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" />
-      </svg>
-    ),
-  },
-  {
-    name: "LinkedIn",
-    href: "#",
-    icon: (
-      <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current">
-        <path d="M20.4 4.5a4 4 0 0 1 0 7.75V20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5.25a2 2 0 0 1 2-2h11.5zm-8.1 1.5h2.4v11.4H12.3zm-1.1-3.1a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z" />
-      </svg>
-    ),
-  },
-  {
-    name: "X",
-    href: "#",
-    icon: (
-      <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current">
-        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-      </svg>
-    ),
-  },
   {
     name: "WhatsApp",
     href: WHATSAPP_URL,
