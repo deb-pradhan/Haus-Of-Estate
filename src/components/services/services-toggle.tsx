@@ -22,6 +22,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PhoneInput } from "@/components/ui/phone-input";
+import type { Country } from "react-phone-number-input";
 import { cn } from "@/lib/utils";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -97,6 +99,13 @@ function inferCurrency(locations: string[]): Currency {
   const allUAE = locations.every((l) => l.startsWith("uae-"));
   if (allUAE) return "AED";
   return "USD";
+}
+
+function inferDefaultCountry(locations: string[]): Country {
+  const first = locations[0] ?? "";
+  if (first.startsWith("uae-")) return "AE";
+  if (first.startsWith("id-")) return "ID";
+  return "GB";
 }
 
 const PROPERTY_TYPES = [
@@ -226,7 +235,7 @@ function SelectionPill({
     <button
       onClick={onClick}
       className={cn(
-        "relative overflow-hidden rounded-full border-2 px-4 py-2.5 text-sm font-medium transition-all duration-200",
+        "relative inline-flex items-center justify-center overflow-hidden rounded-full border-2 px-4 py-2.5 text-sm font-medium transition-all duration-200",
         selected
           ? "border-estate-700 bg-estate-700/8 text-estate-700 shadow-sm"
           : "border-border bg-surface text-muted-foreground hover:border-estate-700/30 hover:text-foreground",
@@ -947,14 +956,19 @@ function BuyRentForm({ intent, onComplete, onBack }: { intent: "buy" | "rent"; o
             required
             icon={Mail}
           />
-          <FloatingInput
-            label="Mobile / WhatsApp number (incl. country code, e.g. +44)"
-            value={form.mobile}
-            onChange={(v) => set("mobile", v.replace(/[^\d+]/g, ""))}
-            type="tel"
-            required
-            icon={Phone}
-          />
+          <div className="space-y-1.5">
+            <label htmlFor="brf-mobile" className="text-xs font-medium text-foreground">
+              Mobile / WhatsApp number <span className="text-destructive">*</span>
+            </label>
+            <PhoneInput
+              id="brf-mobile"
+              value={form.mobile}
+              onChange={(v) => set("mobile", v)}
+              defaultCountry={inferDefaultCountry(form.locations)}
+              placeholder="Mobile / WhatsApp number"
+              className="h-12 rounded-xl border-2 border-border bg-surface"
+            />
+          </div>
 
           <div>
             <p className="mb-2 text-sm font-medium text-foreground">Additional notes (optional)</p>
@@ -1279,14 +1293,19 @@ function SellRentForm({ intent, onComplete, onBack }: { intent: "sell" | "list";
             required
             icon={Mail}
           />
-          <FloatingInput
-            label="Mobile / WhatsApp number (incl. country code, e.g. +44)"
-            value={form.mobile}
-            onChange={(v) => set("mobile", v.replace(/[^\d+]/g, ""))}
-            type="tel"
-            required
-            icon={Phone}
-          />
+          <div className="space-y-1.5">
+            <label htmlFor="srf-mobile" className="text-xs font-medium text-foreground">
+              Mobile / WhatsApp number <span className="text-destructive">*</span>
+            </label>
+            <PhoneInput
+              id="srf-mobile"
+              value={form.mobile}
+              onChange={(v) => set("mobile", v)}
+              defaultCountry={inferDefaultCountry(form.locations)}
+              placeholder="Mobile / WhatsApp number"
+              className="h-12 rounded-xl border-2 border-border bg-surface"
+            />
+          </div>
 
           <div>
             <p className="mb-2 text-sm font-medium text-foreground">Additional notes (optional)</p>
