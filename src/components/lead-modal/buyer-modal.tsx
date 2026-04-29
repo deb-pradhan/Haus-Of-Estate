@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PhoneInput, isValidMobile } from "@/components/ui/phone-input";
 import {
   ArrowRight,
   ArrowLeft,
@@ -96,8 +97,8 @@ export function BuyerModal({ open, onOpenChange }: BuyerModalProps) {
     if (!firstName.trim()) errs.firstName = "Required";
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
       errs.email = "Valid email required";
-    if (!mobile.trim() || mobile.replace(/\D/g, "").length < 7)
-      errs.mobile = "Valid phone required";
+    if (!isValidMobile(mobile))
+      errs.mobile = "Valid mobile required";
     if (!consent) errs.consent = "Consent required";
     return errs;
   };
@@ -335,7 +336,7 @@ export function BuyerModal({ open, onOpenChange }: BuyerModalProps) {
 
               <form onSubmit={handleSubmit} className="space-y-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="bm-first" className="text-xs font-medium text-foreground">First Name <span className="text-destructive">*</span></Label>
+                  <Label htmlFor="bm-first" className="text-xs font-medium text-foreground">First name <span className="text-destructive">*</span></Label>
                   <Input id="bm-first" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First name" className="h-11" autoComplete="given-name" />
                   {errors.firstName && <p className="text-xs text-destructive">{errors.firstName}</p>}
                 </div>
@@ -345,14 +346,14 @@ export function BuyerModal({ open, onOpenChange }: BuyerModalProps) {
                   {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="bm-mobile" className="text-xs font-medium text-foreground">Mobile Number <span className="text-destructive">*</span></Label>
-                  <Input id="bm-mobile" type="tel" value={mobile} onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))} placeholder="+971 XX XXX XXXX" className="h-11" inputMode="tel" autoComplete="tel" />
+                  <Label htmlFor="bm-mobile" className="text-xs font-medium text-foreground">Mobile number <span className="text-destructive">*</span></Label>
+                  <PhoneInput id="bm-mobile" value={mobile} onChange={setMobile} invalid={!!errors.mobile} />
                   {errors.mobile && <p className="text-xs text-destructive">{errors.mobile}</p>}
                 </div>
                 <div className="space-y-1.5">
                   <label className="flex items-start gap-2 cursor-pointer">
                     <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-4 w-4 rounded border-border accent-estate-700" />
-                    <span className="text-xs leading-relaxed text-muted-foreground">I consent to Haus of Estate contacting me via WhatsApp, SMS, email, and phone about properties and investment opportunities. <span className="text-destructive">*</span></span>
+                    <span className="text-xs leading-relaxed text-muted-foreground">I consent to Haus of Estate contacting me about my enquiry by WhatsApp, SMS, email or phone. <span className="text-destructive">*</span></span>
                   </label>
                   {errors.consent && <p className="text-xs text-destructive">{errors.consent}</p>}
                 </div>

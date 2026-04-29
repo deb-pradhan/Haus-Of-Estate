@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PhoneInput, isValidMobile } from "@/components/ui/phone-input";
 import {
   ArrowRight,
   ArrowLeft,
@@ -73,7 +74,7 @@ export function SellerModal({ open, onOpenChange }: SellerModalProps) {
     const errs: Record<string, string> = {};
     if (!firstName.trim()) errs.firstName = "Required";
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = "Valid email required";
-    if (!mobile.trim() || mobile.replace(/\D/g, "").length < 7) errs.mobile = "Valid phone required";
+    if (!isValidMobile(mobile)) errs.mobile = "Valid mobile required";
     if (!consent) errs.consent = "Consent required";
     return errs;
   };
@@ -370,7 +371,7 @@ export function SellerModal({ open, onOpenChange }: SellerModalProps) {
 
               <form onSubmit={handleSubmit} className="space-y-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="sm-first" className="text-xs font-medium text-foreground">First Name <span className="text-destructive">*</span></Label>
+                  <Label htmlFor="sm-first" className="text-xs font-medium text-foreground">First name <span className="text-destructive">*</span></Label>
                   <Input id="sm-first" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First name" className="h-11" autoComplete="given-name" />
                   {errors.firstName && <p className="text-xs text-destructive">{errors.firstName}</p>}
                 </div>
@@ -380,8 +381,8 @@ export function SellerModal({ open, onOpenChange }: SellerModalProps) {
                   {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="sm-mobile" className="text-xs font-medium text-foreground">Mobile Number <span className="text-destructive">*</span></Label>
-                  <Input id="sm-mobile" type="tel" value={mobile} onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))} placeholder="+971 XX XXX XXXX" className="h-11" inputMode="tel" autoComplete="tel" />
+                  <Label htmlFor="sm-mobile" className="text-xs font-medium text-foreground">Mobile number <span className="text-destructive">*</span></Label>
+                  <PhoneInput id="sm-mobile" value={mobile} onChange={setMobile} invalid={!!errors.mobile} />
                   {errors.mobile && <p className="text-xs text-destructive">{errors.mobile}</p>}
                 </div>
                 <div className="space-y-1.5">
@@ -392,7 +393,7 @@ export function SellerModal({ open, onOpenChange }: SellerModalProps) {
                   {errors.consent && <p className="text-xs text-destructive">{errors.consent}</p>}
                 </div>
                 <Button type="submit" disabled={isSubmitting} className="h-11 w-full bg-estate-700 text-white hover:bg-estate-600 disabled:opacity-50">
-                  {isSubmitting ? <div className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Submitting...</div> : <><ArrowRight className="mr-1.5 h-4 w-4" /> Submit Property</>}
+                  {isSubmitting ? <div className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Submitting...</div> : <><ArrowRight className="mr-1.5 h-4 w-4" /> Submit enquiry</>}
                 </Button>
               </form>
               <Button variant="outline" size="sm" onClick={() => setStep(4)} className="h-9">

@@ -10,12 +10,16 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useLeadModals } from "@/components/lead-modal";
 import { cn } from "@/lib/utils";
 
-const navItems = [
-  { href: "/", label: "Home" },
-  { href: "/blog", label: "Blog" },
-  { href: "/#about", label: "About" },
-  { href: "/#services", label: "Services" },
-  { href: "/#contact", label: "Contact" },
+type NavItem =
+  | { kind: "link"; href: string; label: string }
+  | { kind: "modal"; label: string };
+
+const navItems: NavItem[] = [
+  { kind: "link", href: "/", label: "Home" },
+  { kind: "link", href: "/blog", label: "Insights" },
+  { kind: "link", href: "/about", label: "About" },
+  { kind: "link", href: "/#services", label: "Services" },
+  { kind: "modal", label: "Contact" },
 ];
 
 export function Header() {
@@ -39,19 +43,38 @@ export function Header() {
 
         <nav className="hidden items-center gap-1 md:flex">
           {navItems.map((item) => {
-            const isActive = item.href === "/" 
-              ? pathname === "/" 
-              : pathname.startsWith(item.href);
+            const baseClass =
+              "group relative flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-[120ms] ease-[cubic-bezier(0.2,0,0,1)]";
+            const inactive =
+              "text-[#4D5257] hover:bg-[#F7F5F1] hover:text-[#1E1F21] hover:shadow-[0_1px_2px_rgba(0,0,0,0.06)]";
+            const active = "bg-[#1F4F2F]/10 text-[#1F4F2F]";
+
+            if (item.kind === "modal") {
+              return (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={openAccount}
+                  className={cn(baseClass, inactive)}
+                >
+                  <span className="transition-transform duration-[120ms] ease-[cubic-bezier(0.2,0,0,1)] group-hover:scale-[1.02]">
+                    {item.label}
+                  </span>
+                </button>
+              );
+            }
+
+            const isActive =
+              item.href === "/"
+                ? pathname === "/"
+                : item.href.startsWith("/#")
+                  ? false
+                  : pathname.startsWith(item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={cn(
-                  "group relative flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-[120ms] ease-[cubic-bezier(0.2,0,0,1)]",
-                  isActive
-                    ? "bg-[#1F4F2F]/10 text-[#1F4F2F]"
-                    : "text-[#4D5257] hover:bg-[#F7F5F1] hover:text-[#1E1F21] hover:shadow-[0_1px_2px_rgba(0,0,0,0.06)]",
-                )}
+                className={cn(baseClass, isActive ? active : inactive)}
               >
                 <span
                   className={cn(
@@ -93,25 +116,47 @@ export function Header() {
             <SheetContent side="right" className="w-72 p-0">
               <div className="flex flex-col gap-1 p-4 pt-12">
                 {navItems.map((item) => {
-                  const isHome = item.href === "/";
-                  const isBlog = item.href === "/blog";
-                  const isActive = isHome ? pathname === "/" : pathname.startsWith(isBlog ? "/blog" : "/") && isBlog ? true : false;
+                  const itemBase =
+                    "group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-[120ms] ease-[cubic-bezier(0.2,0,0,1)]";
+                  const inactiveItem =
+                    "text-[#4D5257] hover:bg-[#F7F5F1] hover:text-[#1E1F21]";
+                  const activeItem = "bg-[#1F4F2F]/10 text-[#1F4F2F]";
+
+                  if (item.kind === "modal") {
+                    return (
+                      <button
+                        key={item.label}
+                        type="button"
+                        onClick={() => {
+                          setMobileOpen(false);
+                          openAccount();
+                        }}
+                        className={cn(itemBase, inactiveItem, "text-left")}
+                      >
+                        <span className="transition-transform duration-[120ms] ease-[cubic-bezier(0.2,0,0,1)] group-hover:translate-x-0.5">
+                          {item.label}
+                        </span>
+                      </button>
+                    );
+                  }
+
+                  const isActive =
+                    item.href === "/"
+                      ? pathname === "/"
+                      : item.href.startsWith("/#")
+                        ? false
+                        : pathname.startsWith(item.href);
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
                       onClick={() => setMobileOpen(false)}
-                      className={cn(
-                        "group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-[120ms] ease-[cubic-bezier(0.2,0,0,1)]",
-                        pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
-                          ? "bg-[#1F4F2F]/10 text-[#1F4F2F]"
-                          : "text-[#4D5257] hover:bg-[#F7F5F1] hover:text-[#1E1F21]",
-                      )}
+                      className={cn(itemBase, isActive ? activeItem : inactiveItem)}
                     >
                       <span
                         className={cn(
                           "transition-transform duration-[120ms] ease-[cubic-bezier(0.2,0,0,1)] group-hover:translate-x-0.5",
-                          pathname === item.href && "translate-x-0.5",
+                          isActive && "translate-x-0.5",
                         )}
                       >
                         {item.label}

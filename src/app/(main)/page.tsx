@@ -131,7 +131,7 @@ function HeroSection() {
       <div className="relative z-10 mx-auto max-w-7xl px-4 py-20 md:py-28">
         {/* Eyebrow */}
         <p className="mb-3 font-serif text-sm font-medium uppercase tracking-widest text-gold-400 opacity-90">
-          UK | UAE | Indonesia
+          UK · UAE · International
         </p>
 
         {/* Headline — max 2 lines on mobile */}
@@ -140,15 +140,21 @@ function HeroSection() {
           <span className="text-gold-400">your global property journey</span> starts here.
         </h1>
 
-        {/* Sub-headline */}
-        <p className="mt-4 flex flex-wrap items-center gap-2 text-base text-white/70 md:text-lg">
-          <Check className="h-4 w-4 shrink-0 text-gold-400" />
-          Verified properties.
-          <Check className="h-4 w-4 shrink-0 text-gold-400" />
-          Transparent prices.
-          <Check className="h-4 w-4 shrink-0 text-gold-400" />
-          No hidden fees.
-        </p>
+        {/* Sub-headline — stack on mobile, inline on tablet+ */}
+        <ul className="mt-4 flex flex-col gap-2 text-base text-white/80 md:flex-row md:flex-wrap md:items-center md:gap-x-5 md:gap-y-2 md:text-lg">
+          <li className="flex items-center gap-2">
+            <Check className="h-4 w-4 shrink-0 text-gold-400" aria-hidden />
+            <span>Vetted estate agents.</span>
+          </li>
+          <li className="flex items-center gap-2">
+            <Check className="h-4 w-4 shrink-0 text-gold-400" aria-hidden />
+            <span>Transparent advice.</span>
+          </li>
+          <li className="flex items-center gap-2">
+            <Check className="h-4 w-4 shrink-0 text-gold-400" aria-hidden />
+            <span>No hidden fees.</span>
+          </li>
+        </ul>
 
         {/* CTA stack */}
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -168,14 +174,7 @@ function HeroSection() {
             className="border-white/30 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 hover:text-white"
             onClick={() => document.getElementById("services")?.scrollIntoView({ behavior: "smooth" })}
           >
-            Find My Property <ArrowRight className="ml-1.5 h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="lg"
-            className="text-white hover:bg-white/10 hover:text-white"
-          >
-            Explore Dubai Marina — from $280K
+            Speak to a Specialist <ArrowRight className="ml-1.5 h-4 w-4" />
           </Button>
         </div>
 
@@ -317,7 +316,7 @@ const ALL_REVIEWS = [
     name: "Sarah M.",
     market: "Dubai",
     rating: 5,
-    text: "Exceptional service from start to finish. The team at Haus of Estate guided us through the entire process and we closed on our dream apartment in Marina Gate within 6 weeks.",
+    text: "Exceptional service from start to finish. The team at Haus of Estate guided us through the entire process and we completed on our dream flat in Marina Gate within 6 weeks.",
     initials: "SM",
     tag: "#TransparentProcess",
     date: "June 2024",
@@ -385,6 +384,7 @@ function ReviewsSection() {
       className={`px-4 py-16 transition-all duration-700 md:px-6 md:py-24 ${visible ? "opacity-100" : "opacity-0"}`}
     >
       <div className="mx-auto max-w-7xl">
+        {/* Header */}
         <div className="mb-10 text-center">
           <p className="mb-2 font-serif text-sm font-medium uppercase tracking-widest text-gold-500">
             Client stories
@@ -392,65 +392,76 @@ function ReviewsSection() {
           <h2 className="font-serif text-3xl font-medium text-estate-700 md:text-4xl">
             Rated 4.8 / 5 — Excellent
           </h2>
-
-          {/* Market ratings */}
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-6">
-            {MARKET_RATINGS.map((m) => (
-              <div key={m.market} className="text-center">
-                <div className="flex items-center justify-center gap-1">
-                  <Star className="h-4 w-4 fill-gold-500 text-gold-500" />
-                  <span className="font-serif text-lg font-semibold text-estate-700">{m.rating}</span>
-                </div>
-                <p className="text-xs text-muted-foreground">{m.market} ({m.count})</p>
-              </div>
-            ))}
-          </div>
+          <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground md:text-base">
+            Reviewed by clients across Trustpilot, Google and our markets in the UK, UAE and beyond.
+          </p>
         </div>
 
-        {/* Platform links */}
-        <div className="mb-8 flex flex-wrap justify-center gap-4">
-          {/* TrustPilot */}
+        {/* Trust strip — platforms */}
+        <div className="mb-5 flex flex-wrap items-center justify-center gap-3 md:gap-4">
           <a
             href="https://www.trustpilot.com/review/hausofestate.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-3 rounded-full border border-border bg-surface px-4 py-2 shadow-sm transition-shadow hover:shadow-md"
+            aria-label="Read Haus of Estate reviews on Trustpilot"
+            className="group flex items-center gap-3 rounded-full border border-border bg-surface px-5 py-2.5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
           >
-            <svg viewBox="0 0 60 14" className="h-5 w-auto" fill="none">
-              <path d="M5.6 0L3.5 5.2H0L2.9 8.1L2.2 13.4L5.6 10.4L9 13.4L8.3 8.1L11.2 5.2H7.7L5.6 0Z" fill="#00B67A"/>
-              <path d="M14.2 0L12.1 5.2H8.6L11.5 8.1L10.8 13.4L14.2 10.4L17.6 13.4L16.9 8.1L19.8 5.2H16.3L14.2 0Z" fill="#00B67A"/>
-              <path d="M22.8 0L20.7 5.2H17.2L20.1 8.1L19.4 13.4L22.8 10.4L26.2 13.4L25.5 8.1L28.4 5.2H24.9L22.8 0Z" fill="#00B67A"/>
-              <path d="M31.4 0L29.3 5.2H25.8L28.7 8.1L28 13.4L31.4 10.4L34.8 13.4L34.1 8.1L37 5.2H33.5L31.4 0Z" fill="#00B67A"/>
-              <path d="M40 0L37.9 5.2H34.4L37.3 8.1L36.6 13.4L40 10.4L43.4 13.4L42.7 8.1L45.6 5.2H42.1L40 0Z" fill="#00B67A"/>
+            <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" aria-hidden>
+              <polygon
+                points="12,2 15,9 22,9.3 16.5,14 18,21 12,17.5 6,21 7.5,14 2,9.3 9,9"
+                fill="#00B67A"
+              />
             </svg>
-            <div className="flex flex-col">
-              <span className="text-xs font-semibold text-foreground leading-none">TrustPilot</span>
-              <span className="flex items-center gap-0.5 mt-0.5">
-                <Star className="h-3 w-3 fill-gold-500 text-gold-500" />
-                <span className="text-xs text-muted-foreground">4.8/5</span>
-              </span>
-            </div>
+            <span className="text-sm font-semibold text-foreground">Trustpilot</span>
+            <span aria-hidden className="h-4 w-px bg-border" />
+            <span className="flex items-center gap-1">
+              <Star className="h-3.5 w-3.5 fill-gold-500 text-gold-500" />
+              <span className="text-sm font-semibold text-estate-700">4.8</span>
+              <span className="text-xs text-muted-foreground">/ 5</span>
+            </span>
           </a>
 
-          {/* Google */}
+          <span aria-hidden className="hidden h-8 w-px bg-border md:block" />
+
           <a
-            href="#"
-            className="flex items-center gap-3 rounded-full border border-border bg-surface px-4 py-2 shadow-sm transition-shadow hover:shadow-md"
+            href="https://www.google.com/search?q=Haus+of+Estate"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Read Haus of Estate reviews on Google"
+            className="group flex items-center gap-3 rounded-full border border-border bg-surface px-5 py-2.5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
           >
-            <svg viewBox="0 0 60 14" className="h-5 w-auto">
-              <path d="M59.9 7.1c0-.5-.04-.9-.12-1.3H30v2.5h16.4c-.7 3.8-2.8 7-5.9 9.2l-.1.1 8.6 6.7.6.1c5.5-5 8.3-12.4 8.3-21.1z" fill="#4285F4"/>
-              <path d="M30 13.8c3.1 0 5.7-1 7.6-2.8l-7.3-5.7c-1 .7-2.3 1.1-3.8 1.1-2.9 0-5.4-2-6.3-4.6h-7.8l-.1.1-.1.1v4.7l5.8 4.5c1.4-1.3 3.3-2.1 5.4-2.1h4.7z" fill="#34A853"/>
-              <path d="M23.7 8.4c-.3-.8-.4-1.7-.4-2.6 0-.9.1-1.8.4-2.6V1.5H16l-.1.1-.1.1-.1.1v4.6l6.9 5.1z" fill="#FBBC04"/>
-              <path d="M30 2.5c1.7 0 3.2.6 4.3 1.7l3.2-3.2C37.7.6 34.2 0 30 0 18.5 0 9.2 7 6.8 16.4L6.7 16.5l.1.1 7.8 6.1c1.6-3.9 5-6.7 9.2-6.7h4.2z" fill="#EA4335"/>
+            <svg viewBox="0 0 48 48" className="h-5 w-5 shrink-0" aria-hidden>
+              <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z" />
+              <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z" />
+              <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z" />
+              <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z" />
             </svg>
-            <div className="flex flex-col">
-              <span className="text-xs font-semibold text-foreground leading-none">Google</span>
-              <span className="flex items-center gap-0.5 mt-0.5">
-                <Star className="h-3 w-3 fill-gold-500 text-gold-500" />
-                <span className="text-xs text-muted-foreground">4.8/5</span>
-              </span>
-            </div>
+            <span className="text-sm font-semibold text-foreground">Google</span>
+            <span aria-hidden className="h-4 w-px bg-border" />
+            <span className="flex items-center gap-1">
+              <Star className="h-3.5 w-3.5 fill-gold-500 text-gold-500" />
+              <span className="text-sm font-semibold text-estate-700">4.8</span>
+              <span className="text-xs text-muted-foreground">/ 5</span>
+            </span>
           </a>
+        </div>
+
+        {/* Trust strip — markets (secondary) */}
+        <div className="mb-10 flex flex-wrap items-center justify-center gap-x-2 gap-y-2 text-xs md:text-sm">
+          {MARKET_RATINGS.map((m, idx) => (
+            <span key={m.market} className="flex items-center gap-2">
+              <span className="flex items-center gap-1.5 rounded-full bg-stone-100 px-3 py-1 text-muted-foreground">
+                <Star className="h-3 w-3 fill-gold-500 text-gold-500" aria-hidden />
+                <span className="font-semibold text-estate-700">{m.rating}</span>
+                <span>·</span>
+                <span>{m.market}</span>
+                <span className="text-muted-foreground/70">({m.count})</span>
+              </span>
+              {idx < MARKET_RATINGS.length - 1 && (
+                <span aria-hidden className="hidden h-3 w-px bg-border sm:block" />
+              )}
+            </span>
+          ))}
         </div>
 
         {/* Review marquee */}
@@ -512,14 +523,6 @@ function ReviewsSection() {
 }
 
 // ─── CTA Banner ──────────────────────────────────────────────────────────────
-
-const DEAL_TICKER = [
-  "Villa in Dubai Marina sold — AED 4.2M",
-  "3-Bed in Manchester under offer — GBP 680K",
-  "Penthouse in Palm Jumeirah reserved — AED 18.5M",
-  "2-Bed in Downtown Dubai sold — AED 3.1M",
-  "Townhouse in Canggu sold — IDR 12B",
-];
 
 const TEAM_AVATARS = [
   { initials: "LF", name: "Lisa" },
@@ -602,16 +605,10 @@ function CTABanner() {
   );
 }
 
-// ─── Who Are We (condensed) ───────────────────────────────────────────────────
+// ─── Who Are We (teaser) ─────────────────────────────────────────────────────
 
 function WhoAreWe() {
   const { ref, visible } = useScrollReveal();
-
-  const STATS = [
-    { value: "15+", label: "Years Experience", icon: Clock },
-    { value: "3", label: "Continents", icon: Globe },
-    { value: "100%", label: "Transparent", icon: Shield },
-  ];
 
   return (
     <section
@@ -620,31 +617,24 @@ function WhoAreWe() {
       className={`px-4 py-16 transition-all duration-700 md:px-6 md:py-24 ${visible ? "opacity-100" : "opacity-0"}`}
     >
       <div className="mx-auto max-w-7xl">
-        <div className="grid gap-12 md:grid-cols-2 md:gap-16">
+        <div className="grid items-start gap-12 md:grid-cols-2 md:gap-16">
           <div>
             <p className="mb-2 font-serif text-sm font-medium uppercase tracking-widest text-gold-500">
               Who we are
             </p>
             <h2 className="font-serif text-3xl font-medium text-estate-700 md:text-4xl">
-              The international real estate you can rely on.
+              The international property service you can rely on.
             </h2>
-            <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-              Curating 15+ years of international real estate experience, Haus of Estate brings investing in real estate to an open eye-level and accessible to the global public.
+            <p className="mt-4 text-base leading-relaxed text-muted-foreground md:text-lg">
+              Haus of Estate is an international property service for buyers, landlords and investors moving across borders — vetted specialists, unbiased market data, and a single clear pathway from first enquiry to completion.
             </p>
-            <p className="mt-3 text-base leading-relaxed text-muted-foreground">
-              Making each transaction transparent, swift and efficient. Originated in the UK, covering the UAE, and now expanding into international emerging markets.
-            </p>
-
-            {/* Stats */}
-            <div className="mt-8 grid grid-cols-3 gap-4">
-              {STATS.map((s) => (
-                <div key={s.label} className="text-center md:text-left">
-                  <s.icon className="mx-auto mb-1 h-5 w-5 text-gold-500 md:mx-0" />
-                  <p className="font-serif text-3xl font-semibold text-estate-700">{s.value}</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">{s.label}</p>
-                </div>
-              ))}
-            </div>
+            <Link
+              href="/about"
+              className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-estate-700 transition-colors hover:text-gold-500"
+            >
+              Read our story
+              <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
 
           {/* Developer logos */}
@@ -656,7 +646,7 @@ function WhoAreWe() {
               {[
                 { name: "Emaar", color: "#1a1a1a" },
                 { name: "Damac", color: "#8B0000" },
-                { name: "Taylor Whimpey", color: "#1E3A5F" },
+                { name: "Taylor Wimpey", color: "#1E3A5F" },
                 { name: "Binghatti", color: "#2C3E50" },
               ].map((dev) => (
                 <div
@@ -668,13 +658,6 @@ function WhoAreWe() {
                   </span>
                 </div>
               ))}
-            </div>
-
-            <div className="mt-6 rounded-xl border border-border bg-estate-700/5 p-4">
-              <p className="text-sm text-estate-700 font-medium">UK | UAE | International</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Originated in the UK, covering the UAE, and now international emerging markets.
-              </p>
             </div>
           </div>
         </div>

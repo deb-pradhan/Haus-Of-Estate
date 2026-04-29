@@ -32,7 +32,7 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">1. Who We Are</h2>
             <p>
-              Haus of Estate ("we", "our", "us") is an international real estate advisory firm operating across the United Kingdom, United Arab Emirates, and Indonesia. We are committed to protecting your personal data in accordance with the UK General Data Protection Regulation (UK GDPR), the Data Protection Act 2018, and the EU General Data Protection Regulation (GDPR) where applicable.
+              Haus of Estate ("we", "our", "us") is an international property advisory firm operating across the United Kingdom, United Arab Emirates, and Indonesia. We are committed to protecting your personal data in accordance with the UK General Data Protection Regulation (UK GDPR), the Data Protection Act 2018, and the EU General Data Protection Regulation (GDPR) where applicable.
             </p>
             <p className="mt-2">
               <strong>Company details:</strong><br />

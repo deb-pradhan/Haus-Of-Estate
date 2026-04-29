@@ -1,21 +1,18 @@
 "use client";
 
 const ACTIVITIES = [
-  { type: "deal", label: "Villa in Dubai Marina sold", price: "AED 4.2M" },
-  { type: "offer", label: "3-Bed in Manchester under offer", price: "GBP 680K" },
-  { type: "new", label: "Penthouse in Palm Jumeirah listed", price: "AED 18.5M" },
-  { type: "booking", label: "Sarah M. booked a free consultation", price: "" },
-  { type: "deal", label: "Townhouse in Canggu sold", price: "IDR 12B" },
-  { type: "offer", label: "2-Bed in Downtown Dubai under offer", price: "AED 3.1M" },
-  { type: "new", label: "Villa in Ubud newly listed", price: "IDR 9.8B" },
+  { type: "deal", label: "Dubai Marina villa secured for a UK buyer", price: "" },
+  { type: "offer", label: "Manchester townhouse — under offer in 9 days", price: "" },
+  { type: "booking", label: "Sarah M. booked a consultation", price: "" },
+  { type: "deal", label: "Bali villa completed for an international family", price: "" },
+  { type: "offer", label: "Downtown Dubai flat agreed below asking", price: "" },
   { type: "booking", label: "James T. booked a market briefing", price: "" },
-  { type: "deal", label: "Apartment in London sold", price: "GBP 920K" },
-  { type: "offer", label: "5-Bed in Birmingham under offer", price: "GBP 1.1M" },
-  { type: "new", label: "Duplex in Dubai Creek Harbour listed", price: "AED 7.8M" },
-  { type: "booking", label: "Priya & Arjun L. listed their villa", price: "" },
-  { type: "deal", label: "Studio in JVC sold", price: "AED 1.4M" },
-  { type: "offer", label: "4-Bed Villa in Palm under offer", price: "AED 12M" },
-  { type: "new", label: "Penthouse in Manchester new listing", price: "GBP 2.3M" },
+  { type: "deal", label: "London flat completed for an overseas investor", price: "" },
+  { type: "offer", label: "Birmingham home — offer accepted in 5 days", price: "" },
+  { type: "booking", label: "Priya & Arjun L. listed their property with us", price: "" },
+  { type: "deal", label: "JVC studio matched with an off-plan investor", price: "" },
+  { type: "booking", label: "Family from Riyadh booked a viewing tour", price: "" },
+  { type: "offer", label: "Off-plan penthouse reserved for a returning client", price: "" },
 ];
 
 const TAG_STYLES: Record<string, string> = {

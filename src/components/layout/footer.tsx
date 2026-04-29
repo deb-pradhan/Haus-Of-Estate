@@ -1,46 +1,14 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { Star } from "lucide-react";
+import { useLeadModals } from "@/components/lead-modal/modal-context";
 
-const footerLinks = {
-  Services: [
-    { label: "Buy Property", href: "/" },
-    { label: "Rent Property", href: "/" },
-    { label: "Sell Property", href: "/list-property" },
-    { label: "List Your Property", href: "/list-property" },
-    { label: "Manage Property", href: "/" },
-  ],
-  Company: [
-    { label: "About Us", href: "/#about" },
-    { label: "Careers", href: "/" },
-    { label: "Contact", href: "/#contact" },
-  ],
-  Legal: [
-    { label: "Privacy Policy", href: "/legal/privacy-policy" },
-    { label: "Terms of Service", href: "/legal/terms-of-service" },
-    { label: "Cookie Policy", href: "/legal/cookie-policy" },
-  ],
-};
+const WHATSAPP_NUMBER = "+971 58 560 7033";
+const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g, "")}`;
 
 const SOCIAL_LINKS = [
-  {
-    name: "YouTube",
-    href: "#",
-    icon: (
-      <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current">
-        <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 1.5 6.2C1 8.1 1 12 1 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1C23 15.9 23 12 23 12s0-3.9-.5-5.8zM9.6 15.6V8.4l6.4 3.6-6.4 3.6z" />
-      </svg>
-    ),
-  },
-  {
-    name: "Facebook",
-    href: "#",
-    icon: (
-      <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current">
-        <path d="M24 12.7a12 12 0 0 1-12 12A12 12 0 0 1 0 12.7a12 12 0 0 1 12-12A12 12 0 0 1 24 12.7v.6a9.2 9.2 0 0 0 2.3.6A1.4 1.4 0 0 0 27 12.5v-.1a9.4 9.4 0 0 0-2.7-6.6A9.4 9.4 0 0 0 12 1a9.4 9.4 0 0 0-9.4 9.4 9.4 9.4 0 0 0 5.8 8.6v.6A1.4 1.4 0 0 0 9.7 20a9.4 9.4 0 0 0 9.4-9.4v-.6A9.2 9.2 0 0 0 21.7 13z" />
-      </svg>
-    ),
-  },
   {
     name: "Instagram",
     href: "#",
@@ -49,24 +17,6 @@ const SOCIAL_LINKS = [
         <rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="none" stroke="currentColor" strokeWidth="2" />
         <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" strokeWidth="2" />
         <circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" />
-      </svg>
-    ),
-  },
-  {
-    name: "X",
-    href: "#",
-    icon: (
-      <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current">
-        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-      </svg>
-    ),
-  },
-  {
-    name: "Snapchat",
-    href: "#",
-    icon: (
-      <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current">
-        <path d="M12.2 2.2a1.4 1.4 0 0 0-1.4 1.4v3.8a5.6 5.6 0 0 0-1.8.8l-2.1-1.1a1.4 1.4 0 0 0-1.2 0 1.4 1.4 0 0 0-.5 1.2v3.8a5.6 5.6 0 0 0-1.6 1.1l-2-1.2a1.4 1.4 0 0 0-1.2 0 1.4 1.4 0 0 0-.5 1.2v3.5a1.4 1.4 0 0 0 1.4 1.4 7 7 0 0 0 6 6.9 1.4 1.4 0 0 0 1.4-1.4v-3.7a5.6 5.6 0 0 0 2.3-.8l2 1.2a1.4 1.4 0 0 0 1.2.5 1.4 1.4 0 0 0 1.4-1.4v-3.5a5.6 5.6 0 0 0 2-1.3l2.3 1.4a1.4 1.4 0 0 0 1.2.5 1.4 1.4 0 0 0 1.4-1.4v-3.8a1.4 1.4 0 0 0-.5-1.2 1.4 1.4 0 0 0-1.2-.5l-2 .8a5.6 5.6 0 0 0-2.3-1.6V3.6a1.4 1.4 0 0 0-1.4-1.4z" />
       </svg>
     ),
   },
@@ -80,43 +30,46 @@ const SOCIAL_LINKS = [
     ),
   },
   {
-    name: "TikTok",
+    name: "X",
     href: "#",
     icon: (
       <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current">
-        <path d="M19.6 6.7a5.4 5.4 0 0 1-5.4-5.4h-3.5v14.7a5.4 5.4 0 1 1-5.4-5.4v-9.3" />
+        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
       </svg>
     ),
   },
   {
     name: "WhatsApp",
-    href: "https://wa.me/",
+    href: WHATSAPP_URL,
     icon: (
-      <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current">
-        <path d="M17.5 15.4a7.3 7.3 0 0 1-3.3.9 7.4 7.4 0 0 1-7.9-7.4 7.4 7.4 0 0 1 7.4-7.4 7.4 7.4 0 0 1 7.4 7.4c0 1.2-.3 2.3-.8 3.3l-.4-1.4zM12 3a9 9 0 0 0-9 9 9 9 0 0 0 9 9 9 9 0 0 0 9-9 9 9 0 0 0-9-9zm5.3 12.7a1.1 1.1 0 0 1-1.6.7l-1.6-.7-1.6.6a5.6 5.6 0 0 1-5.5-5.5c0-.3 0-.6.1-.9l.6-1.5-1.5-1.6a1.1 1.1 0 0 1 .7-1.6h1.6l.7 1.6 1.6-.6a5.6 5.6 0 0 1 0 5.5l-1.6.6-.7 1.6 1.6.7a1.1 1.1 0 0 1 .7 1.6l-.7 1.6z" />
+      <svg viewBox="0 0 32 32" className="h-4 w-4 fill-current">
+        <path d="M16 .5C7.44.5.5 7.44.5 16c0 2.83.74 5.49 2.04 7.79L.5 31.5l7.93-2.07A15.45 15.45 0 0 0 16 31.5C24.56 31.5 31.5 24.56 31.5 16S24.56.5 16 .5zm0 28a12.45 12.45 0 0 1-6.36-1.74l-.46-.27-4.71 1.23 1.26-4.59-.3-.47A12.5 12.5 0 1 1 16 28.5zm6.86-9.36c-.38-.19-2.22-1.1-2.57-1.22-.34-.13-.59-.19-.84.19s-.96 1.22-1.18 1.47-.43.28-.81.09c-2.2-1.1-3.65-1.97-5.1-4.46-.39-.66.39-.62 1.11-2.05.13-.25.06-.47-.03-.66s-.84-2.03-1.15-2.78c-.3-.73-.61-.63-.84-.64h-.72c-.25 0-.66.09-1.01.47s-1.32 1.29-1.32 3.13 1.35 3.62 1.54 3.87c.19.25 2.66 4.06 6.45 5.69.9.39 1.6.62 2.15.79.9.29 1.72.25 2.37.15.72-.11 2.22-.91 2.53-1.78.31-.88.31-1.62.22-1.78s-.34-.25-.72-.44z" />
       </svg>
     ),
   },
 ];
 
 export function Footer() {
+  const { openAccount, openBuyer, openSeller } = useLeadModals();
+
   return (
     <footer className="border-t border-border bg-stone-100">
       <div className="mx-auto max-w-7xl px-4 py-12 md:px-6">
         <div className="grid gap-10 md:grid-cols-4">
           {/* Brand column */}
           <div className="md:col-span-1">
-            <div className="mb-4">
+            <Link href="/" className="inline-block" aria-label="Haus of Estate — home">
               <Image
                 src="/Frame 16-1.svg"
                 alt="Haus of Estate"
-                width={120}
-                height={64}
-                className="h-7 w-auto"
+                width={240}
+                height={128}
+                className="h-12 w-auto md:h-14"
+                priority={false}
               />
-            </div>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              The international real estate you can rely on. UK | UAE | International Presence.
+            </Link>
+            <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
+              The international property service you can rely on. UK · UAE · International.
             </p>
 
             {/* Social links */}
@@ -142,30 +95,120 @@ export function Footer() {
                   <Star key={s} className="h-3.5 w-3.5 fill-gold-500 text-gold-500" />
                 ))}
               </div>
-              <span className="text-xs text-muted-foreground">4.8 Excellent</span>
+              <span className="text-xs text-muted-foreground">Rated 4.8 · Excellent</span>
             </div>
           </div>
 
-          {/* Link columns */}
-          {Object.entries(footerLinks).map(([category, links]) => (
-            <div key={category}>
-              <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {category}
-              </h3>
-              <ul className="space-y-2">
-                {links.map((link) => (
-                  <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          {/* Services — buttons that open lead modals */}
+          <div>
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Services
+            </h3>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <button
+                  type="button"
+                  onClick={openBuyer}
+                  className="text-left text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  Buy a property
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={openBuyer}
+                  className="text-left text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  Rent a property
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={openSeller}
+                  className="text-left text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  Sell or let your property
+                </button>
+              </li>
+              <li>
+                <Link
+                  href="/list-property"
+                  className="text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  List your property
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Company */}
+          <div>
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Company
+            </h3>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link
+                  href="/about"
+                  className="text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  About us
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/blog"
+                  className="text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  Insights
+                </Link>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={openAccount}
+                  className="text-left text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  Contact us
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          {/* Legal */}
+          <div>
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Legal
+            </h3>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link
+                  href="/legal/privacy-policy"
+                  className="text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  Privacy policy
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/legal/terms-of-service"
+                  className="text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  Terms of service
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/legal/cookie-policy"
+                  className="text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  Cookie policy
+                </Link>
+              </li>
+            </ul>
+          </div>
         </div>
 
         <div className="mt-10 border-t border-border pt-6 text-center text-xs text-muted-foreground">

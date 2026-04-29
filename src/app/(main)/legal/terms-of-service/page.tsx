@@ -42,7 +42,7 @@ export default function TermsOfServicePage() {
           <section>
             <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">2. Who We Are</h2>
             <p>
-              Haus of Estate Ltd is an international real estate advisory firm providing property matching, investment advisory, and transaction facilitation services across the United Kingdom, United Arab Emirates, and Indonesia.
+              Haus of Estate Ltd is an international property advisory firm providing property matching, investment advisory, and transaction facilitation services across the United Kingdom, United Arab Emirates, and Indonesia.
             </p>
             <p className="mt-2">
               <strong>Registered in:</strong> England and Wales<br />

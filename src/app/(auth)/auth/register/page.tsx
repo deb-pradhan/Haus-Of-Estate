@@ -81,7 +81,7 @@ export default function RegisterPage() {
         <div className="mb-6 text-center">
           <h1 className="font-serif text-2xl font-medium">Create your account</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Start discovering verified properties in Dubai
+            Save your enquiries and track your matches with Haus of Estate.
           </p>
         </div>
 
@@ -92,7 +92,7 @@ export default function RegisterPage() {
             </div>
           )}
           <div>
-            <Label htmlFor="name">Full Name</Label>
+            <Label htmlFor="name">Full name</Label>
             <div className="relative mt-1.5">
               <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input

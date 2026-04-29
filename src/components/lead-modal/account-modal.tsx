@@ -12,18 +12,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PhoneInput, isValidMobile } from "@/components/ui/phone-input";
 import { Check, ArrowRight, Loader2 } from "lucide-react";
 
 interface AccountModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-const COUNTRIES = [
-  { code: "+971", label: "UAE (+971)" },
-  { code: "+44", label: "UK (+44)" },
-  { code: "+62", label: "ID (+62)" },
-];
 
 export function AccountModal({ open, onOpenChange }: AccountModalProps) {
   const [step, setStep] = useState<"form" | "success">("form");
@@ -32,7 +27,6 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
   const [surname, setSurname] = useState("");
   const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
-  const [countryCode, setCountryCode] = useState("+971");
   const [consent, setConsent] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -43,7 +37,6 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
     setSurname("");
     setEmail("");
     setMobile("");
-    setCountryCode("+971");
     setConsent(false);
     setErrors({});
   };
@@ -59,8 +52,8 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
     if (!surname.trim()) errs.surname = "Required";
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
       errs.email = "Valid email required";
-    if (!mobile.trim() || mobile.replace(/\D/g, "").length < 7)
-      errs.mobile = "Valid phone number required";
+    if (!isValidMobile(mobile))
+      errs.mobile = "Valid mobile number required";
     if (!consent) errs.consent = "Consent required to proceed";
     return errs;
   };
@@ -83,7 +76,7 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
           firstName,
           surname,
           email,
-          mobile: `${countryCode} ${mobile}`,
+          mobile,
           consentGiven: consent,
         }),
       });
@@ -99,10 +92,10 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
           <div className="p-6">
             <DialogHeader className="text-left">
               <DialogTitle className="font-serif text-2xl font-medium text-estate-700">
-                Get in Touch
+                Get in touch
               </DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground">
-                Join our list for exclusive market insights, investment guides, and the latest property opportunities.
+                Tell us where you&apos;re looking and we&apos;ll match you with a vetted specialist for your market.
               </DialogDescription>
             </DialogHeader>
 
@@ -110,7 +103,7 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="am-first" className="text-xs font-medium text-foreground">
-                    First Name <span className="text-destructive">*</span>
+                    First name <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="am-first"
@@ -144,7 +137,7 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
 
               <div className="space-y-1.5">
                 <Label htmlFor="am-email" className="text-xs font-medium text-foreground">
-                  Email Address <span className="text-destructive">*</span>
+                  Email address <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="am-email"
@@ -162,31 +155,14 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
 
               <div className="space-y-1.5">
                 <Label htmlFor="am-mobile" className="text-xs font-medium text-foreground">
-                  Mobile Number <span className="text-destructive">*</span>
+                  Mobile number <span className="text-destructive">*</span>
                 </Label>
-                <div className="flex gap-2">
-                  <select
-                    value={countryCode}
-                    onChange={(e) => setCountryCode(e.target.value)}
-                    className="h-11 w-24 rounded-md border border-border bg-background px-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                  >
-                    {COUNTRIES.map((c) => (
-                      <option key={c.code} value={c.code}>
-                        {c.code}
-                      </option>
-                    ))}
-                  </select>
-                  <Input
-                    id="am-mobile"
-                    type="tel"
-                    value={mobile}
-                    onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
-                    placeholder="7XXXXXXXX"
-                    autoComplete="tel"
-                    className="flex-1 h-11"
-                    inputMode="numeric"
-                  />
-                </div>
+                <PhoneInput
+                  id="am-mobile"
+                  value={mobile}
+                  onChange={setMobile}
+                  invalid={!!errors.mobile}
+                />
                 {errors.mobile && (
                   <p className="text-xs text-destructive">{errors.mobile}</p>
                 )}
@@ -201,7 +177,7 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
                     className="mt-0.5 h-4 w-4 rounded border-border accent-estate-700"
                   />
                   <span className="text-xs leading-relaxed text-muted-foreground">
-                    I consent to Haus of Estate contacting me via WhatsApp, SMS, email, and phone about properties, investment opportunities, and market updates.{" "}
+                    I consent to Haus of Estate contacting me about my enquiry by WhatsApp, SMS, email or phone.{" "}
                     <span className="text-destructive">*</span>
                   </span>
                 </label>
@@ -222,7 +198,7 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
                   </div>
                 ) : (
                   <>
-                    Sign Up
+                    Submit enquiry
                     <ArrowRight className="ml-1.5 h-4 w-4" />
                   </>
                 )}
@@ -239,10 +215,10 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
               <Check className="h-7 w-7 text-estate-700" />
             </div>
             <DialogTitle className="font-serif text-2xl font-medium text-estate-700">
-              You're in, {firstName}. 🎉
+              Thanks, {firstName}.
             </DialogTitle>
             <DialogDescription className="mt-2 text-sm text-muted-foreground">
-              Our team will be in touch within 2 hours with personalised property opportunities.
+              A specialist will be in touch within 2 hours to discuss your enquiry.
             </DialogDescription>
             <Button
               onClick={() => handleOpenChange(false)}

@@ -12,9 +12,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PhoneInput, isValidMobile } from "@/components/ui/phone-input";
 
 const PROPERTY_TYPES = [
-  "Apartment", "Villa", "Townhouse", "Penthouse", "House", "Cottage", "Land", "Commercial",
+  "Flat", "Villa", "Townhouse", "Penthouse", "House", "Cottage", "Land", "Commercial",
 ];
 const VIEW_TYPES = ["City", "Sea", "Garden", "Pool", "Park", "None"];
 const URGENCY_OPTIONS = [
@@ -49,7 +50,7 @@ export default function ListPropertyPage() {
     if (!firstName.trim()) errs.firstName = "Required";
     if (!surname.trim()) errs.surname = "Required";
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = "Valid email required";
-    if (!mobile.trim() || mobile.replace(/\D/g, "").length < 7) errs.mobile = "Valid phone required";
+    if (!isValidMobile(mobile)) errs.mobile = "Valid mobile required";
     if (!consent) errs.consent = "Consent required";
     return errs;
   };
@@ -358,8 +359,8 @@ export default function ListPropertyPage() {
                   {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">Mobile Number <span className="text-destructive">*</span></Label>
-                  <Input value={mobile} onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))} placeholder="+971 XX XXX XXXX" type="tel" inputMode="tel" className="h-11" autoComplete="tel" />
+                  <Label className="text-xs font-medium">Mobile number <span className="text-destructive">*</span></Label>
+                  <PhoneInput value={mobile} onChange={setMobile} invalid={!!errors.mobile} />
                   {errors.mobile && <p className="text-xs text-destructive">{errors.mobile}</p>}
                 </div>
                 <div className="space-y-1.5">
@@ -371,7 +372,7 @@ export default function ListPropertyPage() {
                       className="mt-0.5 h-4 w-4 rounded border-border accent-estate-700"
                     />
                     <span className="text-xs leading-relaxed text-muted-foreground">
-                      I consent to Haus of Estate contacting me about my property enquiry via WhatsApp, SMS, email, and phone. <span className="text-destructive">*</span>
+                      I consent to Haus of Estate contacting me about my property enquiry by WhatsApp, SMS, email or phone. <span className="text-destructive">*</span>
                     </span>
                   </label>
                   {errors.consent && <p className="text-xs text-destructive">{errors.consent}</p>}
@@ -380,7 +381,7 @@ export default function ListPropertyPage() {
                   {isSubmitting ? (
                     <div className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Submitting...</div>
                   ) : (
-                    <><ArrowRight className="mr-1.5 h-4 w-4" /> Submit Property</>
+                    <><ArrowRight className="mr-1.5 h-4 w-4" /> Submit enquiry</>
                   )}
                 </Button>
               </form>

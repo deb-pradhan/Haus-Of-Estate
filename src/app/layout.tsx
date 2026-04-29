@@ -19,14 +19,15 @@ const cormorant = Cormorant_Garamond({
 });
 
 export const metadata: Metadata = {
-  title: "Haus of Estate — Property, with proof.",
+  title: "Haus of Estate — international property, with proof.",
   description:
-    "The UAE's transaction-first real estate platform. Verified listings, trusted agents, guided transactions.",
+    "International property service for buyers, sellers and investors across the UK, UAE and beyond. Vetted estate agents, transparent advice, no hidden fees.",
   keywords: [
-    "Dubai real estate",
-    "property UAE",
-    "verified listings",
-    "buy property Dubai",
+    "international property",
+    "overseas property UK",
+    "Dubai property",
+    "estate agents UAE",
+    "buy property abroad",
   ],
   icons: {
     icon: "/Vector-1.svg",
