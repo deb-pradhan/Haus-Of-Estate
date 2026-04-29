@@ -66,18 +66,38 @@ interface SellFormData {
 }
 
 const LOCATIONS = [
-  { value: "dubai-marina", label: "Dubai Marina", country: "UAE" },
-  { value: "dubai-downtown", label: "Downtown Dubai", country: "UAE" },
-  { value: "dubai-palm", label: "Palm Jumeirah", country: "UAE" },
-  { value: "dubai-creek", label: "Dubai Creek Harbour", country: "UAE" },
-  { value: "dubai-jvc", label: "JVC", country: "UAE" },
+  // UK — primary market
   { value: "uk-london", label: "London", country: "UK" },
+  { value: "uk-cardiff", label: "Cardiff", country: "UK" },
   { value: "uk-manchester", label: "Manchester", country: "UK" },
   { value: "uk-birmingham", label: "Birmingham", country: "UK" },
-  { value: "bali-canggu", label: "Canggu", country: "Bali" },
-  { value: "bali-ubud", label: "Ubud", country: "Bali" },
+  { value: "uk-edinburgh", label: "Edinburgh", country: "UK" },
+  { value: "uk-other", label: "Other UK city", country: "UK" },
+  // UAE
+  { value: "uae-dubai-marina", label: "Dubai Marina", country: "UAE" },
+  { value: "uae-dubai-downtown", label: "Downtown Dubai", country: "UAE" },
+  { value: "uae-dubai-palm", label: "Palm Jumeirah", country: "UAE" },
+  { value: "uae-dubai-creek", label: "Dubai Creek Harbour", country: "UAE" },
+  { value: "uae-dubai-jvc", label: "JVC", country: "UAE" },
+  { value: "uae-abu-dhabi", label: "Abu Dhabi", country: "UAE" },
+  // Indonesia
+  { value: "id-bali-canggu", label: "Bali — Canggu", country: "Indonesia" },
+  { value: "id-bali-ubud", label: "Bali — Ubud", country: "Indonesia" },
+  { value: "id-bali-seminyak", label: "Bali — Seminyak", country: "Indonesia" },
+  // Catch-all
   { value: "other", label: "Other / Not sure", country: "Other" },
 ];
+
+type Currency = "GBP" | "AED" | "USD";
+
+function inferCurrency(locations: string[]): Currency {
+  if (locations.length === 0) return "GBP";
+  const allUK = locations.every((l) => l.startsWith("uk-"));
+  if (allUK) return "GBP";
+  const allUAE = locations.every((l) => l.startsWith("uae-"));
+  if (allUAE) return "AED";
+  return "USD";
+}
 
 const PROPERTY_TYPES = [
   { value: "apartment", label: "Apartment", icon: Building2 },
@@ -88,21 +108,53 @@ const PROPERTY_TYPES = [
   { value: "land", label: "Land / Plot", icon: MapPin },
 ];
 
-const BUDGET_RANGES_BUY = [
-  { min: "", max: "200,000", label: "Under $200K" },
-  { min: "200,000", max: "500,000", label: "$200K – $500K" },
-  { min: "500,000", max: "1,000,000", label: "$500K – $1M" },
-  { min: "1,000,000", max: "2,000,000", label: "$1M – $2M" },
-  { min: "2,000,000", max: "", label: "$2M+" },
-];
+const BUDGET_RANGES_BUY: Record<Currency, { min: string; max: string; label: string }[]> = {
+  GBP: [
+    { min: "", max: "250000", label: "Under £250K" },
+    { min: "250000", max: "500000", label: "£250K – £500K" },
+    { min: "500000", max: "1000000", label: "£500K – £1M" },
+    { min: "1000000", max: "2500000", label: "£1M – £2.5M" },
+    { min: "2500000", max: "", label: "£2.5M+" },
+  ],
+  AED: [
+    { min: "", max: "750000", label: "Under AED 750K" },
+    { min: "750000", max: "1800000", label: "AED 750K – 1.8M" },
+    { min: "1800000", max: "3700000", label: "AED 1.8M – 3.7M" },
+    { min: "3700000", max: "9000000", label: "AED 3.7M – 9M" },
+    { min: "9000000", max: "", label: "AED 9M+" },
+  ],
+  USD: [
+    { min: "", max: "200000", label: "Under $200K" },
+    { min: "200000", max: "500000", label: "$200K – $500K" },
+    { min: "500000", max: "1000000", label: "$500K – $1M" },
+    { min: "1000000", max: "2000000", label: "$1M – $2M" },
+    { min: "2000000", max: "", label: "$2M+" },
+  ],
+};
 
-const BUDGET_RANGES_RENT = [
-  { min: "", max: "5,000", label: "Under $5K/yr" },
-  { min: "5,000", max: "15,000", label: "$5K – $15K/yr" },
-  { min: "15,000", max: "35,000", label: "$15K – $35K/yr" },
-  { min: "35,000", max: "75,000", label: "$35K – $75K/yr" },
-  { min: "75,000", max: "", label: "$75K+/yr" },
-];
+const BUDGET_RANGES_RENT: Record<Currency, { min: string; max: string; label: string }[]> = {
+  GBP: [
+    { min: "", max: "1500", label: "Under £1,500 pcm" },
+    { min: "1500", max: "3000", label: "£1,500 – £3,000 pcm" },
+    { min: "3000", max: "6000", label: "£3,000 – £6,000 pcm" },
+    { min: "6000", max: "12000", label: "£6,000 – £12,000 pcm" },
+    { min: "12000", max: "", label: "£12,000+ pcm" },
+  ],
+  AED: [
+    { min: "", max: "60000", label: "Under AED 60K/yr" },
+    { min: "60000", max: "150000", label: "AED 60K – 150K/yr" },
+    { min: "150000", max: "300000", label: "AED 150K – 300K/yr" },
+    { min: "300000", max: "600000", label: "AED 300K – 600K/yr" },
+    { min: "600000", max: "", label: "AED 600K+/yr" },
+  ],
+  USD: [
+    { min: "", max: "5000", label: "Under $5K/yr" },
+    { min: "5000", max: "15000", label: "$5K – $15K/yr" },
+    { min: "15000", max: "35000", label: "$15K – $35K/yr" },
+    { min: "35000", max: "75000", label: "$35K – $75K/yr" },
+    { min: "75000", max: "", label: "$75K+/yr" },
+  ],
+};
 
 const TIMELINE_OPTIONS = [
   { value: "asap", label: "As soon as possible" },
@@ -195,17 +247,20 @@ function MultiSelect({
   selected,
   onChange,
   columns = 2,
+  max = 3,
 }: {
   label: string;
   options: { value: string; label: string; country?: string }[];
   selected: string[];
   onChange: (vals: string[]) => void;
   columns?: number;
+  max?: number;
 }) {
+  const atLimit = selected.length >= max;
   const toggle = (val: string) => {
     if (selected.includes(val)) {
       onChange(selected.filter((v) => v !== val));
-    } else if (selected.length < 3) {
+    } else if (selected.length < max) {
       onChange([...selected, val]);
     }
   };
@@ -214,23 +269,31 @@ function MultiSelect({
     <div>
       <p className="mb-2.5 text-sm font-medium text-foreground">
         {label}{" "}
-        <span className="text-xs text-muted-foreground font-normal">(select up to 3)</span>
+        <span className="text-xs text-muted-foreground font-normal">
+          (select up to {max}
+          {atLimit ? " — limit reached" : ""})
+        </span>
       </p>
       <div className={cn("grid gap-2", columns === 3 ? "grid-cols-3" : "grid-cols-2")}>
-        {options.map((opt) => (
-          <SelectionPill
-            key={opt.value}
-            selected={selected.includes(opt.value)}
-            onClick={() => toggle(opt.value)}
-          >
-            <span className="flex items-center gap-1.5">
-              {opt.country && (
-                <span className="text-xs opacity-60">{opt.country}</span>
-              )}
-              {opt.label}
-            </span>
-          </SelectionPill>
-        ))}
+        {options.map((opt) => {
+          const isSelected = selected.includes(opt.value);
+          const disabled = !isSelected && atLimit;
+          return (
+            <SelectionPill
+              key={opt.value}
+              selected={isSelected}
+              onClick={() => !disabled && toggle(opt.value)}
+              className={disabled ? "opacity-40 cursor-not-allowed hover:border-border hover:text-muted-foreground" : ""}
+            >
+              <span className="flex items-center gap-1.5">
+                {opt.country && (
+                  <span className="text-xs opacity-60">{opt.country}</span>
+                )}
+                {opt.label}
+              </span>
+            </SelectionPill>
+          );
+        })}
       </div>
       {selected.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1">
@@ -357,31 +420,31 @@ function SuccessState({
 }) {
   const messages = {
     buy: {
-      title: `Perfect, ${name.split(" ")[0]}! Your property search begins now.`,
+      title: `Thank you, ${name.split(" ")[0]}. Your enquiry is in.`,
       subtitle:
-        "One of our specialist advisors will review your preferences and send you curated listings — no spam, only opportunities.",
-      cta: "Explore Listings",
+        "One of our specialist advisors will review your brief and introduce you to vetted estate agents who match your criteria — no spam, no obligation.",
+      cta: "Speak to an Advisor",
       icon: <Home className="h-8 w-8 text-estate-700" />,
     },
     rent: {
-      title: `You're all set, ${name.split(" ")[0]}!`,
+      title: `You're all set, ${name.split(" ")[0]}.`,
       subtitle:
-        "Our team will prepare a shortlist of rental properties matching your criteria and arrange viewings at your convenience.",
-      cta: "Browse Rentals",
+        "Our team will introduce you to letting agents in your chosen areas and arrange viewings at your convenience.",
+      cta: "Speak to an Advisor",
       icon: <Key className="h-8 w-8 text-estate-700" />,
     },
     sell: {
-      title: `Great choice, ${name.split(" ")[0]}! We're ready to sell your property.`,
+      title: `Thank you, ${name.split(" ")[0]}. Your valuation request is in.`,
       subtitle:
-        "Our network of qualified buyers and investors means we find the right buyer fast. Expect your first offer within days.",
-      cta: "View Market Report",
+        "Our network of vetted estate agents will prepare a comparative market analysis and reach out within 2 working hours.",
+      cta: "Speak to an Advisor",
       icon: <Tag className="h-8 w-8 text-estate-700" />,
     },
     list: {
-      title: `You're listed, ${name.split(" ")[0]}!`,
+      title: `Received, ${name.split(" ")[0]}. Your letting brief is on its way.`,
       subtitle:
-        "Your property is now visible to our global audience of serious tenants and buyers. Expect enquiries within 48 hours.",
-      cta: "View Your Listing",
+        "We'll match you with vetted letting agents in your area — expect to hear from a partner agent within 48 hours.",
+      cta: "Speak to an Advisor",
       icon: <Calendar className="h-8 w-8 text-estate-700" />,
     },
   };
@@ -405,12 +468,14 @@ function SuccessState({
         </p>
         <ul className="space-y-2">
           {[
-            "Advisor reviews your enquiry within 2 hours",
+            "Advisor reviews your enquiry within 2 working hours",
             intent === "buy" || intent === "rent"
-              ? "Curated property shortlist sent to your inbox"
+              ? "Vetted estate agents introduced for your shortlist"
               : "Comparative market analysis emailed to you",
             "Personalised video call arranged at your convenience",
-            intent === "sell" ? "Professional photography scheduled" : "Property viewings arranged",
+            intent === "sell" || intent === "list"
+              ? "Letting / sales brief sent to partner agents"
+              : "Property viewings arranged with your chosen agent",
           ].map((step, i) => (
             <li key={i} className="flex items-start gap-2 text-sm text-foreground">
               <Check className="mt-0.5 h-4 w-4 shrink-0 text-trust-teal" />
@@ -487,8 +552,8 @@ function IntentSelector({
     {
       id: "list" as Intent,
       icon: Calendar,
-      title: "Looking to List",
-      desc: "Rent out your property to global tenants",
+      title: "Looking to Let",
+      desc: "Match with a vetted letting agent",
       color: "copper-clay",
     },
   ];
@@ -510,7 +575,7 @@ function IntentSelector({
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-estate-700 opacity-75" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-estate-700" />
           </span>
-          Join 1,247 people who found their property this month
+          Join 1,247 people we've matched with vetted agents this month
         </p>
       </div>
 
@@ -595,23 +660,41 @@ function BuyRentForm({ intent, onComplete, onBack }: { intent: "buy" | "rent"; o
 
   const stepLabels = ["Your Goal", "Property", "Budget & Timeline", "Contact"];
 
+  const requiresBedrooms = !["land", "commercial"].includes(form.propertyType);
+  const currency = inferCurrency(form.locations);
+  const budgetRanges =
+    form.buyRent === "buy" ? BUDGET_RANGES_BUY[currency] : BUDGET_RANGES_RENT[currency];
+  const hasBudget = Boolean(form.budgetMin || form.budgetMax);
+
+  const step2Complete =
+    form.locations.length > 0 && form.propertyType && (!requiresBedrooms || form.bedrooms);
+
   const stepProgress = {
     1: form.useType ? 100 : 0,
-    2: form.locations.length > 0 && form.bedrooms && form.propertyType ? 100 : 0,
-    3: form.budgetMin || form.budgetMax || form.timeline ? 100 : 0,
+    2: step2Complete ? 100 : 0,
+    3: hasBudget && form.timeline && form.contactMethod ? 100 : 0,
     4: form.name && form.email && form.mobile ? 100 : 0,
   };
 
   const canAdvance =
     (step === 1 && form.useType) ||
-    (step === 2 && form.locations.length > 0 && form.bedrooms && form.propertyType) ||
-    (step === 3 && form.contactMethod) ||
+    (step === 2 && step2Complete) ||
+    (step === 3 && hasBudget && form.timeline && form.contactMethod) ||
     (step === 4 && form.name && form.email && form.mobile);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onComplete(form.name);
   };
+
+  const submitLabel =
+    intent === "rent"
+      ? form.useType === "investment"
+        ? "Get My Corporate Let Brief"
+        : "Find My Rental"
+      : form.useType === "investment"
+      ? "Get My Investment Brief"
+      : "Find My Property";
 
   return (
     <div className="mx-auto max-w-2xl rounded-2xl border border-border bg-surface p-6 shadow-sm md:p-8">
@@ -631,7 +714,9 @@ function BuyRentForm({ intent, onComplete, onBack }: { intent: "buy" | "rent"; o
         <div className="space-y-6 animate-in fade-in duration-300">
           <div>
             <p className="mb-1 text-sm font-semibold text-foreground">
-              Are you buying for personal use or investment?
+              {intent === "rent"
+                ? "Is this for personal living or a corporate / relocation let?"
+                : "Are you buying for personal use or investment?"}
             </p>
             <div className="mt-3 grid grid-cols-2 gap-3">
               <button
@@ -645,7 +730,7 @@ function BuyRentForm({ intent, onComplete, onBack }: { intent: "buy" | "rent"; o
               >
                 <Home className="mx-auto mb-2 h-6 w-6 text-estate-700" />
                 <p className="text-sm font-semibold text-estate-700">Personal Use</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">Home for you & family</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">Home for you &amp; family</p>
               </button>
               <button
                 onClick={() => set("useType", "investment")}
@@ -657,8 +742,14 @@ function BuyRentForm({ intent, onComplete, onBack }: { intent: "buy" | "rent"; o
                 )}
               >
                 <InvestIcon className="mx-auto mb-2 h-6 w-6 text-estate-700" />
-                <p className="text-sm font-semibold text-estate-700">Investment</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">Rental yield & appreciation</p>
+                <p className="text-sm font-semibold text-estate-700">
+                  {intent === "rent" ? "Corporate / Relocation" : "Investment"}
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {intent === "rent"
+                    ? "Managed lets &amp; relocations"
+                    : "Rental yield &amp; appreciation"}
+                </p>
               </button>
             </div>
           </div>
@@ -667,9 +758,13 @@ function BuyRentForm({ intent, onComplete, onBack }: { intent: "buy" | "rent"; o
             <div className="rounded-xl bg-estate-700/5 border border-estate-700/20 p-4">
               <p className="flex items-center gap-2 text-sm text-estate-700 font-medium">
                 <Sparkles className="h-4 w-4" />
-                {form.useType === "investment"
-                  ? "Our investment clients see an average 8–12% rental yield in Dubai."
-                  : "Personal buyers love our curated off-market selections in prime locations."}
+                {intent === "rent"
+                  ? form.useType === "investment"
+                    ? "We manage corporate lets and relocations across London, Manchester and Dubai with vetted partner agents."
+                    : "Our advisors curate fully-vetted rentals across the UK, UAE and Bali — no hidden fees to renters."
+                  : form.useType === "investment"
+                  ? "Investment clients typically see 4–6% net yields in prime UK cities and 6–10% in Dubai's growth corridors."
+                  : "Personal buyers get curated off-market introductions in London, Cardiff, Manchester and prime Dubai districts."}
               </p>
             </div>
           )}
@@ -683,7 +778,10 @@ function BuyRentForm({ intent, onComplete, onBack }: { intent: "buy" | "rent"; o
             label="Preferred locations"
             options={LOCATIONS}
             selected={form.locations}
-            onChange={(v) => set("locations", v)}
+            onChange={(v) => {
+              set("locations", v);
+              // Reset bedrooms if user removed all locations or budget no longer matches
+            }}
           />
 
           <div>
@@ -692,7 +790,12 @@ function BuyRentForm({ intent, onComplete, onBack }: { intent: "buy" | "rent"; o
               {PROPERTY_TYPES.map((t) => (
                 <button
                   key={t.value}
-                  onClick={() => set("propertyType", t.value)}
+                  onClick={() => {
+                    set("propertyType", t.value);
+                    if (["land", "commercial"].includes(t.value)) {
+                      set("bedrooms", "");
+                    }
+                  }}
                   className={cn(
                     "flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 transition-all",
                     form.propertyType === t.value
@@ -707,21 +810,23 @@ function BuyRentForm({ intent, onComplete, onBack }: { intent: "buy" | "rent"; o
             </div>
           </div>
 
-          <div>
-            <p className="mb-2 text-sm font-medium text-foreground">Bedrooms</p>
-            <div className="flex gap-2">
-              {["1", "2", "3", "4", "5+"].map((b) => (
-                <SelectionPill
-                  key={b}
-                  selected={form.bedrooms === b}
-                  onClick={() => set("bedrooms", b as BuyFormData["bedrooms"])}
-                  className="flex-1 py-3"
-                >
-                  {b}
-                </SelectionPill>
-              ))}
+          {requiresBedrooms && (
+            <div>
+              <p className="mb-2 text-sm font-medium text-foreground">Bedrooms</p>
+              <div className="flex gap-2">
+                {["1", "2", "3", "4", "5+"].map((b) => (
+                  <SelectionPill
+                    key={b}
+                    selected={form.bedrooms === b}
+                    onClick={() => set("bedrooms", b as BuyFormData["bedrooms"])}
+                    className="flex-1 py-3"
+                  >
+                    {b}
+                  </SelectionPill>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -730,10 +835,14 @@ function BuyRentForm({ intent, onComplete, onBack }: { intent: "buy" | "rent"; o
         <div className="space-y-5 animate-in fade-in duration-300">
           <div>
             <p className="mb-2 text-sm font-medium text-foreground">
-              {form.buyRent === "buy" ? "Budget range (USD)" : "Annual rent budget (USD)"}
+              {form.buyRent === "buy"
+                ? `Budget range (${currency})`
+                : currency === "GBP"
+                ? "Monthly rent budget (GBP)"
+                : `Annual rent budget (${currency})`}
             </p>
             <div className="grid gap-2">
-              {(form.buyRent === "buy" ? BUDGET_RANGES_BUY : BUDGET_RANGES_RENT).map((range) => (
+              {budgetRanges.map((range) => (
                 <button
                   key={range.label}
                   onClick={() => {
@@ -754,6 +863,9 @@ function BuyRentForm({ intent, onComplete, onBack }: { intent: "buy" | "rent"; o
                 </button>
               ))}
             </div>
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Currency derived from your selected locations. Final pricing confirmed by your advisor.
+            </p>
           </div>
 
           <div>
@@ -836,9 +948,9 @@ function BuyRentForm({ intent, onComplete, onBack }: { intent: "buy" | "rent"; o
             icon={Mail}
           />
           <FloatingInput
-            label="Mobile / WhatsApp number"
+            label="Mobile / WhatsApp number (incl. country code, e.g. +44)"
             value={form.mobile}
-            onChange={(v) => set("mobile", v.replace(/\D/g, ""))}
+            onChange={(v) => set("mobile", v.replace(/[^\d+]/g, ""))}
             type="tel"
             required
             icon={Phone}
@@ -859,7 +971,7 @@ function BuyRentForm({ intent, onComplete, onBack }: { intent: "buy" | "rent"; o
             type="submit"
             className="h-12 w-full bg-estate-700 text-white hover:bg-estate-600 shadow-md shadow-estate-700/20"
           >
-            {form.useType === "investment" ? "Get My Investment Brief" : "Find My Property"}
+            {submitLabel}
             <ArrowRight className="ml-1.5 h-4 w-4" />
           </Button>
 
@@ -919,15 +1031,22 @@ function SellRentForm({ intent, onComplete, onBack }: { intent: "sell" | "list";
 
   const stepLabels = ["Property", "Value", "Timeline", "Contact"];
 
+  const requiresBedrooms = !["land", "commercial"].includes(form.propertyType);
+  const currency = inferCurrency(form.locations);
+  const valueSymbol = currency === "GBP" ? "£" : currency === "AED" ? "AED " : "$";
+
+  const step1Complete =
+    form.locations.length > 0 && form.propertyType && (!requiresBedrooms || form.bedrooms);
+
   const stepProgress = {
-    1: form.locations.length > 0 && form.bedrooms && form.propertyType ? 100 : 0,
+    1: step1Complete ? 100 : 0,
     2: form.currentValue || form.size ? 100 : 0,
     3: form.timeline && form.status && form.ownership ? 100 : 0,
     4: form.name && form.email && form.mobile ? 100 : 0,
   };
 
   const canAdvance =
-    (step === 1 && form.locations.length > 0 && form.bedrooms && form.propertyType) ||
+    (step === 1 && step1Complete) ||
     (step === 2 && (form.currentValue || form.size)) ||
     (step === 3 && form.timeline && form.status && form.ownership) ||
     (step === 4 && form.name && form.email && form.mobile);
@@ -966,7 +1085,12 @@ function SellRentForm({ intent, onComplete, onBack }: { intent: "sell" | "list";
               {PROPERTY_TYPES.map((t) => (
                 <button
                   key={t.value}
-                  onClick={() => set("propertyType", t.value)}
+                  onClick={() => {
+                    set("propertyType", t.value);
+                    if (["land", "commercial"].includes(t.value)) {
+                      set("bedrooms", "");
+                    }
+                  }}
                   className={cn(
                     "flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 transition-all",
                     form.propertyType === t.value
@@ -981,21 +1105,23 @@ function SellRentForm({ intent, onComplete, onBack }: { intent: "sell" | "list";
             </div>
           </div>
 
-          <div>
-            <p className="mb-2 text-sm font-medium text-foreground">Bedrooms</p>
-            <div className="flex gap-2">
-              {["1", "2", "3", "4", "5+"].map((b) => (
-                <SelectionPill
-                  key={b}
-                  selected={form.bedrooms === b}
-                  onClick={() => set("bedrooms", b as SellFormData["bedrooms"])}
-                  className="flex-1 py-3"
-                >
-                  {b}
-                </SelectionPill>
-              ))}
+          {requiresBedrooms && (
+            <div>
+              <p className="mb-2 text-sm font-medium text-foreground">Bedrooms</p>
+              <div className="flex gap-2">
+                {["1", "2", "3", "4", "5+"].map((b) => (
+                  <SelectionPill
+                    key={b}
+                    selected={form.bedrooms === b}
+                    onClick={() => set("bedrooms", b as SellFormData["bedrooms"])}
+                    className="flex-1 py-3"
+                  >
+                    {b}
+                  </SelectionPill>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -1003,11 +1129,17 @@ function SellRentForm({ intent, onComplete, onBack }: { intent: "sell" | "list";
       {step === 2 && (
         <div className="space-y-5 animate-in fade-in duration-300">
           <FloatingInput
-            label={form.sellRent === "sell" ? "Estimated value (USD)" : "Monthly rent expectation (USD)"}
+            label={
+              form.sellRent === "sell"
+                ? `Estimated value (${currency})`
+                : currency === "GBP"
+                ? "Monthly rent expectation (GBP)"
+                : `Monthly rent expectation (${currency})`
+            }
             value={form.currentValue}
             onChange={(v) => set("currentValue", v.replace(/\D/g, ""))}
             icon={Tag}
-            suffix={form.sellRent === "sell" ? "USD" : "USD/mo"}
+            suffix={form.sellRent === "sell" ? currency : `${currency}/mo`}
           />
 
           <FloatingInput
@@ -1041,7 +1173,7 @@ function SellRentForm({ intent, onComplete, onBack }: { intent: "sell" | "list";
           {form.currentValue && (
             <div className="rounded-xl bg-action-amber/10 border border-action-amber/20 p-4">
               <p className="text-sm text-action-amber font-medium">
-                Based on your estimate of ${parseInt(form.currentValue).toLocaleString()}, our average time to secure a buyer is <strong>21 days</strong>.
+                Based on your estimate of {valueSymbol}{parseInt(form.currentValue).toLocaleString()}, our average time to secure a buyer is <strong>21 days</strong>.
               </p>
             </div>
           )}
@@ -1148,9 +1280,9 @@ function SellRentForm({ intent, onComplete, onBack }: { intent: "sell" | "list";
             icon={Mail}
           />
           <FloatingInput
-            label="Mobile / WhatsApp number"
+            label="Mobile / WhatsApp number (incl. country code, e.g. +44)"
             value={form.mobile}
-            onChange={(v) => set("mobile", v.replace(/\D/g, ""))}
+            onChange={(v) => set("mobile", v.replace(/[^\d+]/g, ""))}
             type="tel"
             required
             icon={Phone}
@@ -1222,7 +1354,7 @@ export function ServicesToggle() {
 
   const isBuyRent = intent === "buy" || intent === "rent";
   const intentLabel =
-    intent === "buy" ? "Looking to Buy" : intent === "rent" ? "Looking to Rent" : intent === "sell" ? "Looking to Sell" : "Looking to List";
+    intent === "buy" ? "Looking to Buy" : intent === "rent" ? "Looking to Rent" : intent === "sell" ? "Looking to Sell" : "Looking to Let";
 
   return (
     <section id="services" className="bg-subtle px-4 py-16 md:px-6 md:py-24">
