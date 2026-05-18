@@ -20,6 +20,7 @@ import { useLeadModals } from "@/components/lead-modal";
 import { ServicesToggle } from "@/components/services/services-toggle";
 import { PropertyShowcase } from "@/components/landing/property-showcase";
 import { BuyRentSell } from "@/components/landing/buy-rent-sell";
+import { Partners } from "@/components/landing/partners";
 import { WhatsAppFloat } from "@/components/landing/whatsapp-float";
 
 // ─── Scroll reveal hook ────────────────────────────────────────────────────────
@@ -421,28 +422,27 @@ function WhoAreWe() {
             </Link>
           </div>
 
-          {/* Developer logos */}
+          {/* Why us */}
           <div>
             <p className="mb-4 font-serif text-sm font-medium uppercase tracking-widest text-gold-500">
-              Trusted by world-class developers
+              Why clients choose us
             </p>
-            <div className="grid grid-cols-2 gap-3">
+            <ul className="space-y-3">
               {[
-                { name: "Emaar", color: "#1a1a1a" },
-                { name: "Damac", color: "#8B0000" },
-                { name: "Taylor Wimpey", color: "#1E3A5F" },
-                { name: "Binghatti", color: "#2C3E50" },
-              ].map((dev) => (
-                <div
-                  key={dev.name}
-                  className="flex h-12 items-center justify-center rounded-lg border border-border bg-surface px-4 opacity-70 grayscale transition-all hover:opacity-100 hover:grayscale-0"
+                "Vetted agents only — never a junior on commission",
+                "Transparent advice with no hidden fees",
+                "One pathway from first enquiry to completion",
+                "Rent Smart Wales & Propertymark CMP Registered",
+              ].map((point) => (
+                <li
+                  key={point}
+                  className="flex items-start gap-3 rounded-xl border border-border bg-surface px-4 py-3 text-sm text-foreground"
                 >
-                  <span className="font-serif text-sm font-semibold" style={{ color: dev.color }}>
-                    {dev.name}
-                  </span>
-                </div>
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-estate-700" />
+                  {point}
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         </div>
       </div>
@@ -457,6 +457,7 @@ export default function HomePage() {
     <>
       <BuyRentSell />
       <TrustBar />
+      <Partners />
       <ServicesToggle />
       <PropertyShowcase />
       <WhoAreWe />
