@@ -46,31 +46,31 @@ export function BuyRentSell() {
   return (
     <section
       aria-label="Hero"
-      className="border-b border-border bg-background"
+      className="border-b border-estate-600/40 bg-estate-700"
     >
       <div className="mx-auto grid max-w-7xl gap-x-16 gap-y-12 px-4 py-20 md:px-6 md:py-28 lg:grid-cols-[1.05fr_1fr] lg:items-center">
         {/* Left — editorial statement */}
         <div>
-          <p className="font-serif text-xs font-medium uppercase tracking-[0.3em] text-gold-500">
+          <p className="font-serif text-xs font-medium uppercase tracking-[0.3em] text-gold-400">
             UK · UAE · International
           </p>
 
-          <h1 className="mt-6 font-serif text-[2.75rem] font-medium leading-[1.05] text-estate-700 md:text-6xl md:leading-[1.04]">
+          <h1 className="mt-6 font-serif text-[2.75rem] font-medium leading-[1.05] text-white md:text-6xl md:leading-[1.04]">
             {greeting}.
-            <span className="mt-2 block text-foreground/90">
-              Property, <span className="text-gold-500">with proof.</span>
+            <span className="mt-2 block text-white/95">
+              Property, <span className="text-gold-400">with proof.</span>
             </span>
           </h1>
 
-          <p className="mt-6 max-w-md text-base leading-relaxed text-muted-foreground md:text-lg">
+          <p className="mt-6 max-w-md text-base leading-relaxed text-white/75 md:text-lg">
             One enquiry connects you to the right vetted agent. Transparent
             advice, no hidden fees — wherever you&apos;re moving capital.
           </p>
 
-          <div className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-muted-foreground">
+          <div className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-white/65">
             {TRUST.map((t, i) => (
               <span key={t} className="flex items-center gap-3">
-                {i > 0 && <span className="h-1 w-1 rounded-full bg-gold-500/50" />}
+                {i > 0 && <span className="h-1 w-1 rounded-full bg-gold-400/60" />}
                 {t}
               </span>
             ))}
@@ -78,7 +78,7 @@ export function BuyRentSell() {
         </div>
 
         {/* Right — functional tabular flow */}
-        <div className="overflow-hidden rounded-2xl border border-border bg-surface">
+        <div className="overflow-hidden rounded-2xl border border-white/15 bg-surface shadow-2xl shadow-black/20">
           <div className="flex items-baseline justify-between border-b border-border px-6 py-4">
             <h2 className="font-serif text-lg font-medium text-estate-700">
               Buy, rent or sell
