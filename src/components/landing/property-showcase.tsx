@@ -13,7 +13,6 @@ interface Property {
   beds: number;
   baths: number;
   price: string;
-  currency: string;
   status: "sold" | "under-offer" | "new";
   headline: string;
 }
@@ -26,8 +25,7 @@ const PROPERTIES: Property[] = [
     country: "UAE",
     beds: 2,
     baths: 2,
-    price: "2.1",
-    currency: "AED",
+    price: "£450,000",
     status: "sold",
     headline: "Stunning Marina view, walk to the beach",
   },
@@ -38,8 +36,7 @@ const PROPERTIES: Property[] = [
     country: "UK",
     beds: 3,
     baths: 2,
-    price: "680",
-    currency: "GBP",
+    price: "£680,000",
     status: "under-offer",
     headline: "Modern 3-bed with panoramic city views",
   },
@@ -50,8 +47,7 @@ const PROPERTIES: Property[] = [
     country: "Bali",
     beds: 4,
     baths: 3,
-    price: "8.5",
-    currency: "IDR",
+    price: "£430,000",
     status: "new",
     headline: "Tropical villa, 5 min to the beach",
   },
@@ -125,7 +121,7 @@ function PropertyCard({ property, onEnquire }: { property: Property; onEnquire: 
         <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
           <div>
             <p className={`font-serif text-xl font-semibold ${config.textClass}`}>
-              {property.currency} {property.price}M
+              {property.price}
             </p>
             <p className="text-xs text-muted-foreground">{config.labelText}</p>
           </div>

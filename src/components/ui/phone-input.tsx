@@ -27,7 +27,7 @@ export function PhoneInput({
   id,
   value,
   onChange,
-  defaultCountry = "AE",
+  defaultCountry = "GB",
   placeholder = "Mobile / WhatsApp number",
   disabled,
   className,

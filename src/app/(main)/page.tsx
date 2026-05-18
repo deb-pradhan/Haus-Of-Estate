@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { useLeadModals } from "@/components/lead-modal";
 import { ServicesToggle } from "@/components/services/services-toggle";
 import { PropertyShowcase } from "@/components/landing/property-showcase";
+import { BuyRentSell } from "@/components/landing/buy-rent-sell";
 import { WhatsAppFloat } from "@/components/landing/whatsapp-float";
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -78,8 +79,8 @@ function useCountUp(target: number, duration = 2000) {
 // ─── TrustBar ─────────────────────────────────────────────────────────────────
 
 const TRUST_ITEMS = [
-  { icon: <BadgeCheck className="h-5 w-5 text-trust-teal" />, label: "RERA & FCA-Regulated" },
-  { icon: <Shield className="h-5 w-5 text-estate-700" />, label: "15+ Years Experience" },
+  { icon: <BadgeCheck className="h-5 w-5 text-trust-teal" />, label: "Rent Smart Wales Registered" },
+  { icon: <Shield className="h-5 w-5 text-estate-700" />, label: "Propertymark CMP Registered" },
   { icon: <TrendingUp className="h-5 w-5 text-action-amber" />, label: "Transparent Transactions" },
   { icon: <Users className="h-5 w-5 text-copper-clay" />, label: "500+ Happy Clients" },
 ];
@@ -196,115 +197,6 @@ function HeroSection() {
       >
         <ChevronDown className="h-6 w-6" />
       </button>
-    </section>
-  );
-}
-
-// ─── Book a Call ──────────────────────────────────────────────────────────────
-
-const AGENTS = [
-  {
-    name: "Sonia",
-    title: "Property Consultant",
-    specialisation: "Bali & Southeast Asia",
-    experience: "8+ years",
-    markets: ["Bali", "Thailand", "Singapore"],
-    calendly: "https://calendly.com/hausofestate-sonia",
-  },
-  {
-    name: "Besh",
-    title: "Property Consultant",
-    specialisation: "Dubai & UK",
-    experience: "10+ years",
-    markets: ["Dubai", "UK", "UAE"],
-    calendly: "https://calendly.com/hausofestate-besh",
-  },
-];
-
-function BookACall() {
-  const { ref, visible } = useScrollReveal();
-
-  const handleBook = (url: string) => {
-    window.open(url, "_blank", "noopener,noreferrer");
-  };
-
-  return (
-    <section
-      id="book"
-      ref={ref}
-      className={`px-4 py-16 transition-all duration-700 md:px-6 md:py-24 ${visible ? "opacity-100" : "opacity-0"}`}
-    >
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-10 text-center">
-          <p className="mb-2 font-serif text-sm font-medium uppercase tracking-widest text-gold-500">
-            Speak with an expert
-          </p>
-          <h2 className="font-serif text-3xl font-medium text-estate-700 md:text-4xl">
-            Your free 15-minute consultation.
-          </h2>
-          <p className="mt-2 text-base text-muted-foreground">
-            No obligation. No hard sell. Just honest advice from a global property expert.
-          </p>
-        </div>
-
-        <div className="grid gap-8 md:grid-cols-2 lg:gap-12">
-          {AGENTS.map((agent) => (
-            <div key={agent.name} className="group relative">
-              <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-lg transition-shadow duration-300 hover:shadow-xl">
-                <div className="relative h-64">
-                  <div className="absolute inset-0 bg-gradient-to-br from-estate-600 to-estate-800" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="rounded-full bg-white/10 p-6 backdrop-blur-sm">
-                      <User className="h-20 w-20 text-white/80" />
-                    </div>
-                  </div>
-                  <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <p className="font-serif text-2xl font-semibold text-white">{agent.name}</p>
-                    <p className="text-sm text-white/70">{agent.title}</p>
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {agent.markets.map((m) => (
-                        <span key={m} className="rounded-full bg-gold-500/30 px-2 py-0.5 text-xs text-gold-300">
-                          {m}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-4 p-5">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-xl bg-estate-700/5 p-3">
-                      <p className="text-xs text-muted-foreground">Experience</p>
-                      <p className="font-serif text-lg font-semibold text-estate-700">{agent.experience}</p>
-                    </div>
-                    <div className="rounded-xl bg-estate-700/5 p-3">
-                      <p className="text-xs text-muted-foreground">Specialisation</p>
-                      <p className="text-sm font-semibold text-estate-700">{agent.specialisation}</p>
-                    </div>
-                  </div>
-                  <Button
-                    onClick={() => handleBook(agent.calendly)}
-                    size="lg"
-                    className="relative w-full overflow-hidden bg-estate-700 text-white hover:bg-estate-600 shadow-lg shadow-estate-700/20"
-                  >
-                    <span className="absolute inset-0 animate-shimmer" />
-                    <span className="relative flex items-center justify-center gap-2">
-                      Book with {agent.name} <ArrowRight className="h-4 w-4" />
-                    </span>
-                  </Button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Trust row */}
-        <div className="mt-12 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
-          <span className="flex items-center gap-2"><Shield className="h-4 w-4 text-estate-700" /> FCA-Regulated</span>
-          <span className="flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-estate-700" /> 15+ Years Experience</span>
-          <span className="flex items-center gap-2"><Clock className="h-4 w-4 text-estate-700" /> 24/7 Support</span>
-        </div>
-      </div>
     </section>
   );
 }
@@ -675,10 +567,10 @@ export default function HomePage() {
     <>
       <HeroSection />
       <TrustBar />
+      <BuyRentSell />
       <ServicesToggle />
       <PropertyShowcase />
       <WhoAreWe />
-      <BookACall />
       <ReviewsSection />
       <CTABanner />
       <WhatsAppFloat />

@@ -71,6 +71,11 @@ export function Footer() {
               </div>
               <span className="text-xs text-muted-foreground">Rated 4.8 · Excellent</span>
             </div>
+
+            {/* Regulatory credentials */}
+            <p className="mt-5 text-xs leading-relaxed text-muted-foreground">
+              Rent Smart Wales Registered · Propertymark CMP Registered
+            </p>
           </div>
 
           {/* Services — buttons that open lead modals */}

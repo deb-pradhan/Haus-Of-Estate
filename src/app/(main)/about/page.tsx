@@ -84,9 +84,9 @@ const AUDIENCES = [
 ];
 
 const MARKETS = [
-  { region: "United Kingdom", note: "London · Manchester · Birmingham" },
-  { region: "United Arab Emirates", note: "Dubai · Abu Dhabi" },
-  { region: "International emerging markets", note: "Bali · Southeast Asia" },
+  { region: "United Kingdom", note: "Cardiff · London · Manchester · Birmingham" },
+  { region: "United Arab Emirates", note: "Dubai · Sharjah · Abu Dhabi · Ras Al Khaimah" },
+  { region: "International emerging markets", note: "Indonesia Bali · Thailand · Malaysia" },
 ];
 
 export default function AboutPage() {
