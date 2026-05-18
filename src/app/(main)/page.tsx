@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import {
@@ -10,9 +9,6 @@ import {
   TrendingUp,
   Star,
   Check,
-  ChevronDown,
-  Clock,
-  User,
   Users,
   Building2,
   Globe,
@@ -25,15 +21,6 @@ import { ServicesToggle } from "@/components/services/services-toggle";
 import { PropertyShowcase } from "@/components/landing/property-showcase";
 import { BuyRentSell } from "@/components/landing/buy-rent-sell";
 import { WhatsAppFloat } from "@/components/landing/whatsapp-float";
-
-// ─── Helpers ───────────────────────────────────────────────────────────────────
-
-function getGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
-}
 
 // ─── Scroll reveal hook ────────────────────────────────────────────────────────
 
@@ -101,103 +88,6 @@ function TrustBar() {
         ))}
       </div>
     </div>
-  );
-}
-
-// ─── Hero ─────────────────────────────────────────────────────────────────────
-
-const HERO_IMAGE =
-  "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&q=85";
-
-function HeroSection() {
-  const { openBuyer } = useLeadModals();
-  const greeting = getGreeting();
-
-  return (
-    <section className="relative min-h-[85vh] overflow-hidden bg-estate-700" aria-label="Hero">
-      {/* Full-bleed background image */}
-      <div className="absolute inset-0">
-        <Image
-          src={HERO_IMAGE}
-          alt="Luxury property"
-          fill
-          className="object-cover"
-          priority
-        />
-        {/* Dark overlay for readability */}
-        <div className="absolute inset-0 bg-black/50" />
-      </div>
-
-      {/* Content */}
-      <div className="relative z-10 mx-auto max-w-7xl px-4 py-20 md:py-28">
-        {/* Eyebrow */}
-        <p className="mb-3 font-serif text-sm font-medium uppercase tracking-widest text-gold-400 opacity-90">
-          UK · UAE · International
-        </p>
-
-        {/* Headline — max 2 lines on mobile */}
-        <h1 className="max-w-2xl font-serif text-4xl font-medium leading-tight text-white md:text-6xl md:leading-[1.05]">
-          {greeting} —{" "}
-          <span className="text-gold-400">your global property journey</span> starts here.
-        </h1>
-
-        {/* Sub-headline — stack on mobile, inline on tablet+ */}
-        <ul className="mt-4 flex flex-col gap-2 text-base text-white/80 md:flex-row md:flex-wrap md:items-center md:gap-x-5 md:gap-y-2 md:text-lg">
-          <li className="flex items-center gap-2">
-            <Check className="h-4 w-4 shrink-0 text-gold-400" aria-hidden />
-            <span>Vetted estate agents.</span>
-          </li>
-          <li className="flex items-center gap-2">
-            <Check className="h-4 w-4 shrink-0 text-gold-400" aria-hidden />
-            <span>Transparent advice.</span>
-          </li>
-          <li className="flex items-center gap-2">
-            <Check className="h-4 w-4 shrink-0 text-gold-400" aria-hidden />
-            <span>No hidden fees.</span>
-          </li>
-        </ul>
-
-        {/* CTA stack */}
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          <Button
-            onClick={openBuyer}
-            size="lg"
-            className="relative overflow-hidden bg-gold-500 text-white hover:bg-gold-400 shadow-lg shadow-gold-500/20"
-          >
-            <span className="absolute inset-0 animate-shimmer" />
-            <span className="relative flex items-center gap-2">
-              Book a Free Consultation <ArrowRight className="h-4 w-4" />
-            </span>
-          </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            className="border-white/30 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 hover:text-white"
-            onClick={() => document.getElementById("services")?.scrollIntoView({ behavior: "smooth" })}
-          >
-            Speak to a Specialist <ArrowRight className="ml-1.5 h-4 w-4" />
-          </Button>
-        </div>
-
-        {/* Trust logos */}
-        <div className="mt-8 flex flex-wrap items-center gap-3">
-          {["RERA", "FCA-Regulated", "Google 4.8", "TrustPilot"].map((t) => (
-            <span key={t} className="flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/60 backdrop-blur-sm">
-              <Shield className="h-3 w-3" /> {t}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* Scroll indicator */}
-      <button
-        onClick={() => document.getElementById("services")?.scrollIntoView({ behavior: "smooth" })}
-        className="absolute bottom-6 left-1/2 -translate-x-1/2 animate-bounce-gentle text-white/40"
-        aria-label="Scroll down"
-      >
-        <ChevronDown className="h-6 w-6" />
-      </button>
-    </section>
   );
 }
 
@@ -565,9 +455,8 @@ function WhoAreWe() {
 export default function HomePage() {
   return (
     <>
-      <HeroSection />
-      <TrustBar />
       <BuyRentSell />
+      <TrustBar />
       <ServicesToggle />
       <PropertyShowcase />
       <WhoAreWe />
