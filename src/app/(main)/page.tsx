@@ -321,7 +321,7 @@ function CTABanner() {
   return (
     <section
       ref={ref}
-      className={`relative overflow-hidden bg-deep-olive px-4 py-16 transition-all duration-700 md:px-6 md:py-20 ${visible ? "opacity-100" : "opacity-0"}`}
+      className={`relative overflow-hidden bg-estate-700 px-4 py-16 transition-all duration-700 md:px-6 md:py-20 ${visible ? "opacity-100" : "opacity-0"}`}
     >
       {/* Floating shapes */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
@@ -343,7 +343,7 @@ function CTABanner() {
             {TEAM_AVATARS.map((a) => (
               <div
                 key={a.initials}
-                className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-deep-olive bg-estate-700 text-xs font-semibold text-white"
+                className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-estate-700 bg-estate-600 text-xs font-semibold text-white"
                 title={a.name}
               >
                 {a.initials}
