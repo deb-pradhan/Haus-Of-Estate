@@ -42,28 +42,16 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-[#DDE1E6] bg-surface/95 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="flex items-center gap-3">
-            <Image
-              src="/logo.svg"
-              alt="Haus of Estate"
-              width={140}
-              height={36}
-              className="h-7 w-auto md:h-8"
-              priority
-            />
-          </Link>
-          <a
-            href={WHATSAPP_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Chat with us on WhatsApp"
-            title="Chat with us on WhatsApp"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-[#25D366]/10 text-[#1FAE54] transition-colors hover:bg-[#25D366] hover:text-white"
-          >
-            <WhatsAppIcon className="h-4.5 w-4.5" />
-          </a>
-        </div>
+        <Link href="/" className="flex items-center gap-3">
+          <Image
+            src="/logo.svg"
+            alt="Haus of Estate"
+            width={140}
+            height={36}
+            className="h-7 w-auto md:h-8"
+            priority
+          />
+        </Link>
 
         <nav className="hidden items-center gap-1 md:flex">
           {navItems.map((item) => {
@@ -114,6 +102,16 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
+          <a
+            href={WHATSAPP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Chat with us on WhatsApp"
+            title="Chat with us on WhatsApp"
+            className="hidden h-9 w-9 items-center justify-center rounded-full bg-[#25D366]/10 text-[#1FAE54] transition-colors hover:bg-[#25D366] hover:text-white md:flex"
+          >
+            <WhatsAppIcon className="h-4.5 w-4.5" />
+          </a>
           <a
             href={`mailto:${COMPANY_EMAIL}`}
             aria-label={`Email us at ${COMPANY_EMAIL}`}
