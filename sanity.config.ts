@@ -22,6 +22,14 @@ export default defineConfig({
                   .filter('_type == "post"')
                   .defaultOrdering([{ field: 'publishedAt', direction: 'desc' }])
               ),
+            S.listItem()
+              .title('Roles')
+              .child(
+                S.documentList()
+                  .title('All Roles')
+                  .filter('_type == "role"')
+                  .defaultOrdering([{ field: 'publishedAt', direction: 'desc' }])
+              ),
             S.divider(),
             S.listItem()
               .title('Authors')

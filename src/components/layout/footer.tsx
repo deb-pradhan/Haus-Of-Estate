@@ -111,6 +111,7 @@ export function Footer() {
         <FooterCol title="Company">
           <FooterLink href="/about">About us</FooterLink>
           <FooterLink href="/blog">Insights</FooterLink>
+          <FooterLink href="/careers">Careers</FooterLink>
           <FooterButton onClick={openAccount}>Contact us</FooterButton>
           <FooterLink href="/legal/privacy-policy">Privacy policy</FooterLink>
           <FooterLink href="/legal/terms-of-service">Terms of service</FooterLink>

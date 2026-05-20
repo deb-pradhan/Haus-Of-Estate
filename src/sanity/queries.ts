@@ -69,3 +69,41 @@ export const SEO_QUERY = `
     publishedAt
   }
 `
+
+// ── Roles ─────────────────────────────────────────────────────────────
+
+const ROLE_CARD_FIELDS = `
+  _id,
+  title,
+  "slug": slug.current,
+  department,
+  location,
+  employmentType,
+  summary,
+  featured,
+  publishedAt
+`
+
+export const ROLES_QUERY = `
+  *[_type == "role" && status == "open"]
+    | order(featured desc, publishedAt desc) {
+      ${ROLE_CARD_FIELDS}
+    }
+`
+
+export const ROLE_BY_SLUG_QUERY = `
+  *[_type == "role" && slug.current == $slug && status == "open"][0] {
+    ${ROLE_CARD_FIELDS},
+    description,
+    responsibilities,
+    requirements,
+    niceToHave,
+    applyEmail
+  }
+`
+
+export const ROLE_SLUGS_QUERY = `
+  *[_type == "role" && status == "open" && defined(slug.current)] {
+    "slug": slug.current
+  }
+`

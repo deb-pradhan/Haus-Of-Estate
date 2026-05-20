@@ -26,11 +26,11 @@ type NavItem =
   | { kind: "modal"; label: string };
 
 const navItems: NavItem[] = [
-  { kind: "link", href: "/", label: "Home" },
   { kind: "link", href: "/blog", label: "Insights" },
   { kind: "link", href: "/about", label: "About" },
   { kind: "link", href: "/#services", label: "Services" },
   { kind: "link", href: "/renovations", label: "Renovations" },
+  { kind: "link", href: "/careers", label: "Careers" },
   { kind: "modal", label: "Contact" },
 ];
 
