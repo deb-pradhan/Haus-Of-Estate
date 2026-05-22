@@ -199,7 +199,7 @@ export default async function PropertyDetailPage({
             {/* Description */}
             {property.description ? (
               <div className="mt-10">
-                <PortableTextRenderer value={property.description} />
+                <PortableTextRenderer content={property.description as any} />
               </div>
             ) : (
               <p className="mt-10 text-base leading-relaxed text-muted-foreground">
