@@ -11,6 +11,7 @@ import {
 import { sanityFetch } from '@/sanity'
 import { ROLE_BY_SLUG_QUERY, ROLE_SLUGS_QUERY } from '@/sanity/queries'
 import { PortableTextRenderer } from '@/components/blog'
+import { ApplicationForm } from '@/components/careers/application-form'
 import type { Metadata } from 'next'
 
 interface RoleDetail {
@@ -114,7 +115,7 @@ export default async function RolePage({ params }: RolePageProps) {
           </p>
 
           <a
-            href={applyHref}
+            href="#apply"
             className="mt-8 inline-flex h-11 items-center justify-center gap-2 rounded-md bg-gold-500 px-6 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gold-400"
           >
             Apply for this role <ArrowRight className="h-4 w-4" />
@@ -183,34 +184,22 @@ export default async function RolePage({ params }: RolePageProps) {
           </div>
 
           {/* Apply card (sticky on desktop) */}
-          <aside>
+          <aside id="apply">
             <div className="sticky top-24 rounded-2xl border border-border bg-surface p-6 shadow-sm">
               <p className="font-serif text-xs font-medium uppercase tracking-[0.22em] text-gold-500">
                 Apply
               </p>
               <h3 className="mt-2 font-serif text-xl font-medium text-estate-700">
-                Send your CV
+                Apply for this role
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                Email a CV and a short note about why this role suits you. A
-                member of our team will reply within two working days.
+              <p className="mt-2 mb-5 text-sm leading-relaxed text-muted-foreground">
+                Share a few details and we&apos;ll reply within two working days.
               </p>
-              <a
-                href={applyHref}
-                className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-estate-700 px-6 text-sm font-medium text-white shadow-sm transition-colors hover:bg-estate-600"
-              >
-                Apply for this role <ArrowRight className="h-4 w-4" />
-              </a>
-              <p className="mt-3 text-center text-xs text-muted-foreground">
-                Or email{' '}
-                <a
-                  href={`mailto:${applyEmail}`}
-                  className="text-estate-700 underline-offset-4 hover:underline"
-                >
-                  {applyEmail}
-                </a>{' '}
-                directly.
-              </p>
+              <ApplicationForm
+                roleSlug={role.slug}
+                roleTitle={role.title}
+                applyEmail={applyEmail}
+              />
             </div>
           </aside>
         </div>

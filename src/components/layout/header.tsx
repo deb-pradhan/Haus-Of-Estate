@@ -26,6 +26,7 @@ type NavItem =
   | { kind: "modal"; label: string };
 
 const navItems: NavItem[] = [
+  { kind: "link", href: "/properties", label: "Properties" },
   { kind: "link", href: "/blog", label: "Insights" },
   { kind: "link", href: "/about", label: "About" },
   { kind: "link", href: "/#services", label: "Services" },

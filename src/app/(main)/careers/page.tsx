@@ -8,11 +8,13 @@ import {
   Compass,
   ShieldCheck,
   Users,
+  GraduationCap,
+  CalendarClock,
 } from 'lucide-react'
 import { sanityFetch } from '@/sanity'
 import { ROLES_QUERY } from '@/sanity/queries'
-
-const COMPANY_EMAIL = 'info@hausofestate.com'
+import { ApplicationForm } from '@/components/careers/application-form'
+import { HR_INBOX } from '@/lib/careers'
 
 interface RoleCard {
   _id: string
@@ -35,7 +37,7 @@ const VALUES = [
   {
     icon: Compass,
     title: 'Calm under pressure.',
-    body: "Property is a life-level decision for our clients. We move at the speed of clarity, not the speed of urgency — measured, precise, never panicked.",
+    body: 'Property is a life-level decision for our clients. We move at the speed of clarity, not the speed of urgency — measured, precise, never panicked.',
   },
   {
     icon: Heart,
@@ -49,14 +51,16 @@ const VALUES = [
   },
 ]
 
+const SUB_NAV = [{ href: '#jobs', label: 'Jobs' }]
+
 export const metadata: Metadata = {
   title: 'Careers | Haus of Estate',
   description:
-    'Join Haus of Estate — open roles in advisory, lettings, operations and technology across the UK, UAE and beyond.',
+    'Join Haus of Estate — part-time and full-time jobs across the UK, UAE and beyond.',
   openGraph: {
     title: 'Careers | Haus of Estate',
     description:
-      'Join Haus of Estate — open roles in advisory, lettings, operations and technology across the UK, UAE and beyond.',
+      'Part-time and full-time jobs at Haus of Estate.',
     type: 'website',
   },
 }
@@ -67,7 +71,6 @@ export default async function CareersPage() {
   const { data: roles } = await sanityFetch<RoleCard[]>({ query: ROLES_QUERY })
   const openRoles = roles ?? []
 
-  // Group by department (preserve order: featured first, then publishedAt desc)
   const byDept = new Map<string, RoleCard[]>()
   for (const r of openRoles) {
     const dept = r.department || 'Other'
@@ -89,46 +92,50 @@ export default async function CareersPage() {
             <span className="text-gold-400">people can trust.</span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/80 md:text-lg">
-            We&apos;re a small, deliberate team building the international
-            property service we wished existed. If you care about doing right by
-            people over chasing the next listing, we&apos;d like to meet you.
+            Jobs with a small, deliberate team
+            building the international property service we wished existed.
+            Browse open roles below.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link
-              href="#open-roles"
+            <a
+              href="#jobs"
               className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-gold-500 px-6 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gold-400"
             >
-              See open roles <ArrowRight className="h-4 w-4" />
-            </Link>
-            <a
-              href={`mailto:${COMPANY_EMAIL}?subject=${encodeURIComponent(
-                'Speculative application — Careers at Haus of Estate',
-              )}`}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-white/25 bg-white/5 px-6 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/10"
-            >
-              Send a speculative CV
+              See open jobs <ArrowRight className="h-4 w-4" />
             </a>
           </div>
         </div>
       </section>
 
+      {/* Sticky sub-nav */}
+      <nav
+        aria-label="Careers sections"
+        className="sticky top-16 z-30 border-b border-border bg-surface/95 backdrop-blur-sm"
+      >
+        <div className="mx-auto flex max-w-6xl items-center gap-1 overflow-x-auto px-4 md:px-6">
+          {SUB_NAV.map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              className="whitespace-nowrap px-3 py-3.5 text-sm font-medium text-muted-foreground transition-colors hover:text-estate-700"
+            >
+              {item.label}
+            </a>
+          ))}
+        </div>
+      </nav>
+
       {/* Why work here */}
-      <section className="bg-background px-4 py-16 md:px-6 md:py-24">
+      <section className="bg-background px-4 py-16 md:px-6 md:py-20">
         <div className="mx-auto max-w-6xl">
-          <div className="mb-12 max-w-2xl">
+          <div className="mb-10 max-w-2xl">
             <p className="font-serif text-xs font-medium uppercase tracking-[0.3em] text-gold-500">
               Why us
             </p>
             <h2 className="mt-3 font-serif text-3xl font-medium text-estate-700 md:text-4xl">
               The standard we hold ourselves to.
             </h2>
-            <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-              Property attracts a lot of noise. Our team is built around four
-              quiet convictions — they shape how we hire, how we work, and how
-              clients eventually describe us.
-            </p>
           </div>
-
           <div className="grid gap-6 md:grid-cols-2">
             {VALUES.map((v) => (
               <div
@@ -152,50 +159,26 @@ export default async function CareersPage() {
         </div>
       </section>
 
-      {/* Open roles */}
-      <section id="open-roles" className="bg-subtle px-4 py-16 md:px-6 md:py-24">
+      {/* Jobs — part-time & full-time */}
+      <section id="jobs" className="scroll-mt-32 bg-subtle px-4 py-16 md:px-6 md:py-24">
         <div className="mx-auto max-w-6xl">
-          <div className="mb-10 flex items-end justify-between gap-6">
-            <div>
-              <p className="font-serif text-xs font-medium uppercase tracking-[0.3em] text-gold-500">
-                Open roles
-              </p>
-              <h2 className="mt-3 font-serif text-3xl font-medium text-estate-700 md:text-4xl">
-                {openRoles.length > 0
-                  ? `${openRoles.length} role${openRoles.length === 1 ? '' : 's'} live now.`
-                  : 'No live roles right now.'}
-              </h2>
-            </div>
-            <p className="hidden text-sm text-muted-foreground md:block">
-              Applications go to{' '}
-              <a
-                href={`mailto:${COMPANY_EMAIL}`}
-                className="text-estate-700 underline-offset-4 hover:underline"
-              >
-                {COMPANY_EMAIL}
-              </a>
+          <div className="mb-10">
+            <p className="font-serif text-xs font-medium uppercase tracking-[0.3em] text-gold-500">
+              Jobs
             </p>
+            <h2 className="mt-3 font-serif text-3xl font-medium text-estate-700 md:text-4xl">
+              Part-time &amp; full-time jobs
+            </h2>
           </div>
 
           {departments.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border bg-surface p-10 text-center">
               <h3 className="font-serif text-xl font-medium text-estate-700">
-                We&apos;re not actively hiring at the moment.
+                No live jobs at this moment.
               </h3>
               <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-                We still read every speculative application. If you think you
-                belong here, tell us why — we keep a longlist for when the right
-                seat opens.
+                Check back soon — we publish new roles here as they open.
               </p>
-              <a
-                href={`mailto:${COMPANY_EMAIL}?subject=${encodeURIComponent(
-                  'Speculative application — Careers at Haus of Estate',
-                )}`}
-                className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-md bg-estate-700 px-6 text-sm font-medium text-white shadow-sm transition-colors hover:bg-estate-600"
-              >
-                Send a speculative CV
-                <ArrowRight className="h-4 w-4" />
-              </a>
             </div>
           ) : (
             <div className="space-y-12">
@@ -254,6 +237,7 @@ export default async function CareersPage() {
           )}
         </div>
       </section>
+
     </div>
   )
 }

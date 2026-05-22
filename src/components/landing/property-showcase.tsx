@@ -1,172 +1,164 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Bed, Bath, MapPin, ArrowRight } from "lucide-react";
+import Link from "next/link";
+import { Bed, MapPin, ArrowRight, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLeadModals } from "@/components/lead-modal/modal-context";
+import { client, urlFor } from "@/sanity";
+import { FEATURED_PROPERTIES_QUERY } from "@/sanity/queries";
 
-interface Property {
-  id: string;
-  image: string;
-  location: string;
-  country: string;
-  beds: number;
-  baths: number;
-  price: string;
-  status: "sold" | "under-offer" | "new";
-  headline: string;
+interface FeaturedProperty {
+  _id: string;
+  title: string;
+  slug: string;
+  community: string;
+  city: string;
+  unitType: string;
+  bedrooms?: number;
+  priceDisplay?: string;
+  completionStatus?: string;
+  summary: string;
+  featuredImage?: { alt?: string } & Record<string, unknown>;
 }
 
-const PROPERTIES: Property[] = [
-  {
-    id: "1",
-    image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80",
-    location: "Dubai Marina",
-    country: "UAE",
-    beds: 2,
-    baths: 2,
-    price: "£450,000",
-    status: "sold",
-    headline: "Stunning Marina view, walk to the beach",
-  },
-  {
-    id: "2",
-    image: "https://images.unsplash.com/photo-1449158743715-0a90ebb6d2d8?w=800&q=80",
-    location: "Manchester City Centre",
-    country: "UK",
-    beds: 3,
-    baths: 2,
-    price: "£680,000",
-    status: "under-offer",
-    headline: "Modern 3-bed with panoramic city views",
-  },
-  {
-    id: "3",
-    image: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800&q=80",
-    location: "Canggu, Bali",
-    country: "Bali",
-    beds: 4,
-    baths: 3,
-    price: "£430,000",
-    status: "new",
-    headline: "Tropical villa, 5 min to the beach",
-  },
-];
-
-const STATUS_CONFIG = {
-  sold: {
-    label: "Sold",
-    badgeClass: "bg-emerald-500 text-white",
-    textClass: "text-emerald-600",
-    labelText: "Secured by our buyer",
-  },
-  "under-offer": {
-    label: "Under Offer",
-    badgeClass: "bg-amber-500 text-white",
-    textClass: "text-amber-600",
-    labelText: "Deal in progress",
-  },
-  new: {
-    label: "New Listing",
-    badgeClass: "bg-blue-500 text-white",
-    textClass: "text-blue-600",
-    labelText: "Listed today",
-  },
+const COMPLETION_LABEL: Record<string, string> = {
+  completed: "Completed",
+  "off-plan": "Off-plan",
+  "completed-offplan": "Completed & off-plan",
 };
 
-function PropertyCard({ property, onEnquire }: { property: Property; onEnquire: () => void }) {
-  const config = STATUS_CONFIG[property.status];
-
+function PropertyCard({
+  property,
+}: {
+  property: FeaturedProperty;
+}) {
   return (
-    <article className="group relative overflow-hidden rounded-2xl border border-border bg-surface shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-estate-700/5">
-      {/* Image */}
-      <div className="relative aspect-[4/3] overflow-hidden">
-        <Image
-          src={property.image}
-          alt={`${property.beds}-bed property in ${property.location}`}
-          fill
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
-        />
-        {/* Status badge */}
-        <div className="absolute left-3 top-3">
-          <span className={`rounded-full ${config.badgeClass} px-3 py-1 text-xs font-semibold text-white shadow-sm`}>
-            {config.label}
+    <Link
+      href={`/properties/${property.slug}`}
+      className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-estate-700/5"
+    >
+      <div className="relative aspect-[4/3] overflow-hidden bg-estate-700">
+        {property.featuredImage ? (
+          <Image
+            src={urlFor(property.featuredImage).width(800).height(600).url()}
+            alt={property.featuredImage.alt || property.title}
+            fill
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-estate-600 to-estate-800">
+            <Building2 className="h-10 w-10 text-white/30" />
+          </div>
+        )}
+        {property.completionStatus && (
+          <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-[11px] font-semibold text-estate-700 shadow-sm">
+            {COMPLETION_LABEL[property.completionStatus] ??
+              property.completionStatus}
+          </span>
+        )}
+      </div>
+
+      <div className="flex flex-1 flex-col p-4">
+        <p className="font-serif text-[11px] font-semibold uppercase tracking-widest text-gold-500">
+          {property.unitType}
+        </p>
+        <h3 className="mt-1 font-serif text-lg font-medium text-estate-700">
+          {property.title}
+        </h3>
+        <p className="mt-1.5 flex-1 text-xs leading-relaxed text-muted-foreground">
+          {property.summary}
+        </p>
+        <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+          <span className="font-serif text-base font-semibold text-estate-700">
+            {property.priceDisplay || "Price on application"}
+          </span>
+          <span className="flex items-center gap-3 text-xs text-muted-foreground">
+            {typeof property.bedrooms === "number" && (
+              <span className="flex items-center gap-1">
+                <Bed className="h-3.5 w-3.5" />
+                {property.bedrooms === 0 ? "Studio" : property.bedrooms}
+              </span>
+            )}
+            <span className="flex items-center gap-1">
+              <MapPin className="h-3.5 w-3.5" />
+              {property.city}
+            </span>
           </span>
         </div>
       </div>
-
-      {/* Content */}
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <p className="flex items-center gap-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              <MapPin className="h-3 w-3" />
-              {property.location}, {property.country}
-            </p>
-            <p className="mt-0.5 text-xs text-muted-foreground">{property.headline}</p>
-          </div>
-        </div>
-
-        <div className="mt-3 flex items-center justify-between">
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <Bed className="h-3.5 w-3.5" /> {property.beds} Beds
-            </span>
-            <span className="flex items-center gap-1">
-              <Bath className="h-3.5 w-3.5" /> {property.baths} Baths
-            </span>
-          </div>
-        </div>
-
-        <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
-          <div>
-            <p className={`font-serif text-xl font-semibold ${config.textClass}`}>
-              {property.price}
-            </p>
-            <p className="text-xs text-muted-foreground">{config.labelText}</p>
-          </div>
-          <Button
-            size="sm"
-            onClick={onEnquire}
-            className="bg-estate-700 text-white hover:bg-estate-600"
-          >
-            Enquire <ArrowRight className="ml-1 h-3 w-3" />
-          </Button>
-        </div>
-      </div>
-    </article>
+    </Link>
   );
 }
 
 export function PropertyShowcase() {
   const { openBuyer } = useLeadModals();
+  const [properties, setProperties] = useState<FeaturedProperty[] | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    client
+      .fetch<FeaturedProperty[]>(FEATURED_PROPERTIES_QUERY)
+      .then((data) => {
+        if (active) setProperties(data ?? []);
+      })
+      .catch(() => {
+        if (active) setProperties([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Don't render the section until we know there's something to show.
+  if (properties !== null && properties.length === 0) return null;
 
   return (
     <section className="px-4 py-16 md:px-6 md:py-24">
       <div className="mx-auto max-w-7xl">
         <div className="mb-10 text-center">
           <p className="mb-2 font-serif text-sm font-medium uppercase tracking-widest text-gold-500">
-            Featured Case Studies
+            Featured Properties
           </p>
           <h2 className="font-serif text-3xl font-medium text-estate-700 md:text-4xl">
-            Real properties. Real results.
+            Homes worth a closer look.
           </h2>
           <p className="mt-2 text-base text-muted-foreground">
-            A selection of what we've helped our clients secure across three continents.
+            A selection from our partner communities. Enquire and we&apos;ll
+            connect you with a vetted agent.
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3">
-          {PROPERTIES.map((property) => (
-            <PropertyCard key={property.id} property={property} onEnquire={openBuyer} />
-          ))}
-        </div>
+        {properties === null ? (
+          <div className="grid gap-6 md:grid-cols-3">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="h-80 animate-pulse rounded-2xl border border-border bg-surface"
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-3">
+            {properties.map((p) => (
+              <PropertyCard key={p._id} property={p} />
+            ))}
+          </div>
+        )}
 
-        <div className="mt-8 text-center">
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <Link href="/properties">
+            <Button
+              variant="outline"
+              className="border-estate-700 text-estate-700 hover:bg-estate-700/5"
+            >
+              View all properties <ArrowRight className="ml-1.5 h-4 w-4" />
+            </Button>
+          </Link>
           <Button
-            variant="outline"
             onClick={openBuyer}
-            className="border-estate-700 text-estate-700 hover:bg-estate-700/5"
+            className="bg-estate-700 text-white hover:bg-estate-600"
           >
             Find me something like this <ArrowRight className="ml-1.5 h-4 w-4" />
           </Button>

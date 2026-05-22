@@ -1,22 +1,26 @@
-// Seed 3 sample Role documents into Sanity. Safe to re-run — uses
-// createOrReplace keyed by slug. Requires SANITY_WRITE_TOKEN in env.
+// Seed Role documents into Sanity. Two modes:
+//   1. With SANITY_WRITE_TOKEN set  -> createOrReplace via the API.
+//   2. Without a token              -> writes scripts/roles.ndjson, which
+//      you can import with your own CLI session:
+//        npx sanity dataset import scripts/roles.ndjson production --replace
+// Safe to re-run — documents are keyed by slug (_id = role.<slug>).
 
 const crypto = require('node:crypto');
+const fs = require('node:fs');
+const path = require('node:path');
 const { createClient } = require('@sanity/client');
 
 const TOKEN = process.env.SANITY_WRITE_TOKEN;
-if (!TOKEN) {
-  console.error('Missing SANITY_WRITE_TOKEN env var');
-  process.exit(1);
-}
 
-const client = createClient({
-  projectId: 'jdxbkry4',
-  dataset: 'production',
-  apiVersion: '2024-01-01',
-  token: TOKEN,
-  useCdn: false,
-});
+const client = TOKEN
+  ? createClient({
+      projectId: 'jdxbkry4',
+      dataset: 'production',
+      apiVersion: '2024-01-01',
+      token: TOKEN,
+      useCdn: false,
+    })
+  : null;
 
 const key = () => crypto.randomBytes(6).toString('hex');
 
@@ -124,6 +128,236 @@ const ROLES = [
     featured: false,
   },
   {
+    slug: 'social-media-manager',
+    title: 'Social Media Manager',
+    department: 'Marketing',
+    location: 'London or Remote (UK time)',
+    employmentType: 'Full-time',
+    summary:
+      'Own Haus of Estate’s social presence end-to-end. You’ll shape a calm, premium voice across Instagram, LinkedIn, TikTok and YouTube Shorts — turning the work we do behind the scenes into content people genuinely want to follow.',
+    description: descPT([
+      {
+        text: 'Most property social media looks the same: shouty captions, generic listings, and stock-photo confetti. Ours doesn’t. We’re building a brand people trust with the largest decision of their lives — our content should sound like a thoughtful friend, not a sales floor.',
+      },
+      { style: 'h2', text: 'How the work feels' },
+      {
+        text: 'You’ll set the editorial line for the year, plan content in clean weekly cycles, and ship hands-on with a small in-house video editor and our advisors. Some weeks are tightly produced campaigns; others are quick, reactive posts from a viewing or a market shift. You will own the calendar, the metrics and the voice.',
+      },
+      { style: 'h2', text: 'What we measure' },
+      {
+        text: 'We don’t chase vanity follower counts. We track depth of engagement, qualified enquiries from social, and brand sentiment over six-month windows. You’ll be trusted to define the rest.',
+      },
+    ]),
+    responsibilities: [
+      'Own the social media strategy across Instagram, LinkedIn, TikTok, YouTube and emerging platforms.',
+      'Plan and ship a weekly content calendar, working hand-in-hand with our video editor and advisors.',
+      'Write captions, hooks and short copy that sound like Haus of Estate — calm, premium, never pushy.',
+      'Stay close to the data: track reach, engagement, saves, shares and qualified enquiry attribution.',
+      'Spot cultural and market moments worth a reactive post; defend the brand against ones that aren’t.',
+      'Build and manage a light freelancer bench for design, motion and one-off campaigns.',
+    ],
+    requirements: [
+      'Three or more years running social media for a brand, property firm or agency.',
+      'A portfolio of work you’re genuinely proud of — links to handles or campaigns required.',
+      'Native-level written English with a strong instinct for short-form copy.',
+      'Comfort with analytics tools (Meta Business Suite, LinkedIn analytics, TikTok analytics, plus GA4 basics).',
+      'Calm under deadline pressure and the discipline to say no to off-brand briefs.',
+    ],
+    niceToHave: [
+      'Experience in the UK or UAE property, luxury or financial-services space.',
+      'A second language relevant to our client base (Arabic, Bahasa Indonesia, Mandarin or Welsh).',
+      'Light hands-on motion or photo editing skills.',
+    ],
+    applyEmail: 'info@hausofestate.com',
+    status: 'open',
+    featured: true,
+  },
+  {
+    slug: 'video-editor',
+    title: 'Video Editor',
+    department: 'Marketing',
+    location: 'London or Remote (UK time)',
+    employmentType: 'Full-time',
+    summary:
+      'Cut the videos that turn our work into a brand people remember. Short-form first — Reels, Shorts, TikToks — with the craft and pacing of a documentary editor, not a real-estate showreel.',
+    description: descPT([
+      {
+        text: 'Property video is a crowded category and most of it is forgettable: drone shots, swelling music, no point of view. We want something quieter and more confident — work that earns the watch instead of demanding it.',
+      },
+      { style: 'h2', text: 'How the work feels' },
+      {
+        text: 'You’ll work directly with our Social Media Manager and advisors. Inputs vary: phone footage from a viewing, a sit-down interview with an advisor, a stock library, your own b-roll. Output is mostly short-form vertical, with occasional longer pieces for YouTube or pitch decks.',
+      },
+      { style: 'h2', text: 'What good looks like' },
+      {
+        text: 'Tight cuts. Strong opening seconds. Sound design that does real work. Captions that hold up muted. A clear visual point of view that becomes recognisable as ours.',
+      },
+    ]),
+    responsibilities: [
+      'Edit short-form vertical videos for Instagram Reels, TikTok and YouTube Shorts on a weekly rhythm.',
+      'Produce occasional longer-form content: explainer videos, advisor interviews, recap films.',
+      'Develop a consistent visual identity for our video output — colour, type, motion treatments.',
+      'Source and license music, b-roll and stock assets responsibly.',
+      'Manage your own project files, versioning and delivery; keep the team’s editorial calendar honest.',
+    ],
+    requirements: [
+      'Three or more years cutting short-form social video for a brand, agency or independent studio.',
+      'Reel required — we want to see the cuts, not the credentials.',
+      'Fluent in Premiere Pro or DaVinci Resolve, plus After Effects for light motion.',
+      'Strong sense of pacing, sound design and on-screen typography for muted viewing.',
+      'Reliable communicator who can ship to deadlines without supervision.',
+    ],
+    niceToHave: [
+      'Phone-camera shooting skill for fast turnarounds on viewings.',
+      'Light colour grading and audio repair chops.',
+      'Experience working in the property, luxury, hospitality or travel sectors.',
+    ],
+    applyEmail: 'info@hausofestate.com',
+    status: 'open',
+    featured: true,
+  },
+  {
+    slug: 'interior-design-intern',
+    title: 'Interior Design Intern',
+    department: 'Operations',
+    location: 'London or hybrid — UK based',
+    employmentType: 'Internship',
+    summary:
+      'A structured 3–6 month internship supporting our interior design and property-presentation work — from mood boards and supplier research to install days — learning how design shapes the way a property is received.',
+    description: descPT([
+      {
+        text: 'This is a learning-first placement for someone early in an interior design career. You will work alongside our design and operations team on real residential projects across our UK markets, with structured supervision throughout. It is hands-on from week one, but you are never expected to know it all — questions are welcome and expected.',
+      },
+      { style: 'h2', text: 'How the internship works' },
+      {
+        text: 'The internship runs for three to six months, agreed with you at the outset. You are paired with a named supervisor, set clear objectives for each month, and have regular review conversations. At the end of the placement you receive an honest written reference reflecting the work you have done — whether or not a permanent opening exists at the time.',
+      },
+      { style: 'h2', text: 'What you will learn' },
+      {
+        text: 'How a brief becomes a scheme; how to specify finishes, furniture and lighting responsibly; how UK residential design choices affect saleability and lettability; and how a design team runs a project from concept through to install and handover.',
+      },
+    ]),
+    responsibilities: [
+      'Support the creation of mood boards, sample palettes and design schemes for residential properties.',
+      'Research furniture, finishes, lighting and materials from UK and international suppliers.',
+      'Maintain the design library — fabric samples, paint references and supplier catalogues.',
+      'Help prepare client-facing presentation documents and before-and-after visuals.',
+      'Assist on site during measure-ups, install days and styling sessions.',
+      'Keep project trackers and supplier correspondence accurate and up to date.',
+      'Take part in design reviews and contribute ideas in team critiques.',
+    ],
+    requirements: [
+      'Studying towards, or recently completed, a qualification in interior design, architecture or a related creative field.',
+      'A developing portfolio or coursework you are happy to share.',
+      'Eligibility to undertake an internship in the UK.',
+      'Confident with at least one design tool — for example SketchUp, Canva or the Adobe Creative Suite.',
+      'Strong written English and a genuine eye for detail.',
+      'Organised, dependable and comfortable asking questions.',
+    ],
+    niceToHave: [
+      'Familiarity with UK residential styles and the sales or lettings market.',
+      'Basic CAD or 3D visualisation skills.',
+      'Photography or styling experience.',
+    ],
+    applyEmail: 'hr@hausofestate.com',
+    status: 'open',
+    featured: false,
+  },
+  {
+    slug: 'property-management-intern',
+    title: 'Property Management Intern',
+    department: 'Lettings',
+    location: 'London or hybrid — UK based',
+    employmentType: 'Internship',
+    summary:
+      'A hands-on 3–6 month internship across the day-to-day of UK property management — tenancy administration, maintenance coordination, compliance basics and client communication, all under close supervision.',
+    description: descPT([
+      {
+        text: 'Property management is the engine room of a lettings business: detailed, deadline-driven and built on trust. This internship gives you a structured, supervised introduction to how that work is done to a professional UK standard. It suits someone organised, discreet and genuinely interested in a property career.',
+      },
+      { style: 'h2', text: 'How the internship works' },
+      {
+        text: 'The placement runs for three to six months with a named supervisor, monthly objectives and regular reviews. You will be given real responsibility in measured steps, always with someone checking your work. An honest written reference is provided at the end of the placement.',
+      },
+      { style: 'h2', text: 'What you will learn' },
+      {
+        text: 'How a tenancy runs from referencing to check-out; the key UK compliance touchpoints a managing agent must stay on top of — gas safety, electrical (EICR), EPCs, deposit protection and Right to Rent — at a working, learning level; and how to communicate clearly with landlords, tenants and contractors.',
+      },
+    ]),
+    responsibilities: [
+      'Support tenancy administration: referencing, tenancy agreements, inventories and check-ins and check-outs.',
+      'Help coordinate maintenance requests with contractors and follow jobs through to completion.',
+      'Assist with compliance tracking — gas safety certificates, EICRs, EPCs and deposit-protection deadlines.',
+      'Maintain accurate property and tenancy records in our systems.',
+      'Help prepare routine property inspection reports.',
+      'Respond to straightforward tenant and landlord queries under supervision.',
+      'Support rent tracking and arrears administration.',
+    ],
+    requirements: [
+      'A genuine interest in a career in UK property, lettings or operations.',
+      'Eligibility to undertake an internship in the UK.',
+      'Strong organisation and accuracy with administrative tasks.',
+      'Clear, professional written and spoken English.',
+      'Discretion when handling confidential information.',
+      'Comfortable with spreadsheets and quick to learn new software.',
+    ],
+    niceToHave: [
+      "Awareness of UK lettings legislation — Right to Rent, deposit protection and the Renters' Rights framework.",
+      'Studying towards a property, business or law-related qualification.',
+      'A full UK driving licence, useful for property visits.',
+    ],
+    applyEmail: 'hr@hausofestate.com',
+    status: 'open',
+    featured: false,
+  },
+  {
+    slug: 'staging-interiors-intern',
+    title: 'Staging Interiors Intern',
+    department: 'Operations',
+    location: 'London or hybrid — UK based',
+    employmentType: 'Internship',
+    summary:
+      'A practical 3–6 month internship in property staging — preparing, styling and presenting homes so they show at their best for viewings, photography and marketing.',
+    description: descPT([
+      {
+        text: 'Staging is where design meets logistics. Unlike full interior design, the goal is to present a property so prospective buyers and tenants can picture themselves living there — quickly, on a schedule, and on shoot days that do not move. This internship is a practical, hands-on introduction to that craft.',
+      },
+      { style: 'h2', text: 'How the internship works' },
+      {
+        text: 'The placement runs for three to six months with a named supervisor, clear monthly objectives and regular review conversations. Expect a mix of planning days and active install and shoot days. You receive an honest written reference at the end of the placement.',
+      },
+      { style: 'h2', text: 'What you will learn' },
+      {
+        text: 'How to plan a staging scheme to a brief and a budget; how furniture placement, soft furnishings and finishing details change how a room reads; how a property shoot is run; and how viewing and photography feedback is used to refine a presentation.',
+      },
+    ]),
+    responsibilities: [
+      'Help plan and prepare staging schemes for properties going to market.',
+      'Assist with styling on shoot days — furniture placement, dressing rooms and finishing details.',
+      'Source and manage staging inventory: furniture, soft furnishings, props and accessories.',
+      'Support load-in and load-out logistics for staging projects.',
+      'Help maintain the staging store — cleaning, cataloguing and condition-checking items.',
+      'Assist the team in reviewing photography and viewing feedback to refine schemes.',
+      'Keep project checklists and supplier records accurate.',
+    ],
+    requirements: [
+      'A genuine interest in interiors, styling or property presentation.',
+      'Eligibility to undertake an internship in the UK.',
+      'Practical, hands-on and happy to be on your feet on install and shoot days.',
+      'A good eye for detail, colour and composition.',
+      'Reliable, punctual and a strong team player.',
+      'Able to travel to properties across the relevant region.',
+    ],
+    niceToHave: [
+      'Previous styling, retail visual-merchandising or set-dressing experience.',
+      'Basic photography skills.',
+      'A full UK driving licence.',
+    ],
+    applyEmail: 'hr@hausofestate.com',
+    status: 'open',
+    featured: false,
+  },
+  {
     slug: 'international-markets-associate-remote',
     title: 'International Markets Associate — Remote',
     department: 'Advisory',
@@ -162,8 +396,43 @@ const ROLES = [
   },
 ];
 
+function buildDoc(r) {
+  return {
+    _id: `role.${r.slug}`,
+    _type: 'role',
+    title: r.title,
+    slug: { _type: 'slug', current: r.slug },
+    department: r.department,
+    location: r.location,
+    employmentType: r.employmentType,
+    summary: r.summary,
+    description: r.description,
+    responsibilities: r.responsibilities,
+    requirements: r.requirements,
+    niceToHave: r.niceToHave,
+    applyEmail: r.applyEmail,
+    publishedAt: new Date().toISOString(),
+    status: r.status,
+    featured: r.featured,
+  };
+}
+
 (async () => {
-  // Auth check
+  // ── No token: emit an NDJSON import file ──────────────────────────────
+  if (!client) {
+    const outPath = path.join(__dirname, 'roles.ndjson');
+    const ndjson = ROLES.map((r) => JSON.stringify(buildDoc(r))).join('\n');
+    fs.writeFileSync(outPath, ndjson + '\n', 'utf8');
+    console.log(`No SANITY_WRITE_TOKEN set — wrote ${ROLES.length} roles to:`);
+    console.log(`  ${outPath}`);
+    console.log('\nImport it with your own Sanity CLI session:');
+    console.log(
+      '  npx sanity dataset import scripts/roles.ndjson production --replace',
+    );
+    return;
+  }
+
+  // ── Token present: write via the API ──────────────────────────────────
   const me = await client.request({ uri: '/users/me' }).catch((e) => {
     console.error('Token check failed:', e.message);
     process.exit(1);
@@ -172,26 +441,8 @@ const ROLES = [
 
   const results = [];
   for (const r of ROLES) {
-    const doc = {
-      _id: `role.${r.slug}`,
-      _type: 'role',
-      title: r.title,
-      slug: { _type: 'slug', current: r.slug },
-      department: r.department,
-      location: r.location,
-      employmentType: r.employmentType,
-      summary: r.summary,
-      description: r.description,
-      responsibilities: r.responsibilities,
-      requirements: r.requirements,
-      niceToHave: r.niceToHave,
-      applyEmail: r.applyEmail,
-      publishedAt: new Date().toISOString(),
-      status: r.status,
-      featured: r.featured,
-    };
     try {
-      const out = await client.createOrReplace(doc);
+      const out = await client.createOrReplace(buildDoc(r));
       console.log(`✓ ${out.title} (${out._id})`);
       results.push(out);
     } catch (e) {

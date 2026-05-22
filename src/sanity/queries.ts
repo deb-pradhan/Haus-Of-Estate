@@ -107,3 +107,57 @@ export const ROLE_SLUGS_QUERY = `
     "slug": slug.current
   }
 `
+
+// ── Properties ────────────────────────────────────────────────────────
+
+const PROPERTY_CARD_FIELDS = `
+  _id,
+  title,
+  "slug": slug.current,
+  community,
+  city,
+  country,
+  developer,
+  unitType,
+  bedrooms,
+  bathrooms,
+  sizeDisplay,
+  priceDisplay,
+  completionStatus,
+  summary,
+  featured,
+  publishedAt,
+  featuredImage
+`
+
+export const PROPERTIES_QUERY = `
+  *[_type == "property" && status == "published"]
+    | order(featured desc, publishedAt desc) {
+      ${PROPERTY_CARD_FIELDS}
+    }
+`
+
+export const FEATURED_PROPERTIES_QUERY = `
+  *[_type == "property" && status == "published" && featured == true]
+    | order(publishedAt desc) [0...3] {
+      ${PROPERTY_CARD_FIELDS}
+    }
+`
+
+export const PROPERTY_BY_SLUG_QUERY = `
+  *[_type == "property" && slug.current == $slug && status == "published"][0] {
+    ${PROPERTY_CARD_FIELDS},
+    description,
+    keyFeatures,
+    amenities,
+    locationBenefits,
+    gallery,
+    enquiryEmail
+  }
+`
+
+export const PROPERTY_SLUGS_QUERY = `
+  *[_type == "property" && status == "published" && defined(slug.current)] {
+    "slug": slug.current
+  }
+`
