@@ -398,7 +398,7 @@ const ROLES = [
 
 function buildDoc(r) {
   return {
-    _id: `role.${r.slug}`,
+    _id: `role-${r.slug}`,
     _type: 'role',
     title: r.title,
     slug: { _type: 'slug', current: r.slug },

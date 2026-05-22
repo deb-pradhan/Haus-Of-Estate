@@ -210,7 +210,7 @@ async function uploadAssets(c) {
 
 function buildDoc(p, assetMap) {
   return {
-    _id: `property.${p.slug}`,
+    _id: `property-${p.slug}`,
     _type: 'property',
     title: p.title,
     slug: { _type: 'slug', current: p.slug },
