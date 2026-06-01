@@ -20,6 +20,9 @@ import { useLeadModals } from "@/components/lead-modal";
 import { ServicesToggle } from "@/components/services/services-toggle";
 import { PropertyShowcase } from "@/components/landing/property-showcase";
 import { BuyRentSell } from "@/components/landing/buy-rent-sell";
+import { HomepageFaq } from "@/components/landing/homepage-faq";
+import { client } from "@/sanity";
+import { FEATURED_TESTIMONIALS_QUERY } from "@/sanity/queries";
 import { Partners } from "@/components/landing/partners";
 import { WhatsAppFloat } from "@/components/landing/whatsapp-float";
 
@@ -157,8 +160,85 @@ const MARKET_RATINGS = [
   { market: "Bali", rating: 5.0, count: 31 },
 ];
 
+interface SanityTestimonial {
+  _id: string;
+  authorName: string;
+  authorLocation?: string;
+  rating?: number;
+  quote: string;
+  tag?: string;
+  datePublished?: string;
+}
+
+interface ReviewCard {
+  key: string;
+  name: string;
+  market: string;
+  rating: number;
+  text: string;
+  initials: string;
+  tag: string;
+  date: string;
+}
+
+function initialsFrom(name: string): string {
+  return name
+    .split(/\s+/)
+    .map((p) => p[0]?.toUpperCase() ?? "")
+    .slice(0, 2)
+    .join("");
+}
+
+function formatPublishedDate(iso?: string): string {
+  if (!iso) return "Recently";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "Recently";
+  return d.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+}
+
 function ReviewsSection() {
   const { ref, visible } = useScrollReveal();
+  const [sanityReviews, setSanityReviews] = useState<ReviewCard[] | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    client
+      .fetch<SanityTestimonial[]>(FEATURED_TESTIMONIALS_QUERY)
+      .then((data) => {
+        if (!active) return;
+        const mapped: ReviewCard[] = (data ?? []).map((t) => ({
+          key: t._id,
+          name: t.authorName,
+          market: t.authorLocation || "",
+          rating: typeof t.rating === "number" ? t.rating : 5,
+          text: t.quote,
+          initials: initialsFrom(t.authorName),
+          tag: t.tag || "#Verified",
+          date: formatPublishedDate(t.datePublished),
+        }));
+        setSanityReviews(mapped);
+      })
+      .catch(() => {
+        if (active) setSanityReviews([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const sourceReviews: ReviewCard[] =
+    sanityReviews && sanityReviews.length > 0
+      ? sanityReviews
+      : ALL_REVIEWS.map((r) => ({
+          key: r.name + r.date,
+          name: r.name,
+          market: r.market,
+          rating: r.rating,
+          text: r.text,
+          initials: r.initials,
+          tag: r.tag,
+          date: r.date,
+        }));
 
   return (
     <section
@@ -255,9 +335,9 @@ function ReviewsSection() {
 
           <div className="flex animate-marquee" style={{ width: "max-content" }}>
             {/* Doubled array for seamless loop */}
-            {[...ALL_REVIEWS, ...ALL_REVIEWS].map((review, i) => (
+            {[...sourceReviews, ...sourceReviews].map((review, i) => (
               <article
-                key={`${review.name}-${i}`}
+                key={`${review.key}-${i}`}
                 className="mx-3 flex w-80 shrink-0 flex-col justify-between overflow-hidden rounded-2xl border border-border bg-surface p-5 shadow-sm"
                 aria-label={`${review.name} review`}
               >
@@ -462,6 +542,7 @@ export default function HomePage() {
       <PropertyShowcase />
       <WhoAreWe />
       <ReviewsSection />
+      <HomepageFaq />
       <CTABanner />
       <WhatsAppFloat />
     </>

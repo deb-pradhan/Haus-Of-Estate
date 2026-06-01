@@ -152,6 +152,7 @@ export const PROPERTY_BY_SLUG_QUERY = `
     amenities,
     locationBenefits,
     gallery,
+    videoUrl,
     enquiryEmail
   }
 `
@@ -160,4 +161,87 @@ export const PROPERTY_SLUGS_QUERY = `
   *[_type == "property" && status == "published" && defined(slug.current)] {
     "slug": slug.current
   }
+`
+
+// ── Team / Testimonials / FAQs / Culture ──────────────────────────────
+
+export const TEAM_MEMBERS_QUERY = `
+  *[_type == "teamMember" && status == "published"]
+    | order(order asc, name asc) {
+      _id,
+      name,
+      "slug": slug.current,
+      role,
+      department,
+      photo,
+      shortBio,
+      email,
+      phone,
+      linkedinUrl,
+      markets
+    }
+`
+
+export const FEATURED_TESTIMONIALS_QUERY = `
+  *[_type == "testimonial" && status == "published"]
+    | order(featured desc, order asc, _createdAt desc) [0...6] {
+      _id,
+      authorName,
+      authorLocation,
+      authorPhoto,
+      rating,
+      quote,
+      tag,
+      source,
+      datePublished
+    }
+`
+
+export const TESTIMONIALS_QUERY = `
+  *[_type == "testimonial" && status == "published"]
+    | order(order asc, _createdAt desc) {
+      _id,
+      authorName,
+      authorLocation,
+      authorPhoto,
+      rating,
+      quote,
+      tag,
+      source,
+      datePublished
+    }
+`
+
+export const FAQS_QUERY = `
+  *[_type == "faq" && status == "published"]
+    | order(category asc, order asc) {
+      _id,
+      question,
+      "slug": slug.current,
+      category,
+      answer,
+      featured
+    }
+`
+
+export const FEATURED_FAQS_QUERY = `
+  *[_type == "faq" && status == "published" && featured == true]
+    | order(order asc) [0...6] {
+      _id,
+      question,
+      "slug": slug.current,
+      category,
+      answer
+    }
+`
+
+export const CULTURE_MOMENTS_QUERY = `
+  *[_type == "cultureMoment" && status == "published"]
+    | order(order asc, _createdAt desc) {
+      _id,
+      caption,
+      photo,
+      category,
+      takenOn
+    }
 `

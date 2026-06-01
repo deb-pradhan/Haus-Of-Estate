@@ -38,6 +38,38 @@ export default defineConfig({
                   .filter('_type == "property"')
                   .defaultOrdering([{ field: 'publishedAt', direction: 'desc' }])
               ),
+            S.listItem()
+              .title('Team Members')
+              .child(
+                S.documentList()
+                  .title('All Team Members')
+                  .filter('_type == "teamMember"')
+                  .defaultOrdering([{ field: 'order', direction: 'asc' }])
+              ),
+            S.listItem()
+              .title('Testimonials')
+              .child(
+                S.documentList()
+                  .title('All Testimonials')
+                  .filter('_type == "testimonial"')
+                  .defaultOrdering([{ field: 'order', direction: 'asc' }])
+              ),
+            S.listItem()
+              .title('FAQs')
+              .child(
+                S.documentList()
+                  .title('All FAQs')
+                  .filter('_type == "faq"')
+                  .defaultOrdering([{ field: 'order', direction: 'asc' }])
+              ),
+            S.listItem()
+              .title('Culture Moments')
+              .child(
+                S.documentList()
+                  .title('All Culture Moments')
+                  .filter('_type == "cultureMoment"')
+                  .defaultOrdering([{ field: 'order', direction: 'asc' }])
+              ),
             S.divider(),
             S.listItem()
               .title('Authors')

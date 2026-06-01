@@ -15,6 +15,7 @@ import {
 import { sanityFetch, urlFor } from '@/sanity'
 import { PROPERTY_BY_SLUG_QUERY, PROPERTY_SLUGS_QUERY } from '@/sanity/queries'
 import { PortableTextRenderer } from '@/components/blog'
+import { toEmbedUrl } from '@/lib/embed-video'
 
 interface LocationBenefit {
   destination?: string
@@ -42,6 +43,7 @@ interface PropertyDetail {
   locationBenefits?: LocationBenefit[]
   featuredImage?: { alt?: string } & Record<string, unknown>
   gallery?: (Record<string, unknown> & { alt?: string })[]
+  videoUrl?: string
   enquiryEmail?: string
 }
 
@@ -267,6 +269,28 @@ export default async function PropertyDetailPage({
               )}
 
             {/* Gallery */}
+            {property.videoUrl && (() => {
+              const embed = toEmbedUrl(property.videoUrl)
+              if (!embed) return null
+              return (
+                <div className="mt-10">
+                  <h2 className="font-serif text-xl font-medium text-estate-700">
+                    Walkthrough
+                  </h2>
+                  <div className="mt-4 aspect-video w-full overflow-hidden rounded-2xl border border-border bg-estate-700/5">
+                    <iframe
+                      src={embed}
+                      title={`${property.title} — walkthrough video`}
+                      loading="lazy"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                      className="h-full w-full"
+                    />
+                  </div>
+                </div>
+              )
+            })()}
+
             {property.gallery && property.gallery.length > 0 && (
               <div className="mt-10">
                 <h2 className="font-serif text-xl font-medium text-estate-700">

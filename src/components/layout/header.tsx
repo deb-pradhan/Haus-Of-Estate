@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Menu, X, User, Mail } from "lucide-react";
+import { Menu, X, User, Mail, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useLeadModals } from "@/components/lead-modal";
@@ -12,6 +12,8 @@ import { cn } from "@/lib/utils";
 
 const WHATSAPP_URL = "https://wa.me/971585607033";
 const COMPANY_EMAIL = "info@hausofestate.com";
+const COMPANY_PHONE_DISPLAY = "+971 58 560 7033";
+const COMPANY_PHONE_HREF = "tel:+971585607033";
 
 function WhatsAppIcon({ className }: { className?: string }) {
   return (
@@ -104,6 +106,15 @@ export function Header() {
 
         <div className="flex items-center gap-3">
           <a
+            href={COMPANY_PHONE_HREF}
+            aria-label={`Call us on ${COMPANY_PHONE_DISPLAY}`}
+            title={COMPANY_PHONE_DISPLAY}
+            className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-[#1F4F2F] transition-colors hover:bg-[#F7F5F1] md:flex"
+          >
+            <Phone className="h-4 w-4" />
+            <span className="hidden xl:inline">{COMPANY_PHONE_DISPLAY}</span>
+          </a>
+          <a
             href={WHATSAPP_URL}
             target="_blank"
             rel="noopener noreferrer"
@@ -120,7 +131,7 @@ export function Header() {
             className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-[#4D5257] transition-colors hover:bg-[#F7F5F1] hover:text-[#1F4F2F] md:flex"
           >
             <Mail className="h-4 w-4" />
-            <span className="hidden lg:inline">{COMPANY_EMAIL}</span>
+            <span className="hidden xl:inline">{COMPANY_EMAIL}</span>
           </a>
           <Button
             onClick={openAccount}
@@ -197,6 +208,13 @@ export function Header() {
                   );
                 })}
                 <div className="my-2 h-px bg-[#DDE1E6]" />
+                <a
+                  href={COMPANY_PHONE_HREF}
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-[#1F4F2F] transition-colors hover:bg-[#F7F5F1]"
+                >
+                  <Phone className="h-4 w-4" />
+                  {COMPANY_PHONE_DISPLAY}
+                </a>
                 <a
                   href={WHATSAPP_URL}
                   target="_blank"

@@ -192,6 +192,19 @@ export const property = defineType({
       of: [defineArrayMember({ type: 'image', options: { hotspot: true } })],
     }),
     defineField({
+      name: 'videoUrl',
+      title: 'Walkthrough video URL',
+      type: 'url',
+      description:
+        'YouTube or Vimeo URL. Renders as an embedded player on the listing.',
+      validation: (rule) =>
+        rule.uri({ scheme: ['http', 'https'] }).custom((url?: string) => {
+          if (!url) return true
+          const ok = /youtube\.com|youtu\.be|vimeo\.com/i.test(url)
+          return ok || 'Use a YouTube or Vimeo URL.'
+        }),
+    }),
+    defineField({
       name: 'enquiryEmail',
       title: 'Enquiry email',
       type: 'string',

@@ -15,6 +15,7 @@ import { sanityFetch } from '@/sanity'
 import { ROLES_QUERY } from '@/sanity/queries'
 import { ApplicationForm } from '@/components/careers/application-form'
 import { HR_INBOX } from '@/lib/careers'
+import { LifeAtHoE } from '@/components/careers/life-at-hoe'
 
 interface RoleCard {
   _id: string
@@ -51,7 +52,10 @@ const VALUES = [
   },
 ]
 
-const SUB_NAV = [{ href: '#jobs', label: 'Jobs' }]
+const SUB_NAV = [
+  { href: '#jobs', label: 'Jobs' },
+  { href: '#life-at-hoe', label: 'Life at HoE' },
+]
 
 export const metadata: Metadata = {
   title: 'Careers | Haus of Estate',
@@ -238,6 +242,7 @@ export default async function CareersPage() {
         </div>
       </section>
 
+      <LifeAtHoE />
     </div>
   )
 }

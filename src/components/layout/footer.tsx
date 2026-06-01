@@ -7,6 +7,40 @@ import { useLeadModals } from "@/components/lead-modal/modal-context";
 const WHATSAPP_NUMBER = "+971 58 560 7033";
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g, "")}`;
 const COMPANY_EMAIL = "info@hausofestate.com";
+const COMPANY_PHONE_HREF = "tel:+971585607033";
+
+// Replace placeholder handles in the Sanity Studio or here once live.
+const SOCIAL_LINKS = [
+  {
+    name: "Instagram",
+    href: "https://instagram.com/hausofestate",
+    icon: (
+      <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden="true">
+        <rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="none" stroke="currentColor" strokeWidth="2" />
+        <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" strokeWidth="2" />
+        <circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" />
+      </svg>
+    ),
+  },
+  {
+    name: "LinkedIn",
+    href: "https://linkedin.com/company/hausofestate",
+    icon: (
+      <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden="true">
+        <path d="M20.4 4.5a4 4 0 0 1 0 7.75V20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5.25a2 2 0 0 1 2-2h11.5zm-8.1 1.5h2.4v11.4H12.3zm-1.1-3.1a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z" />
+      </svg>
+    ),
+  },
+  {
+    name: "X",
+    href: "https://x.com/hausofestate",
+    icon: (
+      <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden="true">
+        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+      </svg>
+    ),
+  },
+];
 
 function WhatsAppGlyph() {
   return (
@@ -87,15 +121,48 @@ export function Footer() {
             Rent Smart Wales Registered · Propertymark CMP Registered
           </p>
 
-          <a
-            href={WHATSAPP_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Chat with us on WhatsApp"
-            className="mt-5 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white/5 text-white/70 transition-colors hover:bg-[#25D366] hover:text-white"
-          >
-            <WhatsAppGlyph />
-          </a>
+          {/* Quick actions */}
+          <div className="mt-5 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={openSeller}
+              className="inline-flex items-center gap-1.5 rounded-full bg-gold-500 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-gold-400"
+            >
+              Book Valuation <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+            <Link
+              href="/properties"
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-white/10"
+            >
+              Browse properties <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+
+          {/* Social icons */}
+          <div className="mt-5 flex flex-wrap gap-2">
+            <a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Chat with us on WhatsApp"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white/5 text-white/70 transition-colors hover:bg-[#25D366] hover:text-white"
+            >
+              <WhatsAppGlyph />
+            </a>
+            {SOCIAL_LINKS.map((s) => (
+              <a
+                key={s.name}
+                href={s.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={s.name}
+                title={s.name}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white/5 text-white/70 transition-colors hover:bg-gold-500 hover:text-white"
+              >
+                {s.icon}
+              </a>
+            ))}
+          </div>
         </div>
 
         {/* Services */}
@@ -110,8 +177,10 @@ export function Footer() {
         {/* Company */}
         <FooterCol title="Company">
           <FooterLink href="/about">About us</FooterLink>
+          <FooterLink href="/team">Our team</FooterLink>
           <FooterLink href="/blog">Insights</FooterLink>
           <FooterLink href="/careers">Careers</FooterLink>
+          <FooterLink href="/faq">FAQs</FooterLink>
           <FooterButton onClick={openAccount}>Contact us</FooterButton>
           <FooterLink href="/legal/privacy-policy">Privacy policy</FooterLink>
           <FooterLink href="/legal/terms-of-service">Terms of service</FooterLink>
@@ -120,6 +189,15 @@ export function Footer() {
 
         {/* Contact */}
         <FooterCol title="Get in touch">
+          <li>
+            <a
+              href={COMPANY_PHONE_HREF}
+              className="flex items-center gap-2.5 text-sm font-semibold text-white transition-colors hover:text-gold-400"
+            >
+              <Phone className="h-4 w-4 shrink-0 text-gold-400" />
+              {WHATSAPP_NUMBER}
+            </a>
+          </li>
           <li>
             <a
               href={`mailto:${COMPANY_EMAIL}`}
@@ -131,18 +209,16 @@ export function Footer() {
           </li>
           <li>
             <a
-              href={WHATSAPP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
+              href="mailto:hr@hausofestate.com"
               className="flex items-center gap-2.5 text-sm text-white/60 transition-colors hover:text-white"
             >
-              <Phone className="h-4 w-4 shrink-0 text-gold-400" />
-              {WHATSAPP_NUMBER}
+              <Mail className="h-4 w-4 shrink-0 text-gold-400" />
+              hr@hausofestate.com
             </a>
           </li>
           <li className="flex items-start gap-2.5 text-sm text-white/60">
             <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-gold-400" />
-            UK · UAE · International
+            Offices in the UK &amp; UAE — serving clients worldwide
           </li>
         </FooterCol>
       </div>

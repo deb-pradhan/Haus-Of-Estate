@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLeadModals } from "@/components/lead-modal/modal-context";
+import { TeamPreview } from "@/components/team/team-preview";
 
 const BELIEFS = [
   {
@@ -302,6 +303,9 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
+
+      {/* ─── Team ───────────────────────────────────────────────────── */}
+      <TeamPreview />
 
       {/* ─── CTA ────────────────────────────────────────────────────── */}
       <section className="bg-estate-700 text-white">
