@@ -61,10 +61,56 @@ export const property = defineType({
           { title: '3 Bedroom', value: '3 Bedroom' },
           { title: 'Terrace Apartment', value: 'Terrace Apartment' },
           { title: 'Penthouse', value: 'Penthouse' },
+          { title: 'Mansion', value: 'Mansion' },
+          { title: 'Villa', value: 'Villa' },
+          { title: 'Townhouse', value: 'Townhouse' },
           { title: 'Retail Unit', value: 'Retail Unit' },
         ],
       },
       validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'unitNumber',
+      title: 'Unit number',
+      type: 'string',
+      description: 'Developer unit reference, e.g. "047", "076".',
+    }),
+    defineField({
+      name: 'masterDevelopment',
+      title: 'Master development',
+      type: 'string',
+      description:
+        'Larger master-plan this property sits within, if any. e.g. "Azizi Venice" for Monaco Mansions.',
+    }),
+    defineField({
+      name: 'view',
+      title: 'View',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Lagoon', value: 'Lagoon' },
+          { title: 'Sea', value: 'Sea' },
+          { title: 'Park', value: 'Park' },
+          { title: 'City', value: 'City' },
+          { title: 'Garden', value: 'Garden' },
+          { title: 'Skyline', value: 'Skyline' },
+          { title: 'Pool', value: 'Pool' },
+          { title: 'Other', value: 'Other' },
+        ],
+      },
+    }),
+    defineField({
+      name: 'plotSizeDisplay',
+      title: 'Plot size (display text)',
+      type: 'string',
+      description:
+        'Land plot size, e.g. "10,000 – 20,000 sq ft". For mansions/villas with a plot distinct from BUA.',
+    }),
+    defineField({
+      name: 'paymentPlan',
+      title: 'Payment plan',
+      type: 'string',
+      description: 'e.g. "Standard", "60/40", "On handover".',
     }),
     defineField({
       name: 'bedrooms',

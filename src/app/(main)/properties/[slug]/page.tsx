@@ -27,14 +27,19 @@ interface PropertyDetail {
   title: string
   slug: string
   community: string
+  masterDevelopment?: string
   city: string
   country?: string
   developer?: string
   unitType: string
+  unitNumber?: string
   bedrooms?: number
   bathrooms?: number
   sizeDisplay?: string
+  plotSizeDisplay?: string
   priceDisplay?: string
+  paymentPlan?: string
+  view?: string
   completionStatus?: string
   summary: string
   description?: unknown
@@ -127,6 +132,34 @@ export default async function PropertyDetailPage({
     label: 'Type',
     value: property.unitType,
   })
+  if (property.view) {
+    facts.push({
+      icon: MapPin,
+      label: 'View',
+      value: property.view,
+    })
+  }
+  if (property.plotSizeDisplay) {
+    facts.push({
+      icon: Maximize2,
+      label: 'Plot',
+      value: property.plotSizeDisplay,
+    })
+  }
+  if (property.unitNumber) {
+    facts.push({
+      icon: Building2,
+      label: 'Unit',
+      value: property.unitNumber,
+    })
+  }
+  if (property.paymentPlan) {
+    facts.push({
+      icon: Check,
+      label: 'Payment',
+      value: property.paymentPlan,
+    })
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -172,12 +205,17 @@ export default async function PropertyDetailPage({
             <h1 className="mt-2 font-serif text-3xl font-medium text-estate-700 md:text-4xl">
               {property.title}
             </h1>
-            <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
+            <p className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-muted-foreground">
               <MapPin className="h-4 w-4" />
-              {[property.community, property.city, property.country]
-                .filter(Boolean)
-                .join(', ')}
-              {property.developer ? ` · ${property.developer}` : ''}
+              <span>
+                {[property.community, property.city, property.country]
+                  .filter(Boolean)
+                  .join(', ')}
+              </span>
+              {property.masterDevelopment && (
+                <span>· part of {property.masterDevelopment}</span>
+              )}
+              {property.developer && <span>· {property.developer}</span>}
             </p>
 
             {/* Fact strip */}
