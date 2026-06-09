@@ -3,8 +3,27 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { Menu, X, User, Mail, Phone } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import {
+  Menu,
+  X,
+  User,
+  Mail,
+  Phone,
+  ChevronDown,
+  ArrowRight,
+  Home,
+  KeyRound,
+  Tag,
+  ClipboardList,
+  Sparkles,
+  Sofa,
+  PaintRoller,
+  Users as UsersIcon,
+  Briefcase,
+  HelpCircle,
+  Info,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useLeadModals } from "@/components/lead-modal";
@@ -23,230 +42,513 @@ function WhatsAppIcon({ className }: { className?: string }) {
   );
 }
 
-type NavItem =
-  | { kind: "link"; href: string; label: string }
-  | { kind: "modal"; label: string };
+// ─── Information architecture ─────────────────────────────────────────
 
-const navItems: NavItem[] = [
-  { kind: "link", href: "/properties", label: "Properties" },
-  { kind: "link", href: "/blog", label: "Insights" },
-  { kind: "link", href: "/about", label: "About" },
-  { kind: "link", href: "/#services", label: "Services" },
-  { kind: "link", href: "/renovations", label: "Renovations" },
-  { kind: "link", href: "/careers", label: "Careers" },
-  { kind: "modal", label: "Contact" },
+interface NavItem {
+  href: string;
+  label: string;
+  desc?: string;
+  icon?: React.ComponentType<{ className?: string }>;
+}
+
+interface NavAction {
+  action: "buyer" | "seller" | "account";
+  label: string;
+  desc?: string;
+  icon?: React.ComponentType<{ className?: string }>;
+}
+
+type ServiceEntry = NavItem | NavAction;
+
+const SERVICES_ITEMS: ServiceEntry[] = [
+  { action: "buyer", label: "Buy a property", desc: "Match with vetted estate agents across the UK, UAE and beyond.", icon: Home },
+  { action: "buyer", label: "Rent a property", desc: "Trusted letting agents in your chosen areas.", icon: KeyRound },
+  { action: "seller", label: "Sell or let your property", desc: "Free market appraisal and a vetted listing partner.", icon: Tag },
+  { href: "/services#property-management", label: "Property Management", desc: "Tenancy, maintenance and compliance, handled.", icon: ClipboardList },
+  { href: "/services#staging", label: "Staging", desc: "Present a home for viewings, photography and marketing.", icon: Sparkles },
+  { href: "/services#furnishing", label: "Furnishing", desc: "Move-in ready interiors for new builds and rentals.", icon: Sofa },
+  { href: "/renovations", label: "Renovations", desc: "Painting, plumbing, decorating, electrical, flooring.", icon: PaintRoller },
 ];
+
+const ABOUT_ITEMS: NavItem[] = [
+  { href: "/about", label: "About us", desc: "Our story and the standard we hold.", icon: Info },
+  { href: "/team", label: "Our team", desc: "The advisors behind every introduction.", icon: UsersIcon },
+  { href: "/careers", label: "Careers", desc: "Jobs, internships and how to apply.", icon: Briefcase },
+  { href: "/faq", label: "FAQs", desc: "Common questions, plain-English answers.", icon: HelpCircle },
+];
+
+// ─── Main component ────────────────────────────────────────────────────
 
 export function Header() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { openAccount } = useLeadModals();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[#DDE1E6] bg-surface/95 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
-        <Link href="/" className="flex items-center gap-3">
-          <Image
-            src="/logo.svg"
-            alt="Haus of Estate"
-            width={140}
-            height={36}
-            className="h-7 w-auto md:h-8"
-            priority
-          />
-        </Link>
+    <div className="sticky top-0 z-50">
+      <TopUtilityBar />
+      <header className="border-b border-[#DDE1E6] bg-surface/95 backdrop-blur-md">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
+          {/* Logo */}
+          <Link href="/" className="flex shrink-0 items-center gap-3" aria-label="Haus of Estate — home">
+            <Image
+              src="/logo.svg"
+              alt="Haus of Estate"
+              width={140}
+              height={36}
+              className="h-7 w-auto md:h-8"
+              priority
+            />
+          </Link>
 
-        <nav className="hidden items-center gap-1 md:flex">
-          {navItems.map((item) => {
-            const baseClass =
-              "group relative flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-[120ms] ease-[cubic-bezier(0.2,0,0,1)]";
-            const inactive =
-              "text-[#4D5257] hover:bg-[#F7F5F1] hover:text-[#1E1F21] hover:shadow-[0_1px_2px_rgba(0,0,0,0.06)]";
-            const active = "bg-[#1F4F2F]/10 text-[#1F4F2F]";
+          {/* Desktop nav */}
+          <nav aria-label="Primary" className="hidden items-center gap-1 lg:flex">
+            <NavLink href="/properties" label="Properties" pathname={pathname} />
+            <NavDropdown
+              label="Services"
+              items={SERVICES_ITEMS}
+              pathname={pathname}
+            />
+            <NavLink href="/blog" label="Insights" pathname={pathname} />
+            <NavDropdown
+              label="About"
+              items={ABOUT_ITEMS}
+              pathname={pathname}
+            />
+          </nav>
 
-            if (item.kind === "modal") {
-              return (
-                <button
-                  key={item.label}
-                  type="button"
-                  onClick={openAccount}
-                  className={cn(baseClass, inactive)}
+          {/* Right-side actions */}
+          <div className="flex items-center gap-2">
+            <SignInButton className="hidden lg:flex" />
+
+            {/* Mobile / tablet trigger */}
+            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+              <SheetTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Open menu"
+                  className="text-[#1E1F21] hover:bg-[#F7F5F1] hover:text-[#1F4F2F] lg:hidden"
                 >
-                  <span className="transition-transform duration-[120ms] ease-[cubic-bezier(0.2,0,0,1)] group-hover:scale-[1.02]">
-                    {item.label}
-                  </span>
-                </button>
-              );
-            }
+                  {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-80 overflow-y-auto p-0">
+                <MobileNav
+                  pathname={pathname}
+                  onClose={() => setMobileOpen(false)}
+                />
+              </SheetContent>
+            </Sheet>
+          </div>
+        </div>
+      </header>
+    </div>
+  );
+}
 
-            const isActive =
-              item.href === "/"
-                ? pathname === "/"
-                : item.href.startsWith("/#")
-                  ? false
-                  : pathname.startsWith(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(baseClass, isActive ? active : inactive)}
-              >
-                <span
-                  className={cn(
-                    "transition-transform duration-[120ms] ease-[cubic-bezier(0.2,0,0,1)] group-hover:scale-[1.02]",
-                    isActive && "scale-[1.02]",
-                  )}
-                >
-                  {item.label}
-                </span>
-              </Link>
-            );
-          })}
-        </nav>
+// ─── Top utility bar ───────────────────────────────────────────────────
 
-        <div className="flex items-center gap-3">
+function TopUtilityBar() {
+  const { openAccount } = useLeadModals();
+  return (
+    <div className="hidden bg-estate-700 text-white/85 md:block">
+      <div className="mx-auto flex h-9 max-w-7xl items-center justify-between px-4 md:px-6">
+        <p className="font-serif text-[11px] uppercase tracking-[0.22em] text-gold-400">
+          UK · UAE · International
+        </p>
+        <div className="flex items-center gap-1">
           <a
             href={COMPANY_PHONE_HREF}
-            aria-label={`Call us on ${COMPANY_PHONE_DISPLAY}`}
-            title={COMPANY_PHONE_DISPLAY}
-            className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-[#1F4F2F] transition-colors hover:bg-[#F7F5F1] md:flex"
+            className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-colors hover:bg-white/10"
+            title="Call us"
           >
-            <Phone className="h-4 w-4" />
-            <span className="hidden xl:inline">{COMPANY_PHONE_DISPLAY}</span>
+            <Phone className="h-3.5 w-3.5 text-gold-400" />
+            <span>{COMPANY_PHONE_DISPLAY}</span>
           </a>
+          <span aria-hidden className="h-3 w-px bg-white/15" />
           <a
             href={WHATSAPP_URL}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Chat with us on WhatsApp"
-            title="Chat with us on WhatsApp"
-            className="hidden h-9 w-9 items-center justify-center rounded-full bg-[#25D366]/10 text-[#1FAE54] transition-colors hover:bg-[#25D366] hover:text-white md:flex"
+            className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-colors hover:bg-white/10"
+            title="WhatsApp"
           >
-            <WhatsAppIcon className="h-4.5 w-4.5" />
+            <WhatsAppIcon className="h-3.5 w-3.5 text-gold-400" />
+            <span className="hidden xl:inline">WhatsApp</span>
           </a>
+          <span aria-hidden className="hidden h-3 w-px bg-white/15 xl:inline-block" />
           <a
             href={`mailto:${COMPANY_EMAIL}`}
-            aria-label={`Email us at ${COMPANY_EMAIL}`}
-            title={COMPANY_EMAIL}
-            className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-[#4D5257] transition-colors hover:bg-[#F7F5F1] hover:text-[#1F4F2F] md:flex"
+            className="hidden items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-colors hover:bg-white/10 xl:flex"
+            title="Email us"
           >
-            <Mail className="h-4 w-4" />
-            <span className="hidden xl:inline">{COMPANY_EMAIL}</span>
+            <Mail className="h-3.5 w-3.5 text-gold-400" />
+            <span>{COMPANY_EMAIL}</span>
           </a>
-          <Button
+          <span aria-hidden className="h-3 w-px bg-white/15" />
+          <button
+            type="button"
             onClick={openAccount}
-            size="sm"
-            className="hidden bg-[#1F4F2F] text-white hover:bg-[#275E3B] active:bg-[#1a4530] md:flex transition-all duration-[120ms] ease-[cubic-bezier(0.2,0,0,1)] shadow-[0_1px_3px_rgba(31,79,47,0.3)] hover:shadow-[0_4px_12px_rgba(31,79,47,0.25)] hover:scale-[1.02] active:scale-[0.98]"
+            className="rounded-md px-2 py-1 text-xs font-semibold text-gold-400 transition-colors hover:bg-white/10 hover:text-gold-300"
           >
-            <User className="mr-1.5 h-4 w-4" />
-            Sign In
-          </Button>
-
-          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-            <SheetTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="md:hidden text-[#1E1F21] hover:bg-[#F7F5F1] hover:text-[#1F4F2F] transition-all duration-[120ms]"
-              >
-                {mobileOpen ? (
-                  <X className="h-5 w-5" />
-                ) : (
-                  <Menu className="h-5 w-5" />
-                )}
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-72 p-0">
-              <div className="flex flex-col gap-1 p-4 pt-12">
-                {navItems.map((item) => {
-                  const itemBase =
-                    "group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-[120ms] ease-[cubic-bezier(0.2,0,0,1)]";
-                  const inactiveItem =
-                    "text-[#4D5257] hover:bg-[#F7F5F1] hover:text-[#1E1F21]";
-                  const activeItem = "bg-[#1F4F2F]/10 text-[#1F4F2F]";
-
-                  if (item.kind === "modal") {
-                    return (
-                      <button
-                        key={item.label}
-                        type="button"
-                        onClick={() => {
-                          setMobileOpen(false);
-                          openAccount();
-                        }}
-                        className={cn(itemBase, inactiveItem, "text-left")}
-                      >
-                        <span className="transition-transform duration-[120ms] ease-[cubic-bezier(0.2,0,0,1)] group-hover:translate-x-0.5">
-                          {item.label}
-                        </span>
-                      </button>
-                    );
-                  }
-
-                  const isActive =
-                    item.href === "/"
-                      ? pathname === "/"
-                      : item.href.startsWith("/#")
-                        ? false
-                        : pathname.startsWith(item.href);
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setMobileOpen(false)}
-                      className={cn(itemBase, isActive ? activeItem : inactiveItem)}
-                    >
-                      <span
-                        className={cn(
-                          "transition-transform duration-[120ms] ease-[cubic-bezier(0.2,0,0,1)] group-hover:translate-x-0.5",
-                          isActive && "translate-x-0.5",
-                        )}
-                      >
-                        {item.label}
-                      </span>
-                    </Link>
-                  );
-                })}
-                <div className="my-2 h-px bg-[#DDE1E6]" />
-                <a
-                  href={COMPANY_PHONE_HREF}
-                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-[#1F4F2F] transition-colors hover:bg-[#F7F5F1]"
-                >
-                  <Phone className="h-4 w-4" />
-                  {COMPANY_PHONE_DISPLAY}
-                </a>
-                <a
-                  href={WHATSAPP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[#4D5257] transition-colors hover:bg-[#F7F5F1] hover:text-[#1FAE54]"
-                >
-                  <WhatsAppIcon className="h-4 w-4" />
-                  WhatsApp us
-                </a>
-                <a
-                  href={`mailto:${COMPANY_EMAIL}`}
-                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[#4D5257] transition-colors hover:bg-[#F7F5F1] hover:text-[#1F4F2F]"
-                >
-                  <Mail className="h-4 w-4" />
-                  {COMPANY_EMAIL}
-                </a>
-                <div className="my-2 h-px bg-[#DDE1E6]" />
-                <Button
-                  onClick={() => {
-                    openAccount();
-                    setMobileOpen(false);
-                  }}
-                  className="w-full bg-[#1F4F2F] text-white hover:bg-[#275E3B] active:bg-[#1a4530] transition-all duration-[120ms] ease-[cubic-bezier(0.2,0,0,1)]"
-                >
-                  <User className="mr-1.5 h-4 w-4" />
-                  Sign In
-                </Button>
-              </div>
-            </SheetContent>
-          </Sheet>
+            Speak to an advisor
+          </button>
         </div>
       </div>
-    </header>
+    </div>
   );
 }
+
+// ─── Desktop nav primitives ────────────────────────────────────────────
+
+function navLinkClasses(isActive: boolean) {
+  return cn(
+    "group relative flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150 ease-out",
+    isActive
+      ? "bg-estate-700/10 text-estate-700"
+      : "text-[#4D5257] hover:bg-[#F7F5F1] hover:text-[#1E1F21]",
+  );
+}
+
+function NavLink({
+  href,
+  label,
+  pathname,
+}: {
+  href: string;
+  label: string;
+  pathname: string;
+}) {
+  const isActive =
+    href === "/"
+      ? pathname === "/"
+      : href.startsWith("/#")
+        ? false
+        : pathname.startsWith(href);
+  return (
+    <Link href={href} className={navLinkClasses(isActive)}>
+      {label}
+    </Link>
+  );
+}
+
+function NavDropdown({
+  label,
+  items,
+  pathname,
+}: {
+  label: string;
+  items: ServiceEntry[];
+  pathname: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const { openBuyer, openSeller, openAccount } = useLeadModals();
+
+  // Active when any item href matches current path
+  const isActive = items.some((item) => {
+    if ("href" in item) {
+      const href = item.href.split("#")[0];
+      return href && pathname.startsWith(href) && href !== "/";
+    }
+    return false;
+  });
+
+  // Close on outside click / escape
+  useEffect(() => {
+    if (!open) return;
+    function onDoc(e: MouseEvent) {
+      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  function runAction(action: NavAction["action"]) {
+    setOpen(false);
+    if (action === "buyer") openBuyer();
+    else if (action === "seller") openSeller();
+    else openAccount();
+  }
+
+  return (
+    <div ref={rootRef} className="relative">
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-haspopup="menu"
+        onClick={() => setOpen((v) => !v)}
+        className={navLinkClasses(isActive)}
+      >
+        {label}
+        <ChevronDown
+          className={cn(
+            "h-3.5 w-3.5 transition-transform duration-150",
+            open && "rotate-180",
+          )}
+        />
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute left-1/2 top-full z-50 mt-2 w-80 -translate-x-1/2 overflow-hidden rounded-2xl border border-border bg-surface shadow-xl shadow-black/5"
+        >
+          <ul className="p-2">
+            {items.map((item, i) => {
+              const Icon = ("icon" in item && item.icon) || undefined;
+              const body = (
+                <span className="flex items-start gap-3">
+                  {Icon && (
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-estate-700/8 text-estate-700">
+                      <Icon className="h-4 w-4" />
+                    </span>
+                  )}
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-medium text-estate-700">
+                      {item.label}
+                    </span>
+                    {item.desc && (
+                      <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">
+                        {item.desc}
+                      </span>
+                    )}
+                  </span>
+                </span>
+              );
+              return (
+                <li key={i}>
+                  {"href" in item ? (
+                    <Link
+                      href={item.href}
+                      onClick={() => setOpen(false)}
+                      className="block rounded-xl px-3 py-2.5 transition-colors hover:bg-estate-700/[0.04]"
+                    >
+                      {body}
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => runAction(item.action)}
+                      className="w-full rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-estate-700/[0.04]"
+                    >
+                      {body}
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SignInButton({ className }: { className?: string }) {
+  const { openAccount } = useLeadModals();
+  return (
+    <Button
+      onClick={openAccount}
+      size="sm"
+      className={cn(
+        "bg-[#1F4F2F] text-white hover:bg-[#275E3B] active:bg-[#1a4530] transition-all duration-150 shadow-[0_1px_3px_rgba(31,79,47,0.3)] hover:shadow-[0_4px_12px_rgba(31,79,47,0.25)]",
+        className,
+      )}
+    >
+      <User className="mr-1.5 h-4 w-4" />
+      Sign In
+    </Button>
+  );
+}
+
+// ─── Mobile nav ────────────────────────────────────────────────────────
+
+function MobileNav({
+  pathname,
+  onClose,
+}: {
+  pathname: string;
+  onClose: () => void;
+}) {
+  const { openAccount } = useLeadModals();
+  return (
+    <div className="flex h-full flex-col">
+      <div className="flex-1 px-4 pb-4 pt-12">
+        <ul className="space-y-1">
+          <MobileLink href="/properties" label="Properties" pathname={pathname} onClose={onClose} />
+          <MobileGroup label="Services" defaultOpen items={SERVICES_ITEMS} onClose={onClose} />
+          <MobileLink href="/blog" label="Insights" pathname={pathname} onClose={onClose} />
+          <MobileGroup label="About" items={ABOUT_ITEMS} onClose={onClose} />
+        </ul>
+
+        {/* Contact strip */}
+        <div className="my-5 h-px bg-[#DDE1E6]" />
+        <ul className="space-y-1">
+          <li>
+            <a
+              href={COMPANY_PHONE_HREF}
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-estate-700 transition-colors hover:bg-[#F7F5F1]"
+            >
+              <Phone className="h-4 w-4 text-gold-500" />
+              {COMPANY_PHONE_DISPLAY}
+            </a>
+          </li>
+          <li>
+            <a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[#4D5257] transition-colors hover:bg-[#F7F5F1] hover:text-[#1FAE54]"
+            >
+              <WhatsAppIcon className="h-4 w-4 text-[#1FAE54]" />
+              WhatsApp us
+            </a>
+          </li>
+          <li>
+            <a
+              href={`mailto:${COMPANY_EMAIL}`}
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[#4D5257] transition-colors hover:bg-[#F7F5F1] hover:text-[#1F4F2F]"
+            >
+              <Mail className="h-4 w-4 text-gold-500" />
+              {COMPANY_EMAIL}
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <div className="border-t border-[#DDE1E6] bg-[#F7F5F1] p-4">
+        <Button
+          onClick={() => {
+            openAccount();
+            onClose();
+          }}
+          className="w-full bg-estate-700 text-white hover:bg-estate-600"
+        >
+          <User className="mr-1.5 h-4 w-4" />
+          Sign In
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function MobileLink({
+  href,
+  label,
+  pathname,
+  onClose,
+}: {
+  href: string;
+  label: string;
+  pathname: string;
+  onClose: () => void;
+}) {
+  const isActive =
+    href === "/"
+      ? pathname === "/"
+      : href.startsWith("/#")
+        ? false
+        : pathname.startsWith(href);
+  return (
+    <li>
+      <Link
+        href={href}
+        onClick={onClose}
+        className={cn(
+          "flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+          isActive
+            ? "bg-estate-700/10 text-estate-700"
+            : "text-[#1E1F21] hover:bg-[#F7F5F1]",
+        )}
+      >
+        {label}
+        <ArrowRight className="h-3.5 w-3.5 opacity-50" />
+      </Link>
+    </li>
+  );
+}
+
+function MobileGroup({
+  label,
+  items,
+  defaultOpen,
+  onClose,
+}: {
+  label: string;
+  items: ServiceEntry[];
+  defaultOpen?: boolean;
+  onClose: () => void;
+}) {
+  const [open, setOpen] = useState(!!defaultOpen);
+  const { openBuyer, openSeller, openAccount } = useLeadModals();
+
+  function runAction(a: NavAction["action"]) {
+    onClose();
+    if (a === "buyer") openBuyer();
+    else if (a === "seller") openSeller();
+    else openAccount();
+  }
+
+  return (
+    <li>
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-[#1E1F21] transition-colors hover:bg-[#F7F5F1]"
+      >
+        {label}
+        <ChevronDown
+          className={cn(
+            "h-4 w-4 text-muted-foreground transition-transform duration-150",
+            open && "rotate-180",
+          )}
+        />
+      </button>
+      {open && (
+        <ul className="mt-1 space-y-0.5 pl-2">
+          {items.map((item, i) => {
+            const Icon = ("icon" in item && item.icon) || undefined;
+            const inner = (
+              <span className="flex items-center gap-3">
+                {Icon && <Icon className="h-4 w-4 text-estate-700" />}
+                <span className="text-sm font-medium text-estate-700">
+                  {item.label}
+                </span>
+              </span>
+            );
+            return (
+              <li key={i}>
+                {"href" in item ? (
+                  <Link
+                    href={item.href}
+                    onClick={onClose}
+                    className="block rounded-lg px-3 py-2 transition-colors hover:bg-estate-700/[0.05]"
+                  >
+                    {inner}
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => runAction(item.action)}
+                    className="w-full rounded-lg px-3 py-2 text-left transition-colors hover:bg-estate-700/[0.05]"
+                  >
+                    {inner}
+                  </button>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </li>
+  );
+}
+
