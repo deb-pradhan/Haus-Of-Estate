@@ -7,7 +7,6 @@ import { useEffect, useRef, useState } from "react";
 import {
   Menu,
   X,
-  User,
   Mail,
   Phone,
   ChevronDown,
@@ -112,8 +111,6 @@ export function Header() {
 
           {/* Right-side actions */}
           <div className="flex items-center gap-2">
-            <SignInButton className="hidden lg:flex" />
-
             {/* Mobile / tablet trigger */}
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
@@ -345,23 +342,6 @@ function NavDropdown({
   );
 }
 
-function SignInButton({ className }: { className?: string }) {
-  const { openAccount } = useLeadModals();
-  return (
-    <Button
-      onClick={openAccount}
-      size="sm"
-      className={cn(
-        "bg-[#1F4F2F] text-white hover:bg-[#275E3B] active:bg-[#1a4530] transition-all duration-150 shadow-[0_1px_3px_rgba(31,79,47,0.3)] hover:shadow-[0_4px_12px_rgba(31,79,47,0.25)]",
-        className,
-      )}
-    >
-      <User className="mr-1.5 h-4 w-4" />
-      Sign In
-    </Button>
-  );
-}
-
 // ─── Mobile nav ────────────────────────────────────────────────────────
 
 function MobileNav({
@@ -371,7 +351,6 @@ function MobileNav({
   pathname: string;
   onClose: () => void;
 }) {
-  const { openAccount } = useLeadModals();
   return (
     <div className="flex h-full flex-col">
       <div className="flex-1 px-4 pb-4 pt-12">
@@ -417,18 +396,6 @@ function MobileNav({
         </ul>
       </div>
 
-      <div className="border-t border-[#DDE1E6] bg-[#F7F5F1] p-4">
-        <Button
-          onClick={() => {
-            openAccount();
-            onClose();
-          }}
-          className="w-full bg-estate-700 text-white hover:bg-estate-600"
-        >
-          <User className="mr-1.5 h-4 w-4" />
-          Sign In
-        </Button>
-      </div>
     </div>
   );
 }
