@@ -27,8 +27,10 @@ import { cn } from "@/lib/utils";
 
 const WHATSAPP_URL = "https://wa.me/971585607033";
 const COMPANY_EMAIL = "info@hausofestate.com";
-const COMPANY_PHONE_DISPLAY = "+971 58 560 7033";
-const COMPANY_PHONE_HREF = "tel:+971585607033";
+const COMPANY_PHONES = [
+  { region: "UAE", display: "+971 58 560 7033", href: "tel:+971585607033" },
+  { region: "UK", display: "+44 7496 033321", href: "tel:+447496033321" },
+] as const;
 
 function WhatsAppIcon({ className }: { className?: string }) {
   return (
@@ -148,14 +150,24 @@ function TopUtilityBar() {
           UK · UAE · International
         </p>
         <div className="flex items-center gap-1">
-          <a
-            href={COMPANY_PHONE_HREF}
-            className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-colors hover:bg-white/10"
-            title="Call us"
-          >
-            <Phone className="h-3.5 w-3.5 text-gold-400" />
-            <span>{COMPANY_PHONE_DISPLAY}</span>
-          </a>
+          {COMPANY_PHONES.map((p, i) => (
+            <span key={p.region} className="flex items-center gap-1">
+              {i === 0 && <Phone className="ml-1 h-3.5 w-3.5 shrink-0 text-gold-400" />}
+              <a
+                href={p.href}
+                className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-colors hover:bg-white/10"
+                title={`Call ${p.region}`}
+              >
+                <span className="text-[9px] font-semibold uppercase tracking-[0.12em] text-gold-400/80">
+                  {p.region}
+                </span>
+                <span>{p.display}</span>
+              </a>
+              {i < COMPANY_PHONES.length - 1 && (
+                <span aria-hidden className="h-3 w-px bg-white/15" />
+              )}
+            </span>
+          ))}
           <span aria-hidden className="h-3 w-px bg-white/15" />
           <a
             href={WHATSAPP_URL}
@@ -364,15 +376,20 @@ function MobileNav({
         {/* Contact strip */}
         <div className="my-5 h-px bg-[#DDE1E6]" />
         <ul className="space-y-1">
-          <li>
-            <a
-              href={COMPANY_PHONE_HREF}
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-estate-700 transition-colors hover:bg-[#F7F5F1]"
-            >
-              <Phone className="h-4 w-4 text-gold-500" />
-              {COMPANY_PHONE_DISPLAY}
-            </a>
-          </li>
+          {COMPANY_PHONES.map((p) => (
+            <li key={p.region}>
+              <a
+                href={p.href}
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-estate-700 transition-colors hover:bg-[#F7F5F1]"
+              >
+                <Phone className="h-4 w-4 text-gold-500" />
+                <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-gold-600">
+                  {p.region}
+                </span>
+                {p.display}
+              </a>
+            </li>
+          ))}
           <li>
             <a
               href={WHATSAPP_URL}
