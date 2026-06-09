@@ -12,9 +12,6 @@ import {
   Phone,
   ChevronDown,
   ArrowRight,
-  Home,
-  KeyRound,
-  Tag,
   ClipboardList,
   Sparkles,
   Sofa,
@@ -61,9 +58,6 @@ interface NavAction {
 type ServiceEntry = NavItem | NavAction;
 
 const SERVICES_ITEMS: ServiceEntry[] = [
-  { action: "buyer", label: "Buy a property", desc: "Match with vetted estate agents across the UK, UAE and beyond.", icon: Home },
-  { action: "buyer", label: "Rent a property", desc: "Trusted letting agents in your chosen areas.", icon: KeyRound },
-  { action: "seller", label: "Sell or let your property", desc: "Free market appraisal and a vetted listing partner.", icon: Tag },
   { href: "/services#property-management", label: "Property Management", desc: "Tenancy, maintenance and compliance, handled.", icon: ClipboardList },
   { href: "/services#staging", label: "Staging", desc: "Present a home for viewings, photography and marketing.", icon: Sparkles },
   { href: "/services#furnishing", label: "Furnishing", desc: "Move-in ready interiors for new builds and rentals.", icon: Sofa },

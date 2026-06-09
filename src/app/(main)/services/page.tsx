@@ -4,9 +4,6 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
-  Home,
-  KeyRound,
-  Tag,
   ClipboardList,
   Sparkles,
   Sofa,
@@ -29,51 +26,6 @@ interface ServiceSection {
 }
 
 const SECTIONS: ServiceSection[] = [
-  {
-    id: "buy",
-    eyebrow: "Buying",
-    title: "Buy a property",
-    icon: Home,
-    lead: "One enquiry. The right vetted estate agent. No hidden fees.",
-    body:
-      "Share your brief — location, budget, timeframe and the kind of home you’re after. A Haus of Estate advisor will introduce you to one or two estate agents who actually fit the brief. From viewings through to offer and conveyancing, we stay close as an independent second pair of eyes.",
-    bullets: [
-      "Free, no-obligation enquiry",
-      "Coordinated viewing days for overseas clients",
-      "Honest second-opinion on offers and survey findings",
-    ],
-    cta: { label: "Start a buying enquiry", action: "buyer" },
-  },
-  {
-    id: "rent",
-    eyebrow: "Letting",
-    title: "Rent a property",
-    icon: KeyRound,
-    lead: "Let an advisor introduce you to trusted letting agents in your chosen area.",
-    body:
-      "Whether you’re renting a flat in London, a townhouse in Cardiff or an apartment in Dubai, we route you to letting agents whose standards we vouch for. We help you understand referencing, deposits and the small print before you commit.",
-    bullets: [
-      "Referencing, Right to Rent and deposit protection explained",
-      "Agreed agent fees — no surprises",
-      "Suitable for first-time tenants and corporate relocations",
-    ],
-    cta: { label: "Start a rental enquiry", action: "buyer" },
-  },
-  {
-    id: "sell-let",
-    eyebrow: "Selling & landlord services",
-    title: "Sell or let your property",
-    icon: Tag,
-    lead: "Free market appraisal and a vetted listing partner — sale or let.",
-    body:
-      "We start with a realistic guide price backed by comparable evidence for your area. If you proceed, we introduce a listing agent we vouch for and stay involved through the process — at no extra cost to you.",
-    bullets: [
-      "Free, evidence-led market appraisal",
-      "Vetted listing partners — sale or lettings",
-      "Honest second-opinion on offers, terms and tenant references",
-    ],
-    cta: { label: "Request a free appraisal", action: "seller" },
-  },
   {
     id: "property-management",
     eyebrow: "Property Management",
@@ -150,12 +102,12 @@ export default function ServicesPage() {
             Services
           </p>
           <h1 className="mt-4 font-serif text-4xl font-medium leading-[1.05] text-white md:text-6xl md:leading-[1.04]">
-            One firm,{" "}
-            <span className="text-gold-400">every step of the journey.</span>
+            Beyond the deal —{" "}
+            <span className="text-gold-400">the services that make a home work.</span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/80 md:text-lg">
-            Buying, renting, selling, managing, presenting or improving a
-            property — we&apos;ve built our service to cover the whole arc, with
+            Management, staging, furnishing and renovations — the specialist
+            services we offer alongside our buy, rent and sell advisory, with
             vetted partners in every market we serve.
           </p>
         </div>
