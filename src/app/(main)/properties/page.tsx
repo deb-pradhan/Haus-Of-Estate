@@ -1,15 +1,17 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import type { Metadata } from 'next'
-import { ArrowRight, MapPin, BedDouble, Building2 } from 'lucide-react'
+import { ArrowRight, MapPin, BedDouble, Building2, X } from 'lucide-react'
 import { sanityFetch, urlFor } from '@/sanity'
 import { PROPERTIES_QUERY } from '@/sanity/queries'
+import { EmptyStateCTA } from '@/components/properties/empty-state-cta'
 
 interface PropertyCard {
   _id: string
   title: string
   slug: string
   community: string
+  masterDevelopment?: string
   city: string
   country?: string
   developer?: string
@@ -21,6 +23,28 @@ interface PropertyCard {
   summary: string
   featured?: boolean
   featuredImage?: { alt?: string } & Record<string, unknown>
+}
+
+// Friendly property-type buckets used by the hero search → real schema unitTypes
+const TYPE_GROUPS: Record<string, string[]> = {
+  Apartment: [
+    'Studio',
+    '1 Bedroom',
+    '2 Bedroom',
+    '3 Bedroom',
+    'Terrace Apartment',
+  ],
+  Villa: ['Villa'],
+  Mansion: ['Mansion'],
+  Penthouse: ['Penthouse'],
+  Townhouse: ['Townhouse'],
+}
+
+interface SearchParams {
+  intent?: string
+  location?: string
+  type?: string
+  beds?: string
 }
 
 const COMPLETION_LABEL: Record<string, string> = {
@@ -43,13 +67,68 @@ export const metadata: Metadata = {
 
 export const revalidate = 60
 
-export default async function PropertiesPage() {
+export default async function PropertiesPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>
+}) {
+  const params = await searchParams
+  const intent = params.intent === 'rent' ? 'rent' : 'buy'
+  const locationFilter = params.location?.trim() || ''
+  const typeFilter = params.type?.trim() || ''
+  const bedsFilter = params.beds ? parseInt(params.beds, 10) : NaN
+
   const { data: properties } = await sanityFetch<PropertyCard[]>({
     query: PROPERTIES_QUERY,
   })
-  const list = properties ?? []
+  const all = properties ?? []
 
-  // Group by community
+  // ── Filter pipeline ────────────────────────────────────────────────
+  const allowedUnitTypes = typeFilter ? TYPE_GROUPS[typeFilter] : null
+  const minBeds = Number.isFinite(bedsFilter) ? bedsFilter : null
+  const locLC = locationFilter.toLowerCase()
+
+  const list = all.filter((p) => {
+    if (locLC) {
+      const hay = [p.community, p.city, p.country, p.masterDevelopment]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+      if (!hay.includes(locLC)) return false
+    }
+    if (allowedUnitTypes && !allowedUnitTypes.includes(p.unitType)) return false
+    if (minBeds !== null) {
+      if (typeof p.bedrooms !== 'number') return false
+      if (p.bedrooms < minBeds) return false
+    }
+    return true
+  })
+
+  const activeFilters: { label: string; key: keyof SearchParams }[] = []
+  if (locationFilter) activeFilters.push({ label: locationFilter, key: 'location' })
+  if (typeFilter) activeFilters.push({ label: typeFilter, key: 'type' })
+  if (minBeds !== null)
+    activeFilters.push({
+      label: minBeds === 0 ? 'Studio' : `${minBeds}+ bedrooms`,
+      key: 'beds',
+    })
+  if (params.intent === 'rent')
+    activeFilters.push({ label: 'To rent', key: 'intent' })
+
+  const hasFilters = activeFilters.length > 0
+
+  function buildHrefWithout(key: keyof SearchParams) {
+    const next = new URLSearchParams()
+    if (params.intent && key !== 'intent') next.set('intent', params.intent)
+    if (params.location && key !== 'location')
+      next.set('location', params.location)
+    if (params.type && key !== 'type') next.set('type', params.type)
+    if (params.beds && key !== 'beds') next.set('beds', params.beds)
+    const qs = next.toString()
+    return qs ? `/properties?${qs}` : '/properties'
+  }
+
+  // Group by community for display
   const byCommunity = new Map<string, PropertyCard[]>()
   for (const p of list) {
     const c = p.community || 'Other'
@@ -81,17 +160,50 @@ export default async function PropertiesPage() {
       {/* Listings */}
       <section className="bg-background px-4 py-16 md:px-6 md:py-24">
         <div className="mx-auto max-w-6xl">
-          {communities.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border bg-surface p-10 text-center">
-              <h2 className="font-serif text-xl font-medium text-estate-700">
-                No properties live just yet.
-              </h2>
-              <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-                Our latest community listings are being prepared. In the
-                meantime, tell us what you&apos;re looking for and an advisor
-                will be in touch.
+          {/* Result summary + active filters */}
+          {hasFilters && (
+            <div className="mb-10 flex flex-wrap items-center gap-3">
+              <p className="text-sm font-medium text-estate-700">
+                {list.length === 0
+                  ? `No ${intent === 'rent' ? 'rentals' : 'listings'} match your filters`
+                  : `Showing ${list.length} ${list.length === 1 ? 'listing' : 'listings'}${intent === 'rent' ? ' to rent' : ''}`}
               </p>
+              <div className="flex flex-wrap items-center gap-2">
+                {activeFilters.map((f) => (
+                  <Link
+                    key={f.key}
+                    href={buildHrefWithout(f.key)}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-estate-700/30 hover:text-estate-700"
+                  >
+                    {f.label}
+                    <X className="h-3 w-3" />
+                  </Link>
+                ))}
+                <Link
+                  href="/properties"
+                  className="text-xs text-muted-foreground underline-offset-2 hover:text-estate-700 hover:underline"
+                >
+                  Clear all
+                </Link>
+              </div>
             </div>
+          )}
+
+          {communities.length === 0 ? (
+            hasFilters ? (
+              <EmptyStateCTA intent={intent} />
+            ) : (
+              <div className="rounded-2xl border border-dashed border-border bg-surface p-10 text-center">
+                <h2 className="font-serif text-xl font-medium text-estate-700">
+                  No properties live just yet.
+                </h2>
+                <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+                  Our latest community listings are being prepared. In the
+                  meantime, tell us what you&apos;re looking for and an advisor
+                  will be in touch.
+                </p>
+              </div>
+            )
           ) : (
             <div className="space-y-16">
               {communities.map(([community, items]) => (

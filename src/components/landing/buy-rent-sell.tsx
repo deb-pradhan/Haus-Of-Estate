@@ -1,35 +1,56 @@
 "use client";
 
 import { useState } from "react";
-import { Home, KeyRound, Tag, ArrowRight, MapPin, Building2, Wallet, Search } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  Home,
+  KeyRound,
+  ArrowRight,
+  MapPin,
+  Building2,
+  BedDouble,
+  Search,
+  Tag,
+} from "lucide-react";
 import { useLeadModals } from "@/components/lead-modal/modal-context";
 
-const TABS = [
-  { id: "buy", label: "Buy", icon: Home, action: "buyer" as const },
-  { id: "rent", label: "Rent", icon: KeyRound, action: "buyer" as const },
-  { id: "sell", label: "Sell", icon: Tag, action: "seller" as const },
+// ── Filter option sets — aligned to the actual property schema ──────────
+
+type Intent = "buy" | "rent";
+
+const TABS: { id: Intent; label: string; icon: React.ElementType }[] = [
+  { id: "buy", label: "Buy", icon: Home },
+  { id: "rent", label: "Rent", icon: KeyRound },
 ];
 
 const LOCATIONS = [
+  "Dubai",
+  "Abu Dhabi",
+  "Sharjah",
   "London",
   "Cardiff",
   "Manchester",
   "Birmingham",
-  "Dubai",
-  "Abu Dhabi",
-  "Sharjah",
   "Bali, Indonesia",
-  "Other / Not sure",
 ];
 
-const TYPES = ["Apartment", "Villa", "Townhouse", "Penthouse", "Commercial", "Land / Plot"];
+// Friendly groupings — these map to one or more schema unitType values
+// when /properties filters its results. See TYPE_GROUPS in /properties.
+const TYPES = [
+  "Apartment",
+  "Villa",
+  "Mansion",
+  "Penthouse",
+  "Townhouse",
+];
 
-const BUDGETS = [
-  "Up to £250k",
-  "£250k – £500k",
-  "£500k – £1m",
-  "£1m – £2.5m",
-  "£2.5m+",
+const BEDROOMS = [
+  { value: "0", label: "Studio" },
+  { value: "1", label: "1+" },
+  { value: "2", label: "2+" },
+  { value: "3", label: "3+" },
+  { value: "4", label: "4+" },
+  { value: "5", label: "5+" },
 ];
 
 const STATS = [
@@ -47,12 +68,23 @@ function getGreeting(): string {
 }
 
 export function BuyRentSell() {
-  const { openBuyer, openSeller } = useLeadModals();
-  const [activeTab, setActiveTab] = useState("buy");
+  const router = useRouter();
+  const { openSeller } = useLeadModals();
+  const [intent, setIntent] = useState<Intent>("buy");
+  const [location, setLocation] = useState("");
+  const [type, setType] = useState("");
+  const [beds, setBeds] = useState("");
   const greeting = getGreeting();
 
-  const tab = TABS.find((t) => t.id === activeTab) ?? TABS[0];
-  const startEnquiry = () => (tab.action === "seller" ? openSeller() : openBuyer());
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const params = new URLSearchParams();
+    params.set("intent", intent);
+    if (location) params.set("location", location);
+    if (type) params.set("type", type);
+    if (beds) params.set("beds", beds);
+    router.push(`/properties?${params.toString()}`);
+  };
 
   return (
     <section aria-label="Hero" className="relative overflow-hidden bg-estate-700">
@@ -80,20 +112,20 @@ export function BuyRentSell() {
           advice, no hidden fees, wherever you&apos;re moving capital.
         </p>
 
-        {/* Buy / Rent / Sell quick-tabs */}
+        {/* Buy / Rent intent toggle */}
         <div
           role="tablist"
           aria-label="What would you like to do"
           className="mx-auto mt-9 inline-flex rounded-full border border-white/15 bg-white/5 p-1 backdrop-blur-sm"
         >
           {TABS.map((t) => {
-            const selected = t.id === activeTab;
+            const selected = t.id === intent;
             return (
               <button
                 key={t.id}
                 role="tab"
                 aria-selected={selected}
-                onClick={() => setActiveTab(t.id)}
+                onClick={() => setIntent(t.id)}
                 className={`flex items-center gap-2 rounded-full px-5 py-2 text-sm font-medium transition-colors ${
                   selected
                     ? "bg-white text-estate-700 shadow-sm"
@@ -107,18 +139,20 @@ export function BuyRentSell() {
           })}
         </div>
 
-        {/* Enquiry search bar */}
-        <div className="mx-auto mt-5 max-w-4xl rounded-2xl border border-white/15 bg-surface p-2 shadow-2xl shadow-black/25 md:rounded-full">
+        {/* Search bar */}
+        <form
+          onSubmit={handleSubmit}
+          className="mx-auto mt-5 max-w-4xl rounded-2xl border border-white/15 bg-surface p-2 shadow-2xl shadow-black/25 md:rounded-full"
+        >
           <div className="grid gap-2 md:grid-cols-[1fr_1fr_1fr_auto] md:items-center">
             <Field icon={MapPin} label="Location">
               <select
                 aria-label="Preferred location"
-                defaultValue=""
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
                 className="w-full bg-transparent text-sm text-foreground outline-none"
               >
-                <option value="" disabled>
-                  Any location
-                </option>
+                <option value="">Anywhere</option>
                 {LOCATIONS.map((l) => (
                   <option key={l} value={l}>
                     {l}
@@ -130,12 +164,11 @@ export function BuyRentSell() {
             <Field icon={Building2} label="Property type" bordered>
               <select
                 aria-label="Property type"
-                defaultValue=""
+                value={type}
+                onChange={(e) => setType(e.target.value)}
                 className="w-full bg-transparent text-sm text-foreground outline-none"
               >
-                <option value="" disabled>
-                  Any type
-                </option>
+                <option value="">Any type</option>
                 {TYPES.map((t) => (
                   <option key={t} value={t}>
                     {t}
@@ -144,36 +177,48 @@ export function BuyRentSell() {
               </select>
             </Field>
 
-            <Field icon={Wallet} label="Budget" bordered>
+            <Field icon={BedDouble} label="Bedrooms" bordered>
               <select
-                aria-label="Budget"
-                defaultValue=""
+                aria-label="Bedrooms"
+                value={beds}
+                onChange={(e) => setBeds(e.target.value)}
                 className="w-full bg-transparent text-sm text-foreground outline-none"
               >
-                <option value="" disabled>
-                  Any budget
-                </option>
-                {BUDGETS.map((b) => (
-                  <option key={b} value={b}>
-                    {b}
+                <option value="">Any</option>
+                {BEDROOMS.map((b) => (
+                  <option key={b.value} value={b.value}>
+                    {b.label}
                   </option>
                 ))}
               </select>
             </Field>
 
             <button
-              type="button"
-              onClick={startEnquiry}
+              type="submit"
               className="flex items-center justify-center gap-2 rounded-xl bg-estate-700 px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-estate-600 md:rounded-full"
             >
               <Search className="h-4 w-4" />
-              {tab.id === "sell" ? "Get appraisal" : "Find my match"}
+              Find my match
             </button>
           </div>
-        </div>
+        </form>
 
         <p className="mt-4 text-xs text-white/55">
           Free &amp; without obligation · Replied to within 2 working hours
+        </p>
+
+        {/* Selling path — not a search; a separate flow */}
+        <p className="mt-3 text-sm text-white/65">
+          Selling your home?{" "}
+          <button
+            type="button"
+            onClick={openSeller}
+            className="inline-flex items-center gap-1 font-semibold text-gold-400 underline-offset-4 hover:underline"
+          >
+            <Tag className="h-3.5 w-3.5" />
+            Get a free valuation
+            <ArrowRight className="h-3.5 w-3.5" />
+          </button>
         </p>
 
         {/* Stat strip */}
