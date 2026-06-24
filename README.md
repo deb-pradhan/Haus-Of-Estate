@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Haus Of Estate
+
+AI-powered real estate platform for the UAE market.
+
+## What is this?
+
+Haus Of Estate is a full-lifecycle property platform — from discovering properties to closing deals. Unlike typical listing sites that just show photos and prices, this platform focuses on trust, verification, and actually completing transactions. Built for buyers, investors, developers, and agents who want a smarter way to handle property in the UAE.
+
+## Features
+
+- Verified, up-to-date property listings (no stale or duplicate data)
+- AI-powered search and property recommendations
+- Agent profiles with reputation tied to real deals
+- Content management via Sanity CMS
+- User authentication with multiple sign-in options
+- Mobile-responsive, video-first design for modern buyers
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| **Framework** | Next.js (React, TypeScript) |
+| **Database** | PostgreSQL + Prisma ORM |
+| **CMS** | Sanity (headless content management) |
+| **Auth** | NextAuth with multiple providers |
+| **UI** | Tailwind CSS, shadcn/ui |
+| **Deploy** | Docker Compose |
+
+## Architecture
+
+```
+Users
+  └── Next.js Frontend
+        ├── API Routes → PostgreSQL (Prisma)
+        ├── Sanity CMS → Property content + media
+        └── Auth Layer → User management + sessions
+```
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+git clone https://github.com/deb-pradhan/Haus-Of-Estate.git
+cd Haus-Of-Estate
+npm install
+cp .env.example .env   # configure database, Sanity, and auth
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or 
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Docker
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+docker compose up
+```
 
-## Learn More
+## License
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
