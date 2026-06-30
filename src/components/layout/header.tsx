@@ -25,7 +25,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useLeadModals } from "@/components/lead-modal";
 import { cn } from "@/lib/utils";
 
-const WHATSAPP_URL = "https://wa.me/447721096676";
+const WHATSAPP_URL = "https://wa.me/971585607033";
 const COMPANY_EMAIL = "info@hausofestate.com";
 const COMPANY_PHONES = [
   { region: "UAE", display: "+971 58 560 7033", href: "tel:+971585607033" },

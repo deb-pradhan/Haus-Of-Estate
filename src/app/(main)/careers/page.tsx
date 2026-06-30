@@ -17,6 +17,19 @@ import { ApplicationForm } from '@/components/careers/application-form'
 import { HR_INBOX } from '@/lib/careers'
 import { LifeAtHoE } from '@/components/careers/life-at-hoe'
 
+// WhatsApp line for careers enquiries — UK number, with a pre-filled message.
+const CAREERS_WHATSAPP_URL =
+  'https://wa.me/447721096676?text=' +
+  encodeURIComponent('Hi Haus of Estate, I have a question about careers/applying.')
+
+function WhatsAppGlyph({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 32 32" className={className} fill="currentColor" aria-hidden="true">
+      <path d="M16 .5C7.44.5.5 7.44.5 16c0 2.83.74 5.49 2.04 7.79L.5 31.5l7.93-2.07A15.45 15.45 0 0 0 16 31.5C24.56 31.5 31.5 24.56 31.5 16S24.56.5 16 .5zm0 28a12.45 12.45 0 0 1-6.36-1.74l-.46-.27-4.71 1.23 1.26-4.59-.3-.47A12.5 12.5 0 1 1 16 28.5zm6.86-9.36c-.38-.19-2.22-1.1-2.57-1.22-.34-.13-.59-.19-.84.19s-.96 1.22-1.18 1.47-.43.28-.81.09c-2.2-1.1-3.65-1.97-5.1-4.46-.39-.66.39-.62 1.11-2.05.13-.25.06-.47-.03-.66s-.84-2.03-1.15-2.78c-.3-.73-.61-.63-.84-.64h-.72c-.25 0-.66.09-1.01.47s-1.32 1.29-1.32 3.13 1.35 3.62 1.54 3.87c.19.25 2.66 4.06 6.45 5.69.9.39 1.6.62 2.15.79.9.29 1.72.25 2.37.15.72-.11 2.22-.91 2.53-1.78.31-.88.31-1.62.22-1.78s-.34-.25-.72-.44z" />
+    </svg>
+  )
+}
+
 interface RoleCard {
   _id: string
   title: string
@@ -107,7 +120,18 @@ export default async function CareersPage() {
             >
               See open jobs <ArrowRight className="h-4 w-4" />
             </a>
+            <a
+              href={CAREERS_WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-white/25 bg-white/10 px-6 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+            >
+              <WhatsAppGlyph className="h-4 w-4 text-[#25D366]" /> Ask a question on WhatsApp
+            </a>
           </div>
+          <p className="mt-4 text-xs text-white/60">
+            Got a query about a role or your application? Message us on WhatsApp at +44 7721 096676.
+          </p>
         </div>
       </section>
 
