@@ -25,7 +25,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useLeadModals } from "@/components/lead-modal";
 import { cn } from "@/lib/utils";
 
-const WHATSAPP_URL = "https://wa.me/971585607033";
+const WHATSAPP_URL = "https://wa.me/447721096676";
 const COMPANY_EMAIL = "info@hausofestate.com";
 const COMPANY_PHONES = [
   { region: "UAE", display: "+971 58 560 7033", href: "tel:+971585607033" },
@@ -103,7 +103,7 @@ export function Header() {
               items={SERVICES_ITEMS}
               pathname={pathname}
             />
-            <NavLink href="/blog" label="Insights" pathname={pathname} />
+            <NavLink href="/blog" label="Blogs" pathname={pathname} />
             <NavDropdown
               label="About"
               items={ABOUT_ITEMS}
@@ -369,7 +369,7 @@ function MobileNav({
         <ul className="space-y-1">
           <MobileLink href="/properties" label="Properties" pathname={pathname} onClose={onClose} />
           <MobileGroup label="Services" defaultOpen items={SERVICES_ITEMS} onClose={onClose} />
-          <MobileLink href="/blog" label="Insights" pathname={pathname} onClose={onClose} />
+          <MobileLink href="/blog" label="Blogs" pathname={pathname} onClose={onClose} />
           <MobileGroup label="About" items={ABOUT_ITEMS} onClose={onClose} />
         </ul>
 

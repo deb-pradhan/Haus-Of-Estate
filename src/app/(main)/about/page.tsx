@@ -3,7 +3,6 @@
 import Link from "next/link";
 import {
   ArrowRight,
-  Compass,
   Globe2,
   Handshake,
   ShieldCheck,
@@ -11,10 +10,34 @@ import {
   Users,
   Clock,
   BookOpen,
+  Home,
+  KeyRound,
+  Building2,
+  HardHat,
+  GraduationCap,
+  ClipboardCheck,
+  ShoppingBag,
+  Tag,
+  Settings2,
+  Plane,
+  Briefcase,
+  Newspaper,
+  Lightbulb,
+  Mail,
+  Phone,
+  MessageCircle,
+  Star,
+  MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLeadModals } from "@/components/lead-modal/modal-context";
 import { TeamPreview } from "@/components/team/team-preview";
+
+// ── Contact details (kept in sync with the site footer) ──────────────────
+const WHATSAPP_NUMBER = "+971 58 560 7033";
+const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g, "")}`;
+const COMPANY_EMAIL = "info@hausofestate.com";
+const COMPANY_PHONE_HREF = "tel:+971585607033";
 
 const BELIEFS = [
   {
@@ -39,31 +62,75 @@ const BELIEFS = [
   },
 ];
 
-const MOAT = [
+// ── What We Do — the property categories we cover ────────────────────────
+const WHAT_WE_DO = [
   {
-    icon: Globe2,
-    title: "Cross-border developer partnerships",
-    body:
-      "Direct relationships with world-class developers across the UK, UAE and emerging markets — so you see opportunities that don't reach the open market, and we can negotiate on the same terms as the agents who built the relationship.",
+    icon: Home,
+    title: "Residential Sales",
+    body: "Homes and investment flats matched to your brief across the UK and UAE — from first-time purchases to prime second homes.",
   },
   {
+    icon: KeyRound,
+    title: "Lettings",
+    body: "Long and short-let opportunities for tenants, plus a fully referenced letting service for landlords who want it handled.",
+  },
+  {
+    icon: Building2,
+    title: "Commercial Real Estate",
+    body: "Offices, retail and mixed-use assets for occupiers and investors seeking income and capital growth.",
+  },
+  {
+    icon: HardHat,
+    title: "Off-Plan Properties",
+    body: "Early access to selected developments with direct developer relationships — secured on the same terms as the agents who built them.",
+  },
+  {
+    icon: GraduationCap,
+    title: "Student Accommodation",
+    body: "Purpose-built and buy-to-let student units in the UK's strongest university cities, sized for yield and resilience.",
+  },
+  {
+    icon: ClipboardCheck,
+    title: "Property Management",
+    body: "End-to-end management for landlords and overseas owners — tenancy, maintenance and reporting, under one roof.",
+  },
+];
+
+// ── Why Invest With Us — our four advantages ─────────────────────────────
+const WHY_INVEST = [
+  {
     icon: BookOpen,
-    title: "Unbiased market intelligence",
+    title: "Market Expertise",
     body:
       "Research-led, not commission-led. Our briefings draw on developer data, transaction comparables and on-the-ground reads — given to you straight, even when it points away from a sale.",
   },
   {
-    icon: Compass,
-    title: "Local expertise, globally coordinated",
+    icon: TrendingUp,
+    title: "Exclusive Opportunities",
+    body:
+      "Direct relationships with world-class developers mean you see opportunities that don't reach the open market — and we negotiate on the terms of an insider, not an outsider.",
+  },
+  {
+    icon: Globe2,
+    title: "International Reach",
     body:
       "A specialist on the ground in your target market, working alongside a relationship manager in your timezone. The coverage of an international firm; the response time of a boutique.",
   },
   {
     icon: Handshake,
-    title: "End-to-end transaction support",
+    title: "End-to-End Support",
     body:
       "Buy, renovate, let, manage or sell — handled under one roof. The pathway is the product, not just the introduction.",
   },
+];
+
+// ── Our Services — what we do for you ────────────────────────────────────
+const SERVICES = [
+  { icon: ShoppingBag, title: "Buying", body: "Sourcing, negotiation and due diligence for buyers and investors." },
+  { icon: Tag, title: "Selling", body: "Positioning, pricing and qualified buyers to achieve the right outcome." },
+  { icon: KeyRound, title: "Renting", body: "Tenancies and lettings for renters and landlords across our markets." },
+  { icon: Settings2, title: "Property Management", body: "Hands-off ownership for landlords and overseas investors." },
+  { icon: Plane, title: "Relocation Support", body: "Financing routes, regulation and the practical steps of moving across borders." },
 ];
 
 const AUDIENCES = [
@@ -86,8 +153,116 @@ const AUDIENCES = [
 
 const MARKETS = [
   { region: "United Kingdom", note: "Cardiff · London · Manchester · Birmingham" },
-  { region: "United Arab Emirates", note: "Dubai · Sharjah · Abu Dhabi · Ras Al Khaimah" },
-  { region: "International emerging markets", note: "Indonesia Bali · Thailand · Malaysia" },
+  { region: "Dubai & the UAE", note: "Dubai · Sharjah · Abu Dhabi · Ras Al Khaimah" },
+  { region: "International investment", note: "Indonesia Bali · Thailand · Malaysia" },
+];
+
+// ── Featured statistics — updated regularly ──────────────────────────────
+const STATS = [
+  { value: "1,200+", label: "Properties Listed" },
+  { value: "12", label: "Countries Served" },
+  { value: "1,247+", label: "Clients Assisted" },
+  { value: "350+", label: "Investment Opportunities" },
+];
+
+// ── Areas We Cover ───────────────────────────────────────────────────────
+const AREAS = [
+  "Cardiff",
+  "London",
+  "Manchester",
+  "Birmingham",
+  "Leeds",
+  "Bristol",
+  "Dubai",
+  "Abu Dhabi",
+  "Sharjah",
+  "Ras Al Khaimah",
+  "Bali",
+  "Kuala Lumpur",
+];
+
+// ── Property insights ────────────────────────────────────────────────────
+const INSIGHTS = [
+  { icon: Newspaper, title: "Latest Market News", body: "What's moving prices, yields and policy across our markets." },
+  { icon: BookOpen, title: "Investment Guides", body: "Practical playbooks for buying across borders with confidence." },
+  { icon: Lightbulb, title: "Buying & Renting Tips", body: "Straight advice for buyers, tenants and landlords." },
+];
+
+// ── Client testimonials ──────────────────────────────────────────────────
+const TESTIMONIALS = [
+  {
+    name: "Sarah M.",
+    market: "Buyer · Dubai",
+    initials: "SM",
+    text: "Exceptional service from start to finish. The team guided us through the entire process and we completed on our flat in Marina Gate within six weeks.",
+  },
+  {
+    name: "James T.",
+    market: "Investor · Manchester",
+    initials: "JT",
+    text: "As an overseas buyer I was nervous about Manchester. Their transparency on yields and market data gave me complete confidence.",
+  },
+  {
+    name: "Priya & Arjun L.",
+    market: "Sellers · Bali",
+    initials: "PL",
+    text: "We listed our Ubud villa and had a qualified buyer within three weeks. Professional throughout and the transaction was seamless.",
+  },
+  {
+    name: "Maria S.",
+    market: "Landlord · London",
+    initials: "MS",
+    text: "Moving from Singapore as a non-resident was daunting. They made everything simple — from mortgage advice to management post-purchase.",
+  },
+];
+
+// ── Social media ─────────────────────────────────────────────────────────
+const SOCIALS = [
+  {
+    name: "LinkedIn",
+    href: "https://www.linkedin.com/company/haus-of-estate/",
+    icon: (
+      <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current" aria-hidden="true">
+        <path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.36V9h3.41v1.56h.05a3.74 3.74 0 0 1 3.37-1.85c3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45C23.2 24 24 23.23 24 22.28V1.72C24 .77 23.2 0 22.22 0z" />
+      </svg>
+    ),
+  },
+  {
+    name: "Instagram",
+    href: "https://www.instagram.com/hausofestate/",
+    icon: (
+      <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current" aria-hidden="true">
+        <path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41a3.7 3.7 0 0 1-1.38-.9 3.7 3.7 0 0 1-.9-1.38c-.16-.42-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16zM12 0C8.74 0 8.33.01 7.05.07 5.78.13 4.9.33 4.14.63a5.86 5.86 0 0 0-2.13 1.38A5.86 5.86 0 0 0 .63 4.14c-.3.76-.5 1.64-.56 2.91C.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.06 1.27.26 2.15.56 2.91.3.79.71 1.46 1.38 2.13.67.67 1.34 1.08 2.13 1.38.76.3 1.64.5 2.91.56C8.33 23.99 8.74 24 12 24s3.67-.01 4.95-.07c1.27-.06 2.15-.26 2.91-.56a5.86 5.86 0 0 0 2.13-1.38 5.86 5.86 0 0 0 1.38-2.13c.3-.76.5-1.64.56-2.91.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.06-1.27-.26-2.15-.56-2.91a5.86 5.86 0 0 0-1.38-2.13A5.86 5.86 0 0 0 19.86.63c-.76-.3-1.64-.5-2.91-.56C15.67.01 15.26 0 12 0zm0 5.84A6.16 6.16 0 1 0 18.16 12 6.16 6.16 0 0 0 12 5.84zm0 10.16A4 4 0 1 1 16 12a4 4 0 0 1-4 4zm6.41-10.4a1.44 1.44 0 1 0 0-2.88 1.44 1.44 0 0 0 0 2.88z" />
+      </svg>
+    ),
+  },
+  {
+    name: "Facebook",
+    href: "https://www.facebook.com/hausofestate",
+    icon: (
+      <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current" aria-hidden="true">
+        <path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07c0 6.02 4.39 11.01 10.13 11.93v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.69.24 2.69.24v2.97h-1.52c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8v8.44C19.61 23.08 24 18.09 24 12.07z" />
+      </svg>
+    ),
+  },
+  {
+    name: "TikTok",
+    href: "https://www.tiktok.com/@hausofestate",
+    icon: (
+      <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current" aria-hidden="true">
+        <path d="M16.6 5.82a4.28 4.28 0 0 1-1.05-2.82h-3.3v13.3a2.59 2.59 0 0 1-2.59 2.5 2.59 2.59 0 1 1 .74-5.07V10.4a5.92 5.92 0 0 0-1.48-.19 5.92 5.92 0 1 0 5.92 5.92V9.01a7.5 7.5 0 0 0 4.4 1.41V7.1a4.28 4.28 0 0 1-2.64-1.28z" />
+      </svg>
+    ),
+  },
+  {
+    name: "YouTube",
+    href: "https://www.youtube.com/channel/UCXKr75hHkzX62I7cqhr7A6A",
+    icon: (
+      <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current" aria-hidden="true">
+        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+      </svg>
+    ),
+  },
 ];
 
 export default function AboutPage() {
@@ -106,22 +281,64 @@ export default function AboutPage() {
             About Haus of Estate
           </p>
           <h1 className="mt-4 font-serif text-4xl font-medium leading-[1.1] md:text-6xl md:leading-[1.05]">
-            Property,{" "}
-            <span className="text-gold-400">internationally.</span>
-            <br className="hidden md:block" /> Without the friction.
+            Redefining Real Estate Across the{" "}
+            <span className="text-gold-400">UK &amp; UAE.</span>
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-relaxed text-white/80 md:text-xl">
             Haus of Estate is an international property service for buyers, landlords and investors moving across borders. Vetted specialists, unbiased market data, and a single clear pathway from first enquiry to completion — anywhere our clients want to go.
           </p>
+          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+            <Button
+              onClick={openAccount}
+              size="lg"
+              className="bg-gold-500 text-white hover:bg-gold-400"
+            >
+              Contact us <ArrowRight className="ml-1.5 h-4 w-4" />
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="border-white/30 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 hover:text-white"
+            >
+              <Link href="/properties">
+                Explore properties <ArrowRight className="ml-1.5 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Company introduction ───────────────────────────────────── */}
+      <section className="bg-surface">
+        <div className="mx-auto grid max-w-6xl gap-12 px-4 py-20 md:grid-cols-12 md:gap-16 md:px-6 md:py-24">
+          <div className="md:col-span-5">
+            <p className="font-serif text-sm font-medium uppercase tracking-[0.25em] text-gold-500">
+              Who we are
+            </p>
+            <h2 className="mt-3 font-serif text-3xl font-medium leading-tight text-estate-700 md:text-4xl">
+              One firm, one relationship, every market.
+            </h2>
+          </div>
+          <div className="md:col-span-7">
+            <div className="space-y-5 text-base leading-relaxed text-muted-foreground md:text-lg">
+              <p>
+                We bring residential, commercial and off-plan property under a single, transparent service — connecting clients in the UK, Dubai and international markets with vetted specialists rather than a wall of listings.
+              </p>
+              <p>
+                What makes us different is restraint. We curate the opportunities we&apos;d put our own clients into, we share the data behind every recommendation, and we stay with you from first enquiry through completion and beyond. The pathway is the product — not just the introduction.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* ─── Origin / Story ─────────────────────────────────────────── */}
-      <section className="bg-surface">
+      <section className="bg-subtle">
         <div className="mx-auto grid max-w-6xl gap-12 px-4 py-20 md:grid-cols-12 md:gap-16 md:px-6 md:py-28">
           <div className="md:col-span-5">
             <p className="font-serif text-sm font-medium uppercase tracking-[0.25em] text-gold-500">
-              Our origin
+              Our story
             </p>
             <h2 className="mt-3 font-serif text-3xl font-medium leading-tight text-estate-700 md:text-4xl">
               Built in the gap most agencies pretend doesn&apos;t exist.
@@ -143,35 +360,31 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ─── Beliefs / Promise ──────────────────────────────────────── */}
-      <section className="bg-subtle">
+      {/* ─── Our markets ────────────────────────────────────────────── */}
+      <section className="bg-surface">
         <div className="mx-auto max-w-6xl px-4 py-20 md:px-6 md:py-28">
           <div className="mx-auto max-w-2xl text-center">
             <p className="font-serif text-sm font-medium uppercase tracking-[0.25em] text-gold-500">
-              What we believe
+              Our markets
             </p>
             <h2 className="mt-3 font-serif text-3xl font-medium leading-tight text-estate-700 md:text-4xl">
-              Four promises we don&apos;t break.
+              United Kingdom · Dubai · International.
             </h2>
             <p className="mt-4 text-base text-muted-foreground md:text-lg">
-              The non-negotiables behind every enquiry, viewing, and transaction we handle.
+              Originated in the UK. Coverage extending across the UAE and into selected international investment markets — wherever you&apos;re moving capital, the same calibre of advice.
             </p>
           </div>
-
-          <div className="mt-14 grid gap-6 md:grid-cols-2">
-            {BELIEFS.map((b) => (
+          <div className="mt-14 grid gap-6 md:grid-cols-3">
+            {MARKETS.map((m) => (
               <div
-                key={b.title}
-                className="group rounded-2xl border border-border bg-surface p-7 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md md:p-8"
+                key={m.region}
+                className="rounded-2xl border border-border bg-canvas/50 p-7 md:p-8"
               >
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-estate-700/10 text-estate-700 transition-colors group-hover:bg-estate-700 group-hover:text-white">
-                  <b.icon className="h-5 w-5" />
-                </div>
-                <h3 className="mt-5 font-serif text-2xl font-medium text-estate-700">
-                  {b.title}
+                <h3 className="font-serif text-2xl font-medium text-estate-700">
+                  {m.region}
                 </h3>
-                <p className="mt-3 text-base leading-relaxed text-muted-foreground">
-                  {b.body}
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground md:text-base">
+                  {m.note}
                 </p>
               </div>
             ))}
@@ -179,25 +392,56 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ─── Moat ───────────────────────────────────────────────────── */}
+      {/* ─── What we do ─────────────────────────────────────────────── */}
+      <section className="bg-subtle">
+        <div className="mx-auto max-w-6xl px-4 py-20 md:px-6 md:py-28">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="font-serif text-sm font-medium uppercase tracking-[0.25em] text-gold-500">
+              What we do
+            </p>
+            <h2 className="mt-3 font-serif text-3xl font-medium leading-tight text-estate-700 md:text-4xl">
+              Every property need, under one roof.
+            </h2>
+          </div>
+          <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {WHAT_WE_DO.map((w) => (
+              <div
+                key={w.title}
+                className="group rounded-2xl border border-border bg-surface p-7 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+              >
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-estate-700/10 text-estate-700 transition-colors group-hover:bg-estate-700 group-hover:text-white">
+                  <w.icon className="h-5 w-5" />
+                </div>
+                <h3 className="mt-5 font-serif text-xl font-medium text-estate-700">
+                  {w.title}
+                </h3>
+                <p className="mt-2 text-base leading-relaxed text-muted-foreground">
+                  {w.body}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Why invest with us ─────────────────────────────────────── */}
       <section className="bg-surface">
         <div className="mx-auto max-w-6xl px-4 py-20 md:px-6 md:py-28">
           <div className="grid gap-10 md:grid-cols-12 md:gap-16">
             <div className="md:col-span-4">
               <p className="font-serif text-sm font-medium uppercase tracking-[0.25em] text-gold-500">
-                The Haus of Estate moat
+                Why invest with us
               </p>
               <h2 className="mt-3 font-serif text-3xl font-medium leading-tight text-estate-700 md:text-4xl">
                 Why our work compounds where others stall.
               </h2>
               <p className="mt-5 text-base leading-relaxed text-muted-foreground">
-                We compete with the largest international firms — Colliers, Hamptons, Cushman &amp; Wakefield, Savills — on coverage. We compete with the best local agents on speed. The four advantages below are how we hold both at once.
+                We compete with the largest international firms on coverage and with the best local agents on speed. The four advantages below are how we hold both at once.
               </p>
             </div>
-
             <div className="md:col-span-8">
               <ol className="divide-y divide-border rounded-2xl border border-border bg-canvas/50">
-                {MOAT.map((m, idx) => (
+                {WHY_INVEST.map((m, idx) => (
                   <li key={m.title} className="flex gap-5 p-6 md:gap-7 md:p-8">
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gold-500/10 text-gold-500">
                       <m.icon className="h-6 w-6" />
@@ -221,7 +465,85 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ─── Audiences ──────────────────────────────────────────────── */}
+      {/* ─── Our services ───────────────────────────────────────────── */}
+      <section className="bg-subtle">
+        <div className="mx-auto max-w-6xl px-4 py-20 md:px-6 md:py-28">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="font-serif text-sm font-medium uppercase tracking-[0.25em] text-gold-500">
+              Our services
+            </p>
+            <h2 className="mt-3 font-serif text-3xl font-medium leading-tight text-estate-700 md:text-4xl">
+              However you move, we move with you.
+            </h2>
+          </div>
+          <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
+            {SERVICES.map((s) => (
+              <div
+                key={s.title}
+                className="rounded-2xl border border-border bg-surface p-6 text-center"
+              >
+                <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-gold-500/10 text-gold-500">
+                  <s.icon className="h-5 w-5" />
+                </div>
+                <h3 className="mt-4 font-serif text-lg font-medium text-estate-700">
+                  {s.title}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  {s.body}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Featured statistics ────────────────────────────────────── */}
+      <section className="bg-estate-700 text-white">
+        <div className="mx-auto max-w-6xl px-4 py-16 md:px-6 md:py-20">
+          <div className="grid grid-cols-2 gap-8 text-center md:grid-cols-4">
+            {STATS.map((s) => (
+              <div key={s.label}>
+                <p className="font-serif text-4xl font-semibold text-gold-400 md:text-5xl">
+                  {s.value}
+                </p>
+                <p className="mt-2 text-xs uppercase tracking-wider text-white/70 md:text-sm">
+                  {s.label}
+                </p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-8 text-center text-xs text-white/50">
+            Figures updated regularly and indicative of current activity across our markets.
+          </p>
+        </div>
+      </section>
+
+      {/* ─── Areas we cover ─────────────────────────────────────────── */}
+      <section className="bg-surface">
+        <div className="mx-auto max-w-5xl px-4 py-20 md:px-6 md:py-24">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="font-serif text-sm font-medium uppercase tracking-[0.25em] text-gold-500">
+              Areas we cover
+            </p>
+            <h2 className="mt-3 font-serif text-3xl font-medium leading-tight text-estate-700 md:text-4xl">
+              From Cardiff to Abu Dhabi.
+            </h2>
+          </div>
+          <div className="mt-10 flex flex-wrap justify-center gap-3">
+            {AREAS.map((area) => (
+              <span
+                key={area}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-canvas/50 px-4 py-2 text-sm font-medium text-estate-700"
+              >
+                <MapPin className="h-3.5 w-3.5 text-gold-500" />
+                {area}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Who we serve ───────────────────────────────────────────── */}
       <section className="bg-subtle">
         <div className="mx-auto max-w-6xl px-4 py-20 md:px-6 md:py-28">
           <div className="mx-auto max-w-2xl text-center">
@@ -232,7 +554,6 @@ export default function AboutPage() {
               Three clients, one standard of care.
             </h2>
           </div>
-
           <div className="mt-14 grid gap-6 md:grid-cols-3">
             {AUDIENCES.map((a, idx) => (
               <div
@@ -254,49 +575,184 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ─── Markets ────────────────────────────────────────────────── */}
+      {/* ─── What we believe ────────────────────────────────────────── */}
       <section className="bg-surface">
+        <div className="mx-auto max-w-6xl px-4 py-20 md:px-6 md:py-28">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="font-serif text-sm font-medium uppercase tracking-[0.25em] text-gold-500">
+              What we believe
+            </p>
+            <h2 className="mt-3 font-serif text-3xl font-medium leading-tight text-estate-700 md:text-4xl">
+              Four promises we don&apos;t break.
+            </h2>
+            <p className="mt-4 text-base text-muted-foreground md:text-lg">
+              The non-negotiables behind every enquiry, viewing, and transaction we handle.
+            </p>
+          </div>
+          <div className="mt-14 grid gap-6 md:grid-cols-2">
+            {BELIEFS.map((b) => (
+              <div
+                key={b.title}
+                className="group rounded-2xl border border-border bg-subtle p-7 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md md:p-8"
+              >
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-estate-700/10 text-estate-700 transition-colors group-hover:bg-estate-700 group-hover:text-white">
+                  <b.icon className="h-5 w-5" />
+                </div>
+                <h3 className="mt-5 font-serif text-2xl font-medium text-estate-700">
+                  {b.title}
+                </h3>
+                <p className="mt-3 text-base leading-relaxed text-muted-foreground">
+                  {b.body}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Meet our team ──────────────────────────────────────────── */}
+      <TeamPreview />
+
+      {/* ─── Client testimonials ────────────────────────────────────── */}
+      <section className="bg-subtle">
+        <div className="mx-auto max-w-6xl px-4 py-20 md:px-6 md:py-28">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="font-serif text-sm font-medium uppercase tracking-[0.25em] text-gold-500">
+              Client testimonials
+            </p>
+            <h2 className="mt-3 font-serif text-3xl font-medium leading-tight text-estate-700 md:text-4xl">
+              From buyers, sellers, landlords &amp; investors.
+            </h2>
+          </div>
+          <div className="mt-14 grid gap-6 md:grid-cols-2">
+            {TESTIMONIALS.map((t) => (
+              <figure
+                key={t.name}
+                className="rounded-2xl border border-border bg-surface p-7 md:p-8"
+              >
+                <div className="flex gap-0.5">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <Star key={s} className="h-4 w-4 fill-gold-400 text-gold-400" />
+                  ))}
+                </div>
+                <blockquote className="mt-4 text-base leading-relaxed text-muted-foreground">
+                  &ldquo;{t.text}&rdquo;
+                </blockquote>
+                <figcaption className="mt-5 flex items-center gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-estate-700/10 font-serif text-sm font-semibold text-estate-700">
+                    {t.initials}
+                  </span>
+                  <span>
+                    <span className="block font-serif text-base font-medium text-estate-700">
+                      {t.name}
+                    </span>
+                    <span className="block text-sm text-muted-foreground">
+                      {t.market}
+                    </span>
+                  </span>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Property insights ──────────────────────────────────────── */}
+      <section className="bg-surface">
+        <div className="mx-auto max-w-6xl px-4 py-20 md:px-6 md:py-28">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div className="max-w-2xl">
+              <p className="font-serif text-sm font-medium uppercase tracking-[0.25em] text-gold-500">
+                Property insights
+              </p>
+              <h2 className="mt-3 font-serif text-3xl font-medium leading-tight text-estate-700 md:text-4xl">
+                Market news, guides and straight advice.
+              </h2>
+            </div>
+            <Button asChild variant="outline" size="lg">
+              <Link href="/blog">
+                Read our insights <ArrowRight className="ml-1.5 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
+            {INSIGHTS.map((i) => (
+              <Link
+                key={i.title}
+                href="/blog"
+                className="group rounded-2xl border border-border bg-canvas/50 p-7 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+              >
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gold-500/10 text-gold-500">
+                  <i.icon className="h-5 w-5" />
+                </div>
+                <h3 className="mt-5 font-serif text-xl font-medium text-estate-700">
+                  {i.title}
+                </h3>
+                <p className="mt-2 text-base leading-relaxed text-muted-foreground">
+                  {i.body}
+                </p>
+                <span className="mt-4 inline-flex items-center text-sm font-medium text-gold-600 transition-transform group-hover:translate-x-0.5">
+                  Explore <ArrowRight className="ml-1 h-4 w-4" />
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Careers ────────────────────────────────────────────────── */}
+      <section className="bg-subtle">
         <div className="mx-auto max-w-6xl px-4 py-20 md:px-6 md:py-28">
           <div className="grid gap-10 md:grid-cols-12 md:gap-16">
             <div className="md:col-span-5">
               <p className="font-serif text-sm font-medium uppercase tracking-[0.25em] text-gold-500">
-                Where we work
+                Careers at Haus of Estate
               </p>
               <h2 className="mt-3 font-serif text-3xl font-medium leading-tight text-estate-700 md:text-4xl">
-                A single firm. Three continents. One standard.
+                Build your career with us.
               </h2>
               <p className="mt-5 text-base leading-relaxed text-muted-foreground">
-                Originated in the UK. Coverage extending across the UAE and into selected international markets. Wherever you&apos;re moving capital, you should have the same calibre of advice.
+                We&apos;re a 24-hour business across three continents, hiring people who put the client first. Explore our current internship and full-time vacancies, then apply with your CV, LinkedIn profile and a short cover letter.
               </p>
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                <Button asChild size="lg" className="bg-estate-700 text-white hover:bg-estate-700/90">
+                  <Link href="/careers#jobs">
+                    Current opportunities <ArrowRight className="ml-1.5 h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="lg">
+                  <Link href="/careers#jobs">Apply now</Link>
+                </Button>
+              </div>
             </div>
             <div className="md:col-span-7">
-              <ul className="grid gap-4">
-                {MARKETS.map((m) => (
-                  <li
-                    key={m.region}
-                    className="flex items-baseline justify-between gap-6 border-b border-border pb-4 last:border-0 last:pb-0"
-                  >
-                    <span className="font-serif text-xl font-medium text-estate-700 md:text-2xl">
-                      {m.region}
-                    </span>
-                    <span className="text-right text-sm text-muted-foreground md:text-base">
-                      {m.note}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-8 grid grid-cols-3 gap-6">
-                <div>
-                  <p className="font-serif text-3xl font-semibold text-estate-700 md:text-4xl">15+</p>
-                  <p className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">Years of experience</p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="rounded-2xl border border-border bg-surface p-6">
+                  <Briefcase className="h-6 w-6 text-gold-500" />
+                  <h3 className="mt-4 font-serif text-lg font-medium text-estate-700">
+                    Full-time roles
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    Property consultants, client managers and marketing specialists across the UK and UAE.
+                  </p>
                 </div>
-                <div>
-                  <p className="font-serif text-3xl font-semibold text-estate-700 md:text-4xl">3</p>
-                  <p className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">Continents</p>
+                <div className="rounded-2xl border border-border bg-surface p-6">
+                  <GraduationCap className="h-6 w-6 text-gold-500" />
+                  <h3 className="mt-4 font-serif text-lg font-medium text-estate-700">
+                    Internships
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    Hands-on placements for those starting out — real work, real mentorship, real responsibility.
+                  </p>
                 </div>
-                <div>
-                  <p className="font-serif text-3xl font-semibold text-estate-700 md:text-4xl">24/7</p>
-                  <p className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">Specialist coverage</p>
+                <div className="rounded-2xl border border-border bg-surface p-6 sm:col-span-2">
+                  <ClipboardCheck className="h-6 w-6 text-gold-500" />
+                  <h3 className="mt-4 font-serif text-lg font-medium text-estate-700">
+                    How to apply
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    Upload your CV, add your LinkedIn profile and a short cover letter on the careers page. We read every application and reply to those that fit.
+                  </p>
                 </div>
               </div>
             </div>
@@ -304,8 +760,104 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ─── Team ───────────────────────────────────────────────────── */}
-      <TeamPreview />
+      {/* ─── Contact & social ───────────────────────────────────────── */}
+      <section className="bg-surface">
+        <div className="mx-auto max-w-6xl px-4 py-20 md:px-6 md:py-24">
+          <div className="grid gap-10 md:grid-cols-12 md:gap-16">
+            <div className="md:col-span-5">
+              <p className="font-serif text-sm font-medium uppercase tracking-[0.25em] text-gold-500">
+                Get in touch
+              </p>
+              <h2 className="mt-3 font-serif text-3xl font-medium leading-tight text-estate-700 md:text-4xl">
+                Talk to a specialist.
+              </h2>
+              <p className="mt-5 text-base leading-relaxed text-muted-foreground">
+                Reach us by email, phone or WhatsApp — offices in the UK and UAE, serving clients worldwide.
+              </p>
+              <div className="mt-7 flex flex-wrap gap-2.5">
+                {SOCIALS.map((s) => (
+                  <a
+                    key={s.name}
+                    href={s.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={s.name}
+                    title={s.name}
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-canvas/50 text-estate-700 transition-colors hover:bg-estate-700 hover:text-white"
+                  >
+                    {s.icon}
+                  </a>
+                ))}
+              </div>
+            </div>
+            <div className="md:col-span-7">
+              <div className="grid gap-4 sm:grid-cols-3">
+                <a
+                  href={`mailto:${COMPANY_EMAIL}`}
+                  className="group rounded-2xl border border-border bg-canvas/50 p-6 transition-all hover:-translate-y-0.5 hover:shadow-md"
+                >
+                  <Mail className="h-6 w-6 text-gold-500" />
+                  <p className="mt-4 font-serif text-base font-medium text-estate-700">Email</p>
+                  <p className="mt-1 text-sm text-muted-foreground break-words">{COMPANY_EMAIL}</p>
+                </a>
+                <a
+                  href={COMPANY_PHONE_HREF}
+                  className="group rounded-2xl border border-border bg-canvas/50 p-6 transition-all hover:-translate-y-0.5 hover:shadow-md"
+                >
+                  <Phone className="h-6 w-6 text-gold-500" />
+                  <p className="mt-4 font-serif text-base font-medium text-estate-700">Phone</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{WHATSAPP_NUMBER}</p>
+                </a>
+                <a
+                  href={WHATSAPP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group rounded-2xl border border-border bg-canvas/50 p-6 transition-all hover:-translate-y-0.5 hover:shadow-md"
+                >
+                  <MessageCircle className="h-6 w-6 text-gold-500" />
+                  <p className="mt-4 font-serif text-base font-medium text-estate-700">WhatsApp</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Chat with us</p>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Newsletter signup ──────────────────────────────────────── */}
+      <section className="bg-subtle">
+        <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-16 md:flex-row md:items-center md:justify-between md:px-6 md:py-20">
+          <div className="max-w-xl">
+            <h2 className="font-serif text-2xl font-medium text-estate-700 md:text-3xl">
+              Receive the latest property opportunities &amp; market insights.
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground md:text-base">
+              Cross-border property insight, straight to your inbox. No spam — unsubscribe anytime.
+            </p>
+          </div>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              openAccount();
+            }}
+            className="flex w-full max-w-md items-center gap-2 rounded-full border border-border bg-surface p-1.5"
+          >
+            <input
+              type="email"
+              required
+              placeholder="Your email address"
+              aria-label="Your email address"
+              className="min-w-0 flex-1 bg-transparent px-4 text-sm text-foreground placeholder:text-muted-foreground outline-none"
+            />
+            <button
+              type="submit"
+              className="flex shrink-0 items-center gap-1.5 rounded-full bg-gold-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-gold-400"
+            >
+              Subscribe <ArrowRight className="h-4 w-4" />
+            </button>
+          </form>
+        </div>
+      </section>
 
       {/* ─── CTA ────────────────────────────────────────────────────── */}
       <section className="bg-estate-700 text-white">
@@ -316,10 +868,10 @@ export default function AboutPage() {
                 Take the next step
               </p>
               <h2 className="mt-3 font-serif text-3xl font-medium leading-tight md:text-5xl">
-                Speak with a specialist.
+                Ready to buy, rent, invest or build your career?
               </h2>
               <p className="mt-4 text-base leading-relaxed text-white/80 md:text-lg">
-                A 15-minute conversation is enough to know whether we&apos;re the right firm for what you&apos;re trying to do. No waiting list. No obligation.
+                Contact Haus of Estate today. A 15-minute conversation is enough to know whether we&apos;re the right firm for what you&apos;re trying to do. No waiting list. No obligation.
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
@@ -328,7 +880,7 @@ export default function AboutPage() {
                 size="lg"
                 className="bg-gold-500 text-white hover:bg-gold-400"
               >
-                Book a consultation <ArrowRight className="ml-1.5 h-4 w-4" />
+                Contact us <ArrowRight className="ml-1.5 h-4 w-4" />
               </Button>
               <Button
                 asChild
@@ -336,8 +888,8 @@ export default function AboutPage() {
                 size="lg"
                 className="border-white/30 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 hover:text-white"
               >
-                <Link href="/blog">
-                  Read our insights <ArrowRight className="ml-1.5 h-4 w-4" />
+                <Link href="/properties">
+                  Explore properties <ArrowRight className="ml-1.5 h-4 w-4" />
                 </Link>
               </Button>
             </div>
