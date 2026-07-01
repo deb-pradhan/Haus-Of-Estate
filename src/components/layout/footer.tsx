@@ -5,7 +5,10 @@ import { Star, Mail, Phone, MapPin, ArrowRight } from "lucide-react";
 import { useLeadModals } from "@/components/lead-modal/modal-context";
 
 const WHATSAPP_NUMBER = "+971 58 560 7033";
-const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g, "")}`;
+const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER.replace(
+  /\D/g,
+  "",
+)}?utm_source=site&utm_medium=footer&utm_campaign=whatsapp`;
 const COMPANY_EMAIL = "info@hausofestate.com";
 const COMPANY_PHONE_HREF = "tel:+971585607033";
 
@@ -188,10 +191,10 @@ export function Footer() {
         <FooterCol title="Company">
           <FooterLink href="/about">About us</FooterLink>
           <FooterLink href="/team">Our team</FooterLink>
-          <FooterLink href="/blog">Insights</FooterLink>
+          <FooterLink href="/blog">Blogs</FooterLink>
           <FooterLink href="/careers">Careers</FooterLink>
           <FooterLink href="/faq">FAQs</FooterLink>
-          <FooterButton onClick={openAccount}>Contact us</FooterButton>
+          <FooterLink href="/contact">Contact us</FooterLink>
           <FooterLink href="/legal/privacy-policy">Privacy policy</FooterLink>
           <FooterLink href="/legal/terms-of-service">Terms of service</FooterLink>
           <FooterLink href="/legal/cookie-policy">Cookie policy</FooterLink>

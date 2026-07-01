@@ -29,6 +29,21 @@ const COMPLETION_LABEL: Record<string, string> = {
   "completed-offplan": "Completed & off-plan",
 };
 
+function buildAlt(property: FeaturedProperty): string {
+  if (property.featuredImage?.alt) return property.featuredImage.alt;
+  const beds =
+    typeof property.bedrooms === "number"
+      ? property.bedrooms === 0
+        ? "Studio"
+        : `${property.bedrooms}-bedroom`
+      : "";
+  const place = [property.community, property.city].filter(Boolean).join(", ");
+  return [beds, property.unitType, place ? `in ${place}` : ""]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+}
+
 function PropertyCard({
   property,
 }: {
@@ -43,7 +58,7 @@ function PropertyCard({
         {property.featuredImage ? (
           <Image
             src={urlFor(property.featuredImage).width(800).height(600).url()}
-            alt={property.featuredImage.alt || property.title}
+            alt={buildAlt(property)}
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-105"
           />

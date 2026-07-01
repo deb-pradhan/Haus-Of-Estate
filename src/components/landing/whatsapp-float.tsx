@@ -3,7 +3,7 @@
 import { MessageCircle } from "lucide-react";
 
 const WHATSAPP_NUMBER = "+971 58 560 7033";
-const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g, "")}`;
+const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g, "")}?utm_source=site&utm_medium=float&utm_campaign=whatsapp`;
 
 export function WhatsAppFloat() {
   return (

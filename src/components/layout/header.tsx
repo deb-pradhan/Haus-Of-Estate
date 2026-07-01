@@ -25,7 +25,8 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useLeadModals } from "@/components/lead-modal";
 import { cn } from "@/lib/utils";
 
-const WHATSAPP_URL = "https://wa.me/971585607033";
+const WHATSAPP_URL_HEADER =
+  "https://wa.me/971585607033?utm_source=site&utm_medium=header&utm_campaign=whatsapp";
 const COMPANY_EMAIL = "info@hausofestate.com";
 const COMPANY_PHONES = [
   { region: "UAE", display: "+971 58 560 7033", href: "tel:+971585607033" },
@@ -100,6 +101,7 @@ export function Header() {
             <NavLink href="/properties" label="Properties" pathname={pathname} />
             <NavDropdown
               label="Services"
+              href="/services"
               items={SERVICES_ITEMS}
               pathname={pathname}
             />
@@ -170,10 +172,10 @@ function TopUtilityBar() {
           ))}
           <span aria-hidden className="h-3 w-px bg-white/15" />
           <a
-            href={WHATSAPP_URL}
+            href={WHATSAPP_URL_HEADER}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-colors hover:bg-white/10"
+            className="flex min-h-[44px] items-center gap-1.5 rounded-md px-4 py-1 text-xs font-medium transition-colors hover:bg-white/10 md:min-h-0 md:px-2"
             title="WhatsApp"
           >
             <WhatsAppIcon className="h-3.5 w-3.5 text-gold-400" />
@@ -237,10 +239,12 @@ function NavLink({
 
 function NavDropdown({
   label,
+  href,
   items,
   pathname,
 }: {
   label: string;
+  href?: string;
   items: ServiceEntry[];
   pathname: string;
 }) {
@@ -283,21 +287,48 @@ function NavDropdown({
 
   return (
     <div ref={rootRef} className="relative">
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-haspopup="menu"
-        onClick={() => setOpen((v) => !v)}
-        className={navLinkClasses(isActive)}
-      >
-        {label}
-        <ChevronDown
-          className={cn(
-            "h-3.5 w-3.5 transition-transform duration-150",
-            open && "rotate-180",
-          )}
-        />
-      </button>
+      {href ? (
+        <div className={cn(navLinkClasses(isActive), "gap-0 pr-1")}>
+          <Link
+            href={href}
+            onClick={() => setOpen(false)}
+            className="rounded-md px-1 py-0.5 -mx-1"
+          >
+            {label}
+          </Link>
+          <button
+            type="button"
+            aria-expanded={open}
+            aria-haspopup="menu"
+            aria-label={`${label} menu`}
+            onClick={() => setOpen((v) => !v)}
+            className="ml-1 rounded-md p-0.5"
+          >
+            <ChevronDown
+              className={cn(
+                "h-3.5 w-3.5 transition-transform duration-150",
+                open && "rotate-180",
+              )}
+            />
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-haspopup="menu"
+          onClick={() => setOpen((v) => !v)}
+          className={navLinkClasses(isActive)}
+        >
+          {label}
+          <ChevronDown
+            className={cn(
+              "h-3.5 w-3.5 transition-transform duration-150",
+              open && "rotate-180",
+            )}
+          />
+        </button>
+      )}
       {open && (
         <div
           role="menu"
@@ -371,6 +402,7 @@ function MobileNav({
           <MobileGroup label="Services" defaultOpen items={SERVICES_ITEMS} onClose={onClose} />
           <MobileLink href="/blog" label="Blogs" pathname={pathname} onClose={onClose} />
           <MobileGroup label="About" items={ABOUT_ITEMS} onClose={onClose} />
+          <MobileLink href="/contact" label="Contact" pathname={pathname} onClose={onClose} />
         </ul>
 
         {/* Contact strip */}
@@ -392,10 +424,10 @@ function MobileNav({
           ))}
           <li>
             <a
-              href={WHATSAPP_URL}
+              href={WHATSAPP_URL_HEADER}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[#4D5257] transition-colors hover:bg-[#F7F5F1] hover:text-[#1FAE54]"
+              className="flex min-h-[44px] items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-[#4D5257] transition-colors hover:bg-[#F7F5F1] hover:text-[#1FAE54]"
             >
               <WhatsAppIcon className="h-4 w-4 text-[#1FAE54]" />
               WhatsApp us

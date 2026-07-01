@@ -18,9 +18,53 @@ export const metadata: Metadata = {
 
 export const revalidate = 60
 
+// Flatten Sanity Portable Text blocks into a plain-text string for JSON-LD.
+function portableTextToPlainText(value: unknown): string {
+  if (!Array.isArray(value)) return ''
+  return value
+    .map((block) => {
+      if (
+        block &&
+        typeof block === 'object' &&
+        'children' in block &&
+        Array.isArray((block as { children?: unknown }).children)
+      ) {
+        return (block as { children: Array<{ text?: string }> }).children
+          .map((child) => child?.text ?? '')
+          .join('')
+      }
+      return ''
+    })
+    .filter(Boolean)
+    .join('\n\n')
+    .trim()
+}
+
 export default async function FaqPage() {
   const { data } = await sanityFetch<FaqDoc[]>({ query: FAQS_QUERY })
   const items = data ?? []
+
+  const faqJsonLd =
+    items.length > 0
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: items
+            .map((f) => ({
+              question: f.question,
+              answer: portableTextToPlainText(f.answer),
+            }))
+            .filter((f) => f.question && f.answer)
+            .map((f) => ({
+              '@type': 'Question',
+              name: f.question,
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: f.answer,
+              },
+            })),
+        }
+      : null
 
   // Group by category, preserving GROQ order.
   const byCategory = new Map<string, FaqDoc[]>()
@@ -33,6 +77,12 @@ export default async function FaqPage() {
 
   return (
     <div className="min-h-screen">
+      {faqJsonLd && faqJsonLd.mainEntity.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      )}
       {/* Hero */}
       <section className="bg-estate-700 px-4 py-20 md:px-6 md:py-24">
         <div className="mx-auto max-w-4xl text-center">

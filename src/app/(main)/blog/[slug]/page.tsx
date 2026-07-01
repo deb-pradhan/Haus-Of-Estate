@@ -70,8 +70,36 @@ async function PostContent({ slug }: { slug: string }) {
 
   const { url: imageUrl, alt } = getPostImageUrl(post)
 
+  const blogPostingJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: post.title,
+    ...(post.subtitle ? { description: post.subtitle } : {}),
+    ...(imageUrl ? { image: [imageUrl] } : {}),
+    ...(post.publishedAt
+      ? { datePublished: post.publishedAt, dateModified: post.publishedAt }
+      : {}),
+    author: {
+      '@type': 'Person',
+      name: 'Sonia Baig',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Haus of Estate',
+      url: 'https://hausofestate.com',
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': `https://hausofestate.com/blog/${post.slug}`,
+    },
+  }
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostingJsonLd) }}
+      />
       <article className="mx-auto max-w-3xl">
         <header className="mb-10">
           {post.categories && post.categories.length > 0 && (

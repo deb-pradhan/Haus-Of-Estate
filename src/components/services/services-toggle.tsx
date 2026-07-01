@@ -577,14 +577,14 @@ function IntentSelector({
           How can we help you today?
         </h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Choose your goal and we'll guide you through the rest — takes less than 2 minutes.
+          Choose your goal and we&apos;ll guide you through the rest — takes less than 2 minutes.
         </p>
         <p className="mt-2 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
           <span className="relative flex h-2 w-2">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-estate-700 opacity-75" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-estate-700" />
           </span>
-          Join 1,247 people we've matched with vetted agents this month
+          Join 1,200+ people we&apos;ve matched with vetted agents since 2022
         </p>
       </div>
 

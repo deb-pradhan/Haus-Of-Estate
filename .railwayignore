@@ -1,0 +1,9 @@
+node_modules
+.next
+.git
+photos
+studio-haus-of-estate
+terminals
+coverage
+*.log
+.DS_Store

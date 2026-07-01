@@ -14,6 +14,8 @@ import {
   Globe,
   Eye,
   BarChart2,
+  Pause,
+  Play,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLeadModals } from "@/components/lead-modal";
@@ -73,7 +75,7 @@ const TRUST_ITEMS = [
   { icon: <BadgeCheck className="h-5 w-5 text-trust-teal" />, label: "Rent Smart Wales Registered" },
   { icon: <Shield className="h-5 w-5 text-estate-700" />, label: "Propertymark CMP Registered" },
   { icon: <TrendingUp className="h-5 w-5 text-action-amber" />, label: "Transparent Transactions" },
-  { icon: <Users className="h-5 w-5 text-copper-clay" />, label: "500+ Happy Clients" },
+  { icon: <Users className="h-5 w-5 text-copper-clay" />, label: "1,200+ clients matched since 2022" },
 ];
 
 function TrustBar() {
@@ -199,6 +201,21 @@ function formatPublishedDate(iso?: string): string {
 function ReviewsSection() {
   const { ref, visible } = useScrollReveal();
   const [sanityReviews, setSanityReviews] = useState<ReviewCard[] | null>(null);
+  // Pause by default when the user prefers reduced motion (WCAG 2.1).
+  const [paused, setPaused] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      !!window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const onChange = (e: MediaQueryListEvent) => setPaused(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -327,13 +344,37 @@ function ReviewsSection() {
           ))}
         </div>
 
+        {/* Pause / play control */}
+        <div className="mb-4 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setPaused((p) => !p)}
+            aria-pressed={paused}
+            aria-label={paused ? "Play reviews carousel" : "Pause reviews carousel"}
+            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-sm transition-colors hover:text-estate-700"
+          >
+            {paused ? (
+              <>
+                <Play className="h-3.5 w-3.5" aria-hidden /> Play
+              </>
+            ) : (
+              <>
+                <Pause className="h-3.5 w-3.5" aria-hidden /> Pause
+              </>
+            )}
+          </button>
+        </div>
+
         {/* Review marquee */}
         <div className="relative overflow-hidden" aria-label="Client reviews">
           {/* Fade masks */}
           <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-20 bg-gradient-to-r from-background to-transparent" />
           <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-20 bg-gradient-to-l from-background to-transparent" />
 
-          <div className="flex animate-marquee" style={{ width: "max-content" }}>
+          <div
+            className="flex animate-marquee"
+            style={{ width: "max-content", animationPlayState: paused ? "paused" : "running" }}
+          >
             {/* Doubled array for seamless loop */}
             {[...sourceReviews, ...sourceReviews].map((review, i) => (
               <article
@@ -367,7 +408,7 @@ function ReviewsSection() {
                 </div>
 
                 {/* Review text */}
-                <p className="text-sm leading-relaxed text-foreground">"{review.text}"</p>
+                <p className="text-sm leading-relaxed text-foreground">&ldquo;{review.text}&rdquo;</p>
 
                 {/* Footer */}
                 <div className="mt-4 flex items-center border-t border-border pt-3">
@@ -431,7 +472,7 @@ function CTABanner() {
             ))}
           </div>
           <p className="text-sm text-white/60">
-            Join <span className="font-semibold text-white">1,247+ clients</span> worldwide
+            Join <span className="font-semibold text-white">1,200+ clients matched since 2022</span>
           </p>
         </div>
 

@@ -54,7 +54,7 @@ const BEDROOMS = [
 ];
 
 const STATS = [
-  { value: "1,200+", label: "Clients matched" },
+  { value: "1,200+", label: "Clients matched since 2022" },
   { value: "15+", label: "Years' experience" },
   { value: "3", label: "Continents" },
   { value: "4.8★", label: "Average rating" },
@@ -67,6 +67,12 @@ function getGreeting(): string {
   return "Good evening";
 }
 
+declare global {
+  interface Window {
+    dataLayer?: Record<string, unknown>[];
+  }
+}
+
 export function BuyRentSell() {
   const router = useRouter();
   const { openSeller } = useLeadModals();
@@ -74,15 +80,41 @@ export function BuyRentSell() {
   const [location, setLocation] = useState("");
   const [type, setType] = useState("");
   const [beds, setBeds] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const greeting = getGreeting();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
+
+    if (!location || !type || !beds) {
+      setError("Please choose a location, property type and bedrooms to find your match.");
+      return;
+    }
+
+    setError("");
+    setLoading(true);
+
+    // Fire GA4 event only on confirmed, valid submission.
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: "lead_form_submit",
+      form_location: "homepage_hero",
+      selected_location: location,
+      property_type: type,
+      bedrooms: beds,
+      intent,
+    });
+
     const params = new URLSearchParams();
     params.set("intent", intent);
-    if (location) params.set("location", location);
-    if (type) params.set("type", type);
-    if (beds) params.set("beds", beds);
+    params.set("location", location);
+    params.set("type", type);
+    params.set("beds", beds);
+
+    setSubmitted(true);
     router.push(`/properties?${params.toString()}`);
   };
 
@@ -103,8 +135,12 @@ export function BuyRentSell() {
           UK · UAE · International
         </p>
 
-        <h1 className="mx-auto mt-6 max-w-3xl font-serif text-[2.75rem] font-medium leading-[1.06] text-white md:text-[4rem] md:leading-[1.04]">
-          {greeting}. Property, <span className="text-gold-400">with proof.</span>
+        <p className="mx-auto mt-5 text-sm text-white/70 md:text-base">
+          {greeting} — welcome to Haus of Estate.
+        </p>
+
+        <h1 className="mx-auto mt-3 max-w-3xl font-serif text-[2.75rem] font-medium leading-[1.06] text-white md:text-[4rem] md:leading-[1.04]">
+          Property in Dubai, the UK &amp; beyond — <span className="text-gold-400">with proof.</span>
         </h1>
 
         <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-white/75 md:text-lg">
@@ -140,72 +176,109 @@ export function BuyRentSell() {
         </div>
 
         {/* Search bar */}
-        <form
-          onSubmit={handleSubmit}
-          className="mx-auto mt-5 max-w-4xl rounded-2xl border border-white/15 bg-surface p-2 shadow-2xl shadow-black/25 md:rounded-full"
-        >
-          <div className="grid gap-2 md:grid-cols-[1fr_1fr_1fr_auto] md:items-center">
-            <Field icon={MapPin} label="Location">
-              <select
-                aria-label="Preferred location"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                className="w-full bg-transparent text-sm text-foreground outline-none"
-              >
-                <option value="">Anywhere</option>
-                {LOCATIONS.map((l) => (
-                  <option key={l} value={l}>
-                    {l}
-                  </option>
-                ))}
-              </select>
-            </Field>
-
-            <Field icon={Building2} label="Property type" bordered>
-              <select
-                aria-label="Property type"
-                value={type}
-                onChange={(e) => setType(e.target.value)}
-                className="w-full bg-transparent text-sm text-foreground outline-none"
-              >
-                <option value="">Any type</option>
-                {TYPES.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
-            </Field>
-
-            <Field icon={BedDouble} label="Bedrooms" bordered>
-              <select
-                aria-label="Bedrooms"
-                value={beds}
-                onChange={(e) => setBeds(e.target.value)}
-                className="w-full bg-transparent text-sm text-foreground outline-none"
-              >
-                <option value="">Any</option>
-                {BEDROOMS.map((b) => (
-                  <option key={b.value} value={b.value}>
-                    {b.label}
-                  </option>
-                ))}
-              </select>
-            </Field>
-
-            <button
-              type="submit"
-              className="flex items-center justify-center gap-2 rounded-xl bg-estate-700 px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-estate-600 md:rounded-full"
-            >
-              <Search className="h-4 w-4" />
-              Find my match
-            </button>
+        {submitted ? (
+          <div
+            role="status"
+            aria-live="polite"
+            className="mx-auto mt-5 max-w-xl rounded-2xl border border-white/15 bg-surface p-6 text-center shadow-2xl shadow-black/25"
+          >
+            <p className="font-serif text-lg font-medium text-estate-700">
+              Thank you — we&apos;ll reply within 2 hours.
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              We&apos;re matching you with a vetted agent for your search now.
+            </p>
           </div>
-        </form>
+        ) : (
+          <form
+            onSubmit={handleSubmit}
+            noValidate
+            className="mx-auto mt-5 max-w-4xl rounded-2xl border border-white/15 bg-surface p-2 shadow-2xl shadow-black/25 md:rounded-full"
+          >
+            <div className="grid gap-2 md:grid-cols-[1fr_1fr_1fr_auto] md:items-center">
+              <Field icon={MapPin} label="Location">
+                <select
+                  aria-label="Preferred location"
+                  aria-invalid={Boolean(error && !location)}
+                  required
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="w-full bg-transparent text-sm text-foreground outline-none"
+                >
+                  <option value="" disabled>
+                    Select location (required)
+                  </option>
+                  {LOCATIONS.map((l) => (
+                    <option key={l} value={l}>
+                      {l}
+                    </option>
+                  ))}
+                </select>
+              </Field>
 
-        <p className="mt-4 text-xs text-white/55">
-          Free &amp; without obligation · Replied to within 2 working hours
-        </p>
+              <Field icon={Building2} label="Property type" bordered>
+                <select
+                  aria-label="Property type"
+                  aria-invalid={Boolean(error && !type)}
+                  required
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                  className="w-full bg-transparent text-sm text-foreground outline-none"
+                >
+                  <option value="" disabled>
+                    Select property type (required)
+                  </option>
+                  {TYPES.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
+              <Field icon={BedDouble} label="Bedrooms" bordered>
+                <select
+                  aria-label="Bedrooms"
+                  aria-invalid={Boolean(error && !beds)}
+                  required
+                  value={beds}
+                  onChange={(e) => setBeds(e.target.value)}
+                  className="w-full bg-transparent text-sm text-foreground outline-none"
+                >
+                  <option value="" disabled>
+                    Select bedrooms (required)
+                  </option>
+                  {BEDROOMS.map((b) => (
+                    <option key={b.value} value={b.value}>
+                      {b.label}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex items-center justify-center gap-2 rounded-xl bg-estate-700 px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-estate-600 disabled:cursor-not-allowed disabled:opacity-70 md:rounded-full"
+              >
+                <Search className="h-4 w-4" />
+                {loading ? "Finding your match…" : "Find my match"}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {error && !submitted && (
+          <p role="alert" className="mt-3 text-sm font-medium text-gold-400">
+            {error}
+          </p>
+        )}
+
+        {!submitted && (
+          <p className="mt-4 text-xs text-white/55">
+            Free &amp; without obligation · Replied to within 2 working hours
+          </p>
+        )}
 
         {/* Selling path — not a search; a separate flow */}
         <p className="mt-3 text-sm text-white/65">
