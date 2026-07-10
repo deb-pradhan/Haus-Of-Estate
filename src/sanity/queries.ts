@@ -1,4 +1,4 @@
-const POST_FIELDS = `
+export const POST_FIELDS = `
   _id,
   title,
   subtitle,
@@ -8,9 +8,10 @@ const POST_FIELDS = `
     "url": asset->url
   },
   "author": author->{name, "slug": slug.current, avatar, role},
-  "categories": categories[]->{title, "slug": slug.current, color},
+  "categories": categories[]->{_id, title, "slug": slug.current, color},
   publishedAt,
-  featured
+  featured,
+  "readMins": round(length(pt::text(body)) / 1125)
 `
 
 export const POSTS_QUERY = `

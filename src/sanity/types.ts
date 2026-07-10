@@ -31,6 +31,7 @@ export interface Post {
   categories?: Category[]
   publishedAt: string
   featured?: boolean
+  readMins?: number
   body?: any[]
   seo?: {
     seoTitle?: string
@@ -57,4 +58,5 @@ export interface PostSummary {
   }>
   publishedAt: string
   featured?: boolean
+  readMins?: number
 }
