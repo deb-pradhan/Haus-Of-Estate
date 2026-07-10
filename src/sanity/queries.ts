@@ -3,7 +3,10 @@ const POST_FIELDS = `
   title,
   subtitle,
   "slug": slug.current,
-  featuredImage,
+  featuredImage{
+    ...,
+    "url": asset->url
+  },
   "author": author->{name, "slug": slug.current, avatar, role},
   "categories": categories[]->{title, "slug": slug.current, color},
   publishedAt,
