@@ -10,6 +10,7 @@ import {
   AuthorCard,
   BlogSidebar,
   ReadingProgress,
+  ShareLinks,
 } from '@/components/blog'
 import { FALLBACK_IMAGES, FALLBACK_ALTS } from '@/sanity/fallbackImages'
 import { readingTimeFromBlocks } from '@/lib/reading-time'
@@ -167,6 +168,12 @@ async function PostContent({ slug }: { slug: string }) {
               <CalendarDays className="h-4 w-4 text-mist-400" />
               {formatDate(post.publishedAt)}
             </span>
+          </div>
+
+          {/* Mobile share (sidebar carries it on desktop) */}
+          <div className="mt-6 flex items-center gap-3 border-t border-border/70 pt-5 lg:hidden">
+            <span className="text-sm font-medium text-slate-700">Share</span>
+            <ShareLinks title={post.title} slug={post.slug} />
           </div>
         </header>
 

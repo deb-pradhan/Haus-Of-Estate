@@ -1,10 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
-import { Link2, Check, Mail } from 'lucide-react'
+import { Mail } from 'lucide-react'
 import { useLeadModals } from '@/components/lead-modal'
 import { BlogCard } from './BlogCard'
+import { ShareLinks } from './ShareLinks'
 import type { PostSummary } from '@/sanity/types'
 
 interface Tag {
@@ -19,54 +19,8 @@ interface BlogSidebarProps {
   related: PostSummary[]
 }
 
-const SITE = 'https://hausofestate.com'
-
 export function BlogSidebar({ title, slug, tags, related }: BlogSidebarProps) {
   const { openAccount } = useLeadModals()
-  const [copied, setCopied] = useState(false)
-  const url = `${SITE}/blog/${slug}`
-  const enc = encodeURIComponent(url)
-  const encTitle = encodeURIComponent(title)
-
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(url)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      /* clipboard unavailable */
-    }
-  }
-
-  const shares = [
-    {
-      name: 'Share on X',
-      href: `https://twitter.com/intent/tweet?url=${enc}&text=${encTitle}`,
-      icon: (
-        <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden>
-          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-        </svg>
-      ),
-    },
-    {
-      name: 'Share on LinkedIn',
-      href: `https://www.linkedin.com/sharing/share-offsite/?url=${enc}`,
-      icon: (
-        <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden>
-          <path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.36V9h3.41v1.56h.05a3.74 3.74 0 0 1 3.37-1.85c3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45z" />
-        </svg>
-      ),
-    },
-    {
-      name: 'Share on Facebook',
-      href: `https://www.facebook.com/sharer/sharer.php?u=${enc}`,
-      icon: (
-        <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden>
-          <path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07c0 6.02 4.39 11.01 10.13 11.93v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.69.24 2.69.24v2.97h-1.52c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8v8.44C19.61 23.08 24 18.09 24 12.07z" />
-        </svg>
-      ),
-    },
-  ]
 
   return (
     <aside className="space-y-8 lg:sticky lg:top-24">
@@ -75,30 +29,7 @@ export function BlogSidebar({ title, slug, tags, related }: BlogSidebarProps) {
         <h3 className="font-serif text-sm font-semibold uppercase tracking-[0.12em] text-slate-700">
           Share this article
         </h3>
-        <div className="mt-4 flex gap-2">
-          {shares.map((s) => (
-            <a
-              key={s.name}
-              href={s.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={s.name}
-              title={s.name}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-slate-700 transition-colors hover:border-estate-700 hover:bg-estate-700 hover:text-white"
-            >
-              {s.icon}
-            </a>
-          ))}
-          <button
-            type="button"
-            onClick={copy}
-            aria-label="Copy link"
-            title="Copy link"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-slate-700 transition-colors hover:border-estate-700 hover:bg-estate-700 hover:text-white"
-          >
-            {copied ? <Check className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
-          </button>
-        </div>
+        <ShareLinks title={title} slug={slug} className="mt-4" />
       </div>
 
       {/* Tags */}

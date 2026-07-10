@@ -1,7 +1,13 @@
 import { Suspense } from 'react'
 import { sanityFetch } from '@/sanity'
-import { POST_FIELDS, FEATURED_POST_QUERY, CATEGORIES_QUERY } from '@/sanity/queries'
-import { FeaturedPost, BlogGrid, BlogToolbar, Pagination } from '@/components/blog'
+import { POST_FIELDS, CATEGORIES_QUERY, POSTS_COUNT_QUERY } from '@/sanity/queries'
+import {
+  FeaturedPost,
+  BlogGrid,
+  BlogToolbar,
+  Pagination,
+  BlogCTA,
+} from '@/components/blog'
 import type { PostSummary } from '@/sanity/types'
 import type { Metadata } from 'next'
 
@@ -44,7 +50,6 @@ async function BlogContent({
   const end = start + POSTS_PER_PAGE
   const isFiltered = Boolean(category || q)
 
-  // Build the listing filter dynamically from active category / search.
   const conditions = ['_type == "post"', 'status == "published"']
   if (category) conditions.push('$category in categories[]->slug.current')
   if (q) conditions.push('(title match $q || subtitle match $q || pt::text(body) match $q)')
@@ -61,7 +66,9 @@ async function BlogContent({
     sanityFetch<PostSummary[]>({ query: listQuery, params }),
     sanityFetch<number>({ query: countQuery, params }),
     !isFiltered && page === 1
-      ? sanityFetch<PostSummary>({ query: FEATURED_POST_QUERY })
+      ? sanityFetch<PostSummary>({
+          query: `*[_type == "post" && status == "published"] | order(publishedAt desc)[0] { ${POST_FIELDS} }`,
+        })
       : Promise.resolve({ data: null }),
   ])
 
@@ -77,25 +84,20 @@ async function BlogContent({
         </section>
       )}
 
-      <section className="mx-auto mt-14 max-w-6xl px-5 sm:px-6">
-        <div className="mb-3 flex items-baseline justify-between">
-          <h2 className="font-serif text-2xl font-medium text-ink-900 md:text-3xl">
+      <section className="mx-auto mt-16 max-w-6xl px-5 sm:px-6">
+        <div className="mb-6 flex items-baseline justify-between gap-4 border-b border-border/70 pb-4">
+          <h2 className="font-serif text-2xl font-medium text-ink-900 md:text-[1.75rem]">
             {q ? `Results for “${q}”` : category ? 'Filtered articles' : 'Latest articles'}
           </h2>
-          <span className="text-sm text-slate-700">
+          <span className="shrink-0 text-sm text-slate-700">
             {count} article{count === 1 ? '' : 's'}
           </span>
         </div>
 
         <BlogGrid posts={gridPosts} />
 
-        <div className="mt-14">
-          <Pagination
-            current={page}
-            total={count}
-            baseUrl="/blog"
-            params={{ category, q, sort }}
-          />
+        <div className="mt-16">
+          <Pagination current={page} total={count} baseUrl="/blog" params={{ category, q, sort }} />
         </div>
       </section>
     </>
@@ -107,39 +109,43 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
   const page = parseInt(sp.page || '1', 10)
   const { category, q, sort } = sp
 
-  const { data: categories } = await sanityFetch<Category[]>({ query: CATEGORIES_QUERY })
+  const [{ data: categories }, { data: totalArticles }] = await Promise.all([
+    sanityFetch<Category[]>({ query: CATEGORIES_QUERY }),
+    sanityFetch<number>({ query: POSTS_COUNT_QUERY }),
+  ])
 
   return (
     <main className="min-h-screen bg-canvas pb-24">
       {/* Masthead */}
-      <header className="border-b border-border/70">
-        <div className="mx-auto max-w-3xl px-5 py-16 text-center sm:px-6 md:py-20">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-gold-600">
+      <header className="relative overflow-hidden border-b border-border/70">
+        <div className="pointer-events-none absolute left-1/2 top-0 h-64 w-[42rem] max-w-full -translate-x-1/2 rounded-full bg-gold-400/10 blur-3xl" />
+        <div className="relative mx-auto max-w-3xl animate-fade-up px-5 py-16 text-center sm:px-6 md:py-24">
+          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-gold-500">
             The Haus of Estate Journal
           </p>
-          <h1 className="mt-4 font-serif text-4xl font-medium leading-[1.1] text-ink-900 md:text-6xl">
+          <h1 className="mt-5 font-serif text-[2.6rem] font-medium leading-[1.05] text-ink-900 md:text-[4.25rem]">
             Property Insights
           </h1>
-          <p className="mx-auto mt-4 max-w-xl text-lg leading-relaxed text-slate-700">
-            Market intelligence, investment guides and buying &amp; renting tips across
-            the UK, Dubai and international markets.
+          <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-slate-700">
+            Market intelligence, investment guides and buying &amp; renting tips across the UK,
+            Dubai and international markets.
           </p>
         </div>
       </header>
 
-      {/* Toolbar: search · categories · sort */}
+      {/* Toolbar */}
       <div className="mx-auto mt-12 max-w-6xl px-5 sm:px-6">
         <BlogToolbar categories={categories || []} />
       </div>
 
-      <div className="mt-10">
+      <div className="mt-8">
         <Suspense
           key={`${page}-${category ?? ''}-${q ?? ''}-${sort ?? ''}`}
           fallback={
             <div className="mx-auto max-w-6xl px-5">
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {[0, 1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="h-80 animate-pulse rounded-2xl bg-stone-200" />
+                  <div key={i} className="h-[22rem] animate-pulse rounded-2xl bg-stone-200/70" />
                 ))}
               </div>
             </div>
@@ -148,6 +154,11 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
           <BlogContent page={page} category={category} q={q} sort={sort} />
         </Suspense>
       </div>
+
+      {/* Consultation CTA */}
+      <section className="mx-auto mt-24 max-w-6xl px-5 sm:px-6">
+        <BlogCTA articleCount={totalArticles || 0} />
+      </section>
     </main>
   )
 }

@@ -60,23 +60,23 @@ export function BlogToolbar({ categories }: BlogToolbarProps) {
   const tabs = [{ title: 'All', slug: '' }, ...categories.map((c) => ({ title: c.title, slug: c.slug }))]
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
       {/* Search */}
       <div className="relative">
-        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <Search className="pointer-events-none absolute left-5 top-1/2 h-[1.05rem] w-[1.05rem] -translate-y-1/2 text-slate-400" />
         <input
           type="search"
           value={term}
           onChange={(e) => setTerm(e.target.value)}
           placeholder="Search articles…"
           aria-label="Search articles"
-          className="w-full rounded-full border border-border bg-surface py-3 pl-11 pr-4 text-sm text-ink-900 shadow-sm outline-none transition-colors placeholder:text-slate-400 focus:border-estate-700 focus:ring-2 focus:ring-estate-700/10"
+          className="w-full rounded-full border border-border bg-surface py-3.5 pl-12 pr-4 text-[0.95rem] text-ink-900 shadow-sm outline-none transition-all placeholder:text-slate-400 focus:border-estate-700 focus:ring-4 focus:ring-estate-700/10"
         />
       </div>
 
       {/* Category tabs + sort */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap gap-2">
+      <div className="flex items-center justify-between gap-4">
+        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {tabs.map((tab) => {
             const isActive = activeCategory === tab.slug
             return (
@@ -85,7 +85,7 @@ export function BlogToolbar({ categories }: BlogToolbarProps) {
                 type="button"
                 onClick={() => push({ category: tab.slug || null })}
                 aria-pressed={isActive}
-                className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
+                className={`shrink-0 whitespace-nowrap rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
                   isActive
                     ? 'border-estate-700 bg-estate-700 text-white'
                     : 'border-border bg-surface text-slate-700 hover:border-estate-700/40 hover:text-estate-700'
@@ -97,7 +97,7 @@ export function BlogToolbar({ categories }: BlogToolbarProps) {
           })}
         </div>
 
-        <div className="relative shrink-0">
+        <div className="relative hidden shrink-0 sm:block">
           <select
             value={activeSort}
             onChange={(e) => push({ sort: e.target.value === 'newest' ? null : e.target.value })}
