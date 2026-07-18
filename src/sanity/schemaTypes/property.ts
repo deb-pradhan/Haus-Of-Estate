@@ -1,5 +1,6 @@
 import { defineType, defineField, defineArrayMember } from 'sanity'
 import { HomeIcon } from '@sanity/icons'
+import { ALL_UNIT_TYPES } from '../../lib/property-taxonomy'
 
 export const property = defineType({
   name: 'property',
@@ -50,25 +51,81 @@ export const property = defineType({
       validation: (rule) => rule.max(120),
     }),
     defineField({
+      name: 'category',
+      title: 'Category',
+      type: 'string',
+      description: 'Top-level taxonomy bucket used by nav, search and landing pages.',
+      options: {
+        list: [
+          { title: 'Residential', value: 'residential' },
+          { title: 'Commercial', value: 'commercial' },
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'residential',
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'availability',
+      title: 'Availability',
+      type: 'array',
+      description:
+        'Whether the offering is ready-to-move and/or off-plan. A single showcase can be both.',
+      of: [defineArrayMember({ type: 'string' })],
+      options: {
+        list: [
+          { title: 'Ready', value: 'ready' },
+          { title: 'Off-Plan', value: 'off-plan' },
+        ],
+        layout: 'grid',
+      },
+      initialValue: ['ready'],
+      validation: (rule) => rule.required().min(1),
+    }),
+    defineField({
+      name: 'listingType',
+      title: 'Listing type',
+      type: 'array',
+      description:
+        'For sale and/or for rent. Off-plan properties can only be For sale.',
+      of: [defineArrayMember({ type: 'string' })],
+      options: {
+        list: [
+          { title: 'For sale', value: 'sale' },
+          { title: 'For rent', value: 'rent' },
+        ],
+        layout: 'grid',
+      },
+      initialValue: ['sale'],
+      validation: (rule) =>
+        rule
+          .required()
+          .min(1)
+          .custom((value, context) => {
+            const doc = context.document as { availability?: string[] } | undefined
+            const availability = Array.isArray(doc?.availability)
+              ? doc!.availability
+              : []
+            const offPlanOnly =
+              availability.includes('off-plan') && !availability.includes('ready')
+            if (
+              offPlanOnly &&
+              Array.isArray(value) &&
+              value.includes('rent')
+            ) {
+              return 'Off-plan properties can only be For sale, not For rent.'
+            }
+            return true
+          }),
+    }),
+    defineField({
       name: 'unitType',
       title: 'Unit Type',
       type: 'string',
       description:
         'Primary offering. For a development/community showcase, use the generic type (e.g. "Apartment" or "Mansion"); per-unit variants go in Key Features.',
       options: {
-        list: [
-          { title: 'Apartment', value: 'Apartment' },
-          { title: 'Studio', value: 'Studio' },
-          { title: '1 Bedroom', value: '1 Bedroom' },
-          { title: '2 Bedroom', value: '2 Bedroom' },
-          { title: '3 Bedroom', value: '3 Bedroom' },
-          { title: 'Terrace Apartment', value: 'Terrace Apartment' },
-          { title: 'Penthouse', value: 'Penthouse' },
-          { title: 'Mansion', value: 'Mansion' },
-          { title: 'Villa', value: 'Villa' },
-          { title: 'Townhouse', value: 'Townhouse' },
-          { title: 'Retail Unit', value: 'Retail Unit' },
-        ],
+        list: ALL_UNIT_TYPES.map((value) => ({ title: value, value })),
       },
       validation: (rule) => rule.required(),
     }),
@@ -139,11 +196,18 @@ export const property = defineType({
     }),
     defineField({
       name: 'priceDisplay',
-      title: 'Price (display text)',
+      title: 'Sale price (display text)',
       type: 'string',
       description:
         'Free text — e.g. "From £140,000" or "Price on application". The brand shows prices in GBP (£).',
       initialValue: 'Price on application',
+    }),
+    defineField({
+      name: 'rentPriceDisplay',
+      title: 'Rent price (display text)',
+      type: 'string',
+      description:
+        'Free text shown when the listing is For rent — e.g. "From £2,500 / month". Leave blank for sale-only listings.',
     }),
     defineField({
       name: 'completionStatus',

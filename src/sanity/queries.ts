@@ -123,6 +123,9 @@ const PROPERTY_CARD_FIELDS = `
   city,
   country,
   developer,
+  category,
+  availability,
+  listingType,
   unitType,
   unitNumber,
   bedrooms,
@@ -130,6 +133,7 @@ const PROPERTY_CARD_FIELDS = `
   sizeDisplay,
   plotSizeDisplay,
   priceDisplay,
+  rentPriceDisplay,
   paymentPlan,
   view,
   completionStatus,
@@ -142,6 +146,19 @@ const PROPERTY_CARD_FIELDS = `
 export const PROPERTIES_QUERY = `
   *[_type == "property" && status == "published"]
     | order(featured desc, publishedAt desc) {
+      ${PROPERTY_CARD_FIELDS}
+    }
+`
+
+// Server-side filtered listing. Pass empty-string params to skip a filter.
+// $availability / $intent match against the array fields (membership).
+export const PROPERTIES_FILTERED_QUERY = `
+  *[_type == "property" && status == "published"
+    && ($category == "" || category == $category)
+    && ($availability == "" || $availability in availability)
+    && ($intent == "" || $intent in listingType)
+    && ($type == "" || unitType == $type)
+  ] | order(featured desc, publishedAt desc) {
       ${PROPERTY_CARD_FIELDS}
     }
 `

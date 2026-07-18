@@ -15,9 +15,13 @@ interface FeaturedProperty {
   slug: string;
   community: string;
   city: string;
+  category?: string;
+  availability?: string[];
+  listingType?: string[];
   unitType: string;
   bedrooms?: number;
   priceDisplay?: string;
+  rentPriceDisplay?: string;
   completionStatus?: string;
   summary: string;
   featuredImage?: { alt?: string } & Record<string, unknown>;
@@ -28,6 +32,16 @@ const COMPLETION_LABEL: Record<string, string> = {
   "off-plan": "Off-plan",
   "completed-offplan": "Completed & off-plan",
 };
+
+function saleRentLabel(listingType?: string[]): string | null {
+  if (!listingType || listingType.length === 0) return null;
+  const sale = listingType.includes("sale");
+  const rent = listingType.includes("rent");
+  if (sale && rent) return "Sale · Rent";
+  if (rent) return "For rent";
+  if (sale) return "For sale";
+  return null;
+}
 
 function buildAlt(property: FeaturedProperty): string {
   if (property.featuredImage?.alt) return property.featuredImage.alt;
@@ -67,12 +81,19 @@ function PropertyCard({
             <Building2 className="h-10 w-10 text-white/30" />
           </div>
         )}
-        {property.completionStatus && (
-          <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-[11px] font-semibold text-estate-700 shadow-sm">
-            {COMPLETION_LABEL[property.completionStatus] ??
-              property.completionStatus}
-          </span>
-        )}
+        <div className="absolute left-3 top-3 flex flex-wrap items-center gap-1.5">
+          {property.completionStatus && (
+            <span className="rounded-full bg-surface/95 px-3 py-1 text-[11px] font-semibold text-estate-700 shadow-sm">
+              {COMPLETION_LABEL[property.completionStatus] ??
+                property.completionStatus}
+            </span>
+          )}
+          {saleRentLabel(property.listingType) && (
+            <span className="rounded-full bg-estate-700/90 px-3 py-1 text-[11px] font-semibold text-white shadow-sm">
+              {saleRentLabel(property.listingType)}
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-1 flex-col p-4">

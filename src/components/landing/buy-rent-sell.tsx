@@ -3,8 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Home,
-  KeyRound,
   ArrowRight,
   MapPin,
   Building2,
@@ -13,15 +11,18 @@ import {
   Tag,
 } from "lucide-react";
 import { useLeadModals } from "@/components/lead-modal/modal-context";
-
-// ── Filter option sets — aligned to the actual property schema ──────────
-
-type Intent = "buy" | "rent";
-
-const TABS: { id: Intent; label: string; icon: React.ElementType }[] = [
-  { id: "buy", label: "Buy", icon: Home },
-  { id: "rent", label: "Rent", icon: KeyRound },
-];
+import {
+  type Category,
+  type Availability,
+  type Intent,
+  CATEGORIES,
+  CATEGORY_LABELS,
+  AVAILABILITIES,
+  AVAILABILITY_LABELS,
+  typesFor,
+  bedroomsHidden,
+  buildPropertiesHref,
+} from "@/lib/property-taxonomy";
 
 const LOCATIONS = [
   "Dubai",
@@ -32,16 +33,6 @@ const LOCATIONS = [
   "Manchester",
   "Birmingham",
   "Bali, Indonesia",
-];
-
-// Friendly groupings — these map to one or more schema unitType values
-// when /properties filters its results. See TYPE_GROUPS in /properties.
-const TYPES = [
-  "Apartment",
-  "Villa",
-  "Mansion",
-  "Penthouse",
-  "Townhouse",
 ];
 
 const BEDROOMS = [
@@ -60,6 +51,12 @@ const STATS = [
   { value: "4.8★", label: "Average rating" },
 ];
 
+// Buyer-facing labels for the intent control.
+const INTENT_TABS: { id: Intent; label: string }[] = [
+  { id: "sale", label: "Buy" },
+  { id: "rent", label: "Rent" },
+];
+
 function getGreeting(): string {
   const h = new Date().getHours();
   if (h < 12) return "Good morning";
@@ -76,46 +73,61 @@ declare global {
 export function BuyRentSell() {
   const router = useRouter();
   const { openSeller } = useLeadModals();
-  const [intent, setIntent] = useState<Intent>("buy");
+  const [category, setCategory] = useState<Category>("residential");
+  const [availability, setAvailability] = useState<Availability>("ready");
+  const [intent, setIntent] = useState<Intent>("sale");
   const [location, setLocation] = useState("");
   const [type, setType] = useState("");
   const [beds, setBeds] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const greeting = getGreeting();
+
+  const offPlan = availability === "off-plan";
+  const effectiveIntent: Intent = offPlan ? "sale" : intent;
+  const typeOptions = typesFor(category, availability);
+  const hideBeds = bedroomsHidden(category, type);
+
+  function changeCategory(next: Category) {
+    setCategory(next);
+    setType(""); // reset type when scope changes
+  }
+
+  function changeAvailability(next: Availability) {
+    setAvailability(next);
+    setType(""); // reset type when scope changes
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
 
-    if (!location || !type || !beds) {
-      setError("Please choose a location, property type and bedrooms to find your match.");
-      return;
-    }
-
-    setError("");
     setLoading(true);
 
-    // Fire GA4 event only on confirmed, valid submission.
+    // Fire GA4 event on submission.
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push({
       event: "lead_form_submit",
       form_location: "homepage_hero",
-      selected_location: location,
-      property_type: type,
-      bedrooms: beds,
-      intent,
+      category,
+      availability,
+      intent: effectiveIntent,
+      property_type: type || null,
+      selected_location: location || null,
+      bedrooms: hideBeds ? null : beds || null,
     });
 
-    const params = new URLSearchParams();
-    params.set("intent", intent);
-    params.set("location", location);
-    params.set("type", type);
-    params.set("beds", beds);
+    const href = buildPropertiesHref({
+      category,
+      availability,
+      intent: effectiveIntent,
+      type: type || undefined,
+      location: location || undefined,
+      beds: hideBeds ? undefined : beds || undefined,
+    });
 
     setSubmitted(true);
-    router.push(`/properties?${params.toString()}`);
+    router.push(href);
   };
 
   return (
@@ -148,39 +160,11 @@ export function BuyRentSell() {
           advice, no hidden fees, wherever you&apos;re moving capital.
         </p>
 
-        {/* Buy / Rent intent toggle */}
-        <div
-          role="tablist"
-          aria-label="What would you like to do"
-          className="mx-auto mt-9 inline-flex rounded-full border border-white/15 bg-white/5 p-1 backdrop-blur-sm"
-        >
-          {TABS.map((t) => {
-            const selected = t.id === intent;
-            return (
-              <button
-                key={t.id}
-                role="tab"
-                aria-selected={selected}
-                onClick={() => setIntent(t.id)}
-                className={`flex items-center gap-2 rounded-full px-5 py-2 text-sm font-medium transition-colors ${
-                  selected
-                    ? "bg-white text-estate-700 shadow-sm"
-                    : "text-white/80 hover:text-white"
-                }`}
-              >
-                <t.icon className="h-4 w-4" strokeWidth={1.75} />
-                {t.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Search bar */}
         {submitted ? (
           <div
             role="status"
             aria-live="polite"
-            className="mx-auto mt-5 max-w-xl rounded-2xl border border-white/15 bg-surface p-6 text-center shadow-2xl shadow-black/25"
+            className="mx-auto mt-9 max-w-xl rounded-2xl border border-white/15 bg-surface p-6 text-center shadow-2xl shadow-black/25"
           >
             <p className="font-serif text-lg font-medium text-estate-700">
               Thank you — we&apos;ll reply within 2 hours.
@@ -190,88 +174,117 @@ export function BuyRentSell() {
             </p>
           </div>
         ) : (
-          <form
-            onSubmit={handleSubmit}
-            noValidate
-            className="mx-auto mt-5 max-w-4xl rounded-2xl border border-white/15 bg-surface p-2 shadow-2xl shadow-black/25 md:rounded-full"
-          >
-            <div className="grid gap-2 md:grid-cols-[1fr_1fr_1fr_auto] md:items-center">
-              <Field icon={MapPin} label="Location">
-                <select
-                  aria-label="Preferred location"
-                  aria-invalid={Boolean(error && !location)}
-                  required
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  className="w-full bg-transparent text-sm text-foreground outline-none"
-                >
-                  <option value="" disabled>
-                    Select location (required)
-                  </option>
-                  {LOCATIONS.map((l) => (
-                    <option key={l} value={l}>
-                      {l}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-
-              <Field icon={Building2} label="Property type" bordered>
-                <select
-                  aria-label="Property type"
-                  aria-invalid={Boolean(error && !type)}
-                  required
-                  value={type}
-                  onChange={(e) => setType(e.target.value)}
-                  className="w-full bg-transparent text-sm text-foreground outline-none"
-                >
-                  <option value="" disabled>
-                    Select property type (required)
-                  </option>
-                  {TYPES.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-
-              <Field icon={BedDouble} label="Bedrooms" bordered>
-                <select
-                  aria-label="Bedrooms"
-                  aria-invalid={Boolean(error && !beds)}
-                  required
-                  value={beds}
-                  onChange={(e) => setBeds(e.target.value)}
-                  className="w-full bg-transparent text-sm text-foreground outline-none"
-                >
-                  <option value="" disabled>
-                    Select bedrooms (required)
-                  </option>
-                  {BEDROOMS.map((b) => (
-                    <option key={b.value} value={b.value}>
-                      {b.label}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex items-center justify-center gap-2 rounded-xl bg-estate-700 px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-estate-600 disabled:cursor-not-allowed disabled:opacity-70 md:rounded-full"
-              >
-                <Search className="h-4 w-4" />
-                {loading ? "Finding your match…" : "Find my match"}
-              </button>
+          <>
+            {/* Taxonomy segmented controls */}
+            <div className="mx-auto mt-9 flex flex-wrap items-center justify-center gap-2">
+              <SegmentedControl
+                ariaLabel="Category"
+                options={CATEGORIES.map((c) => ({
+                  id: c,
+                  label: CATEGORY_LABELS[c],
+                }))}
+                value={category}
+                onChange={(v) => changeCategory(v as Category)}
+              />
+              <SegmentedControl
+                ariaLabel="Availability"
+                options={AVAILABILITIES.map((a) => ({
+                  id: a,
+                  label: AVAILABILITY_LABELS[a],
+                }))}
+                value={availability}
+                onChange={(v) => changeAvailability(v as Availability)}
+              />
+              <SegmentedControl
+                ariaLabel="Buy or rent"
+                options={INTENT_TABS.map((t) => ({
+                  id: t.id,
+                  label: t.label,
+                  disabled: offPlan && t.id === "rent",
+                  title:
+                    offPlan && t.id === "rent"
+                      ? "Off-plan is sale only"
+                      : undefined,
+                }))}
+                value={effectiveIntent}
+                onChange={(v) => setIntent(v as Intent)}
+              />
             </div>
-          </form>
-        )}
 
-        {error && !submitted && (
-          <p role="alert" className="mt-3 text-sm font-medium text-gold-400">
-            {error}
-          </p>
+            {/* Search bar */}
+            <form
+              onSubmit={handleSubmit}
+              noValidate
+              className="mx-auto mt-5 max-w-4xl rounded-2xl border border-white/15 bg-surface p-2 shadow-2xl shadow-black/25 md:rounded-full"
+            >
+              <div
+                className={`grid gap-2 md:items-center ${
+                  hideBeds
+                    ? "md:grid-cols-[1fr_1fr_auto]"
+                    : "md:grid-cols-[1fr_1fr_1fr_auto]"
+                }`}
+              >
+                <Field icon={Building2} label="Property type">
+                  <select
+                    aria-label="Property type"
+                    value={type}
+                    onChange={(e) => setType(e.target.value)}
+                    className="w-full bg-transparent text-sm text-foreground outline-none"
+                  >
+                    <option value="">Any type</option>
+                    {typeOptions.map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+
+                <Field icon={MapPin} label="Location" bordered>
+                  <select
+                    aria-label="Preferred location"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    className="w-full bg-transparent text-sm text-foreground outline-none"
+                  >
+                    <option value="">Any location</option>
+                    {LOCATIONS.map((l) => (
+                      <option key={l} value={l}>
+                        {l}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+
+                {!hideBeds && (
+                  <Field icon={BedDouble} label="Bedrooms" bordered>
+                    <select
+                      aria-label="Bedrooms"
+                      value={beds}
+                      onChange={(e) => setBeds(e.target.value)}
+                      className="w-full bg-transparent text-sm text-foreground outline-none"
+                    >
+                      <option value="">Any</option>
+                      {BEDROOMS.map((b) => (
+                        <option key={b.value} value={b.value}>
+                          {b.label}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex items-center justify-center gap-2 rounded-xl bg-estate-700 px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-estate-600 disabled:cursor-not-allowed disabled:opacity-70 md:rounded-full"
+                >
+                  <Search className="h-4 w-4" />
+                  {loading ? "Finding your match…" : "Find my match"}
+                </button>
+              </div>
+            </form>
+          </>
         )}
 
         {!submitted && (
@@ -309,6 +322,49 @@ export function BuyRentSell() {
         </dl>
       </div>
     </section>
+  );
+}
+
+function SegmentedControl({
+  ariaLabel,
+  options,
+  value,
+  onChange,
+}: {
+  ariaLabel: string;
+  options: { id: string; label: string; disabled?: boolean; title?: string }[];
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div
+      role="group"
+      aria-label={ariaLabel}
+      className="inline-flex rounded-full border border-white/15 bg-white/5 p-1 backdrop-blur-sm"
+    >
+      {options.map((opt) => {
+        const selected = opt.id === value;
+        return (
+          <button
+            key={opt.id}
+            type="button"
+            aria-pressed={selected}
+            disabled={opt.disabled}
+            title={opt.title}
+            onClick={() => !opt.disabled && onChange(opt.id)}
+            className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+              selected
+                ? "bg-white text-estate-700 shadow-sm"
+                : opt.disabled
+                  ? "cursor-not-allowed text-white/35"
+                  : "text-white/80 hover:text-white"
+            }`}
+          >
+            {opt.label}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
