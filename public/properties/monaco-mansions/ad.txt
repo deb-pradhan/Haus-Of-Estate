@@ -1,0 +1,59 @@
+# Haus of Estate — Development Notes
+
+## Header & Navigation
+
+- **Two-tier header**: contact strip on top (phone, WhatsApp, email, "Speak to an advisor") above four nav items — Properties, Services, Insights, About
+- **Two regional phones**:
+  - UAE +971 58 560 7033
+  - UK +44 7496 033321
+- **Services menu** trimmed to specialist work only: Property Management, Staging, Furnishing, Renovations
+- **About menu** groups About us, Our team, Careers and FAQs in one quiet drop-down
+- **"Sign In" button removed** — we weren't running a member area, so the button was a promise we couldn't keep
+- **Mobile menu** rebuilt with collapsible groups instead of a long crammed list
+
+## Hero Search (That Actually Searches)
+
+- Buy / Rent tabs, with location, property type and bedrooms aligned to what we genuinely offer
+- "Find my match" takes the visitor to the live catalogue with their filters applied
+- Filter chips above the results — dismiss one or clear them all
+- No match? A calm card invites the visitor to let an advisor find them an off-market option, replied to within two working hours
+- Selling? A separate "Get a free valuation" link sits beneath the search, where it belongs
+
+## Property Catalogue
+
+- One showcase per development — no per-unit listings, no public unit numbers
+- Azizi Monaco Mansions (Dubai South) — single showcase covering the full 12-mansion collection; price, size and bedrooms shown as ranges ("From AED 50M", "6–8 bedrooms", "20,383–39,004 sq ft BUA")
+- Al Furjan — single community showcase covering studios, 1, 2 and 3-bedroom and terrace apartments; pricing on application
+- Nine renders per mansion showcase: aerial, exterior, lagoon pool, rooftop pool, terrace, formal living, master bedroom, cinema, entertainment lounge
+- Four renders per Al Furjan showcase: community view + three retail/street views
+- Source files trimmed from almost a gigabyte of eight-thousand-pixel renders down to ten megabytes — sharp on screen, light on the site
+- Detail pages show View, Plot, Size, Bedrooms and Payment Plan; per-unit numbers and prices are confirmed on enquiry, never displayed
+
+## New Pages (Ready for Content)
+
+- `/services` — sticky sub-nav and a calm section for each specialist offering
+- `/team` — grid that fills automatically as advisors are added in the editor
+- `/faq` — eight common questions in plain UK English, plus a short version on the homepage
+- `/careers` — proper listings imported into the editor and a Life at Haus of Estate section ready for culture photos
+
+## Careers Applications (Handled Properly)
+
+- Upload a CV (PDF, DOC or DOCX)
+- Choose years of experience and the kind of opportunity
+- Tick a GDPR consent box
+- Application lands at hr@hausofestate.com with the CV attached
+- Automatic confirmation sent back to the applicant
+
+## Footer
+
+- Live social icons: LinkedIn, X, YouTube, Pinterest, WhatsApp
+- Instagram intentionally omitted (account currently suspended)
+- Quick-action buttons: Book Valuation and Browse Properties
+- Phone, info inbox and HR inbox each on their own line
+- Rent Smart Wales and Propertymark CMP credentials on display
+
+## Behind the Scenes
+
+- Proper content editor (Sanity) with sections for: Properties, Roles, Team Members, Testimonials, FAQs and Culture Moments
+- Homepage testimonials slider now reads from the editor, falling back to hand-picked quotes until you add your own
+- Blog draft on UK property jargon, ready for review and publication

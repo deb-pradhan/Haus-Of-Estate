@@ -1,4 +1,4 @@
-// Seed the 13 Azizi Monaco Mansions units into Sanity.
+// Seed the single Azizi Monaco Mansions development showcase into Sanity.
 //
 // Two modes:
 //   1. With SANITY_WRITE_TOKEN set  -> createOrReplace via API + asset upload.
@@ -6,9 +6,9 @@
 //      importable with:
 //        npx sanity dataset import scripts/monaco-mansions.ndjson production --replace
 //
-// All units share the same community + developer + amenities (sourced from the
-// Monaco Mansions factsheet PDF). Each unit has its own size, price, unit
-// number and bedroom count from the unit-listing snapshot.
+// One document represents the whole mansion collection — no per-unit listings,
+// no unit numbers. Price, size and bedrooms are presented as ranges derived from
+// the full unit mix. Specific availability is confirmed on enquiry.
 //
 // Image flow: drop the Monaco-Mansions renders into
 //   public/properties/monaco-mansions/
@@ -47,17 +47,52 @@ function descPT(paragraphs) {
   return paragraphs.map((p) => block(p.style || 'normal', p.text));
 }
 
-// ── Shared development data (from FACTSHEET - MM.pdf) ──────────────────
+// ── Development data (from FACTSHEET - MM.pdf) ─────────────────────────
 
 const COMMUNITY = 'Azizi Monaco Mansions';
 const MASTER_DEVELOPMENT = 'Azizi Venice';
 const CITY = 'Dubai';
 const COUNTRY = 'United Arab Emirates';
 const DEVELOPER = 'Azizi Developments';
+const SLUG = 'monaco-mansions';
+
+// Full unit mix, used to derive display ranges. Not seeded per-unit.
+const UNIT_MIX = [
+  { bedrooms: 6, sizeSqft: 20383.36, priceAED: 50039000 },
+  { bedrooms: 6, sizeSqft: 20383.36, priceAED: 50474000 },
+  { bedrooms: 6, sizeSqft: 20383.36, priceAED: 50911000 },
+  { bedrooms: 6, sizeSqft: 20383.36, priceAED: 51348000 },
+  { bedrooms: 6, sizeSqft: 20383.36, priceAED: 52214000 },
+  { bedrooms: 6, sizeSqft: 21272.46, priceAED: 55927000 },
+  { bedrooms: 7, sizeSqft: 29333.95, priceAED: 96730000 },
+  { bedrooms: 7, sizeSqft: 27610.84, priceAED: 113666000 },
+  { bedrooms: 8, sizeSqft: 32393.4, priceAED: 142310000 },
+  { bedrooms: 8, sizeSqft: 38695.72, priceAED: 176259000 },
+  { bedrooms: 8, sizeSqft: 36430.11, priceAED: 182103000 },
+  { bedrooms: 8, sizeSqft: 39003.57, priceAED: 203983000 },
+];
+
+const formatInt = (n) =>
+  Math.round(n).toLocaleString('en-GB', { useGrouping: true });
+
+const minPrice = Math.min(...UNIT_MIX.map((u) => u.priceAED));
+const minSize = Math.min(...UNIT_MIX.map((u) => u.sizeSqft));
+const maxSize = Math.max(...UNIT_MIX.map((u) => u.sizeSqft));
+const bedCounts = [...new Set(UNIT_MIX.map((u) => u.bedrooms))].sort(
+  (a, b) => a - b,
+);
+const bedroomsRange =
+  bedCounts.length === 1 ? `${bedCounts[0]}` : `${bedCounts[0]}–${bedCounts[bedCounts.length - 1]}`;
+
+const PRICE_DISPLAY = `From AED ${formatInt(minPrice)}`;
+const SIZE_DISPLAY = `${formatInt(minSize)}–${formatInt(maxSize)} sq ft (BUA)`;
+const BEDROOMS_DISPLAY = `${bedroomsRange} bedrooms`;
+const UNIT_COUNT = UNIT_MIX.length;
 
 const KEY_FEATURES = [
-  'Bespoke water-inspired mansions across the Azizi Venice lagoon community',
-  'Plot sizes from 10,000 – 20,000 sq ft with 6, 7 or 8 bedrooms',
+  `${UNIT_COUNT} bespoke water-inspired mansions across the Azizi Venice lagoon community`,
+  `Choice of ${bedroomsRange}-bedroom mansions`,
+  'Plot sizes from 10,000 – 20,000 sq ft',
   'Four expansive levels connected by a private elevator',
   'Two swimming pools — ground floor and rooftop',
   'Rooftop terrace with seating areas and al-fresco dining',
@@ -100,7 +135,7 @@ const INTRO =
   'Azizi Monaco Mansions sits at the heart of Dubai South, within the Azizi Venice masterplan — a Venice-inspired waterfront community organised around a 18 km swimmable lagoon, 40 acres of parks, and a Zaha Hadid-designed cultural district. The mansion collection itself is the rarest, most exclusive water-inspired residential tier in the masterplan.';
 
 const COMMUNITY_PARA =
-  'Each mansion is hand-finished across four expansive levels, with a private elevator, two swimming pools (one on the rooftop), a state-of-the-art home cinema, dedicated home office, and a private spa zone with sauna, steam and Hammam. Plot sizes range from 10,000 to 20,000 sq ft, with road-facing and lagoon-facing aspects, and a choice between six, seven and eight bedrooms.';
+  `The collection comprises ${UNIT_COUNT} hand-finished mansions, each set across four expansive levels with a private elevator, two swimming pools (one on the rooftop), a state-of-the-art home cinema, dedicated home office, and a private spa zone with sauna, steam and Hammam. Plot sizes range from 10,000 to 20,000 sq ft, with road-facing and lagoon-facing aspects, and a choice between ${bedroomsRange}-bedroom layouts.`;
 
 // ── Images: shared community renders ───────────────────────────────────
 // Drop the following files into public/properties/monaco-mansions/ before
@@ -145,7 +180,6 @@ const IMG = {
   },
 };
 
-// Gallery shown on every listing: exterior story first, then interiors.
 const GALLERY = [
   IMG.aerial,
   IMG.exterior,
@@ -158,12 +192,7 @@ const GALLERY = [
   IMG.entertainment,
 ];
 
-// Every unit uses the aerial as the featured hero — strongest, most consistent
-// brand image. (Unit-specific design renders can be swapped in the Studio
-// once units are mapped to one of the 8 Monaco mansion design types.)
-function featuredFor(_index) {
-  return IMG.aerial;
-}
+const FEATURED_IMAGE = IMG.aerial;
 
 function sanityImage(img, assetMap, withKey) {
   const base = assetMap
@@ -207,91 +236,60 @@ async function uploadAssets(c) {
   return map;
 }
 
-// ── The 13 units from the snapshot ─────────────────────────────────────
-
-const UNITS = [
-  // 6-bedroom Mansions
-  { unit: '047', bedrooms: 6, sizeSqft: 20383.36, priceAED: 50039000 },
-  { unit: '035', bedrooms: 6, sizeSqft: 20383.36, priceAED: 50474000 },
-  { unit: '046', bedrooms: 6, sizeSqft: 20383.36, priceAED: 50911000 },
-  { unit: '008', bedrooms: 6, sizeSqft: 20383.36, priceAED: 51348000 },
-  { unit: '023', bedrooms: 6, sizeSqft: 20383.36, priceAED: 52214000 },
-  { unit: '002', bedrooms: 6, sizeSqft: 21272.46, priceAED: 55927000 },
-  // 7-bedroom Mansions
-  { unit: '076', bedrooms: 7, sizeSqft: 29333.95, priceAED: 96730000 },
-  { unit: '066', bedrooms: 7, sizeSqft: 27610.84, priceAED: 113666000 },
-  // 8-bedroom Mansions
-  { unit: '102', bedrooms: 8, sizeSqft: 32393.4, priceAED: 142310000 },
-  { unit: '081', bedrooms: 8, sizeSqft: 38695.72, priceAED: 176259000 },
-  { unit: '093', bedrooms: 8, sizeSqft: 36430.11, priceAED: 182103000 },
-  { unit: '096', bedrooms: 8, sizeSqft: 39003.57, priceAED: 203983000 },
-];
-
-const formatInt = (n) =>
-  Math.round(n).toLocaleString('en-GB', { useGrouping: true });
-
-function unitSummary(u) {
-  return `A ${u.bedrooms}-bedroom Mansion in Azizi Monaco Mansions, set across four levels with rooftop pool, private spa and direct access to the Azizi Venice lagoon. Lagoon view, completed and off-plan availability.`;
-}
-
-function buildDoc(u, index, assetMap) {
-  const slug = `monaco-mansions-unit-${u.unit}`;
-  const lead = `Unit ${u.unit} is a ${u.bedrooms}-bedroom Mansion in the Azizi Monaco collection — ${formatInt(u.sizeSqft)} sq ft of built-up area, lagoon view, and four expansive levels connected by a private elevator. Move-in ready with full developer finishings.`;
-
+function buildDoc(assetMap) {
   return {
-    _id: `property-${slug}`,
+    _id: `property-${SLUG}`,
     _type: 'property',
-    title: `Mansion ${u.unit} — Azizi Monaco Mansions`,
-    slug: { _type: 'slug', current: slug },
+    title: 'Azizi Monaco Mansions',
+    slug: { _type: 'slug', current: SLUG },
     community: COMMUNITY,
     masterDevelopment: MASTER_DEVELOPMENT,
     city: CITY,
     country: COUNTRY,
     developer: DEVELOPER,
     unitType: 'Mansion',
-    unitNumber: u.unit,
-    bedrooms: u.bedrooms,
-    sizeDisplay: `${formatInt(u.sizeSqft)} sq ft (BUA)`,
+    bedrooms: bedCounts[0],
+    sizeDisplay: SIZE_DISPLAY,
     plotSizeDisplay: '10,000 – 20,000 sq ft (plot)',
-    priceDisplay: `AED ${formatInt(u.priceAED)}`,
+    priceDisplay: PRICE_DISPLAY,
     paymentPlan: 'Standard',
     view: 'Lagoon',
     completionStatus: 'completed-offplan',
-    summary: unitSummary(u),
+    summary: `${UNIT_COUNT} bespoke mansions at Azizi Monaco Mansions in Dubai South — ${bedroomsRange} bedrooms, lagoon views, four levels, private spa and rooftop pool. Completed and off-plan availability.`,
     description: descPT([
-      { text: lead },
+      {
+        text: `${COMMUNITY} is a collection of ${UNIT_COUNT} hand-finished mansions within the Azizi Venice masterplan. Sizes range from ${formatInt(minSize)} to ${formatInt(maxSize)} sq ft of built-up area, with ${bedroomsRange}-bedroom layouts, lagoon views, and four expansive levels connected by a private elevator.`,
+      },
       { style: 'h2', text: 'About Azizi Monaco Mansions' },
       { text: INTRO },
       { text: COMMUNITY_PARA },
       { style: 'h2', text: 'Enquire' },
       {
-        text: 'Pricing, payment-plan options and the available mansion design types (eight distinct interiors) are confirmed on enquiry. Speak to a Haus of Estate advisor and we will introduce you to the right vetted agent for this development.',
+        text: `Pricing, payment-plan options and the available mansion design types (eight distinct interiors) are confirmed on enquiry. Speak to a Haus of Estate advisor and we will introduce you to the right vetted agent for this development.`,
       },
     ]),
     keyFeatures: KEY_FEATURES,
     amenities: AMENITIES,
     locationBenefits: LOCATION_BENEFITS.map((b) => ({ ...b, _key: key() })),
-    featuredImage: sanityImage(featuredFor(index), assetMap, false),
+    featuredImage: sanityImage(FEATURED_IMAGE, assetMap, false),
     gallery: GALLERY.map((img) => sanityImage(img, assetMap, true)),
     enquiryEmail: 'info@hausofestate.com',
     publishedAt: new Date().toISOString(),
     status: 'published',
-    featured: index < 3,
+    featured: true,
   };
 }
 
 (async () => {
   if (!client) {
     const outPath = path.join(__dirname, 'monaco-mansions.ndjson');
-    const ndjson = UNITS.map((u, i) =>
-      JSON.stringify(buildDoc(u, i)),
-    ).join('\n');
+    const ndjson = JSON.stringify(buildDoc(null));
     fs.writeFileSync(outPath, ndjson + '\n', 'utf8');
-    console.log(`Wrote ${UNITS.length} Monaco Mansions units to:`);
+    console.log('Wrote 1 Monaco Mansions showcase doc to:');
     console.log(`  ${outPath}`);
     console.log('\nNext steps:');
     console.log(
-      '  1. Drop the 4 images into public/properties/monaco-mansions/',
+      '  1. Drop the renders into public/properties/monaco-mansions/',
     );
     console.log('     (filenames must match those listed in IMG at the top)');
     console.log('  2. Import with your CLI session:');
@@ -304,11 +302,9 @@ function buildDoc(u, index, assetMap) {
   console.log('Uploading images...');
   const assetMap = await uploadAssets(client);
 
-  for (const [i, u] of UNITS.entries()) {
-    const out = await client.createOrReplace(buildDoc(u, i, assetMap));
-    console.log(`✓ ${out.title}`);
-  }
-  console.log(`\nSeeded ${UNITS.length} Monaco Mansions units.`);
+  const out = await client.createOrReplace(buildDoc(assetMap));
+  console.log(`✓ ${out.title}`);
+  console.log('\nSeeded 1 Monaco Mansions showcase doc.');
 })().catch((e) => {
   console.error(e);
   process.exit(1);

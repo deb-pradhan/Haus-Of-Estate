@@ -53,8 +53,11 @@ export const property = defineType({
       name: 'unitType',
       title: 'Unit Type',
       type: 'string',
+      description:
+        'Primary offering. For a development/community showcase, use the generic type (e.g. "Apartment" or "Mansion"); per-unit variants go in Key Features.',
       options: {
         list: [
+          { title: 'Apartment', value: 'Apartment' },
           { title: 'Studio', value: 'Studio' },
           { title: '1 Bedroom', value: '1 Bedroom' },
           { title: '2 Bedroom', value: '2 Bedroom' },
@@ -71,9 +74,10 @@ export const property = defineType({
     }),
     defineField({
       name: 'unitNumber',
-      title: 'Unit number',
+      title: 'Unit number (internal)',
       type: 'string',
-      description: 'Developer unit reference, e.g. "047", "076".',
+      description:
+        'Internal reference only — not shown on the public site. Leave blank for development/community showcases.',
     }),
     defineField({
       name: 'masterDevelopment',

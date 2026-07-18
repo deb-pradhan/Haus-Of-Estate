@@ -1,14 +1,18 @@
-// Seed Property documents into Sanity. Two modes:
+// Seed the single Al Furjan community showcase into Sanity. Two modes:
 //   1. With SANITY_WRITE_TOKEN set  -> createOrReplace via the API.
 //   2. Without a token              -> writes scripts/properties.ndjson,
 //      importable with your own CLI session:
 //        npx sanity dataset import scripts/properties.ndjson production --replace
-// Documents are keyed by slug (_id = property.<slug>).
+//
+// One document represents the whole Al Furjan community offering — no per-unit
+// listings, no per-unit-type prices. Apartment types (studio, 1, 2 bed, terrace)
+// are surfaced as a key feature; specific pricing and availability are confirmed
+// on enquiry. The brand shows prices in GBP (£).
 //
 // Source: "AlFurjan Factsheet.pdf" (Azizi Developments). The factsheet is a
 // community-level brochure — it has no per-unit prices, sizes, bed/bath counts
-// or building names, so those are left as "On application" to be filled in
-// the Studio. Images are added in the Studio (drag-and-drop).
+// or building names. Images are added in the Studio (drag-and-drop) or via the
+// _sanityAsset file refs below.
 
 const crypto = require('node:crypto');
 const fs = require('node:fs');
@@ -42,12 +46,13 @@ function descPT(paragraphs) {
   return paragraphs.map((p) => block(p.style || 'normal', p.text));
 }
 
-// ── Shared Al Furjan community data (from the factsheet) ────────────────
+// ── Al Furjan community data (from the factsheet) ────────────────────────
 
 const COMMUNITY = 'Al Furjan';
 const CITY = 'Dubai';
 const COUNTRY = 'United Arab Emirates';
 const DEVELOPER = 'Azizi Developments';
+const SLUG = 'al-furjan';
 
 const AMENITIES = [
   'Swimming pools',
@@ -65,6 +70,7 @@ const AMENITIES = [
 const KEY_FEATURES = [
   'In the growth corridor of new Dubai',
   'On the metro line — 1 minute to Al Furjan Metro Station',
+  'A choice of studios, 1, 2 and 3-bedroom apartments and terrace apartments',
   'Serene views of the Dubai skyline',
   'Direct access to Sheikh Zayed Road and Mohammed Bin Zayed Road',
   'A vibrant, family-friendly community',
@@ -93,50 +99,8 @@ const INTRO =
 const COMMUNITY_PARA =
   'Residents have an abundance of amenities on their doorstep: swimming pools, a fully-equipped gym, sauna and steam rooms, lush open spaces, nurseries and schools, plus shops, cafes and restaurants throughout the community. It is a calm, well-served place to live, with completed and off-plan apartments and retail outlets available.';
 
-// ── Properties ─────────────────────────────────────────────────────────
-
-const PROPERTIES = [
-  {
-    slug: 'al-furjan-studio-apartment',
-    title: 'Studio Apartment — Al Furjan',
-    unitType: 'Studio',
-    bedrooms: 0,
-    featured: true,
-    summary:
-      'A smartly-designed studio apartment in Al Furjan — a connected, family-friendly community one minute from the metro, with completed and off-plan options.',
-    lead: 'An efficient, well-proportioned studio in the heart of Al Furjan — ideal as a first home in Dubai or as a straightforward buy-to-let in an established, well-connected community.',
-  },
-  {
-    slug: 'al-furjan-1-bedroom-apartment',
-    title: '1-Bedroom Apartment — Al Furjan',
-    unitType: '1 Bedroom',
-    bedrooms: 1,
-    featured: true,
-    summary:
-      'A one-bedroom apartment in Al Furjan — serene skyline views, a full suite of community amenities, and the metro one minute away.',
-    lead: 'A comfortable one-bedroom apartment in Al Furjan, with serene views of the Dubai skyline and direct access to Sheikh Zayed Road — a balanced choice for owner-occupiers and investors alike.',
-  },
-  {
-    slug: 'al-furjan-2-bedroom-apartment',
-    title: '2-Bedroom Apartment — Al Furjan',
-    unitType: '2 Bedroom',
-    bedrooms: 2,
-    featured: true,
-    summary:
-      'A two-bedroom apartment in Al Furjan — generous family living in a vibrant community with pools, gyms, schools and nurseries close by.',
-    lead: 'A two-bedroom apartment suited to family living in Al Furjan, a vibrant community with nurseries, schools, open spaces and recreational areas — all within a short walk.',
-  },
-  {
-    slug: 'al-furjan-terrace-apartment',
-    title: 'Terrace Apartment — Al Furjan',
-    unitType: 'Terrace Apartment',
-    bedrooms: null,
-    featured: false,
-    summary:
-      'A terrace apartment in Al Furjan — generous outdoor space and skyline views in one of new Dubai’s most popular community addresses.',
-    lead: 'A terrace apartment in Al Furjan, offering generous private outdoor space and serene skyline views — a distinctive option in an established, amenity-rich community.',
-  },
-];
+const SUMMARY =
+  'A connected, family-friendly community in new Dubai — one minute from the metro, with a choice of studios, 1, 2 and 3-bedroom apartments and terrace apartments. Completed and off-plan options.';
 
 // ── Images (from photos/, copied to public/properties/) ────────────────
 
@@ -159,14 +123,8 @@ const IMG = {
   },
 };
 
-const FEATURED_BY_SLUG = {
-  'al-furjan-studio-apartment': IMG.community,
-  'al-furjan-1-bedroom-apartment': IMG.retail1,
-  'al-furjan-2-bedroom-apartment': IMG.retail2,
-  'al-furjan-terrace-apartment': IMG.retail3,
-};
-
 const GALLERY = [IMG.community, IMG.retail1, IMG.retail2, IMG.retail3];
+const FEATURED_IMAGE = IMG.community;
 
 // In NDJSON mode (no token), reference local files with _sanityAsset so
 // `sanity dataset import` uploads them. In token mode, assetMap holds the
@@ -208,26 +166,25 @@ async function uploadAssets(c) {
   return map;
 }
 
-function buildDoc(p, assetMap) {
+function buildDoc(assetMap) {
   return {
-    _id: `property-${p.slug}`,
+    _id: `property-${SLUG}`,
     _type: 'property',
-    title: p.title,
-    slug: { _type: 'slug', current: p.slug },
+    title: 'Al Furjan',
+    slug: { _type: 'slug', current: SLUG },
     community: COMMUNITY,
     city: CITY,
     country: COUNTRY,
     developer: DEVELOPER,
-    unitType: p.unitType,
-    ...(p.bedrooms !== null && p.bedrooms !== undefined
-      ? { bedrooms: p.bedrooms }
-      : {}),
+    unitType: 'Apartment',
     sizeDisplay: 'On application',
     priceDisplay: 'Price on application',
     completionStatus: 'completed-offplan',
-    summary: p.summary,
+    summary: SUMMARY,
     description: descPT([
-      { text: p.lead },
+      {
+        text: 'Al Furjan offers a choice of studios, 1, 2 and 3-bedroom apartments and terrace apartments in one of new Dubai’s most established, well-connected communities — ideal as a first home, a family base, or a straightforward buy-to-let.',
+      },
       { style: 'h2', text: 'The community' },
       { text: INTRO },
       { text: COMMUNITY_PARA },
@@ -239,23 +196,21 @@ function buildDoc(p, assetMap) {
     keyFeatures: KEY_FEATURES,
     amenities: AMENITIES,
     locationBenefits: LOCATION_BENEFITS.map((b) => ({ ...b, _key: key() })),
-    featuredImage: sanityImage(FEATURED_BY_SLUG[p.slug], assetMap, false),
+    featuredImage: sanityImage(FEATURED_IMAGE, assetMap, false),
     gallery: GALLERY.map((img) => sanityImage(img, assetMap, true)),
     enquiryEmail: 'info@hausofestate.com',
     publishedAt: new Date().toISOString(),
     status: 'published',
-    featured: p.featured,
+    featured: true,
   };
 }
 
 (async () => {
   if (!client) {
     const outPath = path.join(__dirname, 'properties.ndjson');
-    const ndjson = PROPERTIES.map((p) => JSON.stringify(buildDoc(p))).join('\n');
+    const ndjson = JSON.stringify(buildDoc(null));
     fs.writeFileSync(outPath, ndjson + '\n', 'utf8');
-    console.log(
-      `No SANITY_WRITE_TOKEN set — wrote ${PROPERTIES.length} properties to:`,
-    );
+    console.log('No SANITY_WRITE_TOKEN set — wrote 1 showcase doc to:');
     console.log(`  ${outPath}`);
     console.log('\nImport it with your own Sanity CLI session:');
     console.log(
@@ -276,19 +231,9 @@ function buildDoc(p, assetMap) {
     process.exit(1);
   });
 
-  const results = [];
-  for (const p of PROPERTIES) {
-    try {
-      const out = await client.createOrReplace(buildDoc(p, assetMap));
-      console.log(`✓ ${out.title} (${out._id})`);
-      results.push(out);
-    } catch (e) {
-      console.error(`✗ ${p.title}: ${e.message}`);
-      if (e.responseBody) console.error(e.responseBody);
-      process.exit(1);
-    }
-  }
-  console.log(`\nSeeded ${results.length} properties with images.`);
+  const out = await client.createOrReplace(buildDoc(assetMap));
+  console.log(`✓ ${out.title} (${out._id})`);
+  console.log('\nSeeded 1 Al Furjan showcase doc.');
 })().catch((e) => {
   console.error(e);
   process.exit(1);
