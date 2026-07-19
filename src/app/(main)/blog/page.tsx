@@ -10,18 +10,22 @@ import {
 } from '@/components/blog'
 import type { PostSummary } from '@/sanity/types'
 import type { Metadata } from 'next'
+import { DEFAULT_OG_IMAGES } from '@/lib/seo'
 
 const POSTS_PER_PAGE = 9
 
 export const metadata: Metadata = {
-  title: 'Insights | Haus of Estate',
+  title: 'Insights',
   description:
     'Property market intelligence, investment guides and buying & renting tips across the UK, Dubai and international markets — from Haus of Estate.',
+  alternates: { canonical: '/blog' },
   openGraph: {
-    title: 'Insights | Haus of Estate',
+    title: 'Insights — Haus of Estate',
     description:
       'Property market intelligence, investment guides and buying & renting tips across the UK, Dubai and beyond.',
+    url: '/blog',
     type: 'website',
+    images: DEFAULT_OG_IMAGES,
   },
 }
 

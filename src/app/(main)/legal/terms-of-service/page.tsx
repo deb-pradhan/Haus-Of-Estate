@@ -1,7 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Terms of Service",
+  description:
+    "The terms governing your use of the Haus of Estate website and services.",
+  alternates: { canonical: "/legal/terms-of-service" },
+};
 
 export default function TermsOfServicePage() {
   return (

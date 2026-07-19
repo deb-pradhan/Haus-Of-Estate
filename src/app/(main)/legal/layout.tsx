@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Legal — Haus of Estate",
-  description: "Legal information for Haus of Estate",
+  title: "Legal",
+  description:
+    "Legal information for Haus of Estate — privacy policy, terms of service and cookie policy.",
 };
 
 export default function LegalLayout({ children }: { children: React.ReactNode }) {

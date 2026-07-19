@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { sanityFetch } from '@/sanity'
 import { ROLE_BY_SLUG_QUERY, ROLE_SLUGS_QUERY } from '@/sanity/queries'
+import { DEFAULT_OG_IMAGES } from '@/lib/seo'
 import { PortableTextRenderer } from '@/components/blog'
 import { ApplicationForm } from '@/components/careers/application-form'
 import type { Metadata } from 'next'
@@ -41,14 +42,17 @@ export async function generateMetadata({ params }: RolePageProps): Promise<Metad
     query: ROLE_BY_SLUG_QUERY,
     params: { slug },
   })
-  if (!data) return { title: 'Role Not Found | Haus of Estate' }
+  if (!data) return { title: 'Role Not Found' }
   return {
-    title: `${data.title} | Careers at Haus of Estate`,
+    title: `${data.title} — Careers`,
     description: data.summary,
+    alternates: { canonical: `/careers/${slug}` },
     openGraph: {
-      title: `${data.title} | Careers at Haus of Estate`,
+      title: `${data.title} — Careers at Haus of Estate`,
       description: data.summary,
+      url: `/careers/${slug}`,
       type: 'article',
+      images: DEFAULT_OG_IMAGES,
     },
   }
 }

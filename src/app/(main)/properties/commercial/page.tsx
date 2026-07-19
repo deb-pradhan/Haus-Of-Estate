@@ -3,17 +3,20 @@ import {
   PropertyListing,
   type PropertyListingSearchParams,
 } from '@/components/properties/property-listing'
+import { DEFAULT_OG_IMAGES } from '@/lib/seo'
 
 export const metadata: Metadata = {
-  title: 'Commercial Property | Haus of Estate',
+  title: 'Commercial Property',
   description:
     'Offices, retail, shopping malls and commercial plots — ready and off-plan. Tell us your brief and we will source the right opportunity.',
   alternates: { canonical: '/properties/commercial' },
   openGraph: {
-    title: 'Commercial Property | Haus of Estate',
+    title: 'Commercial Property — Haus of Estate',
     description:
       'Offices, retail, shopping malls and commercial plots — ready and off-plan.',
+    url: '/properties/commercial',
     type: 'website',
+    images: DEFAULT_OG_IMAGES,
   },
 }
 

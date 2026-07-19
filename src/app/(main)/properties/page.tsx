@@ -3,16 +3,20 @@ import {
   PropertyListing,
   type PropertyListingSearchParams,
 } from '@/components/properties/property-listing'
+import { DEFAULT_OG_IMAGES } from '@/lib/seo'
 
 export const metadata: Metadata = {
-  title: 'Properties | Haus of Estate',
+  title: 'Properties',
   description:
     'Explore homes across our partner communities — starting with Al Furjan, Dubai. Enquire and we will connect you with a vetted agent.',
+  alternates: { canonical: '/properties' },
   openGraph: {
-    title: 'Properties | Haus of Estate',
+    title: 'Properties — Haus of Estate',
     description:
       'Explore homes across our partner communities — starting with Al Furjan, Dubai.',
+    url: '/properties',
     type: 'website',
+    images: DEFAULT_OG_IMAGES,
   },
 }
 

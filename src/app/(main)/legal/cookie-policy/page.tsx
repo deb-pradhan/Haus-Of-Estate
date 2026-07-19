@@ -1,7 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Cookie Policy",
+  description:
+    "How Haus of Estate uses cookies and similar technologies on our website.",
+  alternates: { canonical: "/legal/cookie-policy" },
+};
 
 export default function CookiePolicyPage() {
   return (

@@ -16,6 +16,7 @@ import { FALLBACK_IMAGES, FALLBACK_ALTS } from '@/sanity/fallbackImages'
 import { readingTimeFromBlocks } from '@/lib/reading-time'
 import type { Post, PostSummary } from '@/sanity/types'
 import type { Metadata } from 'next'
+import { DEFAULT_OG_IMAGE } from '@/lib/seo'
 
 interface PostPageProps {
   params: Promise<{ slug: string }>
@@ -23,18 +24,31 @@ interface PostPageProps {
 
 export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
   const { slug } = await params
-  const { data } = await sanityFetch<{ title: string; subtitle?: string; publishedAt?: string; seo?: { seoTitle?: string; seoDesc?: string } }>({ query: SEO_QUERY, params: { slug } })
+  const { data } = await sanityFetch<{ title: string; subtitle?: string; publishedAt?: string; image?: string; seo?: { seoTitle?: string; seoDesc?: string } }>({ query: SEO_QUERY, params: { slug } })
 
   if (!data) return { title: 'Post Not Found' }
 
+  const title = data.seo?.seoTitle || data.title
+  const description = data.seo?.seoDesc || data.subtitle || ''
+  const images = [data.image || DEFAULT_OG_IMAGE]
+
   return {
-    title: data.seo?.seoTitle || data.title,
-    description: data.seo?.seoDesc || data.subtitle || '',
+    title,
+    description,
+    alternates: { canonical: `/blog/${slug}` },
     openGraph: {
-      title: data.seo?.seoTitle || data.title,
-      description: data.seo?.seoDesc || data.subtitle || '',
+      title,
+      description,
+      url: `/blog/${slug}`,
       type: 'article',
       publishedTime: data.publishedAt,
+      images,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images,
     },
   }
 }

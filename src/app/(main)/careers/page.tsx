@@ -16,6 +16,7 @@ import { ROLES_QUERY } from '@/sanity/queries'
 import { ApplicationForm } from '@/components/careers/application-form'
 import { HR_INBOX } from '@/lib/careers'
 import { LifeAtHoE } from '@/components/careers/life-at-hoe'
+import { DEFAULT_OG_IMAGES } from '@/lib/seo'
 
 // WhatsApp line for careers enquiries — UK number, with a pre-filled message.
 const CAREERS_WHATSAPP_URL =
@@ -71,14 +72,17 @@ const SUB_NAV = [
 ]
 
 export const metadata: Metadata = {
-  title: 'Careers | Haus of Estate',
+  title: 'Careers',
   description:
     'Join Haus of Estate — part-time and full-time jobs across the UK, UAE and beyond.',
+  alternates: { canonical: '/careers' },
   openGraph: {
-    title: 'Careers | Haus of Estate',
+    title: 'Careers — Haus of Estate',
     description:
       'Part-time and full-time jobs at Haus of Estate.',
+    url: '/careers',
     type: 'website',
+    images: DEFAULT_OG_IMAGES,
   },
 }
 

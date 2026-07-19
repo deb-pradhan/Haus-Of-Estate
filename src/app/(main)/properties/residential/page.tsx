@@ -3,17 +3,20 @@ import {
   PropertyListing,
   type PropertyListingSearchParams,
 } from '@/components/properties/property-listing'
+import { DEFAULT_OG_IMAGES } from '@/lib/seo'
 
 export const metadata: Metadata = {
-  title: 'Residential Property | Haus of Estate',
+  title: 'Residential Property',
   description:
     'Apartments, townhouses, villas and mansions across our partner communities — ready and off-plan. Enquire and we will connect you with a vetted agent.',
   alternates: { canonical: '/properties/residential' },
   openGraph: {
-    title: 'Residential Property | Haus of Estate',
+    title: 'Residential Property — Haus of Estate',
     description:
       'Apartments, townhouses, villas and mansions across our partner communities — ready and off-plan.',
+    url: '/properties/residential',
     type: 'website',
+    images: DEFAULT_OG_IMAGES,
   },
 }
 

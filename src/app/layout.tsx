@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Cormorant_Garamond } from "next/font/google";
 import Script from "next/script";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -27,11 +27,15 @@ const DEFAULT_DESCRIPTION =
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  // Plain string (not a template): pages set their own full titles, most of
-  // which already end with "| Haus of Estate" — a `%s | …` template would
-  // double the brand suffix. Pages without a title fall back to this.
-  title: DEFAULT_TITLE,
+  // `default` is used by the home page (and any page without its own title);
+  // `template` appends the brand to bare page titles, e.g. "Properties" →
+  // "Properties — Haus of Estate". Pages therefore set only their page name.
+  title: {
+    default: DEFAULT_TITLE,
+    template: "%s — Haus of Estate",
+  },
   description: DEFAULT_DESCRIPTION,
+  applicationName: SITE_NAME,
   keywords: [
     "international property",
     "overseas property UK",
@@ -39,13 +43,26 @@ export const metadata: Metadata = {
     "estate agents UAE",
     "buy property abroad",
   ],
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  formatDetection: { telephone: false, address: false, email: false },
   alternates: {
     canonical: "/",
   },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-video-preview": -1,
+      "max-snippet": -1,
+    },
   },
+  // og:image / twitter:image are supplied automatically by the
+  // src/app/opengraph-image.png and twitter-image.png file conventions.
   openGraph: {
     type: "website",
     siteName: SITE_NAME,
@@ -53,25 +70,25 @@ export const metadata: Metadata = {
     description: DEFAULT_DESCRIPTION,
     url: "/",
     locale: "en_GB",
-    images: [
-      {
-        url: "/og-default.png",
-        width: 1200,
-        height: 630,
-        alt: SITE_NAME,
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
     title: DEFAULT_TITLE,
     description: DEFAULT_DESCRIPTION,
-    images: ["/og-default.png"],
   },
-  icons: {
-    icon: "/Vector-1.svg",
-    apple: "/Vector-1.svg",
+  appleWebApp: {
+    capable: true,
+    title: SITE_NAME,
+    statusBarStyle: "default",
   },
+  // Favicon, SVG icon and apple-touch-icon are provided by the App Router
+  // file conventions (src/app/favicon.ico, icon.svg, apple-icon.png).
+  // The web manifest link is injected automatically by src/app/manifest.ts.
+};
+
+export const viewport: Viewport = {
+  themeColor: "#1F4F2F",
+  colorScheme: "light",
 };
 
 // Site-wide structured data (JSON-LD) for SEO rich results.

@@ -4,6 +4,7 @@ import { ArrowRight } from 'lucide-react'
 import { sanityFetch } from '@/sanity'
 import { FAQS_QUERY } from '@/sanity/queries'
 import { FaqAccordion, type FaqItem } from '@/components/faq/faq-accordion'
+import { DEFAULT_OG_IMAGES } from '@/lib/seo'
 
 interface FaqDoc extends FaqItem {
   category?: string
@@ -11,9 +12,18 @@ interface FaqDoc extends FaqItem {
 }
 
 export const metadata: Metadata = {
-  title: 'FAQs | Haus of Estate',
+  title: 'FAQs',
   description:
     'Plain-English answers to the questions buyers, renters, sellers and landlords ask us most often.',
+  alternates: { canonical: '/faq' },
+  openGraph: {
+    title: 'FAQs — Haus of Estate',
+    description:
+      'Plain-English answers to the questions buyers, renters, sellers and landlords ask us most often.',
+    url: '/faq',
+    type: 'website',
+    images: DEFAULT_OG_IMAGES,
+  },
 }
 
 export const revalidate = 60

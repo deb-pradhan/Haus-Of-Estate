@@ -16,6 +16,7 @@ import { sanityFetch, urlFor } from '@/sanity'
 import { PROPERTY_BY_SLUG_QUERY, PROPERTY_SLUGS_QUERY } from '@/sanity/queries'
 import { PortableTextRenderer } from '@/components/blog'
 import { toEmbedUrl } from '@/lib/embed-video'
+import { DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGES } from '@/lib/seo'
 
 interface LocationBenefit {
   destination?: string
@@ -77,14 +78,35 @@ export async function generateMetadata({
     query: PROPERTY_BY_SLUG_QUERY,
     params: { slug },
   })
-  if (!property) return { title: 'Property | Haus of Estate' }
+  if (!property) return { title: 'Property' }
+
+  const ogImage = property.featuredImage
+    ? urlFor(property.featuredImage)
+        .width(1200)
+        .height(630)
+        .fit('crop')
+        .url()
+    : undefined
+  const images = ogImage
+    ? [{ url: ogImage, width: 1200, height: 630, alt: property.title }]
+    : DEFAULT_OG_IMAGES
+
   return {
-    title: `${property.title} | Haus of Estate`,
+    title: property.title,
     description: property.summary,
+    alternates: { canonical: `/properties/${property.slug}` },
     openGraph: {
-      title: `${property.title} | Haus of Estate`,
+      title: `${property.title} — Haus of Estate`,
       description: property.summary,
+      url: `/properties/${property.slug}`,
       type: 'website',
+      images,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${property.title} — Haus of Estate`,
+      description: property.summary,
+      images: [ogImage ?? DEFAULT_OG_IMAGE],
     },
   }
 }

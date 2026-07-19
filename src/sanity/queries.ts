@@ -70,7 +70,8 @@ export const SEO_QUERY = `
     title,
     subtitle,
     seo,
-    publishedAt
+    publishedAt,
+    "image": featuredImage.asset->url
   }
 `
 

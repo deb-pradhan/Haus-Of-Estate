@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Mail, Phone, MessageCircle, MapPin, ArrowRight } from 'lucide-react'
+import { DEFAULT_OG_IMAGES } from '@/lib/seo'
 
 const COMPANY_EMAIL = 'info@hausofestate.com'
 const COMPANY_PHONE_DISPLAY = '+971 58 560 7033'
@@ -8,13 +9,17 @@ const WHATSAPP_URL =
   'https://wa.me/971585607033?utm_source=site&utm_medium=contact&utm_campaign=whatsapp'
 
 export const metadata: Metadata = {
-  title: 'Contact | Haus of Estate',
+  title: 'Contact',
   description:
     'Get in touch with Haus of Estate. Speak to a property specialist by email, phone or WhatsApp — offices in the UK and UAE, serving buyers, landlords and investors worldwide.',
+  alternates: { canonical: '/contact' },
   openGraph: {
-    title: 'Contact | Haus of Estate',
+    title: 'Contact — Haus of Estate',
     description:
       'Speak to a Haus of Estate specialist by email, phone or WhatsApp. Offices in the UK and UAE, serving clients worldwide.',
+    url: '/contact',
+    type: 'website',
+    images: DEFAULT_OG_IMAGES,
   },
 }
 

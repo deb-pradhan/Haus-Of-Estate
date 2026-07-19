@@ -1,7 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description:
+    "How Haus of Estate collects, uses and protects your personal data.",
+  alternates: { canonical: "/legal/privacy-policy" },
+};
 
 export default function PrivacyPolicyPage() {
   return (
