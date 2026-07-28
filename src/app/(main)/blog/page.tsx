@@ -14,6 +14,9 @@ import { DEFAULT_OG_IMAGES } from '@/lib/seo'
 
 const POSTS_PER_PAGE = 9
 
+// Keep the listing fresh with Sanity edits (new posts, replaced images).
+export const revalidate = 60
+
 export const metadata: Metadata = {
   title: 'Insights',
   description:

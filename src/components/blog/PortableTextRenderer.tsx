@@ -100,19 +100,68 @@ const components: PortableTextComponents = {
   },
   types: {
     image: ({ value }) => {
-      const url = value?.asset?.url
+      const url = value?.url || value?.asset?.url
       if (!url) return null
       return (
         <figure className="my-10">
-          <div className="relative aspect-[16/9] overflow-hidden rounded-xl">
+          <div className="relative aspect-[16/9] overflow-hidden rounded-xl bg-stone-100">
             <Image
               src={url}
               alt={value.alt || 'Blog image'}
               fill
+              sizes="(max-width: 680px) 100vw, 680px"
               className="object-cover"
             />
           </div>
           {value.caption && (
+            <figcaption className="mt-3 text-center text-sm italic text-slate-700">
+              {value.caption}
+            </figcaption>
+          )}
+        </figure>
+      )
+    },
+    contentTable: ({ value }) => {
+      const rows: Array<{ cells?: string[] }> = Array.isArray(value?.rows) ? value.rows : []
+      if (!rows.length) return null
+      const hasHeader = value?.hasHeader !== false
+      const headRow = hasHeader ? rows[0] : null
+      const bodyRows = hasHeader ? rows.slice(1) : rows
+      return (
+        <figure className="my-10">
+          <div className="overflow-x-auto rounded-xl border border-border">
+            <table className="w-full min-w-[34rem] border-collapse text-left text-[0.95rem]">
+              {headRow && (
+                <thead>
+                  <tr className="bg-stone-100">
+                    {(headRow.cells || []).map((c, i) => (
+                      <th
+                        key={i}
+                        className="border-b border-border px-4 py-3 font-semibold text-ink-900"
+                      >
+                        {c}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+              )}
+              <tbody>
+                {bodyRows.map((row, ri) => (
+                  <tr key={ri} className="even:bg-stone-100/40">
+                    {(row.cells || []).map((c, ci) => (
+                      <td
+                        key={ci}
+                        className="border-b border-border/60 px-4 py-3 align-top leading-relaxed text-slate-700"
+                      >
+                        {c}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {value?.caption && (
             <figcaption className="mt-3 text-center text-sm italic text-slate-700">
               {value.caption}
             </figcaption>

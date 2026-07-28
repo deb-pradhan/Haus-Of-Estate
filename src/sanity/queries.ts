@@ -33,7 +33,10 @@ export const FEATURED_POST_QUERY = `
 export const POST_BY_SLUG_QUERY = `
   *[_type == "post" && slug.current == $slug && status == "published"][0] {
     ${POST_FIELDS},
-    body
+    body[]{
+      ...,
+      _type == "image" => { ..., "url": asset->url }
+    }
   }
 `
 

@@ -86,6 +86,7 @@ export const post = defineType({
           },
         }),
         defineArrayMember({ type: 'image', options: { hotspot: true } }),
+        defineArrayMember({ type: 'contentTable' }),
       ],
     }),
     defineField({

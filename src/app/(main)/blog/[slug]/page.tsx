@@ -18,6 +18,10 @@ import type { Post, PostSummary } from '@/sanity/types'
 import type { Metadata } from 'next'
 import { DEFAULT_OG_IMAGE } from '@/lib/seo'
 
+// Revalidate every 60s so edits in Sanity (e.g. a replaced cover image)
+// propagate to the statically-generated post pages without a full rebuild.
+export const revalidate = 60
+
 interface PostPageProps {
   params: Promise<{ slug: string }>
 }
@@ -193,8 +197,15 @@ async function PostContent({ slug }: { slug: string }) {
 
         {/* Hero image */}
         {imageUrl && (
-          <div className="relative mt-8 aspect-[16/9] overflow-hidden rounded-3xl bg-stone-100">
-            <Image src={imageUrl} alt={alt} fill priority className="object-cover" />
+          <div className="relative mt-8 aspect-[16/10] overflow-hidden rounded-2xl bg-stone-100 sm:aspect-[16/9] md:rounded-3xl">
+            <Image
+              src={imageUrl}
+              alt={alt}
+              fill
+              priority
+              sizes="(max-width: 1152px) 100vw, 1152px"
+              className="object-cover"
+            />
           </div>
         )}
 
