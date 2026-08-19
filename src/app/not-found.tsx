@@ -1,7 +1,7 @@
 import Link from 'next/link'
 
 const WHATSAPP_URL =
-  'https://wa.me/971585607033?utm_source=site&utm_medium=404&utm_campaign=whatsapp'
+  'https://wa.me/447496033321?utm_source=site&utm_medium=404&utm_campaign=whatsapp'
 
 const QUICK_LINKS = [
   { href: '/', label: 'Home' },

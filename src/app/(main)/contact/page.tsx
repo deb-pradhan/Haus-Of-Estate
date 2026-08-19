@@ -3,10 +3,10 @@ import { Mail, Phone, MessageCircle, MapPin, ArrowRight } from 'lucide-react'
 import { DEFAULT_OG_IMAGES } from '@/lib/seo'
 
 const COMPANY_EMAIL = 'info@hausofestate.com'
-const COMPANY_PHONE_DISPLAY = '+971 58 560 7033'
-const COMPANY_PHONE_HREF = 'tel:+971585607033'
+const COMPANY_PHONE_DISPLAY = '+44 7496 033321'
+const COMPANY_PHONE_HREF = 'tel:+447496033321'
 const WHATSAPP_URL =
-  'https://wa.me/971585607033?utm_source=site&utm_medium=contact&utm_campaign=whatsapp'
+  'https://wa.me/447496033321?utm_source=site&utm_medium=contact&utm_campaign=whatsapp'
 
 export const metadata: Metadata = {
   title: 'Contact',

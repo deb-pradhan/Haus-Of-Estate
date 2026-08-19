@@ -21,7 +21,7 @@ export interface PhoneInputProps {
 
 /**
  * Shared phone input with flag + searchable country picker.
- * Emits an E.164 string (e.g. "+971585607033") via onChange.
+ * Emits an E.164 string (e.g. "+447496033321") via onChange.
  */
 export function PhoneInput({
   id,

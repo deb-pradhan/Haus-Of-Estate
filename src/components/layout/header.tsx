@@ -35,10 +35,9 @@ import {
 } from "@/lib/property-taxonomy";
 
 const WHATSAPP_URL_HEADER =
-  "https://wa.me/971585607033?utm_source=site&utm_medium=header&utm_campaign=whatsapp";
+  "https://wa.me/447496033321?utm_source=site&utm_medium=header&utm_campaign=whatsapp";
 const COMPANY_EMAIL = "info@hausofestate.com";
 const COMPANY_PHONES = [
-  { region: "UAE", display: "+971 58 560 7033", href: "tel:+971585607033" },
   { region: "UK", display: "+44 7496 033321", href: "tel:+447496033321" },
 ] as const;
 

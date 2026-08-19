@@ -7,7 +7,6 @@ export interface Author {
   bio?: string
   social?: {
     linkedin?: string
-    twitter?: string
     email?: string
   }
 }
