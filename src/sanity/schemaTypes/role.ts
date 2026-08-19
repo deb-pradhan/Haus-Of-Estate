@@ -1,5 +1,5 @@
 import { defineType, defineField, defineArrayMember } from 'sanity'
-import { CaseIcon } from '@sanity/icons'
+import CaseIcon from '@sanity/icons/Case'
 
 export const role = defineType({
   name: 'role',

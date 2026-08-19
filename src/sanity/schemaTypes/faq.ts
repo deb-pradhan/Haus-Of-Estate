@@ -1,5 +1,5 @@
 import { defineType, defineField, defineArrayMember } from 'sanity'
-import { HelpCircleIcon } from '@sanity/icons'
+import HelpCircleIcon from '@sanity/icons/HelpCircle'
 
 export const faq = defineType({
   name: 'faq',

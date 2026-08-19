@@ -1,5 +1,5 @@
 import { defineType, defineField } from 'sanity'
-import { UserIcon } from '@sanity/icons'
+import UserIcon from '@sanity/icons/User'
 
 export const author = defineType({
   name: 'author',
@@ -43,7 +43,6 @@ export const author = defineType({
       type: 'object',
       fields: [
         defineField({ name: 'linkedin', title: 'LinkedIn', type: 'url' }),
-        defineField({ name: 'twitter', title: 'Twitter/X', type: 'url' }),
         defineField({ name: 'email', title: 'Email', type: 'string' }),
       ],
     }),

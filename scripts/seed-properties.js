@@ -222,7 +222,7 @@ function buildDoc(assetMap) {
     return;
   }
 
-  const me = await client.request({ uri: '/users/me' }).catch((e) => {
+  const me = await client.request({ url: '/users/me' }).catch((e) => {
     console.error('Token check failed:', e.message);
     process.exit(1);
   });

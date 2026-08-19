@@ -1,5 +1,5 @@
 import { defineType, defineField, defineArrayMember } from 'sanity'
-import { HomeIcon } from '@sanity/icons'
+import HomeIcon from '@sanity/icons/Home'
 import { ALL_UNIT_TYPES } from '../../lib/property-taxonomy'
 
 export const property = defineType({
