@@ -80,46 +80,11 @@ function WhatsAppGlyph() {
 }
 
 export function Footer() {
-  const { openAccount, openBuyer, openSeller } = useLeadModals();
+  const { openBuyer, openSeller } = useLeadModals();
   const year = new Date().getFullYear();
 
   return (
     <footer className="bg-estate-700 text-white/70">
-      {/* Newsletter band */}
-      <div className="border-b border-white/10">
-        <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-12 md:flex-row md:items-center md:justify-between md:px-6">
-          <div>
-            <h3 className="font-serif text-2xl font-medium text-white md:text-3xl">
-              Market intelligence, straight to your inbox.
-            </h3>
-            <p className="mt-1.5 text-sm text-white/60">
-              Cross-border property insight. No spam — unsubscribe anytime.
-            </p>
-          </div>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              openAccount();
-            }}
-            className="flex w-full max-w-md items-center gap-2 rounded-full border border-white/15 bg-white/5 p-1.5 backdrop-blur-sm"
-          >
-            <input
-              type="email"
-              required
-              placeholder="Your email address"
-              aria-label="Your email address"
-              className="min-w-0 flex-1 bg-transparent px-4 text-sm text-white placeholder:text-white/40 outline-none"
-            />
-            <button
-              type="submit"
-              className="flex shrink-0 items-center gap-1.5 rounded-full bg-gold-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-gold-400"
-            >
-              Subscribe <ArrowRight className="h-4 w-4" />
-            </button>
-          </form>
-        </div>
-      </div>
-
       {/* Main columns */}
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 md:grid-cols-2 md:px-6 lg:grid-cols-5">
         {/* Brand */}
