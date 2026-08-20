@@ -17,7 +17,6 @@ import {
   Mail,
   MessageSquare,
   Clock,
-  Shield,
   BadgeCheck,
   Sparkles,
 } from "lucide-react";
@@ -515,7 +514,6 @@ function TrustBadges() {
   return (
     <div className="mt-4 flex flex-wrap items-center justify-center gap-4">
       {[
-        { icon: Shield, text: "RERA & FCA-Regulated" },
         { icon: BadgeCheck, text: "15+ Years Experience" },
         { icon: Clock, text: "24/7 Support" },
       ].map(({ icon: Icon, text }) => (

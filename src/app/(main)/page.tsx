@@ -501,8 +501,6 @@ function CTABanner() {
 
         {/* Trust logos */}
         <div className="mt-6 flex flex-wrap justify-center gap-4 text-xs text-white/40">
-          <span className="flex items-center gap-1"><Shield className="h-3.5 w-3.5" /> RERA-Regulated</span>
-          <span className="flex items-center gap-1"><BadgeCheck className="h-3.5 w-3.5" /> FCA-Compliant</span>
           <span className="flex items-center gap-1"><BadgeCheck className="h-3.5 w-3.5" /> SSL Secured</span>
           <span className="flex items-center gap-1"><BadgeCheck className="h-3.5 w-3.5" /> GDPR</span>
         </div>

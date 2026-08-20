@@ -901,9 +901,6 @@ export default function AboutPage() {
               <Users className="h-4 w-4 text-gold-400" /> 1,247+ clients worldwide
             </span>
             <span className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-gold-400" /> RERA &amp; FCA-regulated
-            </span>
-            <span className="flex items-center gap-2">
               <Globe2 className="h-4 w-4 text-gold-400" /> UK · UAE · International
             </span>
           </div>

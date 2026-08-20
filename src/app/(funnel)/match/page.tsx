@@ -274,12 +274,10 @@ const BUDGET_RANGES: Record<
 const TRUST_SIGNALS: Record<Market, string[]> = {
   dubai: [
     "240+ Verified Listings",
-    "Trusted RERA-Licensed Agents",
     "Zero Spam, Zero Obligation",
   ],
   uk: [
     "500+ Verified Listings",
-    " FCA-Regulated Agents",
     "Zero Spam, Zero Obligation",
   ],
   bali: [
