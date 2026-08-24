@@ -1,12 +1,9 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Bed, MapPin, ArrowRight, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useLeadModals } from "@/components/lead-modal/modal-context";
-import { client, urlFor } from "@/sanity";
+import { OpenBuyerButton } from "@/components/lead-modal/open-buyer-button";
+import { sanityFetch, urlFor } from "@/sanity";
 import { FEATURED_PROPERTIES_QUERY } from "@/sanity/queries";
 
 interface FeaturedProperty {
@@ -74,6 +71,7 @@ function PropertyCard({
             src={urlFor(property.featuredImage).width(800).height(600).url()}
             alt={buildAlt(property)}
             fill
+            sizes="(max-width: 767px) calc(100vw - 2rem), (max-width: 1279px) 33vw, 400px"
             className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
@@ -128,27 +126,13 @@ function PropertyCard({
   );
 }
 
-export function PropertyShowcase() {
-  const { openBuyer } = useLeadModals();
-  const [properties, setProperties] = useState<FeaturedProperty[] | null>(null);
+export async function PropertyShowcase() {
+  const { data } = await sanityFetch<FeaturedProperty[]>({
+    query: FEATURED_PROPERTIES_QUERY,
+  });
+  const properties = data ?? [];
 
-  useEffect(() => {
-    let active = true;
-    client
-      .fetch<FeaturedProperty[]>(FEATURED_PROPERTIES_QUERY)
-      .then((data) => {
-        if (active) setProperties(data ?? []);
-      })
-      .catch(() => {
-        if (active) setProperties([]);
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  // Don't render the section until we know there's something to show.
-  if (properties !== null && properties.length === 0) return null;
+  if (properties.length === 0) return null;
 
   return (
     <section className="px-4 py-16 md:px-6 md:py-24">
@@ -166,22 +150,11 @@ export function PropertyShowcase() {
           </p>
         </div>
 
-        {properties === null ? (
-          <div className="grid gap-6 md:grid-cols-3">
-            {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                className="h-80 animate-pulse rounded-2xl border border-border bg-surface"
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-3">
-            {properties.map((p) => (
-              <PropertyCard key={p._id} property={p} />
-            ))}
-          </div>
-        )}
+        <div className="grid gap-6 md:grid-cols-3">
+          {properties.map((p) => (
+            <PropertyCard key={p._id} property={p} />
+          ))}
+        </div>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Link href="/properties">
@@ -192,12 +165,9 @@ export function PropertyShowcase() {
               View all properties <ArrowRight className="ml-1.5 h-4 w-4" />
             </Button>
           </Link>
-          <Button
-            onClick={openBuyer}
-            className="bg-estate-700 text-white hover:bg-estate-600"
-          >
+          <OpenBuyerButton className="bg-estate-700 text-white hover:bg-estate-600">
             Find me something like this <ArrowRight className="ml-1.5 h-4 w-4" />
-          </Button>
+          </OpenBuyerButton>
         </div>
       </div>
     </section>

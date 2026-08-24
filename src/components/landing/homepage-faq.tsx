@@ -1,32 +1,14 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { client } from "@/sanity";
+import { sanityFetch } from "@/sanity";
 import { FEATURED_FAQS_QUERY } from "@/sanity/queries";
 import { FaqAccordion, type FaqItem } from "@/components/faq/faq-accordion";
 
-export function HomepageFaq() {
-  const [items, setItems] = useState<FaqItem[] | null>(null);
+export async function HomepageFaq() {
+  const { data } = await sanityFetch<FaqItem[]>({ query: FEATURED_FAQS_QUERY });
+  const items = data ?? [];
 
-  useEffect(() => {
-    let active = true;
-    client
-      .fetch<FaqItem[]>(FEATURED_FAQS_QUERY)
-      .then((data) => {
-        if (active) setItems(data ?? []);
-      })
-      .catch(() => {
-        if (active) setItems([]);
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  // Hide section entirely until we have at least one FAQ.
-  if (items !== null && items.length === 0) return null;
+  if (items.length === 0) return null;
 
   return (
     <section className="bg-background px-4 py-16 md:px-6 md:py-24">
@@ -44,11 +26,7 @@ export function HomepageFaq() {
           </p>
         </div>
 
-        {items === null ? (
-          <div className="h-72 animate-pulse rounded-2xl border border-border bg-surface" />
-        ) : (
-          <FaqAccordion items={items} defaultOpenFirst />
-        )}
+        <FaqAccordion items={items} defaultOpenFirst />
 
         <div className="mt-8 text-center">
           <Link

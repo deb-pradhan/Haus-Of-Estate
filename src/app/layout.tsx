@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Cormorant_Garamond } from "next/font/google";
 import Script from "next/script";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { SessionProvider } from "@/lib/auth/client";
 import { draftMode } from "next/headers";
 import "./globals.css";
 
@@ -182,14 +180,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         >
           Skip to main content
         </a>
-        <SessionProvider>
-          <TooltipProvider delayDuration={300}>{children}</TooltipProvider>
-          {isDraftModeEnabled && (
-            <div className="fixed bottom-4 right-4 z-50 rounded-full bg-estate-700 px-4 py-2 text-sm text-white shadow-lg">
-              Preview Mode
-            </div>
-          )}
-        </SessionProvider>
+        {children}
+        {isDraftModeEnabled && (
+          <div className="fixed bottom-4 right-4 z-50 rounded-full bg-estate-700 px-4 py-2 text-sm text-white shadow-lg">
+            Preview Mode
+          </div>
+        )}
       </body>
     </html>
   );
