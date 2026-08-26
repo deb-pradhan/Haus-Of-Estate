@@ -96,6 +96,7 @@ function formatPublishedDate(iso?: string): string {
 export async function HomepageReviews() {
   const { data } = await sanityFetch<SanityTestimonial[]>({
     query: FEATURED_TESTIMONIALS_QUERY,
+    throwOnError: true,
   });
 
   const reviews: ReviewCard[] =

@@ -42,36 +42,12 @@ export function ReviewsCarousel({ reviews }: { reviews: ReviewCard[] }) {
             Client stories
           </p>
           <h2 className="font-serif text-3xl font-medium text-estate-700 md:text-4xl">
-            Rated 4.8 / 5 — Excellent
+            What our clients say
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground md:text-base">
-            Reviewed by clients on Google and across our markets in the UK, UAE
-            and beyond.
+            Experiences shared by clients across our markets in the UK, UAE and
+            beyond.
           </p>
-        </div>
-
-        <div className="mb-5 flex flex-wrap items-center justify-center gap-3 md:gap-4">
-          <a
-            href="https://www.google.com/search?q=Haus+of+Estate"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Read Haus of Estate reviews on Google"
-            className="group flex items-center gap-3 rounded-full border border-border bg-surface px-5 py-2.5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
-          >
-            <svg viewBox="0 0 48 48" className="h-5 w-5 shrink-0" aria-hidden>
-              <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z" />
-              <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z" />
-              <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z" />
-              <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z" />
-            </svg>
-            <span className="text-sm font-semibold text-foreground">Google</span>
-            <span aria-hidden className="h-4 w-px bg-border" />
-            <span className="flex items-center gap-1">
-              <Star className="h-3.5 w-3.5 fill-gold-500 text-gold-500" />
-              <span className="text-sm font-semibold text-estate-700">4.8</span>
-              <span className="text-xs text-muted-foreground">/ 5</span>
-            </span>
-          </a>
         </div>
 
         <div className="mb-10 flex flex-wrap items-center justify-center gap-x-2 gap-y-2 text-xs md:text-sm">

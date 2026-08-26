@@ -129,6 +129,7 @@ function PropertyCard({
 export async function PropertyShowcase() {
   const { data } = await sanityFetch<FeaturedProperty[]>({
     query: FEATURED_PROPERTIES_QUERY,
+    throwOnError: true,
   });
   const properties = data ?? [];
 

@@ -5,7 +5,10 @@ import { FEATURED_FAQS_QUERY } from "@/sanity/queries";
 import { FaqAccordion, type FaqItem } from "@/components/faq/faq-accordion";
 
 export async function HomepageFaq() {
-  const { data } = await sanityFetch<FaqItem[]>({ query: FEATURED_FAQS_QUERY });
+  const { data } = await sanityFetch<FaqItem[]>({
+    query: FEATURED_FAQS_QUERY,
+    throwOnError: true,
+  });
   const items = data ?? [];
 
   if (items.length === 0) return null;
