@@ -32,7 +32,7 @@ export default function PrivacyPolicyPage() {
         <div className="mb-8">
           <p className="font-serif text-sm font-medium uppercase tracking-widest text-gold-500 mb-2">Legal</p>
           <h1 className="font-serif text-4xl font-medium text-estate-700">Privacy Policy</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Last updated: February 2026</p>
+          <p className="mt-2 text-sm text-muted-foreground">Last updated: August 2026</p>
         </div>
 
         <div className="space-y-8 text-sm leading-relaxed text-foreground">
@@ -40,7 +40,7 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">1. Who We Are</h2>
             <p>
-              Haus of Estate ("we", "our", "us") is an international property advisory firm operating across the United Kingdom, United Arab Emirates, and Indonesia. We are committed to protecting your personal data in accordance with the UK General Data Protection Regulation (UK GDPR), the Data Protection Act 2018, and the EU General Data Protection Regulation (GDPR) where applicable.
+              Haus of Estate (&quot;we&quot;, &quot;our&quot;, &quot;us&quot;) is an international property advisory firm operating across the United Kingdom, United Arab Emirates, and Indonesia. We are committed to protecting your personal data in accordance with the UK General Data Protection Regulation (UK GDPR), the Data Protection Act 2018, and the EU General Data Protection Regulation (GDPR) where applicable.
             </p>
             <p className="mt-2">
               <strong>Company details:</strong><br />
@@ -63,8 +63,9 @@ export default function PrivacyPolicyPage() {
               <li><strong>Contact data:</strong> email address, mobile number, postal address</li>
               <li><strong>Financial data:</strong> bank details (only where required for transactions), budget range, investment preferences</li>
               <li><strong>Property data:</strong> property requirements, location preferences, bedrooms, size, urgency indicators, title deed documents</li>
+              <li><strong>Enquiry context:</strong> the page, property or development connected to your enquiry and limited campaign-attribution details</li>
               <li><strong>Usage data:</strong> how you interact with our website, including pages visited and time spent</li>
-              <li><strong>Marketing preferences:</strong> your consent to receive marketing communications via WhatsApp, SMS, email, and phone</li>
+              <li><strong>Marketing preferences:</strong> whether you have separately chosen to receive email marketing, including when, where, and under which wording that choice was made or withdrawn</li>
             </ul>
           </section>
 
@@ -75,28 +76,25 @@ export default function PrivacyPolicyPage() {
               <li>To respond to your property enquiries and provide personalised property recommendations</li>
               <li>To match you with properties based on your stated requirements (buy/rent/invest)</li>
               <li>To list your property for sale or rent and facilitate transactions</li>
-              <li>To send you market insights, investment guides, and property opportunities where you have given consent</li>
+              <li>To send you market insights, investment guides, and property opportunities by email only where you have separately opted in</li>
               <li>To comply with our legal obligations under UK and EU anti-money laundering regulations</li>
               <li>To improve our website and services through analytics</li>
             </ul>
             <p className="mt-3">
-              <strong>Legal basis for processing:</strong> We rely on <strong>consent</strong> (Article 6(1)(a) UK GDPR) for marketing communications, <strong>contractual necessity</strong> (Article 6(1)(b)) for property services, and <strong>legitimate interests</strong> (Article 6(1)(f)) for fraud prevention and service improvement.
+              <strong>Legal basis for processing:</strong> We rely on <strong>consent</strong> (Article 6(1)(a) UK GDPR) for email marketing, <strong>steps taken at your request before entering into a contract</strong> and contractual necessity (Article 6(1)(b)) for property services, and <strong>legitimate interests</strong> (Article 6(1)(f)) for fraud prevention, responding to genuine enquiries, and service improvement where those interests are not overridden by your rights.
             </p>
           </section>
 
           <section>
             <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">4. Marketing Communications</h2>
             <p>
-              Where you have provided explicit consent, we may contact you via:
+              Submitting a property enquiry does not subscribe you to marketing. The optional email-marketing checkbox is unchecked by default, and choosing not to select it does not affect our ability to respond to your enquiry.
             </p>
-            <ul className="mt-2 space-y-1 list-disc pl-5">
-              <li><strong>WhatsApp:</strong> Property matches, market updates, investment opportunities</li>
-              <li><strong>SMS:</strong> Property alerts and viewing confirmations</li>
-              <li><strong>Email:</strong> Newsletter, property shortlists, market reports</li>
-              <li><strong>Phone:</strong> Agent consultations and follow-up calls</li>
-            </ul>
             <p className="mt-3">
-              Under UK and EU law ( PECR 2003 and GDPR), we require your <strong>explicit opt-in consent</strong> before sending marketing messages. You have the right to withdraw this consent at any time by contacting us at{" "}
+              Where you give explicit consent, we may email you newsletters, market reports, property opportunities, and related insights. We record the date, source, privacy-notice version, and wording shown when you opt in so that we can manage and evidence your choice. We do not treat an unticked checkbox as a withdrawal of consent already given.
+            </p>
+            <p className="mt-3">
+              You can withdraw your email-marketing consent at any time by contacting us at{" "}
               <a href="mailto:privacy@hausofestate.com" className="text-trust-teal hover:underline">
                 privacy@hausofestate.com
               </a>{" "}
@@ -113,7 +111,8 @@ export default function PrivacyPolicyPage() {
               <li><strong>Property developers</strong> (Emaar, Damac, etc.) where you have expressed interest in specific projects</li>
               <li><strong>Legal representatives</strong> and conveyancing agents to complete property transactions</li>
               <li><strong>HM Revenue & Customs</strong> (HMRC) to comply with UK tax and anti-money laundering regulations</li>
-              <li><strong>Technology providers</strong> (hosting, email delivery) under strict data processing agreements</li>
+              <li><strong>Technology providers</strong> supporting hosting, databases, operational lead handling, analytics, and email delivery under appropriate data processing terms</li>
+              <li><strong>Microsoft 365 and Power Automate</strong> so authorised Haus team members can manage enquiries in an access-controlled operational workbook and receive internal notifications</li>
             </ul>
             <p className="mt-3">
               All third parties are required to process your data only in accordance with our instructions and applicable data protection law.
@@ -166,7 +165,7 @@ export default function PrivacyPolicyPage() {
             </p>
             <p className="mt-2">
               You also have the right to lodge a complaint with the{" "}
-              <strong>Information Commissioner's Office (ICO)</strong> if you believe we have not handled your data correctly.
+              <strong>Information Commissioner&apos;s Office (ICO)</strong> if you believe we have not handled your data correctly.
               Website:{" "}
               <a href="https://ico.org.uk" target="_blank" rel="noopener noreferrer" className="text-trust-teal hover:underline">
                 ico.org.uk
@@ -178,7 +177,7 @@ export default function PrivacyPolicyPage() {
             <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">9. Cookies and Tracking</h2>
             <p>
               Our website uses cookies to improve your browsing experience. For detailed information about the cookies we use and how to manage them, please see our{" "}
-              <Link href="/cookie-policy" className="text-trust-teal hover:underline">Cookie Policy</Link>.
+              <Link href="/legal/cookie-policy" className="text-trust-teal hover:underline">Cookie Policy</Link>.
             </p>
           </section>
 

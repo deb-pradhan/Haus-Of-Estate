@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import {
   ArrowRight,
   Globe2,
@@ -267,7 +268,8 @@ function XGlyph({ className }: { className?: string }) {
 }
 
 export default function AboutPage() {
-  const { openAccount } = useLeadModals();
+  const { openAccount, openNewsletter } = useLeadModals();
+  const [newsletterEmail, setNewsletterEmail] = useState("");
 
   return (
     <div className="min-h-screen bg-canvas">
@@ -839,13 +841,15 @@ export default function AboutPage() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              openAccount();
+              openNewsletter(newsletterEmail);
             }}
             className="flex w-full max-w-md items-center gap-2 rounded-full border border-border bg-surface p-1.5"
           >
             <input
               type="email"
               required
+              value={newsletterEmail}
+              onChange={(event) => setNewsletterEmail(event.target.value)}
               placeholder="Your email address"
               aria-label="Your email address"
               className="min-w-0 flex-1 bg-transparent px-4 text-sm text-foreground placeholder:text-muted-foreground outline-none"

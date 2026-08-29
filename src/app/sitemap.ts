@@ -21,6 +21,13 @@ const STATIC_ROUTES: Array<{
   { path: '/blog', changeFrequency: 'weekly', priority: 0.7 },
   { path: '/list-property', changeFrequency: 'monthly', priority: 0.6 },
   { path: '/contact', changeFrequency: 'monthly', priority: 0.7 },
+  ...(process.env.LEAD_INTAKE_ENABLED === 'true'
+    ? [{
+        path: '/register-interest',
+        changeFrequency: 'monthly' as const,
+        priority: 0.8,
+      }]
+    : []),
   { path: '/legal/privacy-policy', changeFrequency: 'yearly', priority: 0.3 },
   { path: '/legal/terms-of-service', changeFrequency: 'yearly', priority: 0.3 },
   { path: '/legal/cookie-policy', changeFrequency: 'yearly', priority: 0.3 },

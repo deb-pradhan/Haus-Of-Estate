@@ -111,7 +111,7 @@ export function Footer() {
             <span className="text-xs text-white/60">Rated 4.8 · Excellent</span>
           </div>
 
-          <p className="mt-4 text-xs leading-relaxed text-white/45">
+          <p className="mt-4 text-xs leading-relaxed text-white/60">
             Rent Smart Wales Registered · Propertymark CMP Registered
           </p>
 
@@ -120,7 +120,7 @@ export function Footer() {
             <button
               type="button"
               onClick={openSeller}
-              className="inline-flex items-center gap-1.5 rounded-full bg-gold-500 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-gold-400"
+              className="inline-flex items-center gap-1.5 rounded-full bg-gold-500 px-4 py-2 text-xs font-semibold text-ink-900 transition-colors hover:bg-gold-400"
             >
               Book Valuation <ArrowRight className="h-3.5 w-3.5" />
             </button>
@@ -188,7 +188,7 @@ export function Footer() {
               href={WHATSAPP_URL}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Chat with us on WhatsApp"
+              aria-label="WhatsApp us"
               className="flex items-center gap-2.5 text-sm text-white/60 transition-colors hover:text-white"
             >
               <WhatsAppGlyph />
@@ -222,7 +222,7 @@ export function Footer() {
 
       {/* Legal bar */}
       <div className="border-t border-white/10">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-white/45 md:flex-row md:px-6">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-white/60 md:flex-row md:px-6">
           <span>&copy; {year} Haus of Estate. All rights reserved.</span>
           <span>UK English · Prices indicative · Subject to availability</span>
         </div>
@@ -240,9 +240,9 @@ function FooterCol({
 }) {
   return (
     <div>
-      <h4 className="mb-4 font-serif text-xs font-semibold uppercase tracking-[0.18em] text-gold-400">
+      <h2 className="mb-4 font-serif text-xs font-semibold uppercase tracking-[0.18em] text-white/80">
         {title}
-      </h4>
+      </h2>
       <ul className="space-y-2.5">{children}</ul>
     </div>
   );

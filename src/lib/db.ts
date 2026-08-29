@@ -12,7 +12,7 @@ function createPrismaClient(): PrismaClient {
     throw new Error("DATABASE_URL environment variable is not set");
   }
   const pool = new Pool({ connectionString });
-  const adapter = new PrismaPg(pool);
+  const adapter = new PrismaPg(pool, { disposeExternalPool: true });
   return new PrismaClient({ adapter });
 }
 
