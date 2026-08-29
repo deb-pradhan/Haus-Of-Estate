@@ -17,6 +17,7 @@ export interface PhoneInputProps {
   className?: string;
   invalid?: boolean;
   autoComplete?: string;
+  ariaDescribedBy?: string;
 }
 
 /**
@@ -33,6 +34,7 @@ export function PhoneInput({
   className,
   invalid,
   autoComplete = "tel",
+  ariaDescribedBy,
 }: PhoneInputProps) {
   return (
     <div
@@ -55,6 +57,8 @@ export function PhoneInput({
         disabled={disabled}
         autoComplete={autoComplete}
         numberInputProps={{
+          "aria-describedby": ariaDescribedBy,
+          "aria-invalid": invalid || undefined,
           className:
             "flex-1 bg-transparent text-foreground placeholder:text-muted-foreground outline-none border-0 py-1 pl-1 text-base md:text-sm",
         }}

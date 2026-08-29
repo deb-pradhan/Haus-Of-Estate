@@ -7,8 +7,10 @@ export default function MainLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const leadIntakeEnabled = process.env.LEAD_INTAKE_ENABLED === "true";
+
   return (
-    <LeadModalProvider>
+    <LeadModalProvider leadIntakeEnabled={leadIntakeEnabled}>
       <div className="flex min-h-screen flex-col">
         <Header />
         <main id="main-content" className="flex-1">

@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { Mail } from 'lucide-react'
+import { useState } from 'react'
 import { useLeadModals } from '@/components/lead-modal'
 import { BlogCard } from './BlogCard'
 import { ShareLinks } from './ShareLinks'
@@ -20,7 +21,8 @@ interface BlogSidebarProps {
 }
 
 export function BlogSidebar({ title, slug, tags, related }: BlogSidebarProps) {
-  const { openAccount } = useLeadModals()
+  const { openNewsletter } = useLeadModals()
+  const [newsletterEmail, setNewsletterEmail] = useState('')
 
   return (
     <aside className="space-y-8 lg:sticky lg:top-24">
@@ -78,13 +80,15 @@ export function BlogSidebar({ title, slug, tags, related }: BlogSidebarProps) {
         <form
           onSubmit={(e) => {
             e.preventDefault()
-            openAccount()
+            openNewsletter(newsletterEmail)
           }}
           className="mt-4 space-y-2.5"
         >
           <input
             type="email"
             required
+            value={newsletterEmail}
+            onChange={(event) => setNewsletterEmail(event.target.value)}
             placeholder="you@example.com"
             aria-label="Your email address"
             className="w-full rounded-lg border border-border bg-surface px-3.5 py-2.5 text-sm text-ink-900 outline-none transition-colors placeholder:text-slate-400 focus:border-estate-700 focus:ring-2 focus:ring-estate-700/10"

@@ -1,0 +1,279 @@
+import { expect, test, type Page } from "@playwright/test";
+
+const API_PATTERN = "**/api/leads";
+
+async function chooseInterestAndReachContact(
+  page: Page,
+  interest: "Buy" | "Newsletter only" = "Buy",
+) {
+  await page
+    .locator("label")
+    .filter({ hasText: new RegExp(`^${interest}`) })
+    .click();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page.getByRole("heading", { name: /Shape your search|What interests you/ })).toBeFocused();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page.getByRole("heading", { name: "Where should we reach you?" })).toBeFocused();
+}
+
+async function enterRequiredContact(page: Page) {
+  await page.getByLabel("First name").fill("Surya");
+  await page.getByLabel("Email address").fill("surya@example.com");
+}
+
+test("opens after three seconds, only once per session, and restores focus", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.waitForTimeout(2_500);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("dialog")).toBeVisible({ timeout: 1_500 });
+
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.goto("/about");
+  await page.waitForTimeout(3_200);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+
+  const trigger = page.getByRole("button", { name: "Speak to an advisor" });
+  await trigger.click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(trigger).toBeFocused();
+});
+
+test("does not auto-open on explicitly excluded public routes", async ({ page }) => {
+  for (const path of [
+    "/register-interest",
+    "/contact",
+    "/legal/privacy-policy",
+    "/list-property",
+  ]) {
+    await page.goto(path);
+    await page.waitForTimeout(3_100);
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+  }
+});
+
+test("manual opening cancels the pending automatic popup", async ({ page }) => {
+  await page.goto("/about");
+  const trigger = page.getByRole("button", { name: "Speak to an advisor" });
+  await trigger.click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(3_200);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
+test("preserves attribution, separates consent, retries, and emits no PII", async ({
+  page,
+}) => {
+  const submissions: Record<string, unknown>[] = [];
+  let attempts = 0;
+  await page.route(API_PATTERN, async (route) => {
+    attempts += 1;
+    submissions.push(route.request().postDataJSON() as Record<string, unknown>);
+    await route.fulfill({
+      status: attempts === 1 ? 503 : 201,
+      contentType: "application/json",
+      body: JSON.stringify(
+        attempts === 1
+          ? { error: "Lead intake is temporarily unavailable" }
+          : { success: true, status: "created", leadId: "lead-test" },
+      ),
+    });
+  });
+
+  await page.goto(
+    "/register-interest?utm_source=instagram&utm_medium=organic_social&utm_campaign=bio",
+  );
+  await chooseInterestAndReachContact(page);
+  await enterRequiredContact(page);
+  await page.getByLabel(/I would like to receive property news/).check();
+  await page.getByRole("button", { name: "Send enquiry" }).click();
+
+  await expect(
+    page.getByRole("alert").filter({
+      hasText: "We could not save your enquiry just now",
+    }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Send enquiry" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Thank you for registering" }),
+  ).toBeVisible();
+
+  expect(submissions).toHaveLength(2);
+  expect(submissions[1]).toMatchObject({
+    newsletterOptIn: true,
+    context: {
+      surface: "register_interest",
+      pagePath: "/register-interest",
+      utmSource: "instagram",
+      utmMedium: "organic_social",
+      utmCampaign: "bio",
+    },
+  });
+  expect(submissions[1].submissionId).toBe(submissions[0].submissionId);
+
+  const events = await page.evaluate(() => window.dataLayer ?? []);
+  expect(events.map((event) => event.event)).toEqual([
+    "form_view",
+    "form_start",
+    "lead_submit_success",
+    "newsletter_opt_in",
+  ]);
+  const serializedEvents = JSON.stringify(events);
+  expect(serializedEvents).not.toContain("Surya");
+  expect(serializedEvents).not.toContain("surya@example.com");
+});
+
+test("submits without a phone or marketing consent", async ({ page }) => {
+  let payload: Record<string, unknown> | undefined;
+  await page.route(API_PATTERN, async (route) => {
+    payload = route.request().postDataJSON() as Record<string, unknown>;
+    await route.fulfill({
+      status: 201,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, leadId: "lead-no-phone" }),
+    });
+  });
+
+  await page.goto("/register-interest");
+  await chooseInterestAndReachContact(page);
+  await enterRequiredContact(page);
+  await page.getByRole("button", { name: "Send enquiry" }).click();
+  await expect(page.getByRole("heading", { name: "Enquiry received" })).toBeVisible();
+
+  expect(payload).toMatchObject({ newsletterOptIn: false });
+  expect((payload?.contact as Record<string, unknown>).phone).toBeUndefined();
+});
+
+test("announces validation and focuses the first invalid contact field", async ({
+  page,
+}) => {
+  await page.goto("/register-interest");
+  await chooseInterestAndReachContact(page);
+
+  const firstName = page.getByLabel("First name");
+  const email = page.getByLabel("Email address");
+  await expect(firstName).toHaveAttribute("required", "");
+  await expect(email).toHaveAttribute("required", "");
+
+  await page.getByRole("button", { name: "Send enquiry" }).click();
+  await expect(firstName).toBeFocused();
+  await expect(page.getByRole("alert").filter({ hasText: "Enter your first name" })).toBeVisible();
+
+  await firstName.fill("Surya");
+  await page.getByRole("button", { name: "Send enquiry" }).click();
+  await expect(email).toBeFocused();
+  await expect(page.getByRole("alert").filter({ hasText: "Enter a valid email" })).toBeVisible();
+});
+
+test("freezes consent during a slow submission and announces success", async ({
+  page,
+}) => {
+  let releaseResponse: (() => void) | undefined;
+  const waitForRelease = new Promise<void>((resolve) => {
+    releaseResponse = resolve;
+  });
+  await page.route(API_PATTERN, async (route) => {
+    await waitForRelease;
+    await route.fulfill({
+      status: 201,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, leadId: "lead-slow" }),
+    });
+  });
+
+  await page.goto("/register-interest");
+  await chooseInterestAndReachContact(page, "Newsletter only");
+  await enterRequiredContact(page);
+  const consent = page.getByLabel(/I would like to receive property news/);
+  await consent.check();
+  await page.getByRole("button", { name: "Send enquiry" }).click();
+
+  await expect(consent).toBeDisabled();
+  await expect(consent).toBeChecked();
+  releaseResponse?.();
+  const success = page.getByRole("status");
+  await expect(success).toContainText("Thank you for registering");
+  await expect(success).toBeFocused();
+});
+
+test("newsletter CTAs retain the entered email without prechecking consent", async ({
+  page,
+}) => {
+  await page.goto("/about");
+  await page.getByPlaceholder("Your email address").fill("reader@example.com");
+  await page.getByRole("button", { name: "Subscribe" }).click();
+
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(page.getByRole("radio", { name: /^Newsletter only/ })).toBeChecked();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByLabel("Email address")).toHaveValue(
+    "reader@example.com",
+  );
+  await expect(
+    dialog.getByLabel(/I would like to receive property news/),
+  ).not.toBeChecked();
+});
+
+test("@mobile renders and completes the compact three-step flow", async ({ page }) => {
+  await page.route(API_PATTERN, (route) =>
+    route.fulfill({
+      status: 201,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, leadId: "lead-mobile" }),
+    }),
+  );
+  await page.goto("/");
+  await expect(page.getByRole("dialog")).toBeVisible({ timeout: 4_000 });
+  const bodyWidth = await page.locator("body").evaluate((element) => ({
+    client: element.clientWidth,
+    scroll: element.scrollWidth,
+  }));
+  expect(bodyWidth.scroll).toBe(bodyWidth.client);
+  await page.keyboard.press("Escape");
+
+  await page.goto("/register-interest");
+  await expect(page.getByRole("heading", { name: "Register your interest" })).toBeVisible();
+  await chooseInterestAndReachContact(page, "Newsletter only");
+  const mobileWidth = await page.locator("body").evaluate((element) => ({
+    client: element.clientWidth,
+    scroll: element.scrollWidth,
+  }));
+  expect(mobileWidth.scroll).toBe(mobileWidth.client);
+  await enterRequiredContact(page);
+  await page.getByRole("button", { name: "Send enquiry" }).click();
+  await expect(page.getByRole("heading", { name: "Enquiry received" })).toBeVisible();
+});
+
+test("valid project links preselect published property context", async ({ page }) => {
+  let payload: Record<string, unknown> | undefined;
+  await page.route(API_PATTERN, async (route) => {
+    payload = route.request().postDataJSON() as Record<string, unknown>;
+    await route.fulfill({
+      status: 201,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, leadId: "lead-project" }),
+    });
+  });
+
+  await page.goto("/register-interest?project=monaco-mansions");
+  await expect(page.getByText("Selected property")).toBeVisible();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page.getByLabel("Bedrooms")).toHaveValue("6");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await enterRequiredContact(page);
+  await page.getByRole("button", { name: "Send enquiry" }).click();
+  await expect(page.getByRole("heading", { name: "Enquiry received" })).toBeVisible();
+  expect(payload).toMatchObject({ project: { slug: "monaco-mansions" } });
+});
+
+test("ignores invalid or unpublished project query values", async ({ page }) => {
+  await page.goto("/register-interest?project=not-a-published-property");
+  await expect(page.getByText("Selected property")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Register your interest" })).toBeVisible();
+});
