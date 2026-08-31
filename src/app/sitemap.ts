@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next'
-import { sanityFetch } from '@/sanity'
+import { sanityFetch } from '@/sanity/live'
 import { POST_SLUGS_QUERY, PROPERTY_SLUGS_QUERY } from '@/sanity/queries'
 
 const SITE_URL = 'https://hausofestate.com'

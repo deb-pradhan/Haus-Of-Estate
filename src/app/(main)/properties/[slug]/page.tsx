@@ -12,7 +12,8 @@ import {
   Building2,
   Check,
 } from 'lucide-react'
-import { sanityFetch, urlFor } from '@/sanity'
+import { urlFor } from '@/sanity'
+import { sanityFetch } from '@/sanity/live'
 import { PROPERTY_BY_SLUG_QUERY, PROPERTY_SLUGS_QUERY } from '@/sanity/queries'
 import { PortableTextRenderer } from '@/components/blog'
 import { toEmbedUrl } from '@/lib/embed-video'

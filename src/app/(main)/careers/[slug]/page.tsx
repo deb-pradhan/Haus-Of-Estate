@@ -8,7 +8,7 @@ import {
   Building2,
   Check,
 } from 'lucide-react'
-import { sanityFetch } from '@/sanity'
+import { sanityFetch } from '@/sanity/live'
 import { ROLE_BY_SLUG_QUERY, ROLE_SLUGS_QUERY } from '@/sanity/queries'
 import { DEFAULT_OG_IMAGES } from '@/lib/seo'
 import { PortableTextRenderer } from '@/components/blog'
