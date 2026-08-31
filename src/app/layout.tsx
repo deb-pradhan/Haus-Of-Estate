@@ -4,6 +4,7 @@ import Script from "next/script";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SessionProvider } from "@/lib/auth/client";
 import { draftMode } from "next/headers";
+import { HAUS_SITE_ORIGIN } from "@/lib/share";
 import "./globals.css";
 
 const inter = Inter({
@@ -19,7 +20,7 @@ const cormorant = Cormorant_Garamond({
   display: "swap",
 });
 
-const SITE_URL = "https://hausofestate.com";
+const SITE_URL = HAUS_SITE_ORIGIN;
 const SITE_NAME = "Haus of Estate";
 const DEFAULT_TITLE = "Haus of Estate — international property, with proof.";
 const DEFAULT_DESCRIPTION =
