@@ -3,7 +3,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Suspense } from 'react'
 import { ChevronRight, Clock, CalendarDays } from 'lucide-react'
-import { sanityFetch, urlFor } from '@/sanity'
+import { urlFor } from '@/sanity'
+import { sanityFetch } from '@/sanity/live'
 import { POST_BY_SLUG_QUERY, RELATED_POSTS_QUERY, SEO_QUERY } from '@/sanity/queries'
 import {
   PortableTextRenderer,
