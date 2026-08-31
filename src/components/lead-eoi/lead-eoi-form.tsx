@@ -26,8 +26,10 @@ import {
   LEAD_FORM_VERSION,
   MARKETING_CONSENT_WORDING,
   PRIVACY_NOTICE_VERSION,
+  PROPERTY_MATCH_CONSENT_WORDING,
   type LeadIntakeV2Input,
 } from "@/lib/lead-intake/contract";
+import { SocialProfileLinks } from "@/components/social/social-profile-links";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -125,6 +127,7 @@ interface FormValues {
   email: string;
   phone: string;
   message: string;
+  propertyMatchOptIn: boolean;
   newsletterOptIn: boolean;
   website: string;
 }
@@ -134,6 +137,7 @@ interface FormErrors {
   firstName?: string;
   email?: string;
   phone?: string;
+  newsletterOptIn?: string;
   request?: string;
 }
 
@@ -176,6 +180,7 @@ function initialValues(
     email: initialEmail ?? "",
     phone: "",
     message: "",
+    propertyMatchOptIn: false,
     newsletterOptIn: false,
     website: "",
   };
@@ -188,6 +193,10 @@ function optional(value: string): string | undefined {
 
 function optionsWithCurrentValue(options: string[], value: string): string[] {
   return value && !options.includes(value) ? [value, ...options] : options;
+}
+
+function supportsPropertyMatches(interest: LeadInterest | "") {
+  return interest === "buy" || interest === "rent" || interest === "invest";
 }
 
 function createSubmissionId() {
@@ -224,6 +233,7 @@ export function LeadEoiForm({
   const headingRef = useRef<HTMLHeadingElement>(null);
   const requestErrorRef = useRef<HTMLDivElement>(null);
   const successRef = useRef<HTMLDivElement>(null);
+  const newsletterOptInRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (hasTrackedView.current) return;
@@ -244,6 +254,11 @@ export function LeadEoiForm({
     window.requestAnimationFrame(() => successRef.current?.focus());
   }, [submitState]);
 
+  useEffect(() => {
+    if (!errors.newsletterOptIn) return;
+    window.requestAnimationFrame(() => newsletterOptInRef.current?.focus());
+  }, [errors.newsletterOptIn]);
+
   const markStarted = (interest?: LeadInterest) => {
     if (hasStarted.current) return;
     hasStarted.current = true;
@@ -258,7 +273,13 @@ export function LeadEoiForm({
 
   const update = <Key extends keyof FormValues>(key: Key, value: FormValues[Key]) => {
     markStarted(key === "interest" && value ? (value as LeadInterest) : undefined);
-    setValues((current) => ({ ...current, [key]: value }));
+    setValues((current) => ({
+      ...current,
+      [key]: value,
+      ...(key === "interest" && !supportsPropertyMatches(value as LeadInterest)
+        ? { propertyMatchOptIn: false }
+        : {}),
+    }));
     if (key in errors) {
       setErrors((current) => ({ ...current, [key]: undefined, request: undefined }));
     } else if (errors.request) {
@@ -286,6 +307,10 @@ export function LeadEoiForm({
       if (values.phone && !isValidMobile(values.phone)) {
         nextErrors.phone = "Enter a valid phone number or leave this blank.";
       }
+      if (values.interest === "newsletter_only" && !values.newsletterOptIn) {
+        nextErrors.newsletterOptIn =
+          "Choose the newsletter option to complete this subscription.";
+      }
     }
 
     setErrors(nextErrors);
@@ -297,6 +322,8 @@ export function LeadEoiForm({
           ? `${id}-email`
           : nextErrors.phone
             ? `${id}-phone`
+            : nextErrors.newsletterOptIn
+              ? `${id}-newsletter-opt-in`
             : undefined;
     if (firstInvalidId) {
       window.requestAnimationFrame(() =>
@@ -346,6 +373,7 @@ export function LeadEoiForm({
         phone: optional(submitted.phone),
         message: optional(submitted.message),
       },
+      propertyMatchOptIn: submitted.propertyMatchOptIn,
       newsletterOptIn: submitted.newsletterOptIn,
       formVersion: LEAD_FORM_VERSION,
       privacyNoticeVersion: PRIVACY_NOTICE_VERSION,
@@ -425,16 +453,27 @@ export function LeadEoiForm({
           <Check className="h-7 w-7" aria-hidden="true" />
         </div>
         <h2 className="mt-5 font-serif text-3xl font-medium text-estate-700">
-          {successValues.newsletterOptIn
-            ? "Thank you for registering"
-            : "Enquiry received"}
+          {successValues.interest === "newsletter_only"
+            ? "Subscription confirmed"
+            : supportsPropertyMatches(successValues.interest)
+              ? "Brief received"
+              : "Enquiry received"}
         </h2>
         <p className="mt-3 max-w-md text-sm leading-6 text-muted-foreground">
-          {successValues.interest === "newsletter_only" &&
-          successValues.newsletterOptIn
+          {successValues.interest === "newsletter_only"
             ? "You are subscribed to Haus of Estate property news and insights."
-            : "Our team has your details and will respond about your enquiry as soon as possible."}
+            : successValues.propertyMatchOptIn && successValues.newsletterOptIn
+              ? "Our team will respond to your brief. You will also receive matching property opportunities and the Haus of Estate newsletter."
+              : successValues.propertyMatchOptIn
+                ? "Our team will respond to your brief. You will also receive property opportunities matching it."
+                : successValues.newsletterOptIn
+                  ? "Our team will respond to your enquiry. You are also subscribed to the Haus of Estate newsletter."
+                  : "Our team has your details and will respond about your enquiry as soon as possible."}
         </p>
+        <p className="mt-6 text-xs font-semibold uppercase text-muted-foreground">
+          Follow along
+        </p>
+        <SocialProfileLinks className="mt-2 justify-center" />
         <div className="mt-7 flex flex-wrap justify-center gap-3">
           {modal && onClose ? (
             <Button type="button" onClick={onClose}>
@@ -761,18 +800,51 @@ export function LeadEoiForm({
             </div>
           </div>
 
-          <div className="mt-5 rounded-md border border-border bg-subtle p-4">
+          <div className="mt-5 space-y-3 rounded-md border border-border bg-subtle p-4">
+            {supportsPropertyMatches(values.interest) ? (
+              <label className="flex cursor-pointer items-start gap-3">
+                <input
+                  id={`${id}-property-match-opt-in`}
+                  type="checkbox"
+                  checked={values.propertyMatchOptIn}
+                  onChange={(event) =>
+                    update("propertyMatchOptIn", event.target.checked)
+                  }
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-estate-700"
+                />
+                <span className="text-sm leading-5 text-foreground">
+                  {PROPERTY_MATCH_CONSENT_WORDING}
+                </span>
+              </label>
+            ) : null}
             <label className="flex cursor-pointer items-start gap-3">
               <input
+                id={`${id}-newsletter-opt-in`}
+                ref={newsletterOptInRef}
                 type="checkbox"
                 checked={values.newsletterOptIn}
                 onChange={(event) => update("newsletterOptIn", event.target.checked)}
+                aria-invalid={Boolean(errors.newsletterOptIn)}
+                aria-describedby={
+                  errors.newsletterOptIn
+                    ? `${id}-newsletter-opt-in-error`
+                    : undefined
+                }
                 className="mt-0.5 h-4 w-4 shrink-0 accent-estate-700"
               />
               <span className="text-sm leading-5 text-foreground">
                 {MARKETING_CONSENT_WORDING}
               </span>
             </label>
+            {errors.newsletterOptIn ? (
+              <p
+                id={`${id}-newsletter-opt-in-error`}
+                role="alert"
+                className="text-xs text-destructive"
+              >
+                {errors.newsletterOptIn}
+              </p>
+            ) : null}
           </div>
 
           <div className="sr-only" aria-hidden="true">
@@ -841,7 +913,12 @@ export function LeadEoiForm({
             </>
           ) : (
             <>
-              Send enquiry <ArrowRight aria-hidden="true" />
+              {isNewsletterOnly
+                ? "Subscribe"
+                : supportsPropertyMatches(values.interest)
+                  ? "Send my brief"
+                  : "Send enquiry"}
+              <ArrowRight aria-hidden="true" />
             </>
           )}
         </Button>

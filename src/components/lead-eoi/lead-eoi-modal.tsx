@@ -23,7 +23,8 @@ export function LeadEoiModal({
         <DialogHeader className="sr-only">
           <DialogTitle>Register your interest with Haus of Estate</DialogTitle>
           <DialogDescription>
-            A three-step property enquiry and optional newsletter registration form.
+            A three-step property enquiry with separate, optional property-match
+            and newsletter email choices.
           </DialogDescription>
         </DialogHeader>
         <LeadEoiForm

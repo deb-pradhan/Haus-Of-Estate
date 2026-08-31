@@ -33,6 +33,7 @@ export interface NormalizedLeadIntake {
     phone?: string;
     message?: string;
   };
+  propertyMatchOptIn: boolean;
   newsletterOptIn: boolean;
   enquiryConsentGiven: boolean;
   formVersion: string;
@@ -127,6 +128,7 @@ function fromV2(input: LeadIntakeV2Input): NormalizedLeadIntake {
       phone: normalizePhone(input.contact.phone),
       message: compact(input.contact.message),
     },
+    propertyMatchOptIn: input.propertyMatchOptIn,
     newsletterOptIn: input.newsletterOptIn,
     enquiryConsentGiven: false,
     formVersion: input.formVersion,
@@ -171,6 +173,7 @@ function fromLegacy(input: LegacyLeadInput): NormalizedLeadIntake {
       email: input.email.trim().toLowerCase(),
       phone: normalizePhone(input.mobile),
     },
+    propertyMatchOptIn: false,
     newsletterOptIn: false,
     enquiryConsentGiven: input.consentGiven,
     formVersion: "legacy.v1",
@@ -222,6 +225,7 @@ export function hashNormalizedLead(input: NormalizedLeadIntake): string {
     preferences: input.preferences,
     project: input.project,
     contact: input.contact,
+    propertyMatchOptIn: input.propertyMatchOptIn,
     newsletterOptIn: input.newsletterOptIn,
     enquiryConsentGiven: input.enquiryConsentGiven,
     formVersion: input.formVersion,

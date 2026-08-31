@@ -30,6 +30,7 @@ function makeRecord(
       firstName: "Surya",
       email: "person@example.com",
       interest: "buy",
+      propertyMatchOptIn: false,
       newsletterOptIn: false,
     }),
     status: "PROCESSING",
@@ -163,6 +164,33 @@ describe("lead delivery worker", () => {
       "event-1",
       "worker-1",
       "INVALID_PAYLOAD",
+    );
+  });
+
+  it("upgrades and delivers a pending version 1 snapshot", async () => {
+    const current = makeRecord();
+    const currentPayload = current.payload as {
+      schemaVersion: string;
+      row: Record<string, unknown>;
+    };
+    const legacyRow = { ...currentPayload.row };
+    delete legacyRow.propertyMatchOptIn;
+    const deliver = vi.fn().mockResolvedValue(undefined);
+    const setup = dependencies(
+      makeRecord({
+        payload: { ...currentPayload, schemaVersion: "1.0", row: legacyRow },
+      }),
+      deliver,
+    );
+
+    await expect(
+      processLeadDeliveryOutboxId("event-1", setup.value),
+    ).resolves.toBe("delivered");
+    expect(deliver).toHaveBeenCalledWith(
+      expect.objectContaining({
+        schemaVersion: "2.0",
+        row: expect.objectContaining({ propertyMatchOptIn: false }),
+      }),
     );
   });
 

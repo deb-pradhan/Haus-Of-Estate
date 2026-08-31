@@ -4,6 +4,7 @@ import Script from "next/script";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SessionProvider } from "@/lib/auth/client";
 import { draftMode } from "next/headers";
+import { SOCIAL_PROFILE_URLS } from "@/config/social";
 import "./globals.css";
 
 const inter = Inter({
@@ -101,14 +102,7 @@ const jsonLd = {
       name: SITE_NAME,
       url: SITE_URL,
       logo: `${SITE_URL}/Vector-1.svg`,
-      sameAs: [
-        "https://www.instagram.com/haus_of_estate/",
-        "https://www.linkedin.com/company/115804984/",
-        "https://www.facebook.com/profile.php?id=61560983191278",
-        "https://in.pinterest.com/hausofestate/",
-        "https://www.youtube.com/@Hausofestate",
-        "https://x.com/hausofestate",
-      ],
+      sameAs: SOCIAL_PROFILE_URLS,
       contactPoint: {
         "@type": "ContactPoint",
         contactType: "customer service",

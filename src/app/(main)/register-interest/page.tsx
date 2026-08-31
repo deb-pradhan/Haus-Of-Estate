@@ -111,7 +111,8 @@ export default async function RegisterInterestPage({
             </li>
             <li className="flex items-start gap-3">
               <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-estate-700" aria-hidden="true" />
-              Marketing email is always an optional, separate choice
+              Property enquiries do not require marketing consent; newsletter
+              registration requires an affirmative choice
             </li>
           </ul>
         </section>

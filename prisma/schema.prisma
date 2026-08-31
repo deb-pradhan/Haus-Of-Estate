@@ -352,6 +352,7 @@ model Lead {
   tier                 String?
   routing              String?
   consentGiven         Boolean                  @default(false)
+  propertyMatchOptIn   Boolean                  @default(false)
   newsletterOptIn      Boolean                  @default(false)
   formVersion          String?
   privacyNoticeVersion String?
@@ -368,6 +369,7 @@ model Lead {
   user                 User?                    @relation(fields: [userId], references: [id], onDelete: SetNull)
   notifiedAt           DateTime?
   consentEvents        NewsletterConsentEvent[]
+  propertyMatchEvents  PropertyMatchConsentEvent[]
   deliveryOutbox       LeadDeliveryOutbox?
   createdAt            DateTime                 @default(now())
   updatedAt            DateTime                 @updatedAt
@@ -376,8 +378,54 @@ model Lead {
   @@index([tier])
   @@index([routing])
   @@index([projectSlug])
+  @@index([propertyMatchOptIn])
   @@index([newsletterOptIn])
   @@index([createdAt])
+}
+
+enum PropertyMatchSubscriptionStatus {
+  ACTIVE
+  WITHDRAWN
+}
+
+enum PropertyMatchConsentEventType {
+  OPT_IN
+  WITHDRAWAL
+}
+
+model PropertyMatchSubscription {
+  id          String                          @id @default(cuid())
+  email       String                          @unique
+  status      PropertyMatchSubscriptionStatus @default(ACTIVE)
+  criteria    Json?
+  consentedAt DateTime?
+  withdrawnAt DateTime?
+  events      PropertyMatchConsentEvent[]
+  createdAt   DateTime                        @default(now())
+  updatedAt   DateTime                        @updatedAt
+
+  @@index([status])
+  @@index([updatedAt])
+}
+
+model PropertyMatchConsentEvent {
+  id                   String                        @id @default(cuid())
+  subscriptionId       String
+  subscription         PropertyMatchSubscription     @relation(fields: [subscriptionId], references: [id], onDelete: Restrict)
+  leadId               String?
+  lead                 Lead?                         @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  type                 PropertyMatchConsentEventType
+  wording              String                        @db.Text
+  privacyNoticeVersion String
+  formVersion          String
+  pageContext          String
+  source               String?
+  campaign             String?
+  createdAt            DateTime                      @default(now())
+
+  @@index([subscriptionId, createdAt])
+  @@index([leadId])
+  @@index([type, createdAt])
 }
 
 enum NewsletterSubscriptionStatus {

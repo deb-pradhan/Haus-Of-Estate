@@ -19,6 +19,7 @@ function input(
     submissionId,
     interest: "buy",
     contact: { firstName: "Alex", email: "alex@example.com" },
+    propertyMatchOptIn: false,
     newsletterOptIn: false,
     formVersion: LEAD_FORM_VERSION,
     privacyNoticeVersion: PRIVACY_NOTICE_VERSION,

@@ -1,6 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 
 const API_PATTERN = "**/api/leads";
+const MATCH_LABEL = /Email me properties and opportunities matching this brief/;
+const NEWSLETTER_LABEL = /Email me the Haus of Estate newsletter/;
 
 async function chooseInterestAndReachContact(
   page: Page,
@@ -89,21 +91,23 @@ test("preserves attribution, separates consent, retries, and emits no PII", asyn
   );
   await chooseInterestAndReachContact(page);
   await enterRequiredContact(page);
-  await page.getByLabel(/I would like to receive property news/).check();
-  await page.getByRole("button", { name: "Send enquiry" }).click();
+  await page.getByLabel(MATCH_LABEL).check();
+  await page.getByLabel(NEWSLETTER_LABEL).check();
+  await page.getByRole("button", { name: "Send my brief" }).click();
 
   await expect(
     page.getByRole("alert").filter({
       hasText: "We could not save your enquiry just now",
     }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Send enquiry" }).click();
+  await page.getByRole("button", { name: "Send my brief" }).click();
   await expect(
-    page.getByRole("heading", { name: "Thank you for registering" }),
+    page.getByRole("heading", { name: "Brief received" }),
   ).toBeVisible();
 
   expect(submissions).toHaveLength(2);
   expect(submissions[1]).toMatchObject({
+    propertyMatchOptIn: true,
     newsletterOptIn: true,
     context: {
       surface: "register_interest",
@@ -114,6 +118,11 @@ test("preserves attribution, separates consent, retries, and emits no PII", asyn
     },
   });
   expect(submissions[1].submissionId).toBe(submissions[0].submissionId);
+  await expect(
+    page
+      .getByRole("status")
+      .getByRole("link", { name: "Follow Haus of Estate on Instagram" }),
+  ).toHaveAttribute("href", "https://www.instagram.com/haus_of_estate/");
 
   const events = await page.evaluate(() => window.dataLayer ?? []);
   expect(events.map((event) => event.event)).toEqual([
@@ -141,10 +150,13 @@ test("submits without a phone or marketing consent", async ({ page }) => {
   await page.goto("/register-interest");
   await chooseInterestAndReachContact(page);
   await enterRequiredContact(page);
-  await page.getByRole("button", { name: "Send enquiry" }).click();
-  await expect(page.getByRole("heading", { name: "Enquiry received" })).toBeVisible();
+  await page.getByRole("button", { name: "Send my brief" }).click();
+  await expect(page.getByRole("heading", { name: "Brief received" })).toBeVisible();
 
-  expect(payload).toMatchObject({ newsletterOptIn: false });
+  expect(payload).toMatchObject({
+    propertyMatchOptIn: false,
+    newsletterOptIn: false,
+  });
   expect((payload?.contact as Record<string, unknown>).phone).toBeUndefined();
 });
 
@@ -159,12 +171,12 @@ test("announces validation and focuses the first invalid contact field", async (
   await expect(firstName).toHaveAttribute("required", "");
   await expect(email).toHaveAttribute("required", "");
 
-  await page.getByRole("button", { name: "Send enquiry" }).click();
+  await page.getByRole("button", { name: "Send my brief" }).click();
   await expect(firstName).toBeFocused();
   await expect(page.getByRole("alert").filter({ hasText: "Enter your first name" })).toBeVisible();
 
   await firstName.fill("Surya");
-  await page.getByRole("button", { name: "Send enquiry" }).click();
+  await page.getByRole("button", { name: "Send my brief" }).click();
   await expect(email).toBeFocused();
   await expect(page.getByRole("alert").filter({ hasText: "Enter a valid email" })).toBeVisible();
 });
@@ -188,15 +200,15 @@ test("freezes consent during a slow submission and announces success", async ({
   await page.goto("/register-interest");
   await chooseInterestAndReachContact(page, "Newsletter only");
   await enterRequiredContact(page);
-  const consent = page.getByLabel(/I would like to receive property news/);
+  const consent = page.getByLabel(NEWSLETTER_LABEL);
   await consent.check();
-  await page.getByRole("button", { name: "Send enquiry" }).click();
+  await page.getByRole("button", { name: "Subscribe" }).click();
 
   await expect(consent).toBeDisabled();
   await expect(consent).toBeChecked();
   releaseResponse?.();
   const success = page.getByRole("status");
-  await expect(success).toContainText("Thank you for registering");
+  await expect(success).toContainText("Subscription confirmed");
   await expect(success).toBeFocused();
 });
 
@@ -216,8 +228,13 @@ test("newsletter CTAs retain the entered email without prechecking consent", asy
     "reader@example.com",
   );
   await expect(
-    dialog.getByLabel(/I would like to receive property news/),
+    dialog.getByLabel(NEWSLETTER_LABEL),
   ).not.toBeChecked();
+  await dialog.getByRole("button", { name: "Subscribe" }).click();
+  await expect(dialog.getByLabel(NEWSLETTER_LABEL)).toBeFocused();
+  await expect(
+    dialog.getByRole("alert").filter({ hasText: "Choose the newsletter option" }),
+  ).toBeVisible();
 });
 
 test("@mobile renders and completes the compact three-step flow", async ({ page }) => {
@@ -246,8 +263,11 @@ test("@mobile renders and completes the compact three-step flow", async ({ page 
   }));
   expect(mobileWidth.scroll).toBe(mobileWidth.client);
   await enterRequiredContact(page);
-  await page.getByRole("button", { name: "Send enquiry" }).click();
-  await expect(page.getByRole("heading", { name: "Enquiry received" })).toBeVisible();
+  await page.getByLabel(NEWSLETTER_LABEL).check();
+  await page.getByRole("button", { name: "Subscribe" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Subscription confirmed" }),
+  ).toBeVisible();
 });
 
 test("valid project links preselect published property context", async ({ page }) => {
@@ -267,8 +287,8 @@ test("valid project links preselect published property context", async ({ page }
   await expect(page.getByLabel("Bedrooms")).toHaveValue("6");
   await page.getByRole("button", { name: "Continue" }).click();
   await enterRequiredContact(page);
-  await page.getByRole("button", { name: "Send enquiry" }).click();
-  await expect(page.getByRole("heading", { name: "Enquiry received" })).toBeVisible();
+  await page.getByRole("button", { name: "Send my brief" }).click();
+  await expect(page.getByRole("heading", { name: "Brief received" })).toBeVisible();
   expect(payload).toMatchObject({ project: { slug: "monaco-mansions" } });
 });
 

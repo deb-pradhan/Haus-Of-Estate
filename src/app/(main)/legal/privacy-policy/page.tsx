@@ -32,7 +32,7 @@ export default function PrivacyPolicyPage() {
         <div className="mb-8">
           <p className="font-serif text-sm font-medium uppercase tracking-widest text-gold-500 mb-2">Legal</p>
           <h1 className="font-serif text-4xl font-medium text-estate-700">Privacy Policy</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Last updated: August 2026</p>
+          <p className="mt-2 text-sm text-muted-foreground">Last updated: 31 August 2026</p>
         </div>
 
         <div className="space-y-8 text-sm leading-relaxed text-foreground">
@@ -65,7 +65,7 @@ export default function PrivacyPolicyPage() {
               <li><strong>Property data:</strong> property requirements, location preferences, bedrooms, size, urgency indicators, title deed documents</li>
               <li><strong>Enquiry context:</strong> the page, property or development connected to your enquiry and limited campaign-attribution details</li>
               <li><strong>Usage data:</strong> how you interact with our website, including pages visited and time spent</li>
-              <li><strong>Marketing preferences:</strong> whether you have separately chosen to receive email marketing, including when, where, and under which wording that choice was made or withdrawn</li>
+              <li><strong>Marketing preferences:</strong> whether you have separately chosen recurring property-match emails, the Haus of Estate newsletter, or both, including when, where, and under which wording each choice was made or withdrawn</li>
             </ul>
           </section>
 
@@ -73,10 +73,10 @@ export default function PrivacyPolicyPage() {
             <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">3. How We Use Your Data</h2>
             <p>We use your personal data for the following purposes:</p>
             <ul className="mt-2 space-y-1 list-disc pl-5">
-              <li>To respond to your property enquiries and provide personalised property recommendations</li>
-              <li>To match you with properties based on your stated requirements (buy/rent/invest)</li>
+              <li>To respond to your property enquiry and provide the first response or shortlist you requested</li>
+              <li>To send recurring property opportunities matching your stated brief only where you have separately opted in</li>
               <li>To list your property for sale or rent and facilitate transactions</li>
-              <li>To send you market insights, investment guides, and property opportunities by email only where you have separately opted in</li>
+              <li>To send the Haus of Estate newsletter, including market reports, blog highlights, and new developments, only where you have separately opted in</li>
               <li>To comply with our legal obligations under UK and EU anti-money laundering regulations</li>
               <li>To improve our website and services through analytics</li>
             </ul>
@@ -88,17 +88,17 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">4. Marketing Communications</h2>
             <p>
-              Submitting a property enquiry does not subscribe you to marketing. The optional email-marketing checkbox is unchecked by default, and choosing not to select it does not affect our ability to respond to your enquiry.
+              Submitting a property enquiry does not subscribe you to recurring marketing. Our response to that enquiry, including a requested first shortlist, is part of handling the enquiry. The separate property-match and newsletter choices are unchecked by default, and leaving either unchecked does not affect our ability to respond.
             </p>
             <p className="mt-3">
-              Where you give explicit consent, we may email you newsletters, market reports, property opportunities, and related insights. We record the date, source, privacy-notice version, and wording shown when you opt in so that we can manage and evidence your choice. We do not treat an unticked checkbox as a withdrawal of consent already given.
+              Where you give explicit consent, we may email recurring properties and opportunities matching your brief, the Haus of Estate newsletter, or both, according to the choices you made. We record each purpose independently, together with the date, source, privacy-notice version, and wording shown, so that we can manage and evidence your choices. We do not treat an unticked checkbox on a later enquiry as a withdrawal of consent already given.
             </p>
             <p className="mt-3">
-              You can withdraw your email-marketing consent at any time by contacting us at{" "}
+              You can withdraw either email choice independently at any time by contacting us at{" "}
               <a href="mailto:privacy@hausofestate.com" className="text-trust-teal hover:underline">
                 privacy@hausofestate.com
               </a>{" "}
-              or clicking the unsubscribe link in any marketing email.
+              or using the unsubscribe option supplied with the relevant marketing email.
             </p>
           </section>
 
@@ -138,7 +138,7 @@ export default function PrivacyPolicyPage() {
             </p>
             <ul className="mt-2 space-y-1 list-disc pl-5">
               <li><strong>Enquiry data:</strong> 3 years from last contact</li>
-              <li><strong>Marketing consent:</strong> Until you withdraw consent or 2 years of inactivity</li>
+              <li><strong>Property-match and newsletter consent:</strong> Each choice is retained until you withdraw it or after 2 years of inactivity, while consent evidence may be retained as needed to demonstrate compliance</li>
               <li><strong>Property transaction data:</strong> 7 years (required by HMRC for tax purposes)</li>
               <li><strong>Document copies (title deed, passport):</strong> 7 years post-transaction completion</li>
             </ul>

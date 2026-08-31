@@ -19,6 +19,7 @@ export const EXCEL_LEAD_TABLE_HEADINGS = [
   "bathrooms",
   "timeframe",
   "project",
+  "property match opt-in",
   "newsletter opt-in",
   "source",
   "campaign",
@@ -88,6 +89,7 @@ export function buildLeadDeliveryPayload(
       bathrooms: optionalCell(input.bathrooms),
       timeframe: optionalCell(input.timeframe),
       project: optionalCell(input.project),
+      propertyMatchOptIn: input.propertyMatchOptIn,
       newsletterOptIn: input.newsletterOptIn,
       source: optionalCell(input.source),
       campaign: optionalCell(input.campaign),
@@ -135,9 +137,49 @@ export function isLeadDeliveryPayload(
     candidate.eventId.length > 0 &&
     typeof candidate.leadId === "string" &&
     candidate.leadId.length > 0 &&
+    typeof row.propertyMatchOptIn === "boolean" &&
     typeof row.newsletterOptIn === "boolean" &&
     row.status === "New" &&
     row.leadId === candidate.leadId &&
     stringCells.every((key) => typeof row[key] === "string")
   );
+}
+
+/**
+ * Upgrades immutable 1.0 outbox records so a rolling deployment does not
+ * dead-letter leads that were queued before the match-alert column existed.
+ */
+export function normalizeLeadDeliveryPayload(
+  value: unknown,
+): LeadDeliveryPayload | null {
+  if (isLeadDeliveryPayload(value)) return value;
+  if (!value || typeof value !== "object") return null;
+
+  const candidate = value as {
+    schemaVersion?: unknown;
+    eventId?: unknown;
+    eventType?: unknown;
+    leadId?: unknown;
+    row?: Record<string, unknown>;
+  };
+  const row = candidate.row;
+  if (
+    candidate.schemaVersion !== "1.0" ||
+    candidate.eventType !== LEAD_DELIVERY_EVENT_TYPE ||
+    typeof candidate.eventId !== "string" ||
+    !candidate.eventId ||
+    typeof candidate.leadId !== "string" ||
+    !candidate.leadId ||
+    !row ||
+    typeof row.newsletterOptIn !== "boolean"
+  ) {
+    return null;
+  }
+
+  const upgraded = {
+    ...candidate,
+    schemaVersion: LEAD_DELIVERY_SCHEMA_VERSION,
+    row: { ...row, propertyMatchOptIn: false },
+  };
+  return isLeadDeliveryPayload(upgraded) ? upgraded : null;
 }

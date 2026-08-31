@@ -20,6 +20,7 @@ const payload = buildLeadDeliveryPayload({
   firstName: "Surya",
   email: "person@example.com",
   interest: "buy",
+  propertyMatchOptIn: false,
   newsletterOptIn: false,
 });
 
@@ -36,7 +37,7 @@ describe("PowerAutomateLeadDeliveryTransport", () => {
       .mockResolvedValueOnce(
         new Response(
           JSON.stringify({
-            schemaVersion: "1.0",
+            schemaVersion: "2.0",
             eventId: "event-1",
             leadId: "lead-1",
             rowAdded: true,
@@ -67,7 +68,7 @@ describe("PowerAutomateLeadDeliveryTransport", () => {
       Authorization: "Bearer token",
       "Content-Type": "application/json",
       "Idempotency-Key": "event-1",
-      "X-Haus-Event-Version": "1.0",
+      "X-Haus-Event-Version": "2.0",
     });
     expect(JSON.parse(String(flowRequest.body))).toEqual(payload);
   });
@@ -85,7 +86,7 @@ describe("PowerAutomateLeadDeliveryTransport", () => {
         async () =>
           new Response(
             JSON.stringify({
-              schemaVersion: "1.0",
+              schemaVersion: "2.0",
               eventId: "event-1",
               leadId: "lead-1",
               rowAdded: false,
@@ -144,7 +145,7 @@ describe("PowerAutomateLeadDeliveryTransport", () => {
       new Response(JSON.stringify({ accepted: true }), { status: 201 }),
       new Response(
         JSON.stringify({
-          schemaVersion: "1.0",
+          schemaVersion: "2.0",
           eventId: "different-event",
           leadId: "lead-1",
           rowAdded: true,
@@ -154,7 +155,7 @@ describe("PowerAutomateLeadDeliveryTransport", () => {
       ),
       new Response(
         JSON.stringify({
-          schemaVersion: "1.0",
+          schemaVersion: "2.0",
           eventId: "event-1",
           leadId: "lead-1",
           rowAdded: true,

@@ -32,6 +32,7 @@ function v2(overrides: Record<string, unknown> = {}) {
     submissionId: "6bd94ff9-6dc6-4eff-8cb0-1bda245e595a",
     interest: "buy",
     contact: { firstName: "Alex", email: "alex@example.com" },
+    propertyMatchOptIn: false,
     newsletterOptIn: false,
     formVersion: LEAD_FORM_VERSION,
     privacyNoticeVersion: PRIVACY_NOTICE_VERSION,
@@ -91,6 +92,25 @@ describe("POST /api/leads", () => {
     const response = await POST(request(v2()));
     expect(response.status).toBe(200);
     expect(mocks.attemptImmediateLeadDelivery).not.toHaveBeenCalled();
+  });
+
+  it("requires an explicit newsletter choice for newsletter-only requests", async () => {
+    const rejected = await POST(request(v2({ interest: "newsletter_only" })));
+    expect(rejected.status).toBe(400);
+    expect(mocks.submitLeadIntake).not.toHaveBeenCalled();
+
+    const accepted = await POST(
+      request(v2({ interest: "newsletter_only", newsletterOptIn: true })),
+    );
+    expect(accepted.status).toBe(201);
+    expect(mocks.submitLeadIntake).toHaveBeenCalledWith(
+      expect.objectContaining({
+        interest: "newsletter_only",
+        propertyMatchOptIn: false,
+        newsletterOptIn: true,
+      }),
+      expect.any(String),
+    );
   });
 
   it("keeps legacy submissions working while v2 is disabled", async () => {

@@ -4,6 +4,7 @@ import {
   EXCEL_LEAD_TABLE_HEADINGS,
   buildLeadDeliveryPayload,
   isLeadDeliveryPayload,
+  normalizeLeadDeliveryPayload,
 } from "./payload";
 
 describe("buildLeadDeliveryPayload", () => {
@@ -22,6 +23,7 @@ describe("buildLeadDeliveryPayload", () => {
       bedrooms: 2,
       bathrooms: "2",
       timeframe: "3-6 months",
+      propertyMatchOptIn: true,
       newsletterOptIn: true,
       source: "instagram",
       campaign: "bio",
@@ -29,7 +31,7 @@ describe("buildLeadDeliveryPayload", () => {
     });
 
     expect(payload).toEqual({
-      schemaVersion: "1.0",
+      schemaVersion: "2.0",
       eventId: "event-1",
       eventType: "lead.created",
       leadId: "lead-1",
@@ -47,6 +49,7 @@ describe("buildLeadDeliveryPayload", () => {
         bathrooms: "2",
         timeframe: "3-6 months",
         project: "",
+        propertyMatchOptIn: true,
         newsletterOptIn: true,
         source: "instagram",
         campaign: "bio",
@@ -74,6 +77,7 @@ describe("buildLeadDeliveryPayload", () => {
       "bathrooms",
       "timeframe",
       "project",
+      "property match opt-in",
       "newsletter opt-in",
       "source",
       "campaign",
@@ -92,6 +96,7 @@ describe("buildLeadDeliveryPayload", () => {
       firstName: "Surya",
       email: "person@example.com",
       interest: "buy",
+      propertyMatchOptIn: false,
       newsletterOptIn: false,
     };
 
@@ -113,6 +118,7 @@ describe("buildLeadDeliveryPayload", () => {
       email: "person@example.com",
       phone: "+44 7000 000000",
       interest: "buy",
+      propertyMatchOptIn: false,
       newsletterOptIn: false,
       landingPage:
         "https://hausofestate.com/register-interest?email=private@example.com",
@@ -121,5 +127,24 @@ describe("buildLeadDeliveryPayload", () => {
     expect(payload.row.name).toBe("'=HYPERLINK(\"https://example.test\")");
     expect(payload.row.phone).toBe("'+44 7000 000000");
     expect(payload.row.landingPage).toBe("/register-interest");
+  });
+
+  it("upgrades immutable version 1 outbox payloads without inventing consent", () => {
+    const current = buildLeadDeliveryPayload({
+      eventId: "event-1",
+      leadId: "lead-1",
+      submittedAt: "2026-08-29T12:00:00.000Z",
+      firstName: "Surya",
+      email: "person@example.com",
+      interest: "buy",
+      propertyMatchOptIn: false,
+      newsletterOptIn: true,
+    });
+    const legacyRow: Record<string, unknown> = { ...current.row };
+    delete legacyRow.propertyMatchOptIn;
+    const legacy = { ...current, schemaVersion: "1.0", row: legacyRow };
+
+    expect(normalizeLeadDeliveryPayload(legacy)).toEqual(current);
+    expect(normalizeLeadDeliveryPayload({ ...legacy, row: {} })).toBeNull();
   });
 });

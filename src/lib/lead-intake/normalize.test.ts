@@ -20,6 +20,7 @@ function v2(overrides: Record<string, unknown> = {}) {
       email: " Surya@Example.COM ",
       phone: "",
     },
+    propertyMatchOptIn: false,
     newsletterOptIn: false,
     formVersion: LEAD_FORM_VERSION,
     privacyNoticeVersion: PRIVACY_NOTICE_VERSION,
@@ -44,12 +45,16 @@ describe("normalizeLeadRequest", () => {
     });
     expect(result.context.pagePath).toBe("/register-interest");
     expect(result.context.referrer).toBe("https://example.com/path");
+    expect(result.propertyMatchOptIn).toBe(false);
     expect(result.newsletterOptIn).toBe(false);
     expect(result.enquiryConsentGiven).toBe(false);
   });
 
   it("records newsletter choice independently from enquiry handling", () => {
-    const result = normalizeLeadRequest(v2({ newsletterOptIn: true }));
+    const result = normalizeLeadRequest(
+      v2({ propertyMatchOptIn: true, newsletterOptIn: true }),
+    );
+    expect(result.propertyMatchOptIn).toBe(true);
     expect(result.newsletterOptIn).toBe(true);
     expect(result.enquiryConsentGiven).toBe(false);
   });
@@ -67,6 +72,7 @@ describe("normalizeLeadRequest", () => {
     expect(result.interest).toBe("rent");
     expect(result.contact.phone).toBe("+447700900123");
     expect(result.enquiryConsentGiven).toBe(true);
+    expect(result.propertyMatchOptIn).toBe(false);
     expect(result.newsletterOptIn).toBe(false);
   });
 
@@ -90,6 +96,16 @@ describe("normalizeLeadRequest", () => {
       v2({ submissionId: "254cf874-d27b-4698-a610-ab02eb860389" }),
     );
     expect(hashNormalizedLead(first)).toBe(hashNormalizedLead(second));
+  });
+
+  it("includes each independent marketing choice in the idempotency hash", () => {
+    const clear = normalizeLeadRequest(v2());
+    const match = normalizeLeadRequest(v2({ propertyMatchOptIn: true }));
+    const newsletter = normalizeLeadRequest(v2({ newsletterOptIn: true }));
+
+    expect(hashNormalizedLead(match)).not.toBe(hashNormalizedLead(clear));
+    expect(hashNormalizedLead(newsletter)).not.toBe(hashNormalizedLead(clear));
+    expect(hashNormalizedLead(match)).not.toBe(hashNormalizedLead(newsletter));
   });
 });
 
