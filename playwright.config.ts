@@ -6,6 +6,7 @@ const baseURL = `http://127.0.0.1:${port}`;
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: false,
+  workers: 1,
   timeout: 45_000,
   expect: { timeout: 7_500 },
   reporter: "list",
@@ -35,6 +36,7 @@ export default defineConfig({
       ...process.env,
       LEAD_INTAKE_ENABLED: "true",
       LEAD_DELIVERY_ENABLED: "false",
+      PURCHASE_READINESS_ENABLED: "true",
       AUTH_SECRET: "playwright-only-secret-do-not-use-outside-tests",
       AUTH_URL: baseURL,
       DATABASE_URL:
