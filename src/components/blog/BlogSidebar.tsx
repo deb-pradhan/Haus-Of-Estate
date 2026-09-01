@@ -5,7 +5,6 @@ import { Mail } from 'lucide-react'
 import { useState } from 'react'
 import { useLeadModals } from '@/components/lead-modal'
 import { BlogCard } from './BlogCard'
-import { ShareLinks } from './ShareLinks'
 import type { PostSummary } from '@/sanity/types'
 
 interface Tag {
@@ -14,26 +13,16 @@ interface Tag {
 }
 
 interface BlogSidebarProps {
-  title: string
-  slug: string
   tags: Tag[]
   related: PostSummary[]
 }
 
-export function BlogSidebar({ title, slug, tags, related }: BlogSidebarProps) {
+export function BlogSidebar({ tags, related }: BlogSidebarProps) {
   const { openNewsletter } = useLeadModals()
   const [newsletterEmail, setNewsletterEmail] = useState('')
 
   return (
     <aside className="space-y-8 lg:sticky lg:top-24">
-      {/* Share */}
-      <div className="rounded-2xl border border-border bg-surface p-6">
-        <h3 className="font-serif text-sm font-semibold uppercase tracking-[0.12em] text-slate-700">
-          Share this article
-        </h3>
-        <ShareLinks title={title} slug={slug} className="mt-4" />
-      </div>
-
       {/* Tags */}
       {tags.length > 0 && (
         <div className="rounded-2xl border border-border bg-surface p-6">

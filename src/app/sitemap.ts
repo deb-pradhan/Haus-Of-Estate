@@ -1,8 +1,9 @@
 import type { MetadataRoute } from 'next'
 import { sanityFetch } from '@/sanity'
 import { POST_SLUGS_QUERY, PROPERTY_SLUGS_QUERY } from '@/sanity/queries'
+import { HAUS_SITE_ORIGIN } from '@/lib/share'
 
-const SITE_URL = 'https://hausofestate.com'
+const SITE_URL = HAUS_SITE_ORIGIN
 
 // Static routes with sensible SEO weighting.
 const STATIC_ROUTES: Array<{
