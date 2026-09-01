@@ -16,6 +16,7 @@
     "db:migrate:approved": "node scripts/run-approved-migrations.mjs"
   },
   "dependencies": {
+    "@ai-sdk/react": "^4.0.90",
     "@auth/prisma-adapter": "2.11.3",
     "@hookform/resolvers": "^5.2.2",
     "@portabletext/react": "^6.0.3",
@@ -24,6 +25,7 @@
     "@sanity/client": "^8.1.0",
     "@sanity/image-url": "^2.1.1",
     "@sanity/vision": "^6.9.2",
+    "ai": "^7.0.87",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -46,6 +48,7 @@
     "react-phone-number-input": "^3.4.16",
     "resend": "6.25.0",
     "sanity": "^6.9.2",
+    "server-only": "^0.0.1",
     "tailwind-merge": "^3.5.0",
     "zod": "^4.3.6",
     "zustand": "^5.0.11"

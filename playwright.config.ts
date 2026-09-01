@@ -30,6 +30,7 @@ export default defineConfig({
       AUTH_TRUST_HOST: "true",
       AUTH_GOOGLE_ENABLED: "false",
       SAVED_CONTENT_ENABLED: "true",
+      PROPERTY_ASSISTANT_ENABLED: "true",
       NEXT_PUBLIC_GTM_ID: "GTM-TEST123",
       NEXT_PUBLIC_SITE_URL: `http://127.0.0.1:${port}`,
     },

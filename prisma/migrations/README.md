@@ -37,6 +37,13 @@ Sanity references. Apply it only after auth hardening is present and with its
 own reviewed checksum approval. It stores immutable Sanity document IDs and
 does not copy properties or articles into the dormant Prisma property catalog.
 
+`20260901003000_property_assistant_usage` adds HMAC-keyed account/IP
+fixed-window buckets, one stable non-PII global daily bucket, and short-lived
+token reservations. It stores no prompts, transcripts, account IDs, IP
+addresses, or Sanity content. The assistant must remain disabled until this
+migration is approved and deployed; stale reservations are reclaimed on a
+later request after their short expiry.
+
 The auth migration expands the old verification representation safely. The
 legacy Boolean `User.emailVerified` remains in place for deployment overlap and
 rollback. A new `User.emailVerifiedAt` timestamp is backfilled from `createdAt`

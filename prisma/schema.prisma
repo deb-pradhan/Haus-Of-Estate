@@ -377,6 +377,36 @@ model SavedContent {
   @@index([userId, contentType, createdAt])
 }
 
+model PropertyAssistantUsageBucket {
+  id                 String   @id @default(cuid())
+  scope              String
+  keyHash            String
+  windowStart        DateTime
+  windowEnd          DateTime
+  requestCount       Int      @default(0)
+  reservedTokenUnits Int      @default(0)
+  consumedTokenUnits Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  reservations PropertyAssistantUsageReservation[]
+
+  @@unique([scope, keyHash])
+  @@index([windowEnd])
+}
+
+model PropertyAssistantUsageReservation {
+  id         String                       @id @default(cuid())
+  bucketId   String
+  bucket     PropertyAssistantUsageBucket @relation(fields: [bucketId], references: [id], onDelete: Cascade)
+  tokenUnits Int
+  expiresAt  DateTime
+  createdAt  DateTime                     @default(now())
+
+  @@index([bucketId, expiresAt])
+  @@index([expiresAt])
+}
+
 model Lead {
   id           String    @id @default(cuid())
   email        String
