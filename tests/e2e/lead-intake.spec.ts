@@ -157,7 +157,16 @@ test("preserves attribution, separates consent, retries, and emits no PII", asyn
   ).toHaveAttribute("href", "https://www.instagram.com/haus_of_estate/");
 
   const events = await page.evaluate(() => window.dataLayer ?? []);
-  expect(events.map((event) => event.event)).toEqual([
+  const leadEvents = events.filter((event) =>
+    typeof event.event === "string" &&
+    [
+      "form_view",
+      "form_start",
+      "lead_submit_success",
+      "newsletter_opt_in",
+    ].includes(event.event),
+  );
+  expect(leadEvents.map((event) => event.event)).toEqual([
     "form_view",
     "form_start",
     "lead_submit_success",

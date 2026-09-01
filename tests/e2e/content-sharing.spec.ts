@@ -3,6 +3,12 @@ import { expect, test, type Page } from "@playwright/test";
 const PROPERTY_PATH = "/properties/monaco-mansions";
 const BLOG_PATH = "/blog/uae-property-market-2026";
 
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    window.sessionStorage.setItem("haus_lead_popup_seen_v3", "true");
+  });
+});
+
 async function disableNativeShare(page: Page) {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "share", {
