@@ -1,23 +1,44 @@
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { auth } from "@/auth";
+import { safeReturnTo } from "@/lib/auth/safe-return-to";
 
-const GUEST_ONLY = ["/auth/login", "/auth/register"];
+const PROTECTED_PATHS = ["/saved", "/account", "/messages", "/viewings"];
+const GUEST_ONLY_PATHS = ["/auth/login", "/auth/register"];
 
-export default function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+function matches(pathname: string, routes: string[]): boolean {
+  return routes.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
+  );
+}
 
-  if (GUEST_ONLY.some((p) => pathname.startsWith(p))) {
-    const sessionCookie =
-      request.cookies.get("next-auth.session-token") ||
-      request.cookies.get("__Secure-authjs.session-token");
-    if (sessionCookie) {
-      return NextResponse.redirect(new URL("/", request.url));
-    }
+export default auth((request) => {
+  const { pathname, search } = request.nextUrl;
+  const signedIn = Boolean(request.auth?.user?.id);
+
+  if (!signedIn && matches(pathname, PROTECTED_PATHS)) {
+    const loginUrl = new URL("/auth/login", request.url);
+    loginUrl.searchParams.set("returnTo", `${pathname}${search}`);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  if (signedIn && matches(pathname, GUEST_ONLY_PATHS)) {
+    const returnTo = safeReturnTo(
+      request.nextUrl.searchParams.get("returnTo"),
+      "/",
+    );
+    return NextResponse.redirect(new URL(returnTo, request.url));
   }
 
   return NextResponse.next();
-}
+});
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    "/saved/:path*",
+    "/account/:path*",
+    "/messages/:path*",
+    "/viewings/:path*",
+    "/auth/login",
+    "/auth/register",
+  ],
 };

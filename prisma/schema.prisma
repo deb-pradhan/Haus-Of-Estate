@@ -54,29 +54,38 @@ enum ReviewType {
   POST_DEAL
 }
 
+enum AuthActionPurpose {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
 model User {
   id             String    @id @default(cuid())
   email          String    @unique
-  name           String
+  name           String?
   phone          String?
-  avatar         String?
+  image          String?   @map("avatar")
   role           UserRole  @default(BUYER)
   passwordHash   String?
-  emailVerified  Boolean   @default(false)
+  // The physical legacy Boolean remains unmanaged during expand/contract.
+  emailVerified DateTime? @map("emailVerifiedAt")
   savedListings  String[]  @default([])
+  sessionVersion Int       @default(0)
+  disabledAt     DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  accounts        Account[]
-  sessions        Session[]
-  agentProfile    AgentProfile?
-  sentMessages    Message[]       @relation("SentMessages")
-  buyerThreads    MessageThread[] @relation("BuyerThreads")
-  viewingRequests ViewingRequest[] @relation("BuyerViewings")
-  buyerOffers     Offer[]         @relation("BuyerOffers")
-  writtenReviews  Review[]        @relation("WrittenReviews")
-  notifications   Notification[]
-  leads           Lead[]
+  accounts         Account[]
+  sessions         Session[]
+  agentProfile     AgentProfile?
+  sentMessages     Message[]         @relation("SentMessages")
+  buyerThreads     MessageThread[]   @relation("BuyerThreads")
+  viewingRequests  ViewingRequest[]  @relation("BuyerViewings")
+  buyerOffers      Offer[]           @relation("BuyerOffers")
+  writtenReviews   Review[]          @relation("WrittenReviews")
+  notifications    Notification[]
+  leads            Lead[]
+  authActionTokens AuthActionToken[]
 
   @@index([email])
   @@index([role])
@@ -97,7 +106,7 @@ model AgentProfile {
   verified        Boolean  @default(false)
 
   listings        Property[]
-  agentThreads    MessageThread[] @relation("AgentThreads")
+  agentThreads    MessageThread[]  @relation("AgentThreads")
   agentViewings   ViewingRequest[] @relation("AgentViewings")
   agentOffers     Offer[]          @relation("AgentOffers")
   receivedReviews Review[]         @relation("AgentReviews")
@@ -124,14 +133,14 @@ model Property {
   featured     Boolean        @default(false)
 
   locationArea     String
-  locationCity     String   @default("Dubai")
+  locationCity     String  @default("Dubai")
   locationBuilding String?
   locationLat      Float?
   locationLng      Float?
 
-  videoUrl   String?
-  images     String[] @default([])
-  thumbnail  String?
+  videoUrl  String?
+  images    String[] @default([])
+  thumbnail String?
 
   features String[] @default([])
 
@@ -155,11 +164,11 @@ model Property {
 }
 
 model MessageThread {
-  id         String @id @default(cuid())
+  id         String       @id @default(cuid())
   propertyId String
-  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  property   Property     @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   buyerId    String
-  buyer      User   @relation("BuyerThreads", fields: [buyerId], references: [id], onDelete: Cascade)
+  buyer      User         @relation("BuyerThreads", fields: [buyerId], references: [id], onDelete: Cascade)
   agentId    String
   agent      AgentProfile @relation("AgentThreads", fields: [agentId], references: [id], onDelete: Cascade)
 
@@ -174,13 +183,13 @@ model MessageThread {
 }
 
 model Message {
-  id       String @id @default(cuid())
+  id       String        @id @default(cuid())
   threadId String
   thread   MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
   senderId String
-  sender   User   @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  sender   User          @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
   content  String
-  read     Boolean @default(false)
+  read     Boolean       @default(false)
 
   createdAt DateTime @default(now())
 
@@ -189,13 +198,13 @@ model Message {
 }
 
 model ViewingRequest {
-  id         String        @id @default(cuid())
+  id         String       @id @default(cuid())
   propertyId String
-  property   Property      @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  property   Property     @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   buyerId    String
-  buyer      User          @relation("BuyerViewings", fields: [buyerId], references: [id], onDelete: Cascade)
+  buyer      User         @relation("BuyerViewings", fields: [buyerId], references: [id], onDelete: Cascade)
   agentId    String
-  agent      AgentProfile  @relation("AgentViewings", fields: [agentId], references: [id], onDelete: Cascade)
+  agent      AgentProfile @relation("AgentViewings", fields: [agentId], references: [id], onDelete: Cascade)
 
   preferredSlots String[]
   confirmedSlot  DateTime?
@@ -212,11 +221,11 @@ model ViewingRequest {
 }
 
 model Offer {
-  id         String      @id @default(cuid())
+  id         String       @id @default(cuid())
   propertyId String
-  property   Property    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  property   Property     @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   buyerId    String
-  buyer      User        @relation("BuyerOffers", fields: [buyerId], references: [id], onDelete: Cascade)
+  buyer      User         @relation("BuyerOffers", fields: [buyerId], references: [id], onDelete: Cascade)
   agentId    String
   agent      AgentProfile @relation("AgentOffers", fields: [agentId], references: [id], onDelete: Cascade)
 
@@ -242,10 +251,10 @@ model OfferEvent {
   offerId String
   offer   Offer  @relation(fields: [offerId], references: [id], onDelete: Cascade)
 
-  type    String
-  amount  Float?
-  terms   String?
-  by      String
+  type   String
+  amount Float?
+  terms  String?
+  by     String
 
   createdAt DateTime @default(now())
 
@@ -253,11 +262,11 @@ model OfferEvent {
 }
 
 model Review {
-  id         String     @id @default(cuid())
+  id         String       @id @default(cuid())
   agentId    String
   agent      AgentProfile @relation("AgentReviews", fields: [agentId], references: [id], onDelete: Cascade)
   reviewerId String
-  reviewer   User       @relation("WrittenReviews", fields: [reviewerId], references: [id], onDelete: Cascade)
+  reviewer   User         @relation("WrittenReviews", fields: [reviewerId], references: [id], onDelete: Cascade)
 
   rating Int
   text   String
@@ -270,14 +279,14 @@ model Review {
 }
 
 model Notification {
-  id     String  @id @default(cuid())
+  id     String @id @default(cuid())
   userId String
-  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  title   String
-  body    String
-  link    String?
-  read    Boolean @default(false)
+  title String
+  body  String
+  link  String?
+  read  Boolean @default(false)
 
   createdAt DateTime @default(now())
 
@@ -289,6 +298,7 @@ model Account {
   id                String  @id @default(cuid())
   userId            String
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type              String
   provider          String
   providerAccountId String
   refresh_token     String? @db.Text
@@ -319,6 +329,34 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model AuthActionToken {
+  id        String            @id @default(cuid())
+  userId    String
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      AuthActionPurpose
+  tokenHash String            @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime          @default(now())
+
+  @@index([userId, type, expiresAt])
+  @@index([expiresAt])
+}
+
+model AuthThrottle {
+  id           String    @id @default(cuid())
+  scope        String
+  keyHash      String
+  windowStart  DateTime
+  attempts     Int       @default(0)
+  blockedUntil DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([scope, keyHash])
+  @@index([blockedUntil])
 }
 
 model Lead {
