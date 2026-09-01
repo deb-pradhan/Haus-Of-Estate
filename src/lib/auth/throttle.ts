@@ -34,6 +34,31 @@ export interface AuthThrottleDecision {
   retryAfterSeconds: number;
 }
 
+export async function enforceAuthIpThrottle(
+  request: Request,
+  options: { scope: AuthThrottleScope; rule: ThrottleRule },
+): Promise<AuthThrottleDecision> {
+  const ipHash = hashThrottleIdentifier(
+    options.scope,
+    "ip",
+    getClientIp(request),
+  );
+  return applyRule(options.scope, ipHash, options.rule);
+}
+
+export async function enforceAuthIdentifierThrottle(options: {
+  scope: AuthThrottleScope;
+  identifier: ThrottleIdentifier;
+  rule: ThrottleRule;
+}): Promise<AuthThrottleDecision> {
+  const identifierHash = hashThrottleIdentifier(
+    options.scope,
+    options.identifier.kind,
+    options.identifier.value,
+  );
+  return applyRule(options.scope, identifierHash, options.rule);
+}
+
 function throttleSecret(): string {
   const secret = process.env.AUTH_THROTTLE_SECRET ?? process.env.AUTH_SECRET;
   if (secret) return secret;
@@ -163,12 +188,10 @@ export async function enforceAuthThrottle(
   request: Request,
   options: EnforceAuthThrottleOptions,
 ): Promise<AuthThrottleDecision> {
-  const ipHash = hashThrottleIdentifier(
-    options.scope,
-    "ip",
-    getClientIp(request),
-  );
-  const ipDecision = await applyRule(options.scope, ipHash, options.ip);
+  const ipDecision = await enforceAuthIpThrottle(request, {
+    scope: options.scope,
+    rule: options.ip,
+  });
 
   // A blocked client must not be able to consume another account's identifier
   // allowance by continuing to submit victim email addresses.
@@ -176,16 +199,11 @@ export async function enforceAuthThrottle(
 
   if (!options.identifier || !options.identifierRule) return ipDecision;
 
-  const identifierHash = hashThrottleIdentifier(
-    options.scope,
-    options.identifier.kind,
-    options.identifier.value,
-  );
-  const identifierDecision = await applyRule(
-    options.scope,
-    identifierHash,
-    options.identifierRule,
-  );
+  const identifierDecision = await enforceAuthIdentifierThrottle({
+    scope: options.scope,
+    identifier: options.identifier,
+    rule: options.identifierRule,
+  });
   return stricterDecision(ipDecision, identifierDecision);
 }
 

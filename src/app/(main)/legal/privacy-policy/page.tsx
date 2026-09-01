@@ -239,6 +239,23 @@ export default function PrivacyPolicyPage() {
                 Haus team members can manage enquiries in an access-controlled
                 operational workbook and receive internal notifications
               </li>
+              <li>
+                <strong>Cloudflare Turnstile:</strong> when enabled, Turnstile
+                processes security signals such as IP address, browser and
+                connection information, and website origin to protect forms and
+                accounts from automated abuse. Cloudflare states that Turnstile
+                does not access, store, or transmit form entries or other page
+                inputs. See the{" "}
+                <a
+                  href="https://www.cloudflare.com/turnstile-privacy-policy/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-trust-teal hover:underline"
+                >
+                  Cloudflare Turnstile Privacy Addendum
+                </a>
+                .
+              </li>
             </ul>
             <p className="mt-3">
               All third parties are required to process your data only in

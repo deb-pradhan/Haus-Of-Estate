@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { BotChallengeResult } from "@/lib/bot-protection/types";
 
 const mocks = vi.hoisted(() => ({
   hash: vi.fn(async () => "hashed-password"),
@@ -6,7 +7,14 @@ const mocks = vi.hoisted(() => ({
   createUserWithToken: vi.fn(),
   sendVerification: vi.fn(),
   sameOrigin: vi.fn(() => true),
-  throttle: vi.fn(async () => ({ allowed: true, retryAfterSeconds: 0 })),
+  ipThrottle: vi.fn(async () => ({ allowed: true, retryAfterSeconds: 0 })),
+  identifierThrottle: vi.fn(async () => ({
+    allowed: true,
+    retryAfterSeconds: 0,
+  })),
+  verifyBotChallenge: vi.fn(
+    async (): Promise<BotChallengeResult> => ({ ok: true, skipped: true }),
+  ),
 }));
 
 vi.mock("bcryptjs", () => ({ default: { hash: mocks.hash } }));
@@ -23,7 +31,11 @@ vi.mock("@/lib/auth/request-security", () => ({
   isSameOriginRequest: mocks.sameOrigin,
 }));
 vi.mock("@/lib/auth/throttle", () => ({
-  enforceAuthThrottle: mocks.throttle,
+  enforceAuthIpThrottle: mocks.ipThrottle,
+  enforceAuthIdentifierThrottle: mocks.identifierThrottle,
+}));
+vi.mock("@/lib/bot-protection/verify", () => ({
+  verifyBotChallenge: mocks.verifyBotChallenge,
 }));
 
 import { POST } from "@/app/api/auth/register/route";
@@ -42,6 +54,15 @@ function registrationRequest(body: unknown) {
 describe("POST /api/auth/register", () => {
   beforeEach(() => {
     mocks.sameOrigin.mockReturnValue(true);
+    mocks.ipThrottle.mockResolvedValue({
+      allowed: true,
+      retryAfterSeconds: 0,
+    });
+    mocks.identifierThrottle.mockResolvedValue({
+      allowed: true,
+      retryAfterSeconds: 0,
+    });
+    mocks.verifyBotChallenge.mockResolvedValue({ ok: true, skipped: true });
     mocks.findUser.mockResolvedValue(null);
     mocks.createUserWithToken.mockResolvedValue({
       userId: "user-1",
@@ -131,5 +152,104 @@ describe("POST /api/auth/register", () => {
       ok: false,
       fieldErrors: expect.objectContaining({ email: expect.any(Array) }),
     });
+  });
+
+  it("throttles before verifying a challenge or doing account work", async () => {
+    mocks.ipThrottle.mockResolvedValue({
+      allowed: false,
+      retryAfterSeconds: 120,
+    });
+
+    const response = await POST(
+      registrationRequest({
+        name: "Surya Kommuri",
+        email: "surya@example.com",
+        password: "secure-password",
+        turnstileToken: "challenge-token",
+      }),
+    );
+
+    expect(response.status).toBe(429);
+    expect(mocks.verifyBotChallenge).not.toHaveBeenCalled();
+    expect(mocks.identifierThrottle).not.toHaveBeenCalled();
+    expect(mocks.hash).not.toHaveBeenCalled();
+    expect(mocks.findUser).not.toHaveBeenCalled();
+  });
+
+  it("verifies the challenge before hashing or querying account data", async () => {
+    mocks.verifyBotChallenge.mockResolvedValue({
+      ok: false,
+      reason: "rejected",
+    });
+
+    const response = await POST(
+      registrationRequest({
+        name: "Surya Kommuri",
+        email: "surya@example.com",
+        password: "secure-password",
+        turnstileToken: "challenge-token",
+      }),
+    );
+
+    expect(response.status).toBe(403);
+    expect(mocks.verifyBotChallenge).toHaveBeenCalledWith({
+      request: expect.any(Request),
+      token: "challenge-token",
+      action: "register",
+    });
+    expect(mocks.identifierThrottle).not.toHaveBeenCalled();
+    expect(mocks.hash).not.toHaveBeenCalled();
+    expect(mocks.findUser).not.toHaveBeenCalled();
+    expect(mocks.createUserWithToken).not.toHaveBeenCalled();
+  });
+
+  it("returns a retryable response when challenge verification is unavailable", async () => {
+    mocks.verifyBotChallenge.mockResolvedValue({
+      ok: false,
+      reason: "unavailable",
+    });
+
+    const response = await POST(
+      registrationRequest({
+        name: "Surya Kommuri",
+        email: "surya@example.com",
+        password: "secure-password",
+        turnstileToken: "challenge-token",
+      }),
+    );
+
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toMatchObject({
+      ok: false,
+      code: "BOT_CHALLENGE_UNAVAILABLE",
+    });
+    expect(mocks.hash).not.toHaveBeenCalled();
+    expect(mocks.findUser).not.toHaveBeenCalled();
+  });
+
+  it("uses the email quota only after a valid challenge", async () => {
+    mocks.identifierThrottle.mockResolvedValue({
+      allowed: false,
+      retryAfterSeconds: 300,
+    });
+
+    const response = await POST(
+      registrationRequest({
+        name: "Surya Kommuri",
+        email: "surya@example.com",
+        password: "secure-password",
+        turnstileToken: "challenge-token",
+      }),
+    );
+
+    expect(response.status).toBe(429);
+    expect(mocks.verifyBotChallenge).toHaveBeenCalled();
+    expect(mocks.identifierThrottle).toHaveBeenCalledWith({
+      scope: "REGISTER",
+      identifier: { kind: "email", value: "surya@example.com" },
+      rule: { limit: 5, windowMs: 60 * 60 * 1_000 },
+    });
+    expect(mocks.hash).not.toHaveBeenCalled();
+    expect(mocks.findUser).not.toHaveBeenCalled();
   });
 });

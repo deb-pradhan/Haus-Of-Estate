@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { safeReturnTo } from "@/lib/auth/safe-return-to";
+import { getBotProtectionClientConfig } from "@/lib/bot-protection/config";
 import { ForgotPasswordForm } from "./forgot-password-form";
 
 export const metadata: Metadata = {
@@ -18,5 +19,10 @@ function first(value: string | string[] | undefined) {
 export default async function ForgotPasswordPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const returnTo = safeReturnTo(first(params.returnTo) ?? first(params.redirectTo), "/");
-  return <ForgotPasswordForm returnTo={returnTo} />;
+  return (
+    <ForgotPasswordForm
+      returnTo={returnTo}
+      botProtection={getBotProtectionClientConfig()}
+    />
+  );
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { ZodError } from "zod";
+import type { BotChallengeResult } from "@/lib/bot-protection/types";
 
 export const GENERIC_VERIFICATION_MESSAGE =
   "If an account needs verification, we will send instructions to that email address.";
@@ -38,6 +39,33 @@ export function infrastructureFailureResponse() {
   return NextResponse.json(
     { ok: false, error: "This service is temporarily unavailable." },
     { status: 503 },
+  );
+}
+
+export function botChallengeFailureResponse(
+  result: Extract<BotChallengeResult, { ok: false }>,
+) {
+  if (result.reason === "unavailable") {
+    return NextResponse.json(
+      {
+        ok: false,
+        code: "BOT_CHALLENGE_UNAVAILABLE",
+        error: "Security verification is temporarily unavailable.",
+      },
+      { status: 503 },
+    );
+  }
+
+  return NextResponse.json(
+    {
+      ok: false,
+      code:
+        result.reason === "missing"
+          ? "BOT_CHALLENGE_REQUIRED"
+          : "BOT_CHALLENGE_REJECTED",
+      error: "Complete the security check and try again.",
+    },
+    { status: result.reason === "missing" ? 400 : 403 },
   );
 }
 

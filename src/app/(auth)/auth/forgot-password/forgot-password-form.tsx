@@ -7,12 +7,27 @@ import { AuthCard, AuthFeedback, AuthHeading, authHref } from "@/components/auth
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { TurnstileChallenge } from "@/components/auth/turnstile-challenge";
+import type { BotProtectionClientConfig } from "@/lib/bot-protection/types";
 
-export function ForgotPasswordForm({ returnTo }: { returnTo: string }) {
+export function ForgotPasswordForm({
+  returnTo,
+  botProtection,
+}: {
+  returnTo: string;
+  botProtection: BotProtectionClientConfig;
+}) {
   const [email, setEmail] = useState("");
   const [pending, setPending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [challengeRevision, setChallengeRevision] = useState(0);
+
+  function resetChallenge() {
+    setTurnstileToken(null);
+    setChallengeRevision((current) => current + 1);
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -23,21 +38,33 @@ export function ForgotPasswordForm({ returnTo }: { returnTo: string }) {
       const response = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, returnTo }),
+        body: JSON.stringify({
+          email,
+          returnTo,
+          ...(botProtection.enabled ? { turnstileToken } : {}),
+        }),
       });
 
       if (!response.ok) {
+        const payload = (await response.json().catch(() => ({}))) as {
+          error?: string;
+          code?: string;
+        };
         setError(
           response.status === 429
             ? "Too many attempts. Please wait before trying again."
-            : "We could not process the request right now. Please try again shortly.",
+            : payload.code?.startsWith("BOT_CHALLENGE_")
+              ? payload.error ?? "Complete the security check and try again."
+              : "We could not process the request right now. Please try again shortly.",
         );
+        resetChallenge();
         return;
       }
 
       setSent(true);
     } catch {
       setError("We could not process the request right now. Please try again shortly.");
+      resetChallenge();
     } finally {
       setPending(false);
     }
@@ -64,7 +91,22 @@ export function ForgotPasswordForm({ returnTo }: { returnTo: string }) {
               <Input id="recovery-email" name="email" type="email" placeholder="you@example.com" value={email} onChange={(event) => setEmail(event.target.value)} className="pl-9" autoComplete="email" inputMode="email" maxLength={254} disabled={pending} required />
             </div>
           </div>
-          <Button type="submit" className="w-full" size="lg" disabled={pending}>
+          <TurnstileChallenge
+            key={challengeRevision}
+            config={botProtection}
+            action="forgot_password"
+            onTokenChange={setTurnstileToken}
+          />
+          <Button
+            type="submit"
+            className="w-full"
+            size="lg"
+            disabled={
+              pending ||
+              (botProtection.enabled &&
+                (botProtection.siteKey === null || turnstileToken === null))
+            }
+          >
             {pending ? <><Loader2 className="h-4 w-4 animate-spin" />Sending link…</> : "Send reset link"}
           </Button>
         </form>

@@ -1,6 +1,35 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("authentication hardening", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.route(
+      "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit",
+      async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/javascript",
+          body: `
+            window.turnstile = {
+              render(container, options) {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.textContent = "Complete security check";
+                button.addEventListener("click", () => {
+                  options.callback("playwright-turnstile-token-" + options.action);
+                  button.disabled = true;
+                });
+                container.replaceChildren(button);
+                return "auth-hardening-widget";
+              },
+              reset() {},
+              remove() {},
+            };
+          `,
+        });
+      },
+    );
+  });
+
   test("sanitizes return paths and keeps Google disabled", async ({ page }) => {
     await page.goto(
       "/auth/login?returnTo=https%3A%2F%2Fattacker.example%2Fcollect",
@@ -50,6 +79,10 @@ test.describe("authentication hardening", () => {
     await page.getByLabel("Email").fill("surya@example.com");
     await page.getByLabel("Password", { exact: true }).fill("secure-password");
     await page.getByLabel("Confirm password").fill("secure-password");
+    await page
+      .getByTestId("turnstile-register")
+      .getByRole("button", { name: "Complete security check" })
+      .click();
     await page.getByRole("button", { name: "Create account" }).click();
 
     await expect(
@@ -60,6 +93,7 @@ test.describe("authentication hardening", () => {
       email: "surya@example.com",
       password: "secure-password",
       returnTo: "/saved",
+      turnstileToken: "playwright-turnstile-token-register",
     });
     expect(JSON.stringify(submittedBody)).not.toMatch(
       /lead|intent|consent|newsletter/i,
@@ -124,6 +158,8 @@ test.describe("authentication hardening", () => {
       () => document.documentElement.scrollWidth - window.innerWidth,
     );
     expect(overflow).toBeLessThanOrEqual(1);
-    await expect(page.getByRole("button", { name: "Create account" })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Create account" }),
+    ).toBeVisible();
   });
 });
