@@ -48,6 +48,9 @@ export default function PrivacyPolicyPage() {
           <p className="mt-2 text-sm text-muted-foreground">
             Last updated: 1 September 2026
           </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Lead enquiry notice version: 2026-09-01.v2
+          </p>
         </div>
 
         <div className="space-y-8 text-sm leading-relaxed text-foreground">
@@ -124,6 +127,13 @@ export default function PrivacyPolicyPage() {
                 which wording each choice was made or withdrawn
               </li>
             </ul>
+            <p className="mt-3">
+              A country of interest and a preferred city, area, or community
+              describe where you are looking for property. We do not treat those
+              preferences as your nationality or country of residence, use them
+              to decide which privacy law applies to you, or infer permission to
+              send marketing.
+            </p>
           </section>
 
           <section>
@@ -171,6 +181,12 @@ export default function PrivacyPolicyPage() {
               fraud prevention, responding to genuine enquiries, and service
               improvement where those interests are not overridden by your
               rights.
+            </p>
+            <p className="mt-3">
+              The enquiry form asks you to acknowledge that you have read this
+              notice. That acknowledgement records transparency; it is not the
+              legal basis for handling your requested enquiry and it does not
+              give permission for recurring marketing.
             </p>
           </section>
 

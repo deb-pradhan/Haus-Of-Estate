@@ -1,7 +1,9 @@
 import { z } from "zod";
 
-export const LEAD_FORM_VERSION = "2026-09-01.v3";
-export const PRIVACY_NOTICE_VERSION = "2026-09-01";
+export const LEAD_FORM_VERSION = "2026-09-01.v4";
+export const PRIVACY_NOTICE_VERSION = "2026-09-01.v2";
+const QUALIFIER_LEAD_FORM_VERSION = "2026-09-01.v3";
+const QUALIFIER_PRIVACY_NOTICE_VERSION = "2026-09-01";
 const PROPERTY_MATCH_LEAD_FORM_VERSION = "2026-08-31.v2";
 const PROPERTY_MATCH_PRIVACY_NOTICE_VERSION = "2026-08-31";
 const INITIAL_LEAD_FORM_VERSION = "2026-08-29.v1";
@@ -12,6 +14,8 @@ const PREVIOUS_MARKETING_CONSENT_WORDING =
   "I would like to receive property news, insights and offers from Haus of Estate by email. I can unsubscribe at any time.";
 export const PROPERTY_MATCH_CONSENT_WORDING =
   "Email me properties and opportunities matching this brief. I can unsubscribe at any time.";
+export const PRIVACY_ACKNOWLEDGEMENT_WORDING =
+  "I have read the Privacy Policy and understand how Haus of Estate will use my details to respond to this request.";
 
 export const leadInterestSchema = z.enum([
   "buy",
@@ -57,16 +61,19 @@ export const leadIntakeV2Schema = z
         message: optionalString(2_000),
       })
       .strict(),
+    privacyAcknowledged: z.boolean().default(false),
     propertyMatchOptIn: z.boolean().default(false),
     newsletterOptIn: z.boolean().default(false),
     overseasCashBuyer: z.boolean().default(false),
     formVersion: z.enum([
       LEAD_FORM_VERSION,
+      QUALIFIER_LEAD_FORM_VERSION,
       PROPERTY_MATCH_LEAD_FORM_VERSION,
       INITIAL_LEAD_FORM_VERSION,
     ]),
     privacyNoticeVersion: z.enum([
       PRIVACY_NOTICE_VERSION,
+      QUALIFIER_PRIVACY_NOTICE_VERSION,
       PROPERTY_MATCH_PRIVACY_NOTICE_VERSION,
       INITIAL_PRIVACY_NOTICE_VERSION,
     ]),
@@ -97,14 +104,31 @@ export const leadIntakeV2Schema = z
     const hasPropertyMatchVersion =
       input.formVersion === PROPERTY_MATCH_LEAD_FORM_VERSION &&
       input.privacyNoticeVersion === PROPERTY_MATCH_PRIVACY_NOTICE_VERSION;
+    const hasQualifierVersion =
+      input.formVersion === QUALIFIER_LEAD_FORM_VERSION &&
+      input.privacyNoticeVersion === QUALIFIER_PRIVACY_NOTICE_VERSION;
     const hasInitialVersion =
       input.formVersion === INITIAL_LEAD_FORM_VERSION &&
       input.privacyNoticeVersion === INITIAL_PRIVACY_NOTICE_VERSION;
-    if (!hasCurrentVersion && !hasPropertyMatchVersion && !hasInitialVersion) {
+    if (
+      !hasCurrentVersion &&
+      !hasQualifierVersion &&
+      !hasPropertyMatchVersion &&
+      !hasInitialVersion
+    ) {
       context.addIssue({
         code: "custom",
         path: ["formVersion"],
         message: "Form and privacy notice versions must match.",
+      });
+    }
+
+    if (hasCurrentVersion && !input.privacyAcknowledged) {
+      context.addIssue({
+        code: "custom",
+        path: ["privacyAcknowledged"],
+        message:
+          "Confirm that you have read and understood the privacy notice.",
       });
     }
 
@@ -130,6 +154,7 @@ export const leadIntakeV2Schema = z
     if (
       input.propertyMatchOptIn &&
       !hasCurrentVersion &&
+      !hasQualifierVersion &&
       !hasPropertyMatchVersion
     ) {
       context.addIssue({
@@ -149,7 +174,7 @@ export const leadIntakeV2Schema = z
         message: "The overseas cash-buyer qualifier requires a purchase brief.",
       });
     }
-    if (input.overseasCashBuyer && !hasCurrentVersion) {
+    if (input.overseasCashBuyer && !hasCurrentVersion && !hasQualifierVersion) {
       context.addIssue({
         code: "custom",
         path: ["overseasCashBuyer"],

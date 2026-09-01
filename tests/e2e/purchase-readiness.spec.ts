@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
-    window.sessionStorage.setItem("haus_lead_popup_seen_v3", "true");
+    window.sessionStorage.setItem("haus_lead_popup_seen_v4", "true");
   });
 });
 

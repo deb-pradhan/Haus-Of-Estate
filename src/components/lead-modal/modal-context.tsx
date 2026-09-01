@@ -15,10 +15,13 @@ import { AccountModal } from "./account-modal";
 import { BuyerModal, type BuyerInitialBrief } from "./buyer-modal";
 import { SellerModal } from "./seller-modal";
 
-const MARKET_LABELS: Record<NonNullable<BuyerInitialBrief["market"]>, string> = {
-  dubai: "Dubai",
-  uk: "UK",
-  bali: "Bali",
+const COUNTRY_LABELS: Record<
+  NonNullable<BuyerInitialBrief["market"]>,
+  string
+> = {
+  dubai: "United Arab Emirates",
+  uk: "United Kingdom",
+  bali: "Indonesia",
 };
 
 const AREA_LABELS: Partial<
@@ -44,7 +47,7 @@ const AREA_LABELS: Partial<
 function initialPreferencesFromBuyerBrief(brief?: BuyerInitialBrief) {
   if (!brief) return undefined;
   return {
-    market: brief.market ? MARKET_LABELS[brief.market] : undefined,
+    market: brief.market ? COUNTRY_LABELS[brief.market] : undefined,
     location: brief.area ? AREA_LABELS[brief.area] : undefined,
     bedrooms: brief.bedrooms,
   };

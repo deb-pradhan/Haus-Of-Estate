@@ -32,6 +32,7 @@ function v2(overrides: Record<string, unknown> = {}) {
     submissionId: "6bd94ff9-6dc6-4eff-8cb0-1bda245e595a",
     interest: "buy",
     contact: { firstName: "Alex", email: "alex@example.com" },
+    privacyAcknowledged: true,
     overseasCashBuyer: false,
     propertyMatchOptIn: false,
     newsletterOptIn: false,
@@ -81,6 +82,12 @@ describe("POST /api/leads", () => {
     expect(mocks.attemptImmediateLeadDelivery).toHaveBeenCalledWith(
       "outbox-id",
     );
+  });
+
+  it("requires the current privacy acknowledgement", async () => {
+    const response = await POST(request(v2({ privacyAcknowledged: false })));
+    expect(response.status).toBe(400);
+    expect(mocks.submitLeadIntake).not.toHaveBeenCalled();
   });
 
   it("returns 200 for an identical idempotent replay", async () => {

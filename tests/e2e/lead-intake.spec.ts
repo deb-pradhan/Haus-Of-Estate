@@ -4,6 +4,8 @@ const API_PATTERN = "**/api/leads";
 const MATCH_LABEL = /Email me properties and opportunities matching this brief/;
 const NEWSLETTER_LABEL = /Email me the Haus of Estate newsletter/;
 const OVERSEAS_CASH_BUYER_LABEL = /I am a cash buyer purchasing from overseas/i;
+const PRIVACY_ACKNOWLEDGEMENT_LABEL =
+  /I have read the Privacy Policy and understand how Haus of Estate will use my details/i;
 const SOCIAL_PROFILE_NAMES = [
   "Instagram",
   "LinkedIn",
@@ -13,10 +15,21 @@ const SOCIAL_PROFILE_NAMES = [
   "X",
 ] as const;
 
-async function chooseInterestAndReachContact(
+async function enterRequiredContact(page: Page) {
+  await page.getByLabel("First name").fill("Surya");
+  await page.getByLabel("Email address").fill("surya@example.com");
+  await page.getByLabel(PRIVACY_ACKNOWLEDGEMENT_LABEL).check();
+}
+
+async function reachPreferences(
   page: Page,
   interest: "Buy" | "Newsletter only" = "Buy",
 ) {
+  await enterRequiredContact(page);
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(
+    page.getByRole("heading", { name: "How can we help?" }),
+  ).toBeFocused();
   await page
     .locator("label")
     .filter({ hasText: new RegExp(`^${interest}`) })
@@ -25,15 +38,6 @@ async function chooseInterestAndReachContact(
   await expect(
     page.getByRole("heading", { name: /Shape your search|What interests you/ }),
   ).toBeFocused();
-  await page.getByRole("button", { name: "Continue" }).click();
-  await expect(
-    page.getByRole("heading", { name: "Where should we reach you?" }),
-  ).toBeFocused();
-}
-
-async function enterRequiredContact(page: Page) {
-  await page.getByLabel("First name").fill("Surya");
-  await page.getByLabel("Email address").fill("surya@example.com");
 }
 
 test("opens after three seconds, only once per session, and restores focus", async ({
@@ -104,26 +108,31 @@ test("preserves attribution, separates consent, retries, and emits no PII", asyn
   await page.goto(
     "/register-interest?utm_source=instagram&utm_medium=organic_social&utm_campaign=bio",
   );
-  await chooseInterestAndReachContact(page);
-  const contactStep = page.getByRole("region", {
-    name: "Where should we reach you?",
+  await reachPreferences(page);
+  const preferencesStep = page.getByRole("region", {
+    name: "Shape your search",
   });
   await expect(
-    contactStep.getByLabel(OVERSEAS_CASH_BUYER_LABEL),
+    preferencesStep.getByLabel(OVERSEAS_CASH_BUYER_LABEL),
   ).not.toBeChecked();
-  await expect(contactStep.getByLabel(MATCH_LABEL)).not.toBeChecked();
-  await expect(contactStep.getByLabel(NEWSLETTER_LABEL)).not.toBeChecked();
+  await expect(preferencesStep.getByLabel(MATCH_LABEL)).not.toBeChecked();
+  await expect(preferencesStep.getByLabel(NEWSLETTER_LABEL)).not.toBeChecked();
   for (const platform of SOCIAL_PROFILE_NAMES) {
     await expect(
-      contactStep.getByRole("link", {
+      preferencesStep.getByRole("link", {
         name: `Follow Haus of Estate on ${platform}`,
       }),
     ).toBeVisible();
   }
-  await enterRequiredContact(page);
-  await contactStep.getByLabel(OVERSEAS_CASH_BUYER_LABEL).check();
-  await contactStep.getByLabel(MATCH_LABEL).check();
-  await contactStep.getByLabel(NEWSLETTER_LABEL).check();
+  await preferencesStep
+    .getByLabel("Country of interest")
+    .selectOption("United Arab Emirates");
+  await preferencesStep
+    .getByLabel("City, area or community")
+    .fill("Ras al Khaimah");
+  await preferencesStep.getByLabel(OVERSEAS_CASH_BUYER_LABEL).check();
+  await preferencesStep.getByLabel(MATCH_LABEL).check();
+  await preferencesStep.getByLabel(NEWSLETTER_LABEL).check();
   await page.getByRole("button", { name: "Send my brief" }).click();
 
   await expect(
@@ -141,6 +150,11 @@ test("preserves attribution, separates consent, retries, and emits no PII", asyn
     overseasCashBuyer: true,
     propertyMatchOptIn: true,
     newsletterOptIn: true,
+    privacyAcknowledged: true,
+    preferences: {
+      market: "United Arab Emirates",
+      location: "Ras al Khaimah",
+    },
     context: {
       surface: "register_interest",
       pagePath: "/register-interest",
@@ -189,8 +203,7 @@ test("submits without a phone or marketing consent", async ({ page }) => {
   });
 
   await page.goto("/register-interest");
-  await chooseInterestAndReachContact(page);
-  await enterRequiredContact(page);
+  await reachPreferences(page);
   await page.getByRole("button", { name: "Send my brief" }).click();
   await expect(
     page.getByRole("heading", { name: "Brief received" }),
@@ -200,6 +213,7 @@ test("submits without a phone or marketing consent", async ({ page }) => {
     overseasCashBuyer: false,
     propertyMatchOptIn: false,
     newsletterOptIn: false,
+    privacyAcknowledged: true,
   });
   expect((payload?.contact as Record<string, unknown>).phone).toBeUndefined();
 });
@@ -208,24 +222,34 @@ test("announces validation and focuses the first invalid contact field", async (
   page,
 }) => {
   await page.goto("/register-interest");
-  await chooseInterestAndReachContact(page);
 
   const firstName = page.getByLabel("First name");
   const email = page.getByLabel("Email address");
+  const privacyAcknowledgement = page.getByLabel(PRIVACY_ACKNOWLEDGEMENT_LABEL);
   await expect(firstName).toHaveAttribute("required", "");
   await expect(email).toHaveAttribute("required", "");
+  await expect(privacyAcknowledgement).toHaveAttribute("required", "");
 
-  await page.getByRole("button", { name: "Send my brief" }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
   await expect(firstName).toBeFocused();
   await expect(
     page.getByRole("alert").filter({ hasText: "Enter your first name" }),
   ).toBeVisible();
 
   await firstName.fill("Surya");
-  await page.getByRole("button", { name: "Send my brief" }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
   await expect(email).toBeFocused();
   await expect(
     page.getByRole("alert").filter({ hasText: "Enter a valid email" }),
+  ).toBeVisible();
+
+  await email.fill("surya@example.com");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(privacyAcknowledgement).toBeFocused();
+  await expect(
+    page
+      .getByRole("alert")
+      .filter({ hasText: "read and understood the privacy notice" }),
   ).toBeVisible();
 });
 
@@ -246,8 +270,7 @@ test("freezes consent during a slow submission and announces success", async ({
   });
 
   await page.goto("/register-interest");
-  await chooseInterestAndReachContact(page, "Newsletter only");
-  await enterRequiredContact(page);
+  await reachPreferences(page, "Newsletter only");
   const consent = page.getByLabel(NEWSLETTER_LABEL);
   await consent.check();
   await page.getByRole("button", { name: "Subscribe" }).click();
@@ -267,16 +290,18 @@ test("newsletter CTAs retain the entered email without prechecking consent", asy
   await page.getByPlaceholder("Your email address").fill("reader@example.com");
   await page.getByRole("button", { name: "Subscribe" }).click();
 
-  await expect(page.getByRole("dialog")).toBeVisible();
-  await expect(
-    page.getByRole("radio", { name: /^Newsletter only/ }),
-  ).toBeChecked();
-  await page.getByRole("button", { name: "Continue" }).click();
-  await page.getByRole("button", { name: "Continue" }).click();
   const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
   await expect(dialog.getByLabel("Email address")).toHaveValue(
     "reader@example.com",
   );
+  await dialog.getByLabel("First name").fill("Reader");
+  await dialog.getByLabel(PRIVACY_ACKNOWLEDGEMENT_LABEL).check();
+  await dialog.getByRole("button", { name: "Continue" }).click();
+  await expect(
+    dialog.getByRole("radio", { name: /^Newsletter only/ }),
+  ).toBeChecked();
+  await dialog.getByRole("button", { name: "Continue" }).click();
   await expect(dialog.getByLabel(NEWSLETTER_LABEL)).not.toBeChecked();
   await dialog.getByRole("button", { name: "Subscribe" }).click();
   await expect(dialog.getByLabel(NEWSLETTER_LABEL)).toBeFocused();
@@ -310,13 +335,12 @@ test("@mobile renders and completes the compact three-step flow", async ({
   await expect(
     page.getByRole("heading", { name: "Register your interest" }),
   ).toBeVisible();
-  await chooseInterestAndReachContact(page, "Newsletter only");
+  await reachPreferences(page, "Newsletter only");
   const mobileWidth = await page.locator("body").evaluate((element) => ({
     client: element.clientWidth,
     scroll: element.scrollWidth,
   }));
   expect(mobileWidth.scroll).toBe(mobileWidth.client);
-  await enterRequiredContact(page);
   await page.getByLabel(NEWSLETTER_LABEL).check();
   await page.getByRole("button", { name: "Subscribe" }).click();
   await expect(
@@ -329,7 +353,6 @@ test("@mobile keeps the complete contact form within a 320px viewport", async ({
 }) => {
   await page.setViewportSize({ width: 320, height: 800 });
   await page.goto("/register-interest");
-  await chooseInterestAndReachContact(page);
 
   const contactStep = page.getByRole("region", {
     name: "Where should we reach you?",
@@ -363,10 +386,14 @@ test("valid project links preselect published property context", async ({
 
   await page.goto("/register-interest?project=monaco-mansions");
   await expect(page.getByText("Selected property")).toBeVisible();
+  await enterRequiredContact(page);
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page.getByRole("radio", { name: /^Buy/ })).toBeChecked();
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByLabel("Bedrooms")).toHaveValue("6");
-  await page.getByRole("button", { name: "Continue" }).click();
-  await enterRequiredContact(page);
+  await expect(page.getByLabel("Country of interest")).toHaveValue(
+    "United Arab Emirates",
+  );
   await page.getByRole("button", { name: "Send my brief" }).click();
   await expect(
     page.getByRole("heading", { name: "Brief received" }),

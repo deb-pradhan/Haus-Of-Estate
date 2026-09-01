@@ -342,8 +342,15 @@ test("authenticated results stay validated and hand off an editable brief", asyn
   const leadDialog = page.getByRole("dialog");
   await expect(
     leadDialog.getByRole("heading", {
-      name: "How can we help?",
+      name: "Where should we reach you?",
     }),
+  ).toBeVisible();
+  await leadDialog.getByLabel("First name").fill("Preview");
+  await leadDialog.getByLabel("Email").fill("preview@example.com");
+  await leadDialog.getByLabel(/I have read the Privacy Policy/).check();
+  await leadDialog.getByRole("button", { name: "Continue" }).click();
+  await expect(
+    leadDialog.getByRole("heading", { name: "How can we help?" }),
   ).toBeVisible();
   await expect(
     leadDialog.getByRole("radio", { name: /^Buy\b/ }),
@@ -353,8 +360,10 @@ test("authenticated results stay validated and hand off an editable brief", asyn
   await expect(
     leadDialog.getByRole("heading", { name: "Shape your search" }),
   ).toBeVisible();
-  await expect(leadDialog.getByLabel("Market")).toHaveValue("Dubai");
-  await expect(leadDialog.getByLabel("Preferred location")).toHaveValue(
+  await expect(leadDialog.getByLabel("Country of interest")).toHaveValue(
+    "United Arab Emirates",
+  );
+  await expect(leadDialog.getByLabel("City, area or community")).toHaveValue(
     "Downtown Dubai",
   );
   await expect(leadDialog.getByLabel("Bedrooms")).toHaveValue("2");
@@ -366,6 +375,10 @@ test("authenticated results stay validated and hand off an editable brief", asyn
     .click();
   await page.getByRole("button", { name: /Continue with an adviser/ }).click();
   const blankLeadDialog = page.getByRole("dialog");
+  await blankLeadDialog.getByLabel("First name").fill("Preview");
+  await blankLeadDialog.getByLabel("Email").fill("preview@example.com");
+  await blankLeadDialog.getByLabel(/I have read the Privacy Policy/).check();
+  await blankLeadDialog.getByRole("button", { name: "Continue" }).click();
   await expect(
     blankLeadDialog.getByRole("radio", { name: /^Buy\b/ }),
   ).not.toBeChecked();
