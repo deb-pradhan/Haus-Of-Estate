@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import {
   Menu,
   X,
@@ -27,6 +27,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useLeadModals } from "@/components/lead-modal";
+import { HeaderAuthControl } from "@/components/auth/header-auth-control";
 import { cn } from "@/lib/utils";
 import {
   buildPropertiesMenu,
@@ -213,6 +214,16 @@ export function Header() {
 
           {/* Right-side actions */}
           <div className="flex items-center gap-2">
+            <Suspense
+              fallback={
+                <span
+                  aria-label="Checking sign-in status"
+                  className="inline-flex h-10 w-10 animate-pulse rounded-lg bg-muted sm:w-20"
+                />
+              }
+            >
+              <HeaderAuthControl />
+            </Suspense>
             {/* Mobile / tablet trigger */}
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
