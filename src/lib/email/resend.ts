@@ -27,6 +27,10 @@ function escapeHtml(text: string): string {
     .replace(/'/g, "&#039;");
 }
 
+function sanitizeSubject(text: string): string {
+  return text.replace(/[\r\n]+/g, " ").replace(/\s+/g, " ").trim();
+}
+
 export async function sendWelcomeEmail(to: string, name: string) {
   const client = getResend();
   if (!client) return { success: true, mock: true };
@@ -173,17 +177,21 @@ export async function sendLeadNotificationToAdmin(lead: {
     lead.tier === "hot" ? "🔥" : lead.tier === "warm" ? "📈" : "🌱";
   const client = getResend();
   if (!client) return { success: true, mock: true };
+  const tier = lead.tier ?? "unknown";
+  const email = escapeHtml(lead.email);
   return client.emails.send({
     from: FROM,
     to: ADMIN,
-    subject: `${tierEmoji} New ${(lead.tier ?? "unknown").toUpperCase()} Lead: ${lead.firstName} (${lead.intent}) — Score: ${lead.score}`,
+    subject: sanitizeSubject(
+      `${tierEmoji} New ${tier.toUpperCase()} Lead: ${lead.firstName} (${lead.intent}) — Score: ${lead.score}`,
+    ),
     html: `<h2>New Lead Notification</h2>
 <table style="border-collapse:collapse">
-<tr><td style="padding:8px;border:1px solid #ddd"><strong>Name</strong></td><td style="padding:8px;border:1px solid #ddd">${lead.firstName}</td></tr>
-<tr><td style="padding:8px;border:1px solid #ddd"><strong>Email</strong></td><td style="padding:8px;border:1px solid #ddd"><a href="mailto:${lead.email}">${lead.email}</a></td></tr>
-<tr><td style="padding:8px;border:1px solid #ddd"><strong>Phone</strong></td><td style="padding:8px;border:1px solid #ddd">${lead.phone ?? "—"}</td></tr>
-<tr><td style="padding:8px;border:1px solid #ddd"><strong>Intent</strong></td><td style="padding:8px;border:1px solid #ddd">${lead.intent}</td></tr>
-<tr><td style="padding:8px;border:1px solid #ddd"><strong>Tier</strong></td><td style="padding:8px;border:1px solid #ddd">${(lead.tier ?? "unknown").toUpperCase()}</td></tr>
+<tr><td style="padding:8px;border:1px solid #ddd"><strong>Name</strong></td><td style="padding:8px;border:1px solid #ddd">${escapeHtml(lead.firstName)}</td></tr>
+<tr><td style="padding:8px;border:1px solid #ddd"><strong>Email</strong></td><td style="padding:8px;border:1px solid #ddd"><a href="mailto:${email}">${email}</a></td></tr>
+<tr><td style="padding:8px;border:1px solid #ddd"><strong>Phone</strong></td><td style="padding:8px;border:1px solid #ddd">${escapeHtml(lead.phone ?? "—")}</td></tr>
+<tr><td style="padding:8px;border:1px solid #ddd"><strong>Intent</strong></td><td style="padding:8px;border:1px solid #ddd">${escapeHtml(lead.intent)}</td></tr>
+<tr><td style="padding:8px;border:1px solid #ddd"><strong>Tier</strong></td><td style="padding:8px;border:1px solid #ddd">${escapeHtml(tier.toUpperCase())}</td></tr>
 <tr><td style="padding:8px;border:1px solid #ddd"><strong>Score</strong></td><td style="padding:8px;border:1px solid #ddd">${lead.score}</td></tr>
 </table>`,
   });

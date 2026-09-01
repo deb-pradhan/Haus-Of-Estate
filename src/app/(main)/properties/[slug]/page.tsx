@@ -15,6 +15,8 @@ import {
 import { sanityFetch, urlFor } from '@/sanity'
 import { PROPERTY_BY_SLUG_QUERY, PROPERTY_SLUGS_QUERY } from '@/sanity/queries'
 import { PortableTextRenderer } from '@/components/blog'
+import { LeadEoiTrigger } from '@/components/lead-eoi/lead-eoi-trigger'
+import { LeadProjectContextRegistration } from '@/components/lead-eoi/lead-project-context'
 import { toEmbedUrl } from '@/lib/embed-video'
 import { DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGES } from '@/lib/seo'
 
@@ -32,6 +34,7 @@ interface PropertyDetail {
   city: string
   country?: string
   developer?: string
+  listingType?: string[]
   unitType: string
   unitNumber?: string
   bedrooms?: number
@@ -43,7 +46,7 @@ interface PropertyDetail {
   view?: string
   completionStatus?: string
   summary: string
-  description?: unknown
+  description?: unknown[]
   keyFeatures?: string[]
   amenities?: string[]
   locationBenefits?: LocationBenefit[]
@@ -128,6 +131,10 @@ export default async function PropertyDetailPage({
   const enquiryHref = `mailto:${enquiryEmail}?subject=${encodeURIComponent(
     `Enquiry — ${property.title}`,
   )}`
+  const enquiryInterest =
+    property.listingType?.length === 1 && property.listingType[0] === 'rent'
+      ? 'rent'
+      : 'buy'
 
   const facts: { icon: typeof BedDouble; label: string; value: string }[] = []
   if (typeof property.bedrooms === 'number') {
@@ -185,6 +192,20 @@ export default async function PropertyDetailPage({
 
   return (
     <div className="min-h-screen bg-background">
+      <LeadProjectContextRegistration
+        project={{
+          slug: property.slug,
+          title: property.title,
+          community: property.community,
+          masterDevelopment: property.masterDevelopment,
+          city: property.city,
+          country: property.country,
+          unitType: property.unitType,
+          bedrooms: property.bedrooms,
+          bathrooms: property.bathrooms,
+          listingType: property.listingType,
+        }}
+      />
       {/* Top bar */}
       <div className="border-b border-border bg-surface">
         <div className="mx-auto max-w-6xl px-4 py-4 md:px-6">
@@ -261,7 +282,7 @@ export default async function PropertyDetailPage({
             {/* Description */}
             {property.description ? (
               <div className="mt-10">
-                <PortableTextRenderer content={property.description as any} />
+                <PortableTextRenderer content={property.description} />
               </div>
             ) : (
               <p className="mt-10 text-base leading-relaxed text-muted-foreground">
@@ -389,12 +410,16 @@ export default async function PropertyDetailPage({
                 enquiry. We&apos;ll connect you with a vetted agent for this
                 community — no obligation.
               </p>
-              <a
-                href={enquiryHref}
+              <LeadEoiTrigger
+                fallbackHref={enquiryHref}
+                options={{
+                  interest: enquiryInterest,
+                  surface: 'manual_cta',
+                }}
                 className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-estate-700 px-6 text-sm font-medium text-white shadow-sm transition-colors hover:bg-estate-600"
               >
                 Enquire about this property <ArrowRight className="h-4 w-4" />
-              </a>
+              </LeadEoiTrigger>
               <p className="mt-3 text-center text-xs text-muted-foreground">
                 Or email{' '}
                 <a
