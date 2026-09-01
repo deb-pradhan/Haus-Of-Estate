@@ -339,28 +339,25 @@ test("authenticated results stay validated and hand off an editable brief", asyn
       name: "Discuss Downtown Home 1 with an adviser",
     })
     .click();
-  const buyerDialog = page.getByRole("dialog");
+  const leadDialog = page.getByRole("dialog");
   await expect(
-    buyerDialog.getByRole("heading", {
-      name: "Are you looking to buy or rent?",
+    leadDialog.getByRole("heading", {
+      name: "How can we help?",
     }),
   ).toBeVisible();
   await expect(
-    buyerDialog.getByRole("button", { name: "Buy a property" }),
-  ).toHaveAttribute("aria-pressed", "true");
-  await expect(buyerDialog).not.toContainText("Ready two-bedroom homes in Dubai");
-  await buyerDialog.getByRole("button", { name: "Buy a property" }).click();
-  await buyerDialog.getByRole("button", { name: "Personal use" }).click();
-  await expect(buyerDialog.getByRole("button", { name: "2", exact: true })).toHaveAttribute(
-    "aria-pressed",
-    "true",
+    leadDialog.getByRole("radio", { name: /^Buy\b/ }),
+  ).toBeChecked();
+  await expect(leadDialog).not.toContainText("Ready two-bedroom homes in Dubai");
+  await leadDialog.getByRole("button", { name: "Continue" }).click();
+  await expect(
+    leadDialog.getByRole("heading", { name: "Shape your search" }),
+  ).toBeVisible();
+  await expect(leadDialog.getByLabel("Market")).toHaveValue("Dubai");
+  await expect(leadDialog.getByLabel("Preferred location")).toHaveValue(
+    "Downtown Dubai",
   );
-  await buyerDialog.getByRole("button", { name: "2", exact: true }).click();
-  await expect(buyerDialog.getByRole("button", { name: /Dubai/ })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
-  await expect(buyerDialog.locator("select")).toHaveValue("downtown");
+  await expect(leadDialog.getByLabel("Bedrooms")).toHaveValue("2");
   expect(leadRequests).toBe(0);
 
   await page.keyboard.press("Escape");
@@ -368,13 +365,13 @@ test("authenticated results stay validated and hand off an editable brief", asyn
     .getByRole("button", { name: "Open Haus Property Assistant" })
     .click();
   await page.getByRole("button", { name: /Continue with an adviser/ }).click();
-  const blankBuyerDialog = page.getByRole("dialog");
+  const blankLeadDialog = page.getByRole("dialog");
   await expect(
-    blankBuyerDialog.getByRole("button", { name: "Buy a property" }),
-  ).toHaveAttribute("aria-pressed", "false");
+    blankLeadDialog.getByRole("radio", { name: /^Buy\b/ }),
+  ).not.toBeChecked();
   await expect(
-    blankBuyerDialog.getByRole("button", { name: "Rent a property" }),
-  ).toHaveAttribute("aria-pressed", "false");
+    blankLeadDialog.getByRole("radio", { name: /^Rent\b/ }),
+  ).not.toBeChecked();
   await page.keyboard.press("Escape");
   await page
     .getByRole("button", { name: "Open Haus Property Assistant" })
