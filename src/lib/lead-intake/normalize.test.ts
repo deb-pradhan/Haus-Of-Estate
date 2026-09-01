@@ -18,6 +18,7 @@ function v2(overrides: Record<string, unknown> = {}) {
       email: " Surya@Example.COM ",
       phone: "",
     },
+    privacyAcknowledged: true,
     overseasCashBuyer: false,
     propertyMatchOptIn: false,
     newsletterOptIn: false,
@@ -69,6 +70,23 @@ function hashPropertyMatchContractShape(input: NormalizedLead): string {
   });
 }
 
+function hashQualifierContractShape(input: NormalizedLead): string {
+  return hashCanonical({
+    interest: input.interest,
+    preferences: input.preferences,
+    project: input.project,
+    contact: input.contact,
+    propertyMatchOptIn: input.propertyMatchOptIn,
+    newsletterOptIn: input.newsletterOptIn,
+    overseasCashBuyer: input.overseasCashBuyer,
+    enquiryConsentGiven: input.enquiryConsentGiven,
+    formVersion: input.formVersion,
+    privacyNoticeVersion: input.privacyNoticeVersion,
+    context: input.context,
+    legacy: input.legacy,
+  });
+}
+
 describe("normalizeLeadRequest", () => {
   it("accepts an optional blank phone and normalizes contact/context fields", () => {
     const result = normalizeLeadRequest(v2());
@@ -84,7 +102,7 @@ describe("normalizeLeadRequest", () => {
     expect(result.overseasCashBuyer).toBe(false);
     expect(result.propertyMatchOptIn).toBe(false);
     expect(result.newsletterOptIn).toBe(false);
-    expect(result.enquiryConsentGiven).toBe(false);
+    expect(result.enquiryConsentGiven).toBe(true);
   });
 
   it("records newsletter choice independently from enquiry handling", () => {
@@ -93,7 +111,7 @@ describe("normalizeLeadRequest", () => {
     );
     expect(result.propertyMatchOptIn).toBe(true);
     expect(result.newsletterOptIn).toBe(true);
-    expect(result.enquiryConsentGiven).toBe(false);
+    expect(result.enquiryConsentGiven).toBe(true);
   });
 
   it("normalizes the overseas cash-buyer qualifier independently from consent", () => {
@@ -102,7 +120,7 @@ describe("normalizeLeadRequest", () => {
     expect(result.overseasCashBuyer).toBe(true);
     expect(result.propertyMatchOptIn).toBe(false);
     expect(result.newsletterOptIn).toBe(false);
-    expect(result.enquiryConsentGiven).toBe(false);
+    expect(result.enquiryConsentGiven).toBe(true);
   });
 
   it("normalizes a legacy buyer without treating consent as marketing opt-in", () => {
@@ -208,6 +226,23 @@ describe("normalizeLeadRequest", () => {
       hashPropertyMatchContractShape(matched),
     );
     expect(hashNormalizedLead(matched)).not.toBe(hashNormalizedLead(clear));
+  });
+
+  it("preserves match and cash-buyer state in the v3 idempotency hash shape", () => {
+    const previous = normalizeLeadRequest(
+      v2({
+        privacyAcknowledged: false,
+        propertyMatchOptIn: true,
+        overseasCashBuyer: true,
+        formVersion: "2026-09-01.v3",
+        privacyNoticeVersion: "2026-09-01",
+      }),
+    );
+
+    expect(previous.enquiryConsentGiven).toBe(false);
+    expect(hashNormalizedLead(previous)).toBe(
+      hashQualifierContractShape(previous),
+    );
   });
 });
 

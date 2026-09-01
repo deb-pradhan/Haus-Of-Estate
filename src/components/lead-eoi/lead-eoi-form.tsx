@@ -20,6 +20,7 @@ import {
   LEAD_FORM_VERSION,
   MARKETING_CONSENT_WORDING,
   PRIVACY_NOTICE_VERSION,
+  PRIVACY_ACKNOWLEDGEMENT_WORDING,
   PROPERTY_MATCH_CONSENT_WORDING,
   type LeadIntakeV2Input,
 } from "@/lib/lead-intake/contract";
@@ -72,7 +73,13 @@ const INTEREST_OPTIONS: Array<{
   },
 ];
 
-const MARKET_OPTIONS = ["UK", "Dubai", "Bali", "Cyprus", "Other / not sure"];
+const COUNTRY_OPTIONS = [
+  "United Kingdom",
+  "United Arab Emirates",
+  "Indonesia",
+  "Cyprus",
+  "Other / not sure",
+];
 const PROPERTY_TYPE_OPTIONS = [
   "Apartment",
   "House",
@@ -117,6 +124,7 @@ interface FormValues {
   email: string;
   phone: string;
   message: string;
+  privacyAcknowledged: boolean;
   propertyMatchOptIn: boolean;
   newsletterOptIn: boolean;
   overseasCashBuyer: boolean;
@@ -128,16 +136,19 @@ interface FormErrors {
   firstName?: string;
   email?: string;
   phone?: string;
+  privacyAcknowledged?: string;
   newsletterOptIn?: string;
   request?: string;
 }
 
-function inferMarket(project?: LeadProjectContext) {
+function inferCountryOfInterest(project?: LeadProjectContext) {
   const place =
     `${project?.city ?? ""} ${project?.country ?? ""}`.toLowerCase();
-  if (place.includes("dubai") || place.includes("emirates")) return "Dubai";
-  if (place.includes("united kingdom") || place.includes(" uk")) return "UK";
-  if (place.includes("bali") || place.includes("indonesia")) return "Bali";
+  if (place.includes("dubai") || place.includes("emirates"))
+    return "United Arab Emirates";
+  if (place.includes("united kingdom") || place.includes(" uk"))
+    return "United Kingdom";
+  if (place.includes("bali") || place.includes("indonesia")) return "Indonesia";
   if (place.includes("cyprus")) return "Cyprus";
   return "";
 }
@@ -156,7 +167,7 @@ function initialValues(
 ): FormValues {
   return {
     interest: initialInterest ?? inferInterest(project) ?? "",
-    market: inferMarket(project),
+    market: inferCountryOfInterest(project),
     location: project?.community ?? "",
     propertyType: project?.unitType ?? "",
     bedrooms:
@@ -172,6 +183,7 @@ function initialValues(
     email: initialEmail ?? "",
     phone: "",
     message: "",
+    privacyAcknowledged: false,
     propertyMatchOptIn: false,
     newsletterOptIn: false,
     overseasCashBuyer: false,
@@ -309,10 +321,10 @@ export function LeadEoiForm({
 
   const validateCurrentStep = () => {
     const nextErrors: FormErrors = {};
-    if (step === 1 && !values.interest) {
+    if (step === 2 && !values.interest) {
       nextErrors.interest = "Choose the option that best matches your enquiry.";
     }
-    if (step === 3) {
+    if (step === 1) {
       if (!values.firstName.trim()) {
         nextErrors.firstName = "Enter your first name.";
       }
@@ -322,10 +334,18 @@ export function LeadEoiForm({
       if (values.phone && !isValidMobile(values.phone)) {
         nextErrors.phone = "Enter a valid phone number or leave this blank.";
       }
-      if (values.interest === "newsletter_only" && !values.newsletterOptIn) {
-        nextErrors.newsletterOptIn =
-          "Choose the newsletter option to complete this subscription.";
+      if (!values.privacyAcknowledged) {
+        nextErrors.privacyAcknowledged =
+          "Confirm that you have read and understood the privacy notice.";
       }
+    }
+    if (
+      step === 3 &&
+      values.interest === "newsletter_only" &&
+      !values.newsletterOptIn
+    ) {
+      nextErrors.newsletterOptIn =
+        "Choose the newsletter option to complete this subscription.";
     }
 
     setErrors(nextErrors);
@@ -337,9 +357,11 @@ export function LeadEoiForm({
           ? `${id}-email`
           : nextErrors.phone
             ? `${id}-phone`
-            : nextErrors.newsletterOptIn
-              ? `${id}-newsletter-opt-in`
-              : undefined;
+            : nextErrors.privacyAcknowledged
+              ? `${id}-privacy-acknowledged`
+              : nextErrors.newsletterOptIn
+                ? `${id}-newsletter-opt-in`
+                : undefined;
     if (firstInvalidId) {
       window.requestAnimationFrame(() =>
         document.getElementById(firstInvalidId)?.focus(),
@@ -388,6 +410,7 @@ export function LeadEoiForm({
         phone: optional(submitted.phone),
         message: optional(submitted.message),
       },
+      privacyAcknowledged: submitted.privacyAcknowledged,
       propertyMatchOptIn: submitted.propertyMatchOptIn,
       newsletterOptIn: submitted.newsletterOptIn,
       overseasCashBuyer: submitted.overseasCashBuyer,
@@ -510,6 +533,11 @@ export function LeadEoiForm({
   }
 
   const isNewsletterOnly = values.interest === "newsletter_only";
+  const finalSubmitLabel = isNewsletterOnly
+    ? "Subscribe"
+    : supportsPropertyMatches(values.interest)
+      ? "Send my brief"
+      : "Send enquiry";
 
   return (
     <form
@@ -548,7 +576,7 @@ export function LeadEoiForm({
           className="mb-6 grid grid-cols-3 gap-2"
           aria-label="Enquiry progress"
         >
-          {["Interest", "Preferences", "Contact"].map((label, index) => {
+          {["Contact", "Interest", "Preferences"].map((label, index) => {
             const number = index + 1;
             const current = step === number;
             const complete = step > number;
@@ -573,7 +601,7 @@ export function LeadEoiForm({
           })}
         </ol>
 
-        {step === 1 ? (
+        {step === 2 ? (
           <section aria-labelledby={`${id}-step-title`}>
             <h2
               id={`${id}-step-title`}
@@ -636,7 +664,7 @@ export function LeadEoiForm({
           </section>
         ) : null}
 
-        {step === 2 ? (
+        {step === 3 ? (
           <section aria-labelledby={`${id}-step-title`}>
             <h2
               id={`${id}-step-title`}
@@ -652,17 +680,17 @@ export function LeadEoiForm({
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <SelectField
                 id={`${id}-market`}
-                label="Market"
+                label="Country of interest"
                 value={values.market}
-                options={MARKET_OPTIONS}
-                placeholder="Choose a market"
+                options={COUNTRY_OPTIONS}
+                placeholder="Choose a country"
                 onChange={(value) => update("market", value)}
               />
               <TextField
                 id={`${id}-location`}
-                label="Preferred location"
+                label="City, area or community"
                 value={values.location}
-                placeholder="City, area or community"
+                placeholder="Enter a city, area or community"
                 icon={MapPin}
                 onChange={(value) => update("location", value)}
               />
@@ -714,10 +742,135 @@ export function LeadEoiForm({
                 </>
               ) : null}
             </div>
+
+            <div className="mt-5">
+              <p className="text-xs font-semibold uppercase text-muted-foreground">
+                Follow along on socials
+              </p>
+              <SocialProfileLinks className="mt-2" />
+            </div>
+
+            <div className="mt-5 space-y-3 rounded-md border border-border bg-subtle p-4">
+              <div>
+                <p className="text-sm font-semibold text-foreground">
+                  Optional email updates
+                </p>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                  These permissions are separate from this enquiry and are
+                  unchecked by default.
+                </p>
+              </div>
+              {supportsPropertyMatches(values.interest) ? (
+                <label className="flex cursor-pointer items-start gap-3">
+                  <input
+                    id={`${id}-property-match-opt-in`}
+                    type="checkbox"
+                    checked={values.propertyMatchOptIn}
+                    onChange={(event) =>
+                      update("propertyMatchOptIn", event.target.checked)
+                    }
+                    className="mt-0.5 h-4 w-4 shrink-0 accent-estate-700"
+                  />
+                  <span className="text-sm leading-5 text-foreground">
+                    {PROPERTY_MATCH_CONSENT_WORDING}
+                  </span>
+                </label>
+              ) : null}
+              <label className="flex cursor-pointer items-start gap-3">
+                <input
+                  id={`${id}-newsletter-opt-in`}
+                  ref={newsletterOptInRef}
+                  type="checkbox"
+                  checked={values.newsletterOptIn}
+                  onChange={(event) =>
+                    update("newsletterOptIn", event.target.checked)
+                  }
+                  aria-invalid={Boolean(errors.newsletterOptIn)}
+                  aria-describedby={
+                    errors.newsletterOptIn
+                      ? `${id}-newsletter-opt-in-error`
+                      : undefined
+                  }
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-estate-700"
+                />
+                <span className="text-sm leading-5 text-foreground">
+                  {MARKETING_CONSENT_WORDING}
+                </span>
+              </label>
+              {errors.newsletterOptIn ? (
+                <p
+                  id={`${id}-newsletter-opt-in-error`}
+                  role="alert"
+                  className="text-xs text-destructive"
+                >
+                  {errors.newsletterOptIn}
+                </p>
+              ) : null}
+            </div>
+
+            {supportsOverseasCashBuyer(values.interest) ? (
+              <div className="mt-3 rounded-md border border-border bg-surface p-4">
+                <label className="flex cursor-pointer items-start gap-3">
+                  <input
+                    id={`${id}-overseas-cash-buyer`}
+                    type="checkbox"
+                    checked={values.overseasCashBuyer}
+                    onChange={(event) =>
+                      update("overseasCashBuyer", event.target.checked)
+                    }
+                    className="mt-0.5 h-4 w-4 shrink-0 accent-estate-700"
+                  />
+                  <span className="text-sm leading-5 text-foreground">
+                    <strong>I am a cash buyer purchasing from overseas.</strong>{" "}
+                    <span className="text-muted-foreground">
+                      This helps us prepare the right adviser for an
+                      international cash purchase.
+                    </span>
+                  </span>
+                </label>
+              </div>
+            ) : null}
+
+            <div className="sr-only" aria-hidden="true">
+              <Label htmlFor={`${id}-website`}>Website</Label>
+              <Input
+                id={`${id}-website`}
+                name="website"
+                value={values.website}
+                onChange={(event) => update("website", event.target.value)}
+                tabIndex={-1}
+                autoComplete="off"
+              />
+            </div>
+
+            <p className="mt-4 text-xs leading-5 text-muted-foreground">
+              By selecting &quot;{finalSubmitLabel}&quot;, you ask Haus of
+              Estate to use the details you provided to handle this request.
+              This is separate from optional email marketing. Read our{" "}
+              <Link
+                href="/legal/privacy-policy"
+                target="_blank"
+                className="font-medium text-estate-700 underline underline-offset-2"
+              >
+                privacy policy
+              </Link>
+              .
+            </p>
+
+            {errors.request ? (
+              <div
+                ref={requestErrorRef}
+                tabIndex={-1}
+                role="alert"
+                className="mt-4 rounded-md border border-destructive/25 bg-destructive/5 p-3 text-sm text-destructive outline-none"
+              >
+                {errors.request}
+              </div>
+            ) : null}
           </section>
         ) : null}
 
-        {step === 3 ? (
+        {step === 1 ? (
           <section aria-labelledby={`${id}-step-title`}>
             <h2
               id={`${id}-step-title`}
@@ -728,7 +881,8 @@ export function LeadEoiForm({
               Where should we reach you?
             </h2>
             <p className="mt-1.5 text-sm text-muted-foreground">
-              We only need a name and email to respond.
+              We only need a name and email. Nothing is sent until you review
+              and submit the final step.
             </p>
             <div className="mt-5 grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2">
               <div className="min-w-0 space-y-1.5">
@@ -831,130 +985,59 @@ export function LeadEoiForm({
               </div>
             </div>
 
-            <div className="mt-5">
-              <p className="text-xs font-semibold uppercase text-muted-foreground">
-                Follow along on socials
-              </p>
-              <SocialProfileLinks className="mt-2" />
-            </div>
-
-            <div className="mt-5 space-y-3 rounded-md border border-border bg-subtle p-4">
-              <div>
-                <p className="text-sm font-semibold text-foreground">
-                  Optional email updates
-                </p>
-                <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  These choices are separate from sending your enquiry and are
-                  unchecked by default.
-                </p>
-              </div>
-              {supportsPropertyMatches(values.interest) ? (
-                <label className="flex cursor-pointer items-start gap-3">
-                  <input
-                    id={`${id}-property-match-opt-in`}
-                    type="checkbox"
-                    checked={values.propertyMatchOptIn}
-                    onChange={(event) =>
-                      update("propertyMatchOptIn", event.target.checked)
-                    }
-                    className="mt-0.5 h-4 w-4 shrink-0 accent-estate-700"
-                  />
-                  <span className="text-sm leading-5 text-foreground">
-                    {PROPERTY_MATCH_CONSENT_WORDING}
-                  </span>
-                </label>
-              ) : null}
-              <label className="flex cursor-pointer items-start gap-3">
+            <div className="mt-5 rounded-md border border-border bg-subtle p-4">
+              <div className="flex items-start gap-3">
                 <input
-                  id={`${id}-newsletter-opt-in`}
-                  ref={newsletterOptInRef}
+                  id={`${id}-privacy-acknowledged`}
                   type="checkbox"
-                  checked={values.newsletterOptIn}
+                  checked={values.privacyAcknowledged}
                   onChange={(event) =>
-                    update("newsletterOptIn", event.target.checked)
+                    update("privacyAcknowledged", event.target.checked)
                   }
-                  aria-invalid={Boolean(errors.newsletterOptIn)}
+                  required
+                  aria-required="true"
+                  aria-invalid={Boolean(errors.privacyAcknowledged)}
                   aria-describedby={
-                    errors.newsletterOptIn
-                      ? `${id}-newsletter-opt-in-error`
-                      : undefined
+                    errors.privacyAcknowledged
+                      ? `${id}-privacy-acknowledged-error`
+                      : `${id}-privacy-acknowledged-description`
                   }
                   className="mt-0.5 h-4 w-4 shrink-0 accent-estate-700"
                 />
-                <span className="text-sm leading-5 text-foreground">
-                  {MARKETING_CONSENT_WORDING}
-                </span>
-              </label>
-              {errors.newsletterOptIn ? (
-                <p
-                  id={`${id}-newsletter-opt-in-error`}
-                  role="alert"
-                  className="text-xs text-destructive"
-                >
-                  {errors.newsletterOptIn}
-                </p>
-              ) : null}
-            </div>
-
-            {supportsOverseasCashBuyer(values.interest) ? (
-              <div className="mt-3 rounded-md border border-border bg-surface p-4">
-                <label className="flex cursor-pointer items-start gap-3">
-                  <input
-                    id={`${id}-overseas-cash-buyer`}
-                    type="checkbox"
-                    checked={values.overseasCashBuyer}
-                    onChange={(event) =>
-                      update("overseasCashBuyer", event.target.checked)
-                    }
-                    className="mt-0.5 h-4 w-4 shrink-0 accent-estate-700"
-                  />
-                  <span className="text-sm leading-5 text-foreground">
-                    <strong>I am a cash buyer purchasing from overseas.</strong>{" "}
-                    <span className="text-muted-foreground">
-                      This helps us prepare the right adviser for an
-                      international cash purchase.
-                    </span>
-                  </span>
-                </label>
+                <div className="min-w-0">
+                  <Label
+                    htmlFor={`${id}-privacy-acknowledged`}
+                    className="cursor-pointer text-sm leading-5 text-foreground"
+                  >
+                    {PRIVACY_ACKNOWLEDGEMENT_WORDING}
+                  </Label>
+                  <p
+                    id={`${id}-privacy-acknowledged-description`}
+                    className="mt-1 text-xs leading-5 text-muted-foreground"
+                  >
+                    This acknowledgement is required to continue. It does not
+                    subscribe you to marketing. Read the{" "}
+                    <Link
+                      href="/legal/privacy-policy"
+                      target="_blank"
+                      className="font-medium text-estate-700 underline underline-offset-2"
+                    >
+                      Privacy Policy
+                    </Link>
+                    .
+                  </p>
+                  {errors.privacyAcknowledged ? (
+                    <p
+                      id={`${id}-privacy-acknowledged-error`}
+                      role="alert"
+                      className="mt-1 text-xs text-destructive"
+                    >
+                      {errors.privacyAcknowledged}
+                    </p>
+                  ) : null}
+                </div>
               </div>
-            ) : null}
-
-            <div className="sr-only" aria-hidden="true">
-              <Label htmlFor={`${id}-website`}>Website</Label>
-              <Input
-                id={`${id}-website`}
-                name="website"
-                value={values.website}
-                onChange={(event) => update("website", event.target.value)}
-                tabIndex={-1}
-                autoComplete="off"
-              />
             </div>
-
-            <p className="mt-4 text-xs leading-5 text-muted-foreground">
-              By submitting, you ask Haus of Estate to use these details to
-              respond to your enquiry. This is separate from optional email
-              marketing. Read our{" "}
-              <Link
-                href="/legal/privacy-policy"
-                target="_blank"
-                className="font-medium text-estate-700 underline underline-offset-2"
-              >
-                privacy policy
-              </Link>
-              .
-            </p>
-
-            {errors.request ? (
-              <div
-                ref={requestErrorRef}
-                tabIndex={-1}
-                role="alert"
-                className="mt-4 rounded-md border border-destructive/25 bg-destructive/5 p-3 text-sm text-destructive outline-none"
-              >
-                {errors.request}
-              </div>
-            ) : null}
           </section>
         ) : null}
 
@@ -990,11 +1073,7 @@ export function LeadEoiForm({
               </>
             ) : (
               <>
-                {isNewsletterOnly
-                  ? "Subscribe"
-                  : supportsPropertyMatches(values.interest)
-                    ? "Send my brief"
-                    : "Send enquiry"}
+                {finalSubmitLabel}
                 <ArrowRight aria-hidden="true" />
               </>
             )}

@@ -133,7 +133,10 @@ function fromV2(input: LeadIntakeV2Input): NormalizedLeadIntake {
     propertyMatchOptIn: input.propertyMatchOptIn,
     newsletterOptIn: input.newsletterOptIn,
     overseasCashBuyer: input.overseasCashBuyer,
-    enquiryConsentGiven: false,
+    enquiryConsentGiven:
+      input.formVersion === LEAD_FORM_VERSION
+        ? input.privacyAcknowledged
+        : false,
     formVersion: input.formVersion,
     privacyNoticeVersion: input.privacyNoticeVersion,
     context: {
@@ -231,11 +234,13 @@ export function hashNormalizedLead(input: NormalizedLeadIntake): string {
     project: input.project,
     contact: input.contact,
     ...(input.formVersion === LEAD_FORM_VERSION ||
+    input.formVersion === "2026-09-01.v3" ||
     input.formVersion === "2026-08-31.v2"
       ? { propertyMatchOptIn: input.propertyMatchOptIn }
       : {}),
     newsletterOptIn: input.newsletterOptIn,
-    ...(input.formVersion === LEAD_FORM_VERSION
+    ...(input.formVersion === LEAD_FORM_VERSION ||
+    input.formVersion === "2026-09-01.v3"
       ? { overseasCashBuyer: input.overseasCashBuyer }
       : {}),
     enquiryConsentGiven: input.enquiryConsentGiven,

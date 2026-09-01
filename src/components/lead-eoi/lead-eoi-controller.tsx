@@ -20,7 +20,7 @@ import type {
 } from "./types";
 
 const AUTO_POPUP_DELAY_MS = 3_000;
-const AUTO_POPUP_SESSION_KEY = "haus_lead_popup_seen_v3";
+const AUTO_POPUP_SESSION_KEY = "haus_lead_popup_seen_v4";
 
 const LazyLeadEoiModal = dynamic(
   () => import("./lead-eoi-modal").then((module) => module.LeadEoiModal),

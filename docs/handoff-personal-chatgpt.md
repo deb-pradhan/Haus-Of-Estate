@@ -12,6 +12,9 @@ Updated: 1 September 2026
 - Current stacked branch: `suryak02/lead-intake-qualifiers`
 - The qualifier PR should target `suryak02/lead-intake-foundation` until that
   dependency merges, then be rebased and retargeted to `main`.
+- Current contact-first branch: `suryak02/lead-intake-contact-first`
+- The contact-first PR should target `suryak02/lead-intake-qualifiers` until
+  that dependency merges, then be rebased and retargeted in sequence.
 
 ## Qualifier milestone implemented
 
@@ -28,10 +31,10 @@ no automated match is promised. The confirmation screen explains exactly which
 choices were made and links to Haus accounts on Instagram, LinkedIn, Facebook,
 Pinterest, YouTube, and X.
 
-The contact step also shows the same six social links before submission and an
-optional `I am a cash buyer purchasing from overseas` qualifier for buyer and
-investor briefs. This is stored as adviser context, not marketing consent, and
-is unchecked by default.
+The final Preferences step also shows the same six social links before
+submission and an optional `I am a cash buyer purchasing from overseas`
+qualifier for buyer and investor briefs. This is stored as adviser context, not
+marketing consent, and is unchecked by default.
 
 The API contract carries `propertyMatchOptIn`, `newsletterOptIn`, and
 `overseasCashBuyer`. PostgreSQL stores one immutable
@@ -50,6 +53,43 @@ context, recurring match emails, and newsletters. Launch is still blocked
 because the company number, registered address, and privacy-controller details
 are not confirmed.
 
+## Contact-first and privacy milestone implemented
+
+The shared popup and `/register-interest` form now follow this journey:
+
+1. Contact: first name and email, plus optional phone and message.
+2. Interest: buy, rent, invest, sell/let, or newsletter only.
+3. Preferences: country of interest, city/area/community, property details,
+   timeframe, adviser context, and any optional email choices.
+
+The former user-facing `Market` field is labelled `Country of interest` and
+contains country values. `City, area or community` remains a separate text
+field. For backward compatibility with the existing database and the approved
+Power Automate contract, the selected country continues to travel internally
+as `preferences.market` and the Excel heading remains `market` until Marketing
+approves a coordinated workbook/flow change.
+
+The Contact step includes a required, unchecked acknowledgement that the user
+has read the Privacy Policy and understands how Haus will use their details to
+respond. It is deliberately described and recorded as a transparency
+acknowledgement, not as the lawful basis for handling the enquiry and not as
+marketing consent. Recurring property-match emails and the newsletter remain
+separate, optional, unchecked choices on the final step. The selected country
+describes the property sought; it must not be treated as the user's residence,
+nationality, or a signal of which privacy regime applies.
+
+The form/privacy pair is versioned as `2026-09-01.v4` /
+`2026-09-01.v2`, and the exact notice snapshot is archived at
+`docs/legal/lead-notice-2026-09-01-v2.md`. Identical retries from prior form
+versions remain idempotent, while a new submission from an expired modern form
+is asked to refresh. No database migration was needed for this milestone.
+
+The Ras al Khaimah PDF has not been added because the approved asset is still
+pending. When supplied, the safer first release is a one-off `Email me the
+guide` request with its own delivery wording, alongside a separate optional
+newsletter checkbox. Receiving the guide must not silently subscribe someone
+to recurring marketing.
+
 ## Verification completed
 
 - Prisma schema validation and client generation pass.
@@ -57,6 +97,8 @@ are not confirmed.
 - 78 Vitest tests pass.
 - 12 Playwright desktop/mobile lead-intake tests pass, including a 320px
   overflow check.
+- The contact-first browser suite also covers required privacy acknowledgement,
+  the country/city split, old-version replay safety, and UAE adviser routing.
 - ESLint passes for all files changed in this milestone.
 - The repository-wide lint command still fails on pre-existing unrelated files;
   do not attribute those baseline errors to this branch.

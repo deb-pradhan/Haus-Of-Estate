@@ -10,6 +10,7 @@ function request(overrides: Record<string, unknown> = {}) {
     submissionId: "6bd94ff9-6dc6-4eff-8cb0-1bda245e595a",
     interest: "buy",
     contact: { firstName: "Alex", email: "alex@example.com" },
+    privacyAcknowledged: true,
     overseasCashBuyer: false,
     propertyMatchOptIn: false,
     newsletterOptIn: false,
@@ -27,6 +28,22 @@ describe("lead intake v2 contract", () => {
     if (result.success) {
       expect(result.data.overseasCashBuyer).toBe(false);
     }
+  });
+
+  it("requires the privacy acknowledgement only for the current form pair", () => {
+    expect(
+      leadIntakeV2Schema.safeParse(request({ privacyAcknowledged: false }))
+        .success,
+    ).toBe(false);
+    expect(
+      leadIntakeV2Schema.safeParse(
+        request({
+          privacyAcknowledged: false,
+          formVersion: "2026-09-01.v3",
+          privacyNoticeVersion: "2026-09-01",
+        }),
+      ).success,
+    ).toBe(true);
   });
 
   it("defaults an omitted overseas cash-buyer qualifier to false", () => {
@@ -106,6 +123,16 @@ describe("lead intake v2 contract", () => {
     expect(
       leadIntakeV2Schema.safeParse(
         request({
+          privacyAcknowledged: false,
+          formVersion: "2026-09-01.v3",
+          privacyNoticeVersion: "2026-09-01",
+        }),
+      ).success,
+    ).toBe(true);
+    expect(
+      leadIntakeV2Schema.safeParse(
+        request({
+          privacyAcknowledged: false,
           formVersion: "2026-08-31.v2",
           privacyNoticeVersion: "2026-08-31",
         }),
@@ -114,6 +141,7 @@ describe("lead intake v2 contract", () => {
     expect(
       leadIntakeV2Schema.safeParse(
         request({
+          privacyAcknowledged: false,
           formVersion: "2026-08-29.v1",
           privacyNoticeVersion: "2026-08-29",
         }),
@@ -126,6 +154,7 @@ describe("lead intake v2 contract", () => {
     expect(
       leadIntakeV2Schema.safeParse(
         request({
+          privacyAcknowledged: false,
           overseasCashBuyer: true,
           formVersion: "2026-08-31.v2",
           privacyNoticeVersion: "2026-08-31",
