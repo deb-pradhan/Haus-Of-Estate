@@ -40,13 +40,14 @@ export function PhoneInput({
     <div
       data-invalid={invalid || undefined}
       className={cn(
-        "hoe-phone-input flex h-11 w-full items-center gap-2 rounded-md border border-input bg-transparent px-3 text-base shadow-xs transition-[color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50 md:text-sm",
+        "hoe-phone-input flex h-11 w-full min-w-0 items-center gap-2 rounded-md border border-input bg-transparent px-3 text-base shadow-xs transition-[color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50 md:text-sm",
         invalid && "border-destructive ring-destructive/20",
         disabled && "pointer-events-none cursor-not-allowed opacity-50",
         className,
       )}
     >
       <PhoneInputBase
+        className="min-w-0 flex-1"
         id={id}
         value={value || undefined}
         onChange={(v) => onChange(v ?? "")}
@@ -60,7 +61,7 @@ export function PhoneInput({
           "aria-describedby": ariaDescribedBy,
           "aria-invalid": invalid || undefined,
           className:
-            "flex-1 bg-transparent text-foreground placeholder:text-muted-foreground outline-none border-0 py-1 pl-1 text-base md:text-sm",
+            "w-0 min-w-0 flex-1 border-0 bg-transparent py-1 pl-1 text-base text-foreground outline-none placeholder:text-muted-foreground md:text-sm",
         }}
       />
     </div>

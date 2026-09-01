@@ -20,7 +20,7 @@ import type {
 } from "./types";
 
 const AUTO_POPUP_DELAY_MS = 3_000;
-const AUTO_POPUP_SESSION_KEY = "haus_lead_popup_seen_v1";
+const AUTO_POPUP_SESSION_KEY = "haus_lead_popup_seen_v3";
 
 const LazyLeadEoiModal = dynamic(
   () => import("./lead-eoi-modal").then((module) => module.LeadEoiModal),
@@ -46,8 +46,12 @@ function isAutoPopupRoute(pathname: string): boolean {
     return true;
   }
 
-  return pathname === "/blog" || pathname.startsWith("/blog/") ||
-    pathname === "/properties" || pathname.startsWith("/properties/");
+  return (
+    pathname === "/blog" ||
+    pathname.startsWith("/blog/") ||
+    pathname === "/properties" ||
+    pathname.startsWith("/properties/")
+  );
 }
 
 function hasSeenAutoPopup(): boolean {
@@ -73,7 +77,9 @@ export function useLeadEoi() {
 export function LeadEoiProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [request, setRequest] = useState<LeadFormRequest | null>(null);
-  const [pageProject, setPageProject] = useState<LeadProjectContext | null>(null);
+  const [pageProject, setPageProject] = useState<LeadProjectContext | null>(
+    null,
+  );
   const returnFocusRef = useRef<HTMLElement | null>(null);
 
   const closeLead = useCallback(() => {

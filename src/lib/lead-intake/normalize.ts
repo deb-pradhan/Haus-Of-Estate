@@ -11,8 +11,7 @@ import {
 import { LeadValidationError } from "./errors";
 
 export type NormalizedLeadInterest =
-  | LeadIntakeV2Input["interest"]
-  | "general_enquiry";
+  LeadIntakeV2Input["interest"] | "general_enquiry";
 
 export interface NormalizedLeadIntake {
   submissionId: string;
@@ -33,7 +32,9 @@ export interface NormalizedLeadIntake {
     phone?: string;
     message?: string;
   };
+  propertyMatchOptIn: boolean;
   newsletterOptIn: boolean;
+  overseasCashBuyer: boolean;
   enquiryConsentGiven: boolean;
   formVersion: string;
   privacyNoticeVersion: string;
@@ -93,7 +94,9 @@ export function normalizePagePath(value: string): string {
   }
 }
 
-export function normalizeReferrer(value: string | undefined): string | undefined {
+export function normalizeReferrer(
+  value: string | undefined,
+): string | undefined {
   const referrer = compact(value);
   if (!referrer) return undefined;
   try {
@@ -127,7 +130,9 @@ function fromV2(input: LeadIntakeV2Input): NormalizedLeadIntake {
       phone: normalizePhone(input.contact.phone),
       message: compact(input.contact.message),
     },
+    propertyMatchOptIn: input.propertyMatchOptIn,
     newsletterOptIn: input.newsletterOptIn,
+    overseasCashBuyer: input.overseasCashBuyer,
     enquiryConsentGiven: false,
     formVersion: input.formVersion,
     privacyNoticeVersion: input.privacyNoticeVersion,
@@ -147,7 +152,8 @@ function fromV2(input: LeadIntakeV2Input): NormalizedLeadIntake {
 
 function legacyInterest(input: LegacyLeadInput): NormalizedLeadInterest {
   if (input.intent === "seller") return "sell_let";
-  if (input.intent === "invest" || input.useType === "investment") return "invest";
+  if (input.intent === "invest" || input.useType === "investment")
+    return "invest";
   if (input.intent === "buyer" && input.buyOrRent === "rent") return "rent";
   if (input.intent === "buyer") return "buy";
   return "general_enquiry";
@@ -171,7 +177,9 @@ function fromLegacy(input: LegacyLeadInput): NormalizedLeadIntake {
       email: input.email.trim().toLowerCase(),
       phone: normalizePhone(input.mobile),
     },
+    propertyMatchOptIn: false,
     newsletterOptIn: false,
+    overseasCashBuyer: false,
     enquiryConsentGiven: input.consentGiven,
     formVersion: "legacy.v1",
     privacyNoticeVersion: "legacy.enquiry-consent",
@@ -222,7 +230,14 @@ export function hashNormalizedLead(input: NormalizedLeadIntake): string {
     preferences: input.preferences,
     project: input.project,
     contact: input.contact,
+    ...(input.formVersion === LEAD_FORM_VERSION ||
+    input.formVersion === "2026-08-31.v2"
+      ? { propertyMatchOptIn: input.propertyMatchOptIn }
+      : {}),
     newsletterOptIn: input.newsletterOptIn,
+    ...(input.formVersion === LEAD_FORM_VERSION
+      ? { overseasCashBuyer: input.overseasCashBuyer }
+      : {}),
     enquiryConsentGiven: input.enquiryConsentGiven,
     formVersion: input.formVersion,
     privacyNoticeVersion: input.privacyNoticeVersion,

@@ -1,8 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import {
-  LEAD_FORM_VERSION,
-  PRIVACY_NOTICE_VERSION,
-} from "./contract";
+import { LEAD_FORM_VERSION, PRIVACY_NOTICE_VERSION } from "./contract";
 import { LeadConflictError, LeadRateLimitError } from "./errors";
 import {
   hashNormalizedLead,
@@ -19,6 +16,8 @@ function input(
     submissionId,
     interest: "buy",
     contact: { firstName: "Alex", email: "alex@example.com" },
+    overseasCashBuyer: false,
+    propertyMatchOptIn: false,
     newsletterOptIn: false,
     formVersion: LEAD_FORM_VERSION,
     privacyNoticeVersion: PRIVACY_NOTICE_VERSION,
@@ -53,7 +52,11 @@ describe("submitLeadIntake", () => {
       persistSubmission: vi.fn(),
     };
 
-    const result = await submitLeadIntake(value, "ip-hash", dependencies(store));
+    const result = await submitLeadIntake(
+      value,
+      "ip-hash",
+      dependencies(store),
+    );
     expect(result.created).toBe(false);
     expect(result.leadId).toBe("lead-existing");
     expect(store.persistSubmission).not.toHaveBeenCalled();

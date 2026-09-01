@@ -3,6 +3,7 @@ import {
   LEAD_FORM_VERSION,
   MARKETING_CONSENT_WORDING,
   PRIVACY_NOTICE_VERSION,
+  PROPERTY_MATCH_CONSENT_WORDING,
 } from "./contract";
 import { LeadConflictError, LeadRateLimitError } from "./errors";
 import { hashNormalizedLead, normalizeLeadRequest } from "./normalize";
@@ -11,7 +12,11 @@ import {
   type PersistLeadSubmission,
 } from "./persistence";
 
-function normalized(newsletterOptIn = false) {
+function normalized(
+  propertyMatchOptIn = false,
+  newsletterOptIn = false,
+  overseasCashBuyer = false,
+) {
   return normalizeLeadRequest({
     submissionId: "6bd94ff9-6dc6-4eff-8cb0-1bda245e595a",
     interest: "buy",
@@ -27,6 +32,8 @@ function normalized(newsletterOptIn = false) {
       firstName: "Alex",
       email: "alex@example.com",
     },
+    overseasCashBuyer,
+    propertyMatchOptIn,
     newsletterOptIn,
     formVersion: LEAD_FORM_VERSION,
     privacyNoticeVersion: PRIVACY_NOTICE_VERSION,
@@ -34,8 +41,16 @@ function normalized(newsletterOptIn = false) {
   });
 }
 
-function submission(newsletterOptIn = false): PersistLeadSubmission {
-  const input = normalized(newsletterOptIn);
+function submission(
+  propertyMatchOptIn = false,
+  newsletterOptIn = false,
+  overseasCashBuyer = false,
+): PersistLeadSubmission {
+  const input = normalized(
+    propertyMatchOptIn,
+    newsletterOptIn,
+    overseasCashBuyer,
+  );
   return {
     input,
     payloadHash: hashNormalizedLead(input),
@@ -78,6 +93,22 @@ function database(overrides: Record<string, unknown> = {}) {
     newsletterConsentEvent: {
       create: vi.fn(async () => ({ id: "consent-event-id" })),
     },
+    propertyMatchSubscription: {
+      findUnique: vi.fn(async () => null),
+      create: vi.fn(async () => ({
+        id: "match-subscription-id",
+        consentedAt: new Date("2026-08-29T12:00:00.000Z"),
+        withdrawnAt: null,
+      })),
+      update: vi.fn(async () => ({
+        id: "match-subscription-id",
+        consentedAt: new Date("2026-08-29T12:00:00.000Z"),
+        withdrawnAt: null,
+      })),
+    },
+    propertyMatchConsentEvent: {
+      create: vi.fn(async () => ({ id: "match-consent-event-id" })),
+    },
     leadDeliveryOutbox: {
       create: vi.fn(async () => ({ id: "outbox-id" })),
     },
@@ -98,7 +129,7 @@ describe("Prisma lead intake transaction", () => {
     const { client, transaction } = database();
     const store = createPrismaLeadIntakeStore(client as never);
 
-    const result = await store.persistSubmission(submission(true));
+    const result = await store.persistSubmission(submission(true, true, true));
 
     expect(result).toMatchObject({
       created: true,
@@ -110,6 +141,8 @@ describe("Prisma lead intake transaction", () => {
         data: expect.objectContaining({
           email: "alex@example.com",
           phone: null,
+          overseasCashBuyer: true,
+          propertyMatchOptIn: true,
           newsletterOptIn: true,
         }),
       }),
@@ -121,6 +154,13 @@ describe("Prisma lead intake transaction", () => {
         wording: MARKETING_CONSENT_WORDING,
       }),
     });
+    expect(transaction.propertyMatchConsentEvent.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        leadId: "lead-id",
+        type: "OPT_IN",
+        wording: PROPERTY_MATCH_CONSENT_WORDING,
+      }),
+    });
     expect(transaction.leadDeliveryOutbox.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         id: "outbox-id",
@@ -129,6 +169,9 @@ describe("Prisma lead intake transaction", () => {
           eventId: "outbox-id",
           leadId: "lead-id",
           row: expect.objectContaining({
+            overseasCashBuyer: true,
+            propertyMatchOptIn: true,
+            newsletterOptIn: true,
             source: "modal",
             landingPage: "/properties/example",
           }),
@@ -140,12 +183,36 @@ describe("Prisma lead intake transaction", () => {
   it("does not create newsletter state when the optional checkbox is clear", async () => {
     const { client, transaction } = database();
     const store = createPrismaLeadIntakeStore(client as never);
-    await store.persistSubmission(submission(false));
+    await store.persistSubmission(submission(false, false));
 
     expect(transaction.newsletterSubscription.create).not.toHaveBeenCalled();
     expect(transaction.newsletterSubscription.update).not.toHaveBeenCalled();
     expect(transaction.newsletterConsentEvent.create).not.toHaveBeenCalled();
+    expect(transaction.propertyMatchSubscription.create).not.toHaveBeenCalled();
+    expect(transaction.propertyMatchSubscription.update).not.toHaveBeenCalled();
+    expect(transaction.propertyMatchConsentEvent.create).not.toHaveBeenCalled();
     expect(transaction.leadDeliveryOutbox.create).toHaveBeenCalledOnce();
+  });
+
+  it("persists cash-buyer context without creating consent state", async () => {
+    const { client, transaction } = database();
+    const store = createPrismaLeadIntakeStore(client as never);
+    await store.persistSubmission(submission(false, false, true));
+
+    expect(transaction.lead.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ overseasCashBuyer: true }),
+      }),
+    );
+    expect(transaction.newsletterConsentEvent.create).not.toHaveBeenCalled();
+    expect(transaction.propertyMatchConsentEvent.create).not.toHaveBeenCalled();
+    expect(transaction.leadDeliveryOutbox.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        payload: expect.objectContaining({
+          row: expect.objectContaining({ overseasCashBuyer: true }),
+        }),
+      }),
+    });
   });
 
   it("records a stale opt-in event without overriding a newer withdrawal", async () => {
@@ -158,7 +225,7 @@ describe("Prisma lead intake transaction", () => {
     } as never);
     const store = createPrismaLeadIntakeStore(client as never);
 
-    await store.persistSubmission(submission(true));
+    await store.persistSubmission(submission(false, true));
 
     expect(transaction.newsletterSubscription.update).not.toHaveBeenCalled();
     expect(transaction.newsletterConsentEvent.create).toHaveBeenCalledWith({
@@ -187,7 +254,9 @@ describe("Prisma lead intake transaction", () => {
 
   it("does not enqueue delivery when database lead creation fails", async () => {
     const { client, transaction } = database();
-    transaction.lead.create.mockRejectedValue(new Error("database unavailable"));
+    transaction.lead.create.mockRejectedValue(
+      new Error("database unavailable"),
+    );
     const store = createPrismaLeadIntakeStore(client as never);
 
     await expect(store.persistSubmission(submission())).rejects.toThrow(

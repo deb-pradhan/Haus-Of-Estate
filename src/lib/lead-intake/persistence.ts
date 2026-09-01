@@ -1,11 +1,11 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { db } from "@/lib/db";
 import { buildLeadDeliveryPayload } from "@/lib/lead-delivery";
-import { MARKETING_CONSENT_WORDING } from "./contract";
 import {
-  LeadConflictError,
-  LeadRateLimitError,
-} from "./errors";
+  PROPERTY_MATCH_CONSENT_WORDING,
+  newsletterConsentWordingFor,
+} from "./contract";
+import { LeadConflictError, LeadRateLimitError } from "./errors";
 import type { NormalizedLeadIntake } from "./normalize";
 import type { PublishedProjectContext } from "./project";
 
@@ -199,7 +199,9 @@ export function createPrismaLeadIntakeStore(
               tier: scoring.tier,
               routing: scoring.routing,
               consentGiven: input.enquiryConsentGiven,
+              propertyMatchOptIn: input.propertyMatchOptIn,
               newsletterOptIn: input.newsletterOptIn,
+              overseasCashBuyer: input.overseasCashBuyer,
               formVersion: input.formVersion,
               privacyNoticeVersion: input.privacyNoticeVersion,
               formSurface: input.context.surface,
@@ -214,6 +216,66 @@ export function createPrismaLeadIntakeStore(
               createdAt: submission.submittedAt,
             },
           });
+
+          if (input.propertyMatchOptIn) {
+            await transaction.$executeRaw`
+              SELECT pg_advisory_xact_lock(hashtext(${`property-match:${input.contact.email}`}))
+            `;
+            const existingSubscription =
+              await transaction.propertyMatchSubscription.findUnique({
+                where: { email: input.contact.email },
+              });
+            const latestStateAt = existingSubscription
+              ? Math.max(
+                  existingSubscription.consentedAt?.getTime() ?? 0,
+                  existingSubscription.withdrawnAt?.getTime() ?? 0,
+                )
+              : 0;
+            const criteria: Prisma.InputJsonObject = {
+              interest: input.interest,
+              market: input.preferences.market ?? null,
+              location: input.preferences.location ?? null,
+              propertyType: input.preferences.propertyType ?? null,
+              bedrooms: input.preferences.bedrooms ?? null,
+              bathrooms: input.preferences.bathrooms ?? null,
+              timeframe: input.preferences.timeframe ?? null,
+              projectSlug: project?.slug ?? input.project?.slug ?? null,
+            };
+            const subscription = !existingSubscription
+              ? await transaction.propertyMatchSubscription.create({
+                  data: {
+                    email: input.contact.email,
+                    status: "ACTIVE",
+                    criteria,
+                    consentedAt: submission.submittedAt,
+                  },
+                })
+              : latestStateAt < submission.submittedAt.getTime()
+                ? await transaction.propertyMatchSubscription.update({
+                    where: { id: existingSubscription.id },
+                    data: {
+                      status: "ACTIVE",
+                      criteria,
+                      consentedAt: submission.submittedAt,
+                      withdrawnAt: null,
+                    },
+                  })
+                : existingSubscription;
+            await transaction.propertyMatchConsentEvent.create({
+              data: {
+                subscriptionId: subscription.id,
+                leadId: lead.id,
+                type: "OPT_IN",
+                wording: PROPERTY_MATCH_CONSENT_WORDING,
+                privacyNoticeVersion: input.privacyNoticeVersion,
+                formVersion: input.formVersion,
+                pageContext: input.context.pagePath,
+                source: input.context.utmSource ?? input.context.surface,
+                campaign: input.context.utmCampaign ?? null,
+                createdAt: submission.submittedAt,
+              },
+            });
+          }
 
           if (input.newsletterOptIn) {
             await transaction.$executeRaw`
@@ -252,7 +314,7 @@ export function createPrismaLeadIntakeStore(
                 subscriptionId: subscription.id,
                 leadId: lead.id,
                 type: "OPT_IN",
-                wording: MARKETING_CONSENT_WORDING,
+                wording: newsletterConsentWordingFor(input.formVersion),
                 privacyNoticeVersion: input.privacyNoticeVersion,
                 formVersion: input.formVersion,
                 pageContext: input.context.pagePath,
@@ -279,7 +341,9 @@ export function createPrismaLeadIntakeStore(
             bathrooms: input.preferences.bathrooms,
             timeframe: input.preferences.timeframe,
             project: project?.title,
+            propertyMatchOptIn: input.propertyMatchOptIn,
             newsletterOptIn: input.newsletterOptIn,
+            overseasCashBuyer: input.overseasCashBuyer,
             source: input.context.utmSource ?? input.context.surface,
             campaign: input.context.utmCampaign,
             landingPage: input.context.pagePath,

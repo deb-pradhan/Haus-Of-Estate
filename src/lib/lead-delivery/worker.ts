@@ -1,5 +1,5 @@
 import { classifyDeliveryError } from "./errors";
-import { isLeadDeliveryPayload } from "./payload";
+import { normalizeLeadDeliveryPayload } from "./payload";
 import type {
   LeadDeliveryLogger,
   LeadDeliveryOutboxRecord,
@@ -35,7 +35,8 @@ async function processClaimedRecord(
   const { repository, transport, options } = dependencies;
   const now = dependencies.now ?? (() => new Date());
 
-  if (!isLeadDeliveryPayload(record.payload)) {
+  const payload = normalizeLeadDeliveryPayload(record.payload);
+  if (!payload) {
     const changed = await repository.markDeadLetter(
       record.id,
       options.workerId,
@@ -45,7 +46,7 @@ async function processClaimedRecord(
   }
 
   try {
-    await transport.deliver(record.payload);
+    await transport.deliver(payload);
     const changed = await repository.markDelivered(
       record.id,
       options.workerId,

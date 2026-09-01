@@ -32,6 +32,8 @@ function v2(overrides: Record<string, unknown> = {}) {
     submissionId: "6bd94ff9-6dc6-4eff-8cb0-1bda245e595a",
     interest: "buy",
     contact: { firstName: "Alex", email: "alex@example.com" },
+    overseasCashBuyer: false,
+    propertyMatchOptIn: false,
     newsletterOptIn: false,
     formVersion: LEAD_FORM_VERSION,
     privacyNoticeVersion: PRIVACY_NOTICE_VERSION,
@@ -76,7 +78,9 @@ describe("POST /api/leads", () => {
     const response = await POST(request(v2()));
     expect(response.status).toBe(201);
     expect(mocks.submitLeadIntake).toHaveBeenCalledOnce();
-    expect(mocks.attemptImmediateLeadDelivery).toHaveBeenCalledWith("outbox-id");
+    expect(mocks.attemptImmediateLeadDelivery).toHaveBeenCalledWith(
+      "outbox-id",
+    );
   });
 
   it("returns 200 for an identical idempotent replay", async () => {
@@ -91,6 +95,40 @@ describe("POST /api/leads", () => {
     const response = await POST(request(v2()));
     expect(response.status).toBe(200);
     expect(mocks.attemptImmediateLeadDelivery).not.toHaveBeenCalled();
+  });
+
+  it("requires an explicit newsletter choice for newsletter-only requests", async () => {
+    const rejected = await POST(request(v2({ interest: "newsletter_only" })));
+    expect(rejected.status).toBe(400);
+    expect(mocks.submitLeadIntake).not.toHaveBeenCalled();
+
+    const accepted = await POST(
+      request(v2({ interest: "newsletter_only", newsletterOptIn: true })),
+    );
+    expect(accepted.status).toBe(201);
+    expect(mocks.submitLeadIntake).toHaveBeenCalledWith(
+      expect.objectContaining({
+        interest: "newsletter_only",
+        overseasCashBuyer: false,
+        propertyMatchOptIn: false,
+        newsletterOptIn: true,
+      }),
+      expect.any(String),
+    );
+  });
+
+  it("passes the optional overseas cash-buyer qualifier to persistence", async () => {
+    const response = await POST(request(v2({ overseasCashBuyer: true })));
+
+    expect(response.status).toBe(201);
+    expect(mocks.submitLeadIntake).toHaveBeenCalledWith(
+      expect.objectContaining({
+        overseasCashBuyer: true,
+        propertyMatchOptIn: false,
+        newsletterOptIn: false,
+      }),
+      expect.any(String),
+    );
   });
 
   it("keeps legacy submissions working while v2 is disabled", async () => {
@@ -145,9 +183,12 @@ describe("POST /api/leads", () => {
     [new LeadConflictError(), 409],
     [new LeadRateLimitError(60), 429],
     [new LeadInfrastructureError(), 503],
-  ])("maps expected service errors without leaking details", async (error, status) => {
-    mocks.submitLeadIntake.mockRejectedValueOnce(error);
-    const response = await POST(request(v2()));
-    expect(response.status).toBe(status);
-  });
+  ])(
+    "maps expected service errors without leaking details",
+    async (error, status) => {
+      mocks.submitLeadIntake.mockRejectedValueOnce(error);
+      const response = await POST(request(v2()));
+      expect(response.status).toBe(status);
+    },
+  );
 });

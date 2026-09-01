@@ -1,9 +1,17 @@
 import { z } from "zod";
 
-export const LEAD_FORM_VERSION = "2026-08-29.v1";
-export const PRIVACY_NOTICE_VERSION = "2026-08-29";
+export const LEAD_FORM_VERSION = "2026-09-01.v3";
+export const PRIVACY_NOTICE_VERSION = "2026-09-01";
+const PROPERTY_MATCH_LEAD_FORM_VERSION = "2026-08-31.v2";
+const PROPERTY_MATCH_PRIVACY_NOTICE_VERSION = "2026-08-31";
+const INITIAL_LEAD_FORM_VERSION = "2026-08-29.v1";
+const INITIAL_PRIVACY_NOTICE_VERSION = "2026-08-29";
 export const MARKETING_CONSENT_WORDING =
+  "Email me the Haus of Estate newsletter, including market reports, blog highlights and new developments. I can unsubscribe at any time.";
+const PREVIOUS_MARKETING_CONSENT_WORDING =
   "I would like to receive property news, insights and offers from Haus of Estate by email. I can unsubscribe at any time.";
+export const PROPERTY_MATCH_CONSENT_WORDING =
+  "Email me properties and opportunities matching this brief. I can unsubscribe at any time.";
 
 export const leadInterestSchema = z.enum([
   "buy",
@@ -49,9 +57,19 @@ export const leadIntakeV2Schema = z
         message: optionalString(2_000),
       })
       .strict(),
+    propertyMatchOptIn: z.boolean().default(false),
     newsletterOptIn: z.boolean().default(false),
-    formVersion: z.literal(LEAD_FORM_VERSION),
-    privacyNoticeVersion: z.literal(PRIVACY_NOTICE_VERSION),
+    overseasCashBuyer: z.boolean().default(false),
+    formVersion: z.enum([
+      LEAD_FORM_VERSION,
+      PROPERTY_MATCH_LEAD_FORM_VERSION,
+      INITIAL_LEAD_FORM_VERSION,
+    ]),
+    privacyNoticeVersion: z.enum([
+      PRIVACY_NOTICE_VERSION,
+      PROPERTY_MATCH_PRIVACY_NOTICE_VERSION,
+      INITIAL_PRIVACY_NOTICE_VERSION,
+    ]),
     context: z
       .object({
         surface: z.enum([
@@ -71,9 +89,82 @@ export const leadIntakeV2Schema = z
       .strict(),
     website: z.string().max(200).optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((input, context) => {
+    const hasCurrentVersion =
+      input.formVersion === LEAD_FORM_VERSION &&
+      input.privacyNoticeVersion === PRIVACY_NOTICE_VERSION;
+    const hasPropertyMatchVersion =
+      input.formVersion === PROPERTY_MATCH_LEAD_FORM_VERSION &&
+      input.privacyNoticeVersion === PROPERTY_MATCH_PRIVACY_NOTICE_VERSION;
+    const hasInitialVersion =
+      input.formVersion === INITIAL_LEAD_FORM_VERSION &&
+      input.privacyNoticeVersion === INITIAL_PRIVACY_NOTICE_VERSION;
+    if (!hasCurrentVersion && !hasPropertyMatchVersion && !hasInitialVersion) {
+      context.addIssue({
+        code: "custom",
+        path: ["formVersion"],
+        message: "Form and privacy notice versions must match.",
+      });
+    }
+
+    if (input.interest === "newsletter_only" && !input.newsletterOptIn) {
+      context.addIssue({
+        code: "custom",
+        path: ["newsletterOptIn"],
+        message: "Confirm that you want to receive the newsletter.",
+      });
+    }
+
+    if (
+      input.propertyMatchOptIn &&
+      !["buy", "rent", "invest"].includes(input.interest)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["propertyMatchOptIn"],
+        message:
+          "Property match alerts require a buyer, renter or investor brief.",
+      });
+    }
+    if (
+      input.propertyMatchOptIn &&
+      !hasCurrentVersion &&
+      !hasPropertyMatchVersion
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["propertyMatchOptIn"],
+        message: "Property match alerts require the current consent notice.",
+      });
+    }
+
+    if (
+      input.overseasCashBuyer &&
+      !["buy", "invest"].includes(input.interest)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["overseasCashBuyer"],
+        message: "The overseas cash-buyer qualifier requires a purchase brief.",
+      });
+    }
+    if (input.overseasCashBuyer && !hasCurrentVersion) {
+      context.addIssue({
+        code: "custom",
+        path: ["overseasCashBuyer"],
+        message: "The overseas cash-buyer qualifier requires the current form.",
+      });
+    }
+  });
 
 export type LeadIntakeV2Input = z.infer<typeof leadIntakeV2Schema>;
+
+export function newsletterConsentWordingFor(formVersion: string): string {
+  return formVersion === INITIAL_LEAD_FORM_VERSION
+    ? PREVIOUS_MARKETING_CONSENT_WORDING
+    : MARKETING_CONSENT_WORDING;
+}
 
 export const legacyLeadSchema = z
   .object({

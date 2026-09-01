@@ -15,19 +15,15 @@ import {
   MessageSquareText,
   TrendingUp,
 } from "lucide-react";
-import {
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  type FormEvent,
-} from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import {
   LEAD_FORM_VERSION,
   MARKETING_CONSENT_WORDING,
   PRIVACY_NOTICE_VERSION,
+  PROPERTY_MATCH_CONSENT_WORDING,
   type LeadIntakeV2Input,
 } from "@/lib/lead-intake/contract";
+import { SocialProfileLinks } from "@/components/social/social-profile-links";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,11 +32,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { trackLeadEvent } from "./analytics";
 import { getLeadAttribution, primeLeadAttribution } from "./attribution";
-import type {
-  LeadInterest,
-  LeadProjectContext,
-  LeadSurface,
-} from "./types";
+import type { LeadInterest, LeadProjectContext, LeadSurface } from "./types";
 
 const INTEREST_OPTIONS: Array<{
   value: LeadInterest;
@@ -125,7 +117,9 @@ interface FormValues {
   email: string;
   phone: string;
   message: string;
+  propertyMatchOptIn: boolean;
   newsletterOptIn: boolean;
+  overseasCashBuyer: boolean;
   website: string;
 }
 
@@ -134,11 +128,13 @@ interface FormErrors {
   firstName?: string;
   email?: string;
   phone?: string;
+  newsletterOptIn?: string;
   request?: string;
 }
 
 function inferMarket(project?: LeadProjectContext) {
-  const place = `${project?.city ?? ""} ${project?.country ?? ""}`.toLowerCase();
+  const place =
+    `${project?.city ?? ""} ${project?.country ?? ""}`.toLowerCase();
   if (place.includes("dubai") || place.includes("emirates")) return "Dubai";
   if (place.includes("united kingdom") || place.includes(" uk")) return "UK";
   if (place.includes("bali") || place.includes("indonesia")) return "Bali";
@@ -176,7 +172,9 @@ function initialValues(
     email: initialEmail ?? "",
     phone: "",
     message: "",
+    propertyMatchOptIn: false,
     newsletterOptIn: false,
+    overseasCashBuyer: false,
     website: "",
   };
 }
@@ -190,16 +188,27 @@ function optionsWithCurrentValue(options: string[], value: string): string[] {
   return value && !options.includes(value) ? [value, ...options] : options;
 }
 
+function supportsPropertyMatches(interest: LeadInterest | "") {
+  return interest === "buy" || interest === "rent" || interest === "invest";
+}
+
+function supportsOverseasCashBuyer(interest: LeadInterest | "") {
+  return interest === "buy" || interest === "invest";
+}
+
 function createSubmissionId() {
   if (typeof globalThis.crypto?.randomUUID === "function") {
     return globalThis.crypto.randomUUID();
   }
 
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (character) => {
-    const random = Math.floor(Math.random() * 16);
-    const value = character === "x" ? random : (random & 0x3) | 0x8;
-    return value.toString(16);
-  });
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+    /[xy]/g,
+    (character) => {
+      const random = Math.floor(Math.random() * 16);
+      const value = character === "x" ? random : (random & 0x3) | 0x8;
+      return value.toString(16);
+    },
+  );
 }
 
 export function LeadEoiForm({
@@ -217,13 +226,16 @@ export function LeadEoiForm({
   );
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
-  const [submittedValues, setSubmittedValues] = useState<FormValues | null>(null);
+  const [submittedValues, setSubmittedValues] = useState<FormValues | null>(
+    null,
+  );
   const submissionId = useRef(createSubmissionId());
   const hasStarted = useRef(false);
   const hasTrackedView = useRef(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const requestErrorRef = useRef<HTMLDivElement>(null);
   const successRef = useRef<HTMLDivElement>(null);
+  const newsletterOptInRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (hasTrackedView.current) return;
@@ -244,6 +256,11 @@ export function LeadEoiForm({
     window.requestAnimationFrame(() => successRef.current?.focus());
   }, [submitState]);
 
+  useEffect(() => {
+    if (!errors.newsletterOptIn) return;
+    window.requestAnimationFrame(() => newsletterOptInRef.current?.focus());
+  }, [errors.newsletterOptIn]);
+
   const markStarted = (interest?: LeadInterest) => {
     if (hasStarted.current) return;
     hasStarted.current = true;
@@ -256,11 +273,30 @@ export function LeadEoiForm({
     });
   };
 
-  const update = <Key extends keyof FormValues>(key: Key, value: FormValues[Key]) => {
-    markStarted(key === "interest" && value ? (value as LeadInterest) : undefined);
-    setValues((current) => ({ ...current, [key]: value }));
+  const update = <Key extends keyof FormValues>(
+    key: Key,
+    value: FormValues[Key],
+  ) => {
+    markStarted(
+      key === "interest" && value ? (value as LeadInterest) : undefined,
+    );
+    setValues((current) => ({
+      ...current,
+      [key]: value,
+      ...(key === "interest" && !supportsPropertyMatches(value as LeadInterest)
+        ? { propertyMatchOptIn: false }
+        : {}),
+      ...(key === "interest" &&
+      !supportsOverseasCashBuyer(value as LeadInterest)
+        ? { overseasCashBuyer: false }
+        : {}),
+    }));
     if (key in errors) {
-      setErrors((current) => ({ ...current, [key]: undefined, request: undefined }));
+      setErrors((current) => ({
+        ...current,
+        [key]: undefined,
+        request: undefined,
+      }));
     } else if (errors.request) {
       setErrors((current) => ({ ...current, request: undefined }));
     }
@@ -286,6 +322,10 @@ export function LeadEoiForm({
       if (values.phone && !isValidMobile(values.phone)) {
         nextErrors.phone = "Enter a valid phone number or leave this blank.";
       }
+      if (values.interest === "newsletter_only" && !values.newsletterOptIn) {
+        nextErrors.newsletterOptIn =
+          "Choose the newsletter option to complete this subscription.";
+      }
     }
 
     setErrors(nextErrors);
@@ -297,7 +337,9 @@ export function LeadEoiForm({
           ? `${id}-email`
           : nextErrors.phone
             ? `${id}-phone`
-            : undefined;
+            : nextErrors.newsletterOptIn
+              ? `${id}-newsletter-opt-in`
+              : undefined;
     if (firstInvalidId) {
       window.requestAnimationFrame(() =>
         document.getElementById(firstInvalidId)?.focus(),
@@ -346,7 +388,9 @@ export function LeadEoiForm({
         phone: optional(submitted.phone),
         message: optional(submitted.message),
       },
+      propertyMatchOptIn: submitted.propertyMatchOptIn,
       newsletterOptIn: submitted.newsletterOptIn,
+      overseasCashBuyer: submitted.overseasCashBuyer,
       formVersion: LEAD_FORM_VERSION,
       privacyNoticeVersion: PRIVACY_NOTICE_VERSION,
       context: getLeadAttribution(surface),
@@ -361,15 +405,16 @@ export function LeadEoiForm({
       });
 
       if (!response.ok) {
-        const responseBody = (await response.json().catch(() => null)) as
-          | { error?: string }
-          | null;
+        const responseBody = (await response.json().catch(() => null)) as {
+          error?: string;
+        } | null;
         const friendlyMessage =
           response.status === 429
             ? "We have received several requests from this connection. Please wait a few minutes and try again."
             : response.status >= 500
               ? "We could not save your enquiry just now. Please try again."
-              : responseBody?.error || "Please check your details and try again.";
+              : responseBody?.error ||
+                "Please check your details and try again.";
         throw new Error(friendlyMessage);
       }
 
@@ -425,16 +470,27 @@ export function LeadEoiForm({
           <Check className="h-7 w-7" aria-hidden="true" />
         </div>
         <h2 className="mt-5 font-serif text-3xl font-medium text-estate-700">
-          {successValues.newsletterOptIn
-            ? "Thank you for registering"
-            : "Enquiry received"}
+          {successValues.interest === "newsletter_only"
+            ? "Subscription confirmed"
+            : supportsPropertyMatches(successValues.interest)
+              ? "Brief received"
+              : "Enquiry received"}
         </h2>
         <p className="mt-3 max-w-md text-sm leading-6 text-muted-foreground">
-          {successValues.interest === "newsletter_only" &&
-          successValues.newsletterOptIn
+          {successValues.interest === "newsletter_only"
             ? "You are subscribed to Haus of Estate property news and insights."
-            : "Our team has your details and will respond about your enquiry as soon as possible."}
+            : successValues.propertyMatchOptIn && successValues.newsletterOptIn
+              ? "Our team will respond to your brief. You will also receive matching property opportunities and the Haus of Estate newsletter."
+              : successValues.propertyMatchOptIn
+                ? "Our team will respond to your brief. You will also receive property opportunities matching it."
+                : successValues.newsletterOptIn
+                  ? "Our team will respond to your enquiry. You are also subscribed to the Haus of Estate newsletter."
+                  : "Our team has your details and will respond about your enquiry as soon as possible."}
         </p>
+        <p className="mt-6 text-xs font-semibold uppercase text-muted-foreground">
+          Follow along
+        </p>
+        <SocialProfileLinks className="mt-2 justify-center" />
         <div className="mt-7 flex flex-wrap justify-center gap-3">
           {modal && onClose ? (
             <Button type="button" onClick={onClose}>
@@ -466,386 +522,484 @@ export function LeadEoiForm({
         disabled={submitState === "submitting"}
         className="min-w-0 border-0 p-0"
       >
-      {project ? (
-        <div className="mb-5 flex items-start gap-3 rounded-md border border-estate-700/15 bg-estate-700/[0.04] p-3.5">
-          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-estate-700" aria-hidden="true" />
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase text-estate-700">
-              Selected property
-            </p>
-            <p className="truncate text-sm font-medium text-foreground">
-              {project.title ?? project.slug}
-            </p>
-            {project.community || project.city ? (
-              <p className="truncate text-xs text-muted-foreground">
-                {[project.community, project.city].filter(Boolean).join(", ")}
+        {project ? (
+          <div className="mb-5 flex items-start gap-3 rounded-md border border-estate-700/15 bg-estate-700/[0.04] p-3.5">
+            <MapPin
+              className="mt-0.5 h-4 w-4 shrink-0 text-estate-700"
+              aria-hidden="true"
+            />
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase text-estate-700">
+                Selected property
               </p>
-            ) : null}
+              <p className="truncate text-sm font-medium text-foreground">
+                {project.title ?? project.slug}
+              </p>
+              {project.community || project.city ? (
+                <p className="truncate text-xs text-muted-foreground">
+                  {[project.community, project.city].filter(Boolean).join(", ")}
+                </p>
+              ) : null}
+            </div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
 
-      <ol className="mb-6 grid grid-cols-3 gap-2" aria-label="Enquiry progress">
-        {["Interest", "Preferences", "Contact"].map((label, index) => {
-          const number = index + 1;
-          const current = step === number;
-          const complete = step > number;
-          return (
-            <li key={label} aria-current={current ? "step" : undefined}>
-              <div
-                className={cn(
-                  "h-1 rounded-full",
-                  current || complete ? "bg-estate-700" : "bg-border",
-                )}
+        <ol
+          className="mb-6 grid grid-cols-3 gap-2"
+          aria-label="Enquiry progress"
+        >
+          {["Interest", "Preferences", "Contact"].map((label, index) => {
+            const number = index + 1;
+            const current = step === number;
+            const complete = step > number;
+            return (
+              <li key={label} aria-current={current ? "step" : undefined}>
+                <div
+                  className={cn(
+                    "h-1 rounded-full",
+                    current || complete ? "bg-estate-700" : "bg-border",
+                  )}
+                />
+                <span
+                  className={cn(
+                    "mt-1.5 block text-[11px] font-medium",
+                    current ? "text-estate-700" : "text-muted-foreground",
+                  )}
+                >
+                  {number}. {label}
+                </span>
+              </li>
+            );
+          })}
+        </ol>
+
+        {step === 1 ? (
+          <section aria-labelledby={`${id}-step-title`}>
+            <h2
+              id={`${id}-step-title`}
+              ref={headingRef}
+              tabIndex={-1}
+              className="font-serif text-2xl font-medium text-estate-700 outline-none sm:text-3xl"
+            >
+              How can we help?
+            </h2>
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              Choose one option. You can add more detail on the next step.
+            </p>
+            <fieldset className="mt-5">
+              <legend className="sr-only">Your property interest</legend>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {INTEREST_OPTIONS.map((option) => {
+                  const Icon = option.icon;
+                  return (
+                    <label
+                      key={option.value}
+                      htmlFor={`${id}-${option.value}`}
+                      className={cn(
+                        "flex min-h-20 cursor-pointer items-start gap-3 rounded-md border bg-surface p-3.5 transition-colors focus-within:ring-2 focus-within:ring-ring/50",
+                        values.interest === option.value
+                          ? "border-estate-700 bg-estate-700/[0.04]"
+                          : "border-border hover:border-estate-700/40",
+                        option.value === "newsletter_only" && "sm:col-span-2",
+                      )}
+                    >
+                      <input
+                        id={`${id}-${option.value}`}
+                        type="radio"
+                        name={`${id}-interest`}
+                        value={option.value}
+                        checked={values.interest === option.value}
+                        onChange={() => update("interest", option.value)}
+                        className="sr-only"
+                      />
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-estate-700/10 text-estate-700">
+                        <Icon className="h-4 w-4" aria-hidden="true" />
+                      </span>
+                      <span>
+                        <span className="block text-sm font-semibold text-foreground">
+                          {option.label}
+                        </span>
+                        <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">
+                          {option.description}
+                        </span>
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+              {errors.interest ? (
+                <p className="mt-2 text-sm text-destructive" role="alert">
+                  {errors.interest}
+                </p>
+              ) : null}
+            </fieldset>
+          </section>
+        ) : null}
+
+        {step === 2 ? (
+          <section aria-labelledby={`${id}-step-title`}>
+            <h2
+              id={`${id}-step-title`}
+              ref={headingRef}
+              tabIndex={-1}
+              className="font-serif text-2xl font-medium text-estate-700 outline-none sm:text-3xl"
+            >
+              {isNewsletterOnly ? "What interests you?" : "Shape your search"}
+            </h2>
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              All preferences are optional. Share only what is useful today.
+            </p>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <SelectField
+                id={`${id}-market`}
+                label="Market"
+                value={values.market}
+                options={MARKET_OPTIONS}
+                placeholder="Choose a market"
+                onChange={(value) => update("market", value)}
               />
-              <span
-                className={cn(
-                  "mt-1.5 block text-[11px] font-medium",
-                  current ? "text-estate-700" : "text-muted-foreground",
-                )}
-              >
-                {number}. {label}
-              </span>
-            </li>
-          );
-        })}
-      </ol>
-
-      {step === 1 ? (
-        <section aria-labelledby={`${id}-step-title`}>
-          <h2
-            id={`${id}-step-title`}
-            ref={headingRef}
-            tabIndex={-1}
-            className="font-serif text-2xl font-medium text-estate-700 outline-none sm:text-3xl"
-          >
-            How can we help?
-          </h2>
-          <p className="mt-1.5 text-sm text-muted-foreground">
-            Choose one option. You can add more detail on the next step.
-          </p>
-          <fieldset className="mt-5">
-            <legend className="sr-only">Your property interest</legend>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {INTEREST_OPTIONS.map((option) => {
-                const Icon = option.icon;
-                return (
-                  <label
-                    key={option.value}
-                    htmlFor={`${id}-${option.value}`}
-                    className={cn(
-                      "flex min-h-20 cursor-pointer items-start gap-3 rounded-md border bg-surface p-3.5 transition-colors focus-within:ring-2 focus-within:ring-ring/50",
-                      values.interest === option.value
-                        ? "border-estate-700 bg-estate-700/[0.04]"
-                        : "border-border hover:border-estate-700/40",
-                      option.value === "newsletter_only" && "sm:col-span-2",
+              <TextField
+                id={`${id}-location`}
+                label="Preferred location"
+                value={values.location}
+                placeholder="City, area or community"
+                icon={MapPin}
+                onChange={(value) => update("location", value)}
+              />
+              {!isNewsletterOnly ? (
+                <>
+                  <SelectField
+                    id={`${id}-property-type`}
+                    label="Property type"
+                    value={values.propertyType}
+                    options={optionsWithCurrentValue(
+                      PROPERTY_TYPE_OPTIONS,
+                      values.propertyType,
                     )}
+                    placeholder="Choose a type"
+                    onChange={(value) => update("propertyType", value)}
+                  />
+                  <SelectField
+                    id={`${id}-bedrooms`}
+                    label="Bedrooms"
+                    value={values.bedrooms}
+                    options={optionsWithCurrentValue(
+                      BEDROOM_OPTIONS,
+                      values.bedrooms,
+                    )}
+                    placeholder="Any"
+                    icon={Home}
+                    onChange={(value) => update("bedrooms", value)}
+                  />
+                  <SelectField
+                    id={`${id}-bathrooms`}
+                    label="Bathrooms"
+                    value={values.bathrooms}
+                    options={optionsWithCurrentValue(
+                      BATHROOM_OPTIONS,
+                      values.bathrooms,
+                    )}
+                    placeholder="Any"
+                    icon={Bath}
+                    onChange={(value) => update("bathrooms", value)}
+                  />
+                  <SelectField
+                    id={`${id}-timeframe`}
+                    label="Timeframe"
+                    value={values.timeframe}
+                    options={TIMEFRAME_OPTIONS}
+                    placeholder="Choose a timeframe"
+                    onChange={(value) => update("timeframe", value)}
+                  />
+                </>
+              ) : null}
+            </div>
+          </section>
+        ) : null}
+
+        {step === 3 ? (
+          <section aria-labelledby={`${id}-step-title`}>
+            <h2
+              id={`${id}-step-title`}
+              ref={headingRef}
+              tabIndex={-1}
+              className="font-serif text-2xl font-medium text-estate-700 outline-none sm:text-3xl"
+            >
+              Where should we reach you?
+            </h2>
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              We only need a name and email to respond.
+            </p>
+            <div className="mt-5 grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2">
+              <div className="min-w-0 space-y-1.5">
+                <Label htmlFor={`${id}-first-name`}>
+                  First name <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id={`${id}-first-name`}
+                  value={values.firstName}
+                  onChange={(event) => update("firstName", event.target.value)}
+                  autoComplete="given-name"
+                  required
+                  aria-required="true"
+                  maxLength={80}
+                  aria-invalid={Boolean(errors.firstName)}
+                  aria-describedby={
+                    errors.firstName ? `${id}-first-name-error` : undefined
+                  }
+                  className="h-11"
+                />
+                {errors.firstName ? (
+                  <p
+                    id={`${id}-first-name-error`}
+                    role="alert"
+                    className="text-xs text-destructive"
                   >
-                    <input
-                      id={`${id}-${option.value}`}
-                      type="radio"
-                      name={`${id}-interest`}
-                      value={option.value}
-                      checked={values.interest === option.value}
-                      onChange={() => update("interest", option.value)}
-                      className="sr-only"
-                    />
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-estate-700/10 text-estate-700">
-                      <Icon className="h-4 w-4" aria-hidden="true" />
-                    </span>
-                    <span>
-                      <span className="block text-sm font-semibold text-foreground">
-                        {option.label}
-                      </span>
-                      <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">
-                        {option.description}
-                      </span>
-                    </span>
-                  </label>
-                );
-              })}
-            </div>
-            {errors.interest ? (
-              <p className="mt-2 text-sm text-destructive" role="alert">
-                {errors.interest}
-              </p>
-            ) : null}
-          </fieldset>
-        </section>
-      ) : null}
-
-      {step === 2 ? (
-        <section aria-labelledby={`${id}-step-title`}>
-          <h2
-            id={`${id}-step-title`}
-            ref={headingRef}
-            tabIndex={-1}
-            className="font-serif text-2xl font-medium text-estate-700 outline-none sm:text-3xl"
-          >
-            {isNewsletterOnly ? "What interests you?" : "Shape your search"}
-          </h2>
-          <p className="mt-1.5 text-sm text-muted-foreground">
-            All preferences are optional. Share only what is useful today.
-          </p>
-          <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            <SelectField
-              id={`${id}-market`}
-              label="Market"
-              value={values.market}
-              options={MARKET_OPTIONS}
-              placeholder="Choose a market"
-              onChange={(value) => update("market", value)}
-            />
-            <TextField
-              id={`${id}-location`}
-              label="Preferred location"
-              value={values.location}
-              placeholder="City, area or community"
-              icon={MapPin}
-              onChange={(value) => update("location", value)}
-            />
-            {!isNewsletterOnly ? (
-              <>
-                <SelectField
-                  id={`${id}-property-type`}
-                  label="Property type"
-                  value={values.propertyType}
-                  options={optionsWithCurrentValue(
-                    PROPERTY_TYPE_OPTIONS,
-                    values.propertyType,
-                  )}
-                  placeholder="Choose a type"
-                  onChange={(value) => update("propertyType", value)}
+                    {errors.firstName}
+                  </p>
+                ) : null}
+              </div>
+              <div className="min-w-0 space-y-1.5">
+                <Label htmlFor={`${id}-email`}>
+                  Email address <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id={`${id}-email`}
+                  type="email"
+                  value={values.email}
+                  onChange={(event) => update("email", event.target.value)}
+                  autoComplete="email"
+                  inputMode="email"
+                  required
+                  aria-required="true"
+                  maxLength={254}
+                  aria-invalid={Boolean(errors.email)}
+                  aria-describedby={
+                    errors.email ? `${id}-email-error` : undefined
+                  }
+                  className="h-11"
                 />
-                <SelectField
-                  id={`${id}-bedrooms`}
-                  label="Bedrooms"
-                  value={values.bedrooms}
-                  options={optionsWithCurrentValue(
-                    BEDROOM_OPTIONS,
-                    values.bedrooms,
-                  )}
-                  placeholder="Any"
-                  icon={Home}
-                  onChange={(value) => update("bedrooms", value)}
+                {errors.email ? (
+                  <p
+                    id={`${id}-email-error`}
+                    role="alert"
+                    className="text-xs text-destructive"
+                  >
+                    {errors.email}
+                  </p>
+                ) : null}
+              </div>
+              <div className="min-w-0 space-y-1.5 sm:col-span-2">
+                <Label htmlFor={`${id}-phone`}>Phone number (optional)</Label>
+                <PhoneInput
+                  id={`${id}-phone`}
+                  value={values.phone}
+                  onChange={(value) => update("phone", value)}
+                  invalid={Boolean(errors.phone)}
+                  ariaDescribedBy={
+                    errors.phone ? `${id}-phone-error` : undefined
+                  }
                 />
-                <SelectField
-                  id={`${id}-bathrooms`}
-                  label="Bathrooms"
-                  value={values.bathrooms}
-                  options={optionsWithCurrentValue(
-                    BATHROOM_OPTIONS,
-                    values.bathrooms,
-                  )}
-                  placeholder="Any"
-                  icon={Bath}
-                  onChange={(value) => update("bathrooms", value)}
-                />
-                <SelectField
-                  id={`${id}-timeframe`}
-                  label="Timeframe"
-                  value={values.timeframe}
-                  options={TIMEFRAME_OPTIONS}
-                  placeholder="Choose a timeframe"
-                  onChange={(value) => update("timeframe", value)}
-                />
-              </>
-            ) : null}
-          </div>
-        </section>
-      ) : null}
-
-      {step === 3 ? (
-        <section aria-labelledby={`${id}-step-title`}>
-          <h2
-            id={`${id}-step-title`}
-            ref={headingRef}
-            tabIndex={-1}
-            className="font-serif text-2xl font-medium text-estate-700 outline-none sm:text-3xl"
-          >
-            Where should we reach you?
-          </h2>
-          <p className="mt-1.5 text-sm text-muted-foreground">
-            We only need a name and email to respond.
-          </p>
-          <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor={`${id}-first-name`}>
-                First name <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id={`${id}-first-name`}
-                value={values.firstName}
-                onChange={(event) => update("firstName", event.target.value)}
-                autoComplete="given-name"
-                required
-                aria-required="true"
-                maxLength={80}
-                aria-invalid={Boolean(errors.firstName)}
-                aria-describedby={errors.firstName ? `${id}-first-name-error` : undefined}
-                className="h-11"
-              />
-              {errors.firstName ? (
-                <p
-                  id={`${id}-first-name-error`}
-                  role="alert"
-                  className="text-xs text-destructive"
-                >
-                  {errors.firstName}
-                </p>
-              ) : null}
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor={`${id}-email`}>
-                Email address <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id={`${id}-email`}
-                type="email"
-                value={values.email}
-                onChange={(event) => update("email", event.target.value)}
-                autoComplete="email"
-                inputMode="email"
-                required
-                aria-required="true"
-                maxLength={254}
-                aria-invalid={Boolean(errors.email)}
-                aria-describedby={errors.email ? `${id}-email-error` : undefined}
-                className="h-11"
-              />
-              {errors.email ? (
-                <p
-                  id={`${id}-email-error`}
-                  role="alert"
-                  className="text-xs text-destructive"
-                >
-                  {errors.email}
-                </p>
-              ) : null}
-            </div>
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label htmlFor={`${id}-phone`}>Phone number (optional)</Label>
-              <PhoneInput
-                id={`${id}-phone`}
-                value={values.phone}
-                onChange={(value) => update("phone", value)}
-                invalid={Boolean(errors.phone)}
-                ariaDescribedBy={errors.phone ? `${id}-phone-error` : undefined}
-              />
-              {errors.phone ? (
-                <p
-                  id={`${id}-phone-error`}
-                  role="alert"
-                  className="text-xs text-destructive"
-                >
-                  {errors.phone}
-                </p>
-              ) : null}
-            </div>
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label htmlFor={`${id}-message`}>Anything else? (optional)</Label>
-              <div className="relative">
-                <MessageSquareText
-                  className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground"
-                  aria-hidden="true"
-                />
-                <Textarea
-                  id={`${id}-message`}
-                  value={values.message}
-                  onChange={(event) => update("message", event.target.value)}
-                  placeholder="Tell us what would make this enquiry more useful"
-                  maxLength={2_000}
-                  className="min-h-20 pl-9"
-                />
+                {errors.phone ? (
+                  <p
+                    id={`${id}-phone-error`}
+                    role="alert"
+                    className="text-xs text-destructive"
+                  >
+                    {errors.phone}
+                  </p>
+                ) : null}
+              </div>
+              <div className="min-w-0 space-y-1.5 sm:col-span-2">
+                <Label htmlFor={`${id}-message`}>
+                  Anything else? (optional)
+                </Label>
+                <div className="relative">
+                  <MessageSquareText
+                    className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground"
+                    aria-hidden="true"
+                  />
+                  <Textarea
+                    id={`${id}-message`}
+                    value={values.message}
+                    onChange={(event) => update("message", event.target.value)}
+                    placeholder="Tell us what would make this enquiry more useful"
+                    maxLength={2_000}
+                    className="min-h-20 pl-9"
+                  />
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="mt-5 rounded-md border border-border bg-subtle p-4">
-            <label className="flex cursor-pointer items-start gap-3">
-              <input
-                type="checkbox"
-                checked={values.newsletterOptIn}
-                onChange={(event) => update("newsletterOptIn", event.target.checked)}
-                className="mt-0.5 h-4 w-4 shrink-0 accent-estate-700"
-              />
-              <span className="text-sm leading-5 text-foreground">
-                {MARKETING_CONSENT_WORDING}
-              </span>
-            </label>
-          </div>
-
-          <div className="sr-only" aria-hidden="true">
-            <Label htmlFor={`${id}-website`}>Website</Label>
-            <Input
-              id={`${id}-website`}
-              name="website"
-              value={values.website}
-              onChange={(event) => update("website", event.target.value)}
-              tabIndex={-1}
-              autoComplete="off"
-            />
-          </div>
-
-          <p className="mt-4 text-xs leading-5 text-muted-foreground">
-            By submitting, you ask Haus of Estate to use these details to respond to
-            your enquiry. This is separate from optional email marketing. Read our{" "}
-            <Link
-              href="/legal/privacy-policy"
-              target="_blank"
-              className="font-medium text-estate-700 underline underline-offset-2"
-            >
-              privacy policy
-            </Link>
-            .
-          </p>
-
-          {errors.request ? (
-            <div
-              ref={requestErrorRef}
-              tabIndex={-1}
-              role="alert"
-              className="mt-4 rounded-md border border-destructive/25 bg-destructive/5 p-3 text-sm text-destructive outline-none"
-            >
-              {errors.request}
+            <div className="mt-5">
+              <p className="text-xs font-semibold uppercase text-muted-foreground">
+                Follow along on socials
+              </p>
+              <SocialProfileLinks className="mt-2" />
             </div>
-          ) : null}
-        </section>
-      ) : null}
 
-      <div className="mt-7 flex items-center justify-between gap-3 border-t border-border pt-5">
-        {step > 1 ? (
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => moveToStep(step - 1)}
-            disabled={submitState === "submitting"}
-          >
-            <ArrowLeft aria-hidden="true" /> Back
-          </Button>
-        ) : modal && onClose ? (
-          <Button type="button" variant="ghost" onClick={onClose}>
-            Not now
-          </Button>
-        ) : (
-          <span />
-        )}
-        <Button type="submit" disabled={submitState === "submitting"} className="min-w-32">
-          {submitState === "submitting" ? (
-            <>
-              <Loader2 className="animate-spin" aria-hidden="true" /> Sending
-            </>
-          ) : step < 3 ? (
-            <>
-              Continue <ArrowRight aria-hidden="true" />
-            </>
+            <div className="mt-5 space-y-3 rounded-md border border-border bg-subtle p-4">
+              <div>
+                <p className="text-sm font-semibold text-foreground">
+                  Optional email updates
+                </p>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                  These choices are separate from sending your enquiry and are
+                  unchecked by default.
+                </p>
+              </div>
+              {supportsPropertyMatches(values.interest) ? (
+                <label className="flex cursor-pointer items-start gap-3">
+                  <input
+                    id={`${id}-property-match-opt-in`}
+                    type="checkbox"
+                    checked={values.propertyMatchOptIn}
+                    onChange={(event) =>
+                      update("propertyMatchOptIn", event.target.checked)
+                    }
+                    className="mt-0.5 h-4 w-4 shrink-0 accent-estate-700"
+                  />
+                  <span className="text-sm leading-5 text-foreground">
+                    {PROPERTY_MATCH_CONSENT_WORDING}
+                  </span>
+                </label>
+              ) : null}
+              <label className="flex cursor-pointer items-start gap-3">
+                <input
+                  id={`${id}-newsletter-opt-in`}
+                  ref={newsletterOptInRef}
+                  type="checkbox"
+                  checked={values.newsletterOptIn}
+                  onChange={(event) =>
+                    update("newsletterOptIn", event.target.checked)
+                  }
+                  aria-invalid={Boolean(errors.newsletterOptIn)}
+                  aria-describedby={
+                    errors.newsletterOptIn
+                      ? `${id}-newsletter-opt-in-error`
+                      : undefined
+                  }
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-estate-700"
+                />
+                <span className="text-sm leading-5 text-foreground">
+                  {MARKETING_CONSENT_WORDING}
+                </span>
+              </label>
+              {errors.newsletterOptIn ? (
+                <p
+                  id={`${id}-newsletter-opt-in-error`}
+                  role="alert"
+                  className="text-xs text-destructive"
+                >
+                  {errors.newsletterOptIn}
+                </p>
+              ) : null}
+            </div>
+
+            {supportsOverseasCashBuyer(values.interest) ? (
+              <div className="mt-3 rounded-md border border-border bg-surface p-4">
+                <label className="flex cursor-pointer items-start gap-3">
+                  <input
+                    id={`${id}-overseas-cash-buyer`}
+                    type="checkbox"
+                    checked={values.overseasCashBuyer}
+                    onChange={(event) =>
+                      update("overseasCashBuyer", event.target.checked)
+                    }
+                    className="mt-0.5 h-4 w-4 shrink-0 accent-estate-700"
+                  />
+                  <span className="text-sm leading-5 text-foreground">
+                    <strong>I am a cash buyer purchasing from overseas.</strong>{" "}
+                    <span className="text-muted-foreground">
+                      This helps us prepare the right adviser for an
+                      international cash purchase.
+                    </span>
+                  </span>
+                </label>
+              </div>
+            ) : null}
+
+            <div className="sr-only" aria-hidden="true">
+              <Label htmlFor={`${id}-website`}>Website</Label>
+              <Input
+                id={`${id}-website`}
+                name="website"
+                value={values.website}
+                onChange={(event) => update("website", event.target.value)}
+                tabIndex={-1}
+                autoComplete="off"
+              />
+            </div>
+
+            <p className="mt-4 text-xs leading-5 text-muted-foreground">
+              By submitting, you ask Haus of Estate to use these details to
+              respond to your enquiry. This is separate from optional email
+              marketing. Read our{" "}
+              <Link
+                href="/legal/privacy-policy"
+                target="_blank"
+                className="font-medium text-estate-700 underline underline-offset-2"
+              >
+                privacy policy
+              </Link>
+              .
+            </p>
+
+            {errors.request ? (
+              <div
+                ref={requestErrorRef}
+                tabIndex={-1}
+                role="alert"
+                className="mt-4 rounded-md border border-destructive/25 bg-destructive/5 p-3 text-sm text-destructive outline-none"
+              >
+                {errors.request}
+              </div>
+            ) : null}
+          </section>
+        ) : null}
+
+        <div className="mt-7 flex items-center justify-between gap-3 border-t border-border pt-5">
+          {step > 1 ? (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => moveToStep(step - 1)}
+              disabled={submitState === "submitting"}
+            >
+              <ArrowLeft aria-hidden="true" /> Back
+            </Button>
+          ) : modal && onClose ? (
+            <Button type="button" variant="ghost" onClick={onClose}>
+              Not now
+            </Button>
           ) : (
-            <>
-              Send enquiry <ArrowRight aria-hidden="true" />
-            </>
+            <span />
           )}
-        </Button>
-      </div>
+          <Button
+            type="submit"
+            disabled={submitState === "submitting"}
+            className="min-w-32"
+          >
+            {submitState === "submitting" ? (
+              <>
+                <Loader2 className="animate-spin" aria-hidden="true" /> Sending
+              </>
+            ) : step < 3 ? (
+              <>
+                Continue <ArrowRight aria-hidden="true" />
+              </>
+            ) : (
+              <>
+                {isNewsletterOnly
+                  ? "Subscribe"
+                  : supportsPropertyMatches(values.interest)
+                    ? "Send my brief"
+                    : "Send enquiry"}
+                <ArrowRight aria-hidden="true" />
+              </>
+            )}
+          </Button>
+        </div>
       </fieldset>
     </form>
   );
