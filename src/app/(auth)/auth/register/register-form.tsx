@@ -15,20 +15,39 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { TurnstileChallenge } from "@/components/auth/turnstile-challenge";
+import type { BotProtectionClientConfig } from "@/lib/bot-protection/types";
 
-type RegisterFormProps = { returnTo: string; googleEnabled: boolean };
+type RegisterFormProps = {
+  returnTo: string;
+  googleEnabled: boolean;
+  botProtection: BotProtectionClientConfig;
+};
 type FieldErrors = Partial<Record<"name" | "email" | "password", string>>;
 type ApiPayload = {
   ok?: boolean;
+  error?: string;
+  code?: string;
   fieldErrors?: Record<string, string[]>;
 };
 
-export function RegisterForm({ returnTo, googleEnabled }: RegisterFormProps) {
+export function RegisterForm({
+  returnTo,
+  googleEnabled,
+  botProtection,
+}: RegisterFormProps) {
   const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
   const [pending, setPending] = useState<"credentials" | "google" | null>(null);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [submitted, setSubmitted] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [challengeRevision, setChallengeRevision] = useState(0);
+
+  function resetChallenge() {
+    setTurnstileToken(null);
+    setChallengeRevision((current) => current + 1);
+  }
 
   function update(field: keyof typeof form) {
     return (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -57,6 +76,7 @@ export function RegisterForm({ returnTo, googleEnabled }: RegisterFormProps) {
           email: form.email,
           password: form.password,
           returnTo,
+          ...(botProtection.enabled ? { turnstileToken } : {}),
         }),
       });
       const payload = (await response.json().catch(() => ({}))) as ApiPayload;
@@ -71,14 +91,18 @@ export function RegisterForm({ returnTo, googleEnabled }: RegisterFormProps) {
         setError(
           response.status === 429
             ? "Too many attempts. Please wait before trying again."
-            : "We could not create the account. Check the details and try again.",
+            : payload.code?.startsWith("BOT_CHALLENGE_")
+              ? payload.error ?? "Complete the security check and try again."
+              : "We could not create the account. Check the details and try again.",
         );
+        resetChallenge();
         return;
       }
 
       setSubmitted(true);
     } catch {
       setError("We could not create the account right now. Please try again shortly.");
+      resetChallenge();
     } finally {
       setPending(null);
     }
@@ -112,6 +136,9 @@ export function RegisterForm({ returnTo, googleEnabled }: RegisterFormProps) {
   }
 
   const disabled = pending !== null;
+  const challengeComplete =
+    !botProtection.enabled ||
+    (botProtection.siteKey !== null && turnstileToken !== null);
   const passwordDescription = ["password-hint", fieldErrors.password && "password-error"].filter(Boolean).join(" ");
 
   return (
@@ -156,7 +183,14 @@ export function RegisterForm({ returnTo, googleEnabled }: RegisterFormProps) {
           </div>
         </div>
 
-        <Button type="submit" className="w-full" size="lg" disabled={disabled}>
+        <TurnstileChallenge
+          key={challengeRevision}
+          config={botProtection}
+          action="register"
+          onTokenChange={setTurnstileToken}
+        />
+
+        <Button type="submit" className="w-full" size="lg" disabled={disabled || !challengeComplete}>
           {pending === "credentials" ? <><Loader2 className="h-4 w-4 animate-spin" />Creating account…</> : <>Create account<ArrowRight className="h-4 w-4" /></>}
         </Button>
       </form>

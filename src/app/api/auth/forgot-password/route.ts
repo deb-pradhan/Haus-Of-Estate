@@ -6,6 +6,7 @@ import {
 } from "@/lib/auth/action-tokens";
 import {
   GENERIC_PASSWORD_RESET_MESSAGE,
+  botChallengeFailureResponse,
   logAuthFailure,
   originRejectedResponse,
   rateLimitedResponse,
@@ -14,9 +15,13 @@ import {
 } from "@/lib/auth/api-response";
 import { emailActionSchema } from "@/lib/auth/contracts";
 import { isSameOriginRequest } from "@/lib/auth/request-security";
-import { enforceAuthThrottle } from "@/lib/auth/throttle";
+import {
+  enforceAuthIdentifierThrottle,
+  enforceAuthIpThrottle,
+} from "@/lib/auth/throttle";
 import { settlePublicAuthResponse } from "@/lib/auth/public-response-timing";
 import { sendPasswordResetEmail } from "@/lib/email/auth";
+import { verifyBotChallenge } from "@/lib/bot-protection/verify";
 
 export const runtime = "nodejs";
 
@@ -31,14 +36,28 @@ export async function POST(request: Request) {
   const startedAt = Date.now();
 
   try {
-    const throttle = await enforceAuthThrottle(request, {
+    const ipThrottle = await enforceAuthIpThrottle(request, {
+      scope: "FORGOT_PASSWORD",
+      rule: { limit: 10, windowMs: 15 * 60 * 1_000 },
+    });
+    if (!ipThrottle.allowed) {
+      return rateLimitedResponse(ipThrottle.retryAfterSeconds);
+    }
+
+    const challenge = await verifyBotChallenge({
+      request,
+      token: parsed.data.turnstileToken,
+      action: "forgot_password",
+    });
+    if (!challenge.ok) return botChallengeFailureResponse(challenge);
+
+    const emailThrottle = await enforceAuthIdentifierThrottle({
       scope: "FORGOT_PASSWORD",
       identifier: { kind: "email", value: parsed.data.email },
-      ip: { limit: 10, windowMs: 15 * 60 * 1_000 },
-      identifierRule: { limit: 3, windowMs: 60 * 60 * 1_000 },
+      rule: { limit: 3, windowMs: 60 * 60 * 1_000 },
     });
-    if (!throttle.allowed) {
-      return rateLimitedResponse(throttle.retryAfterSeconds);
+    if (!emailThrottle.allowed) {
+      return rateLimitedResponse(emailThrottle.retryAfterSeconds);
     }
 
     const user = await authDb.user.findUnique({

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { isGoogleAuthEnabled } from "@/lib/auth/provider-config";
 import { safeReturnTo } from "@/lib/auth/safe-return-to";
+import { getBotProtectionClientConfig } from "@/lib/bot-protection/config";
 import { RegisterForm } from "./register-form";
 
 export const metadata: Metadata = {
@@ -23,6 +24,13 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
   const params = await searchParams;
   const returnTo = safeReturnTo(first(params.returnTo) ?? first(params.redirectTo), "/");
   const googleEnabled = isGoogleAuthEnabled();
+  const botProtection = getBotProtectionClientConfig();
 
-  return <RegisterForm returnTo={returnTo} googleEnabled={googleEnabled} />;
+  return (
+    <RegisterForm
+      returnTo={returnTo}
+      googleEnabled={googleEnabled}
+      botProtection={botProtection}
+    />
+  );
 }

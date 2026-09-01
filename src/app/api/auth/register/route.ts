@@ -5,6 +5,7 @@ import { authDb } from "@/lib/auth/auth-db";
 import { createUnverifiedUserWithToken } from "@/lib/auth/action-tokens";
 import {
   GENERIC_VERIFICATION_MESSAGE,
+  botChallengeFailureResponse,
   infrastructureFailureResponse,
   logAuthFailure,
   originRejectedResponse,
@@ -13,9 +14,13 @@ import {
   validationResponse,
 } from "@/lib/auth/api-response";
 import { isSameOriginRequest } from "@/lib/auth/request-security";
-import { enforceAuthThrottle } from "@/lib/auth/throttle";
+import {
+  enforceAuthIdentifierThrottle,
+  enforceAuthIpThrottle,
+} from "@/lib/auth/throttle";
 import { settlePublicAuthResponse } from "@/lib/auth/public-response-timing";
 import { sendVerificationEmail } from "@/lib/email/auth";
+import { verifyBotChallenge } from "@/lib/bot-protection/verify";
 
 export const runtime = "nodejs";
 
@@ -57,14 +62,28 @@ export async function POST(request: Request) {
   const startedAt = Date.now();
 
   try {
-    const throttle = await enforceAuthThrottle(request, {
+    const ipThrottle = await enforceAuthIpThrottle(request, {
+      scope: "REGISTER",
+      rule: { limit: 10, windowMs: TEN_MINUTES },
+    });
+    if (!ipThrottle.allowed) {
+      return rateLimitedResponse(ipThrottle.retryAfterSeconds);
+    }
+
+    const challenge = await verifyBotChallenge({
+      request,
+      token: parsed.data.turnstileToken,
+      action: "register",
+    });
+    if (!challenge.ok) return botChallengeFailureResponse(challenge);
+
+    const emailThrottle = await enforceAuthIdentifierThrottle({
       scope: "REGISTER",
       identifier: { kind: "email", value: parsed.data.email },
-      ip: { limit: 10, windowMs: TEN_MINUTES },
-      identifierRule: { limit: 5, windowMs: ONE_HOUR },
+      rule: { limit: 5, windowMs: ONE_HOUR },
     });
-    if (!throttle.allowed) {
-      return rateLimitedResponse(throttle.retryAfterSeconds);
+    if (!emailThrottle.allowed) {
+      return rateLimitedResponse(emailThrottle.retryAfterSeconds);
     }
 
     // Throttling deliberately happens before this CPU-intensive operation.

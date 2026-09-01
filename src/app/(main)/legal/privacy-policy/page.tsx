@@ -32,7 +32,7 @@ export default function PrivacyPolicyPage() {
         <div className="mb-8">
           <p className="font-serif text-sm font-medium uppercase tracking-widest text-gold-500 mb-2">Legal</p>
           <h1 className="font-serif text-4xl font-medium text-estate-700">Privacy Policy</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Last updated: February 2026</p>
+          <p className="mt-2 text-sm text-muted-foreground">Last updated: September 2026</p>
         </div>
 
         <div className="space-y-8 text-sm leading-relaxed text-foreground">
@@ -40,7 +40,7 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">1. Who We Are</h2>
             <p>
-              Haus of Estate ("we", "our", "us") is an international property advisory firm operating across the United Kingdom, United Arab Emirates, and Indonesia. We are committed to protecting your personal data in accordance with the UK General Data Protection Regulation (UK GDPR), the Data Protection Act 2018, and the EU General Data Protection Regulation (GDPR) where applicable.
+              Haus of Estate (&quot;we&quot;, &quot;our&quot;, &quot;us&quot;) is an international property advisory firm operating across the United Kingdom, United Arab Emirates, and Indonesia. We are committed to protecting your personal data in accordance with the UK General Data Protection Regulation (UK GDPR), the Data Protection Act 2018, and the EU General Data Protection Regulation (GDPR) where applicable.
             </p>
             <p className="mt-2">
               <strong>Company details:</strong><br />
@@ -114,6 +114,23 @@ export default function PrivacyPolicyPage() {
               <li><strong>Legal representatives</strong> and conveyancing agents to complete property transactions</li>
               <li><strong>HM Revenue & Customs</strong> (HMRC) to comply with UK tax and anti-money laundering regulations</li>
               <li><strong>Technology providers</strong> (hosting, email delivery) under strict data processing agreements</li>
+              <li>
+                <strong>Cloudflare Turnstile:</strong> when enabled, Turnstile
+                processes security signals such as IP address, browser and
+                connection information, and website origin to protect forms and
+                accounts from automated abuse. Cloudflare states that Turnstile
+                does not access, store, or transmit form entries or other page
+                inputs. See the{" "}
+                <a
+                  href="https://www.cloudflare.com/turnstile-privacy-policy/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-trust-teal hover:underline"
+                >
+                  Cloudflare Turnstile Privacy Addendum
+                </a>
+                .
+              </li>
             </ul>
             <p className="mt-3">
               All third parties are required to process your data only in accordance with our instructions and applicable data protection law.
@@ -166,7 +183,7 @@ export default function PrivacyPolicyPage() {
             </p>
             <p className="mt-2">
               You also have the right to lodge a complaint with the{" "}
-              <strong>Information Commissioner's Office (ICO)</strong> if you believe we have not handled your data correctly.
+              <strong>Information Commissioner&apos;s Office (ICO)</strong> if you believe we have not handled your data correctly.
               Website:{" "}
               <a href="https://ico.org.uk" target="_blank" rel="noopener noreferrer" className="text-trust-teal hover:underline">
                 ico.org.uk

@@ -38,6 +38,12 @@ const optionalPhoneSchema = z.preprocess(
 );
 
 const optionalReturnToSchema = z.string().max(2_048).optional();
+const optionalTurnstileTokenSchema = z
+  .string()
+  .trim()
+  .min(1, "Complete the security check.")
+  .max(2_048, "The security check response is invalid.")
+  .optional();
 
 export const credentialsSchema = z.object({
   email: normalizedEmailSchema,
@@ -53,11 +59,13 @@ export const registerSchema = z.object({
   password: passwordSchema,
   phone: optionalPhoneSchema,
   returnTo: optionalReturnToSchema,
+  turnstileToken: optionalTurnstileTokenSchema,
 });
 
 export const emailActionSchema = z.object({
   email: normalizedEmailSchema,
   returnTo: optionalReturnToSchema,
+  turnstileToken: optionalTurnstileTokenSchema,
 });
 
 const actionTokenSchema = z
