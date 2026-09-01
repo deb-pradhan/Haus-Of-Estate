@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { LEAD_FORM_VERSION, PRIVACY_NOTICE_VERSION } from "./contract";
-import { LeadConflictError, LeadRateLimitError } from "./errors";
+import {
+  LeadConflictError,
+  LeadRateLimitError,
+  LeadValidationError,
+} from "./errors";
 import {
   hashNormalizedLead,
   normalizeLeadRequest,
@@ -16,6 +20,7 @@ function input(
     submissionId,
     interest: "buy",
     contact: { firstName: "Alex", email: "alex@example.com" },
+    privacyAcknowledged: true,
     overseasCashBuyer: false,
     propertyMatchOptIn: false,
     newsletterOptIn: false,
@@ -102,6 +107,42 @@ describe("submitLeadIntake", () => {
     expect(store.persistSubmission).toHaveBeenCalledTimes(2);
   });
 
+  it("allows an old idempotent replay but rejects a new expired form", async () => {
+    const expired = normalizeLeadRequest({
+      submissionId: "bda96f42-222f-498b-92a0-f07e2771d875",
+      interest: "buy",
+      contact: { firstName: "Alex", email: "alex@example.com" },
+      overseasCashBuyer: false,
+      propertyMatchOptIn: false,
+      newsletterOptIn: false,
+      formVersion: "2026-09-01.v3",
+      privacyNoticeVersion: "2026-09-01",
+      context: { surface: "modal", pagePath: "/" },
+    });
+    const replayStore: LeadIntakeStore = {
+      findSubmission: vi.fn(async () => ({
+        id: "lead-existing",
+        submissionId: expired.submissionId,
+        payloadHash: hashNormalizedLead(expired),
+        score: 30,
+        tier: "nurture",
+      })),
+      persistSubmission: vi.fn(),
+    };
+    await expect(
+      submitLeadIntake(expired, "ip-hash", dependencies(replayStore)),
+    ).resolves.toMatchObject({ created: false, leadId: "lead-existing" });
+
+    const newStore: LeadIntakeStore = {
+      findSubmission: vi.fn(async () => null),
+      persistSubmission: vi.fn(),
+    };
+    await expect(
+      submitLeadIntake(expired, "ip-hash", dependencies(newStore)),
+    ).rejects.toBeInstanceOf(LeadValidationError);
+    expect(newStore.persistSubmission).not.toHaveBeenCalled();
+  });
+
   it("propagates throttling and database failures without reporting success", async () => {
     const throttledStore: LeadIntakeStore = {
       findSubmission: vi.fn(async () => null),
@@ -143,5 +184,11 @@ describe("scoreLead", () => {
       tier: "warm",
       routing: "luxury",
     });
+  });
+
+  it("routes the country-labelled UAE buyer value without losing Dubai behavior", () => {
+    const uaeBuyer = input();
+    uaeBuyer.preferences.market = "United Arab Emirates";
+    expect(scoreLead(uaeBuyer).routing).toBe("luxury");
   });
 });

@@ -12,10 +12,8 @@ import {
   type LeadScore,
   type StoredLeadSubmission,
 } from "./persistence";
-import {
-  hashNormalizedLead,
-  type NormalizedLeadIntake,
-} from "./normalize";
+import { hashNormalizedLead, type NormalizedLeadIntake } from "./normalize";
+import { LEAD_FORM_VERSION } from "./contract";
 import {
   resolvePublishedProject,
   type PublishedProjectContext,
@@ -56,8 +54,13 @@ export function scoreLead(input: NormalizedLeadIntake): LeadScore {
 
   const tier = score >= 60 ? "hot" : score >= 35 ? "warm" : "nurture";
   let routing = "general";
+  const countryOrLegacyMarket = input.preferences.market?.toLowerCase();
+  const isUnitedArabEmirates =
+    countryOrLegacyMarket === "dubai" ||
+    countryOrLegacyMarket === "uae" ||
+    countryOrLegacyMarket === "united arab emirates";
   if (
-    input.preferences.market?.toLowerCase() === "dubai" &&
+    isUnitedArabEmirates &&
     (input.legacy.area?.toLowerCase() === "palm" ||
       input.legacy.buyOrRent === "buy" ||
       (!input.legacy.intent && input.interest === "buy"))
@@ -80,7 +83,8 @@ export function scoreLead(input: NormalizedLeadIntake): LeadScore {
 }
 
 function prismaErrorCode(error: unknown): string | undefined {
-  if (!error || typeof error !== "object" || !("code" in error)) return undefined;
+  if (!error || typeof error !== "object" || !("code" in error))
+    return undefined;
   const code = (error as { code?: unknown }).code;
   return typeof code === "string" ? code : undefined;
 }
@@ -114,6 +118,12 @@ export async function submitLeadIntake(
   );
   if (replay) return replay;
 
+  if (!input.legacy.intent && input.formVersion !== LEAD_FORM_VERSION) {
+    throw new LeadValidationError("This form version has expired", {
+      formVersion: ["Refresh the page and submit the current form."],
+    });
+  }
+
   const project = await dependencies.resolveProject(input.project?.slug);
   const submittedAt = dependencies.now();
   const submission = {
@@ -142,7 +152,11 @@ export async function submitLeadIntake(
 
       const code = prismaErrorCode(error);
       if (code === "P2002") {
-        return resolveConcurrentSubmission(input, payloadHash, dependencies.store);
+        return resolveConcurrentSubmission(
+          input,
+          payloadHash,
+          dependencies.store,
+        );
       }
       if (code === "P2034" && attempt < 2) continue;
       throw error;

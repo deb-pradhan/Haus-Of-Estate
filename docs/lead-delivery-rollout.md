@@ -93,6 +93,12 @@ The Excel table headings, in order, must be:
 `property match opt-in`, `newsletter opt-in`, `overseas cash buyer`, `source`,
 `campaign`, `landing page`, `status`, `owner`, and `notes`.
 
+The form displays the `market` value to users as **Country of interest** and
+collects `location` separately as **City, area or community**. The API,
+database, and version 3.0 Excel contract retain the `market` key and heading for
+backward compatibility. Change that external heading only as a coordinated
+workbook, Power Automate, API-contract, and migration update.
+
 The application sends this versioned contract:
 
 ```json
@@ -108,8 +114,8 @@ The application sends this versioned contract:
     "email": "person@example.com",
     "phone": "",
     "interest": "invest",
-    "market": "Dubai",
-    "location": "",
+    "market": "United Arab Emirates",
+    "location": "Ras al Khaimah",
     "propertyType": "apartment",
     "bedrooms": "2",
     "bathrooms": "2",

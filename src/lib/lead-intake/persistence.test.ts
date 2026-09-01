@@ -32,6 +32,7 @@ function normalized(
       firstName: "Alex",
       email: "alex@example.com",
     },
+    privacyAcknowledged: true,
     overseasCashBuyer,
     propertyMatchOptIn,
     newsletterOptIn,
@@ -141,6 +142,7 @@ describe("Prisma lead intake transaction", () => {
         data: expect.objectContaining({
           email: "alex@example.com",
           phone: null,
+          consentGiven: true,
           overseasCashBuyer: true,
           propertyMatchOptIn: true,
           newsletterOptIn: true,
