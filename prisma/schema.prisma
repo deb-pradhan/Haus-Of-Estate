@@ -54,29 +54,44 @@ enum ReviewType {
   POST_DEAL
 }
 
-model User {
-  id            String   @id @default(cuid())
-  email         String   @unique
-  name          String
-  phone         String?
-  avatar        String?
-  role          UserRole @default(BUYER)
-  passwordHash  String?
-  emailVerified Boolean  @default(false)
-  savedListings String[] @default([])
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+enum AuthActionPurpose {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
 
-  accounts        Account[]
-  sessions        Session[]
-  agentProfile    AgentProfile?
-  sentMessages    Message[]        @relation("SentMessages")
-  buyerThreads    MessageThread[]  @relation("BuyerThreads")
-  viewingRequests ViewingRequest[] @relation("BuyerViewings")
-  buyerOffers     Offer[]          @relation("BuyerOffers")
-  writtenReviews  Review[]         @relation("WrittenReviews")
-  notifications   Notification[]
-  leads           Lead[]
+enum SavedContentType {
+  PROPERTY
+  ARTICLE
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  name           String?
+  phone          String?
+  image          String?   @map("avatar")
+  role           UserRole  @default(BUYER)
+  passwordHash   String?
+  // The physical legacy Boolean remains unmanaged during expand/contract.
+  emailVerified  DateTime? @map("emailVerifiedAt")
+  savedListings  String[]  @default([])
+  sessionVersion Int       @default(0)
+  disabledAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  accounts         Account[]
+  sessions         Session[]
+  agentProfile     AgentProfile?
+  sentMessages     Message[]         @relation("SentMessages")
+  buyerThreads     MessageThread[]   @relation("BuyerThreads")
+  viewingRequests  ViewingRequest[]  @relation("BuyerViewings")
+  buyerOffers      Offer[]           @relation("BuyerOffers")
+  writtenReviews   Review[]          @relation("WrittenReviews")
+  notifications    Notification[]
+  leads            Lead[]
+  authActionTokens AuthActionToken[]
+  savedContent     SavedContent[]
 
   @@index([email])
   @@index([role])
@@ -289,6 +304,7 @@ model Account {
   id                String  @id @default(cuid())
   userId            String
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type              String
   provider          String
   providerAccountId String
   refresh_token     String? @db.Text
@@ -319,6 +335,76 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model AuthActionToken {
+  id        String            @id @default(cuid())
+  userId    String
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      AuthActionPurpose
+  tokenHash String            @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime          @default(now())
+
+  @@index([userId, type, expiresAt])
+  @@index([expiresAt])
+}
+
+model AuthThrottle {
+  id           String    @id @default(cuid())
+  scope        String
+  keyHash      String
+  windowStart  DateTime
+  attempts     Int       @default(0)
+  blockedUntil DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([scope, keyHash])
+  @@index([blockedUntil])
+}
+
+model SavedContent {
+  id               String           @id @default(cuid())
+  userId           String
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contentType      SavedContentType
+  sanityDocumentId String
+  createdAt        DateTime         @default(now())
+
+  @@unique([userId, contentType, sanityDocumentId])
+  @@index([userId, contentType, createdAt])
+}
+
+model PropertyAssistantUsageBucket {
+  id                 String   @id @default(cuid())
+  scope              String
+  keyHash            String
+  windowStart        DateTime
+  windowEnd          DateTime
+  requestCount       Int      @default(0)
+  reservedTokenUnits Int      @default(0)
+  consumedTokenUnits Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  reservations PropertyAssistantUsageReservation[]
+
+  @@unique([scope, keyHash])
+  @@index([windowEnd])
+}
+
+model PropertyAssistantUsageReservation {
+  id         String                       @id @default(cuid())
+  bucketId   String
+  bucket     PropertyAssistantUsageBucket @relation(fields: [bucketId], references: [id], onDelete: Cascade)
+  tokenUnits Int
+  expiresAt  DateTime
+  createdAt  DateTime                     @default(now())
+
+  @@index([bucketId, expiresAt])
+  @@index([expiresAt])
 }
 
 model Lead {

@@ -19,6 +19,7 @@ import type { Post, PostSummary } from '@/sanity/types'
 import type { Metadata } from 'next'
 import { DEFAULT_OG_IMAGE } from '@/lib/seo'
 import { HAUS_SITE_ORIGIN, canonicalHausUrl } from '@/lib/share'
+import { SaveContentButton } from '@/components/saved-content'
 
 // Revalidate every 60s so edits in Sanity (e.g. a replaced cover image)
 // propagate to the statically-generated post pages without a full rebuild.
@@ -153,9 +154,18 @@ async function PostContent({ slug }: { slug: string }) {
 
         {/* Title + meta */}
         <header className="mt-6 max-w-3xl">
-          <h1 className="font-serif text-[2.25rem] font-medium leading-[1.1] text-ink-900 md:text-[3rem] md:leading-[1.05]">
-            {post.title}
-          </h1>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <h1 className="min-w-0 flex-1 font-serif text-[2.25rem] font-medium leading-[1.1] text-ink-900 md:text-[3rem] md:leading-[1.05]">
+              {post.title}
+            </h1>
+            <SaveContentButton
+              contentType="ARTICLE"
+              sanityDocumentId={post._id}
+              title={post.title}
+              showLabel
+              className="shrink-0"
+            />
+          </div>
           {post.subtitle && (
             <p className="mt-4 text-lg leading-relaxed text-slate-700 md:text-xl">{post.subtitle}</p>
           )}

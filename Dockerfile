@@ -35,6 +35,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
 COPY --from=builder --chown=nextjs:nodejs /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+COPY --from=builder --chown=nextjs:nodejs /app/scripts/migration-approval.mjs ./scripts/migration-approval.mjs
+COPY --from=builder --chown=nextjs:nodejs /app/scripts/run-approved-migrations.mjs ./scripts/run-approved-migrations.mjs
 
 USER nextjs
 EXPOSE 3000

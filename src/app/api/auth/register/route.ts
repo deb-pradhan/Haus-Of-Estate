@@ -1,96 +1,104 @@
-import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { db } from "@/lib/db";
-import { sendWelcomeEmail, sendLeadNotificationToAdmin } from "@/lib/email/resend";
+import { NextResponse } from "next/server";
+import { registerSchema } from "@/lib/auth/contracts";
+import { authDb } from "@/lib/auth/auth-db";
+import { createUnverifiedUserWithToken } from "@/lib/auth/action-tokens";
+import {
+  GENERIC_VERIFICATION_MESSAGE,
+  infrastructureFailureResponse,
+  logAuthFailure,
+  originRejectedResponse,
+  rateLimitedResponse,
+  readJson,
+  validationResponse,
+} from "@/lib/auth/api-response";
+import { isSameOriginRequest } from "@/lib/auth/request-security";
+import { enforceAuthThrottle } from "@/lib/auth/throttle";
+import { settlePublicAuthResponse } from "@/lib/auth/public-response-timing";
+import { sendVerificationEmail } from "@/lib/email/auth";
+
+export const runtime = "nodejs";
+
+const TEN_MINUTES = 10 * 60 * 1_000;
+const ONE_HOUR = 60 * 60 * 1_000;
+
+function isUniqueConstraintError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: unknown }).code === "P2002"
+  );
+}
+
+async function deliverVerification(input: {
+  email: string;
+  name: string;
+  rawToken: string;
+  returnTo?: string;
+}) {
+  try {
+    await sendVerificationEmail({
+      to: input.email,
+      name: input.name,
+      rawToken: input.rawToken,
+      returnTo: input.returnTo,
+    });
+  } catch (error) {
+    logAuthFailure("Auth verification email delivery failed", error);
+  }
+}
 
 export async function POST(request: Request) {
+  if (!isSameOriginRequest(request)) return originRejectedResponse();
+
+  const parsed = registerSchema.safeParse(await readJson(request));
+  if (!parsed.success) return validationResponse(parsed.error);
+  const startedAt = Date.now();
+
   try {
-    const { name, email, password, phone, intent, consentGiven } = await request.json();
-
-    // ── Validation ─────────────────────────────────────────────────────────────
-    if (!name || !email || !password) {
-      return NextResponse.json(
-        { error: "Name, email, and password are required" },
-        { status: 400 }
-      );
-    }
-    if (password.length < 8) {
-      return NextResponse.json(
-        { error: "Password must be at least 8 characters" },
-        { status: 400 }
-      );
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { error: "Invalid email format" },
-        { status: 400 }
-      );
+    const throttle = await enforceAuthThrottle(request, {
+      scope: "REGISTER",
+      identifier: { kind: "email", value: parsed.data.email },
+      ip: { limit: 10, windowMs: TEN_MINUTES },
+      identifierRule: { limit: 5, windowMs: ONE_HOUR },
+    });
+    if (!throttle.allowed) {
+      return rateLimitedResponse(throttle.retryAfterSeconds);
     }
 
-    // ── Duplicate check ────────────────────────────────────────────────────────
-    const existing = await db.user.findUnique({ where: { email } });
-    if (existing) {
-      return NextResponse.json(
-        { error: "An account with this email already exists" },
-        { status: 409 }
-      );
+    // Throttling deliberately happens before this CPU-intensive operation.
+    const passwordHash = await bcrypt.hash(parsed.data.password, 12);
+    const existing = await authDb.user.findUnique({
+      where: { email: parsed.data.email },
+    });
+
+    if (!existing) {
+      try {
+        const created = await createUnverifiedUserWithToken({
+          name: parsed.data.name,
+          email: parsed.data.email,
+          phone: parsed.data.phone,
+          passwordHash,
+        });
+        await deliverVerification({
+          email: parsed.data.email,
+          name: parsed.data.name,
+          rawToken: created.rawToken,
+          returnTo: parsed.data.returnTo,
+        });
+      } catch (error) {
+        if (!isUniqueConstraintError(error)) throw error;
+      }
     }
 
-    // ── Password hash ──────────────────────────────────────────────────────────
-    const passwordHash = await bcrypt.hash(password, 14);
-
-    // ── Lead scoring ─────────────────────────────────────────────────────────────
-    let score = 10;
-    if (intent === "buyer") score += 30;
-    else if (intent === "seller") score += 25;
-    const tier = score >= 60 ? "hot" : score >= 35 ? "warm" : "nurture";
-
-    // ── Transaction: create user + lead record ─────────────────────────────────
-    const [user, _lead] = await db.$transaction([
-      db.user.create({
-        data: { name, email, phone: phone ?? null, passwordHash },
-      }),
-      db.lead.create({
-        data: {
-          email,
-          firstName: name,
-          intent: intent ?? "account",
-          consentGiven: consentGiven ?? true,
-          tier,
-          score,
-          source: "modal",
-        },
-      }),
-    ]);
-
-    // ── Async email notifications (non-blocking) ────────────────────────────────
-    sendWelcomeEmail(email, name).catch((err) =>
-      console.error("Failed to send welcome email:", err)
-    );
-    sendLeadNotificationToAdmin({
-      email,
-      firstName: name,
-      intent: intent ?? "account",
-      tier,
-      score,
-      phone,
-    }).catch((err) =>
-      console.error("Failed to send lead notification:", err)
-    );
-
+    await settlePublicAuthResponse(startedAt);
     return NextResponse.json(
-      {
-        success: true,
-        user: { id: user.id, email: user.email, name: user.name },
-      },
-      { status: 201 }
+      { ok: true, message: GENERIC_VERIFICATION_MESSAGE },
+      { status: 202 },
     );
   } catch (error) {
-    console.error("Registration error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    logAuthFailure("Auth registration failed", error);
+    return infrastructureFailureResponse();
   }
 }

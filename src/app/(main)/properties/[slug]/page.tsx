@@ -20,6 +20,7 @@ import { PortableTextRenderer } from '@/components/blog'
 import { LeadEoiTrigger } from '@/components/lead-eoi/lead-eoi-trigger'
 import { LeadProjectContextRegistration } from '@/components/lead-eoi/lead-project-context'
 import { PurchaseReadiness } from '@/components/property/purchase-readiness'
+import { SaveContentButton } from '@/components/saved-content'
 import { toEmbedUrl } from '@/lib/embed-video'
 import {
   isPurchaseReadinessVisible,
@@ -250,6 +251,7 @@ export default async function PropertyDetailPage({
             src={urlFor(property.featuredImage).width(1600).height(900).url()}
             alt={property.featuredImage.alt || property.title}
             fill
+            sizes="100vw"
             className="object-cover"
             priority
           />
@@ -270,10 +272,18 @@ export default async function PropertyDetailPage({
                 ? ` · ${COMPLETION_LABEL[property.completionStatus] ?? property.completionStatus}`
                 : ''}
             </p>
-
-            <h1 className="mt-2 font-serif text-3xl font-medium text-estate-700 md:text-4xl">
-              {property.title}
-            </h1>
+            <div className="mt-2 flex flex-wrap items-start justify-between gap-4">
+              <h1 className="min-w-0 flex-1 font-serif text-3xl font-medium text-estate-700 md:text-4xl">
+                {property.title}
+              </h1>
+              <SaveContentButton
+                contentType="PROPERTY"
+                sanityDocumentId={property._id}
+                title={property.title}
+                showLabel
+                className="shrink-0"
+              />
+            </div>
             <p className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-muted-foreground">
               <MapPin className="h-4 w-4" />
               <span>
@@ -430,6 +440,7 @@ export default async function PropertyDetailPage({
                         src={urlFor(img).width(800).height(600).url()}
                         alt={img.alt || `${property.title} — image ${i + 1}`}
                         fill
+                        sizes="(max-width: 640px) 100vw, 50vw"
                         className="object-cover"
                       />
                     </div>

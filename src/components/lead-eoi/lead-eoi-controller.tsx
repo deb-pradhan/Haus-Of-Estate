@@ -96,6 +96,7 @@ export function LeadEoiProvider({ children }: { children: ReactNode }) {
   const openLead = useCallback(
     (options: LeadOpenOptions = {}) => {
       suppressAutoPopup();
+      window.dispatchEvent(new CustomEvent("haus:lead-modal-open"));
       const activeElement = document.activeElement;
       returnFocusRef.current =
         activeElement instanceof HTMLElement && activeElement !== document.body
@@ -114,6 +115,21 @@ export function LeadEoiProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     primeLeadAttribution();
   }, [pathname]);
+
+  useEffect(() => {
+    function closeForAssistant(event: Event) {
+      const detail = (event as CustomEvent<{ open?: boolean }>).detail;
+      if (detail?.open) closeLead();
+    }
+
+    window.addEventListener("haus:property-assistant-state", closeForAssistant);
+    return () => {
+      window.removeEventListener(
+        "haus:property-assistant-state",
+        closeForAssistant,
+      );
+    };
+  }, [closeLead]);
 
   useEffect(() => {
     if (!isAutoPopupRoute(pathname) || hasSeenAutoPopup()) return;

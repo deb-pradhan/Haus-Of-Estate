@@ -20,7 +20,16 @@ export interface Category {
   color?: string
 }
 
-export interface Post {
+export interface AssistantKnowledgeApproval {
+  assistantApproved?: boolean
+  assistantSummary?: string
+  assistantAsOf?: string
+  assistantExpiresAt?: string
+  assistantSourceLabel?: string
+  assistantSourceUrl?: string
+}
+
+export interface Post extends AssistantKnowledgeApproval {
   _id: string
   title: string
   subtitle?: string
@@ -58,4 +67,12 @@ export interface PostSummary {
   publishedAt: string
   featured?: boolean
   readMins?: number
+}
+
+export interface AssistantApprovedFaq extends AssistantKnowledgeApproval {
+  _id: string
+  question: string
+  slug: string
+  category?: string
+  status?: 'draft' | 'published'
 }

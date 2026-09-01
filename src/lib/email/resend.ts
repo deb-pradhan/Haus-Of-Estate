@@ -30,38 +30,6 @@ function escapeHtml(text: string): string {
 function sanitizeSubject(text: string): string {
   return text.replace(/[\r\n]+/g, " ").replace(/\s+/g, " ").trim();
 }
-
-export async function sendWelcomeEmail(to: string, name: string) {
-  const client = getResend();
-  if (!client) return { success: true, mock: true };
-  return client.emails.send({
-    from: FROM,
-    to,
-    subject: "Welcome to Haus of Estate",
-    html: `<h1>Welcome, ${name}</h1>
-<p>Thank you for joining Haus of Estate. Your account has been created successfully.</p>
-<p>We'll be in touch within 2 hours with property opportunities tailored to your needs.</p>`,
-  });
-}
-
-export async function sendLoginAlertEmail(
-  to: string,
-  name: string,
-  device: string
-) {
-  const client = getResend();
-  if (!client) return { success: true, mock: true };
-  return client.emails.send({
-    from: FROM,
-    to,
-    subject: "New login to your Haus of Estate account",
-    html: `<p>Hi ${name},</p>
-<p>We noticed a new sign-in to your account.</p>
-<p><strong>Device/Browser:</strong> ${device}</p>
-<p>If this wasn't you, please contact us immediately at ${ADMIN}.</p>`,
-  });
-}
-
 // ── Careers ──────────────────────────────────────────────────────────
 
 export interface CvAttachment {

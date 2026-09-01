@@ -11,7 +11,7 @@ export default defineConfig({
   workers: 1,
   timeout: 45_000,
   expect: { timeout: 7_500 },
-  reporter: "list",
+  reporter: [["list"], ["html", { open: "never" }]],
   use: {
     baseURL,
     screenshot: "only-on-failure",
@@ -39,14 +39,22 @@ export default defineConfig({
       LEAD_INTAKE_ENABLED: "true",
       LEAD_DELIVERY_ENABLED: "false",
       PURCHASE_READINESS_ENABLED: "true",
-      AUTH_SECRET: "playwright-only-secret-do-not-use-outside-tests",
+      AUTH_SECRET: "playwright-only-auth-secret-with-at-least-32-bytes",
       AUTH_URL: baseURL,
+      AUTH_THROTTLE_SECRET:
+        "playwright-only-throttle-secret-with-at-least-32-bytes",
+      AUTH_TRUST_HOST: "true",
+      AUTH_GOOGLE_ENABLED: "false",
+      SAVED_CONTENT_ENABLED: "true",
+      PROPERTY_ASSISTANT_ENABLED: "true",
+      NEXT_PUBLIC_GTM_ID: "GTM-TEST123",
+      NEXT_PUBLIC_SITE_URL: baseURL,
       DATABASE_URL:
         process.env.DATABASE_URL ??
         "postgresql://johndoe:randompassword@127.0.0.1:5432/mydb?schema=public",
-      SANITY_API_READ_TOKEN: '',
-      SANITY_API_BROWSER_TOKEN: '',
-      SANITY_REVALIDATE_SECRET: '',
+      SANITY_API_READ_TOKEN: "",
+      SANITY_API_BROWSER_TOKEN: "",
+      SANITY_REVALIDATE_SECRET: "",
     },
   },
 });

@@ -32,7 +32,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { trackLeadEvent } from "./analytics";
 import { getLeadAttribution, primeLeadAttribution } from "./attribution";
-import type { LeadInterest, LeadProjectContext, LeadSurface } from "./types";
+import type {
+  LeadInitialPreferences,
+  LeadInterest,
+  LeadProjectContext,
+  LeadSurface,
+} from "./types";
 
 const INTEREST_OPTIONS: Array<{
   value: LeadInterest;
@@ -100,6 +105,7 @@ interface LeadEoiFormProps {
   surface: LeadSurface;
   initialInterest?: LeadInterest;
   initialEmail?: string;
+  initialPreferences?: LeadInitialPreferences;
   project?: LeadProjectContext;
   modal?: boolean;
   onClose?: () => void;
@@ -153,18 +159,19 @@ function initialValues(
   project?: LeadProjectContext,
   initialInterest?: LeadInterest,
   initialEmail?: string,
+  initialPreferences?: LeadInitialPreferences,
 ): FormValues {
   return {
     interest: initialInterest ?? inferInterest(project) ?? "",
-    market: inferMarket(project),
-    location: project?.community ?? "",
+    market: initialPreferences?.market ?? inferMarket(project),
+    location: initialPreferences?.location ?? project?.community ?? "",
     propertyType: project?.unitType ?? "",
-    bedrooms:
-      typeof project?.bedrooms === "number"
+    bedrooms: initialPreferences?.bedrooms ??
+      (typeof project?.bedrooms === "number"
         ? project.bedrooms === 0
           ? "Studio"
           : String(project.bedrooms)
-        : "",
+        : ""),
     bathrooms:
       typeof project?.bathrooms === "number" ? String(project.bathrooms) : "",
     timeframe: "",
@@ -215,6 +222,7 @@ export function LeadEoiForm({
   surface,
   initialInterest,
   initialEmail,
+  initialPreferences,
   project,
   modal = false,
   onClose,
@@ -222,7 +230,7 @@ export function LeadEoiForm({
   const id = useId();
   const [step, setStep] = useState(1);
   const [values, setValues] = useState<FormValues>(() =>
-    initialValues(project, initialInterest, initialEmail),
+    initialValues(project, initialInterest, initialEmail, initialPreferences),
   );
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
@@ -349,7 +357,9 @@ export function LeadEoiForm({
   };
 
   const reset = () => {
-    setValues(initialValues(project, initialInterest, initialEmail));
+    setValues(
+      initialValues(project, initialInterest, initialEmail, initialPreferences),
+    );
     setErrors({});
     setSubmitState("idle");
     setSubmittedValues(null);

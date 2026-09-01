@@ -31,6 +31,7 @@ export function LeadEoiModal({
           surface={request.surface}
           initialInterest={request.interest}
           initialEmail={request.email}
+          initialPreferences={request.initialPreferences}
           project={request.project}
           modal
           onClose={onClose}

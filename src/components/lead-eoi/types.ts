@@ -23,10 +23,18 @@ export interface LeadProjectContext {
   bathrooms?: number;
   listingType?: string[];
 }
+
+export interface LeadInitialPreferences {
+  market?: string;
+  location?: string;
+  bedrooms?: string;
+}
+
 export interface LeadOpenOptions {
   interest?: LeadInterest;
   email?: string;
   project?: LeadProjectContext;
+  initialPreferences?: LeadInitialPreferences;
   surface?: LeadSurface;
 }
 

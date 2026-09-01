@@ -7,7 +7,7 @@ import type {
   LeadProjectContext,
 } from "@/components/lead-eoi/types";
 import { DEFAULT_OG_IMAGES } from "@/lib/seo";
-import { sanityFetch } from "@/sanity";
+import { sanityFetch } from "@/sanity/live";
 
 const PROJECT_CONTEXT_QUERY = `
   *[_type == "property" && status == "published" && slug.current == $slug][0] {
