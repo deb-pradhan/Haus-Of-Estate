@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { safeReturnTo } from "@/lib/auth/safe-return-to";
+import { getBotProtectionClientConfig } from "@/lib/bot-protection/config";
 import { VerifyEmail } from "../verify-email/verify-email";
 
 export const metadata: Metadata = {
@@ -39,6 +40,7 @@ export default async function VerifyPage({ searchParams }: PageProps) {
       tokenAvailable={first(params.ready) === "1"}
       invalidToken={first(params.invalid) === "1"}
       returnTo={returnTo}
+      botProtection={getBotProtectionClientConfig()}
     />
   );
 }
