@@ -30,6 +30,7 @@ function makeRecord(
       firstName: "Surya",
       email: "person@example.com",
       interest: "buy",
+      overseasCashBuyer: false,
       propertyMatchOptIn: false,
       newsletterOptIn: false,
     }),
@@ -104,9 +105,9 @@ describe("lead delivery worker", () => {
       retried: 0,
       deadLettered: 0,
     });
-    expect(JSON.stringify(vi.mocked(setup.logger.info).mock.calls)).not.toContain(
-      "person@example.com",
-    );
+    expect(
+      JSON.stringify(vi.mocked(setup.logger.info).mock.calls),
+    ).not.toContain("person@example.com");
   });
 
   it("backs off retryable failures and stores only an error code", async () => {
@@ -115,10 +116,7 @@ describe("lead delivery worker", () => {
       .mockRejectedValue(new LeadDeliveryError("FLOW_HTTP_503", true));
     const setup = dependencies(makeRecord({ attempts: 2 }), deliver);
 
-    const outcome = await processLeadDeliveryOutboxId(
-      "event-1",
-      setup.value,
-    );
+    const outcome = await processLeadDeliveryOutboxId("event-1", setup.value);
 
     expect(outcome).toBe("retried");
     expect(setup.repository.releaseForRetry).toHaveBeenCalledWith(
@@ -154,7 +152,10 @@ describe("lead delivery worker", () => {
 
   it("dead-letters invalid snapshots without contacting Power Automate", async () => {
     const deliver = vi.fn().mockResolvedValue(undefined);
-    const setup = dependencies(makeRecord({ payload: { email: "private" } }), deliver);
+    const setup = dependencies(
+      makeRecord({ payload: { email: "private" } }),
+      deliver,
+    );
 
     await expect(
       processLeadDeliveryOutboxId("event-1", setup.value),
@@ -174,7 +175,8 @@ describe("lead delivery worker", () => {
       row: Record<string, unknown>;
     };
     const legacyRow = { ...currentPayload.row };
-    delete legacyRow.propertyMatchOptIn;
+    legacyRow.propertyMatchOptIn = true;
+    delete legacyRow.overseasCashBuyer;
     const deliver = vi.fn().mockResolvedValue(undefined);
     const setup = dependencies(
       makeRecord({
@@ -188,8 +190,11 @@ describe("lead delivery worker", () => {
     ).resolves.toBe("delivered");
     expect(deliver).toHaveBeenCalledWith(
       expect.objectContaining({
-        schemaVersion: "2.0",
-        row: expect.objectContaining({ propertyMatchOptIn: false }),
+        schemaVersion: "3.0",
+        row: expect.objectContaining({
+          overseasCashBuyer: false,
+          propertyMatchOptIn: false,
+        }),
       }),
     );
   });

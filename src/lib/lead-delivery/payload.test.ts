@@ -23,6 +23,7 @@ describe("buildLeadDeliveryPayload", () => {
       bedrooms: 2,
       bathrooms: "2",
       timeframe: "3-6 months",
+      overseasCashBuyer: true,
       propertyMatchOptIn: true,
       newsletterOptIn: true,
       source: "instagram",
@@ -31,7 +32,7 @@ describe("buildLeadDeliveryPayload", () => {
     });
 
     expect(payload).toEqual({
-      schemaVersion: "2.0",
+      schemaVersion: "3.0",
       eventId: "event-1",
       eventType: "lead.created",
       leadId: "lead-1",
@@ -49,6 +50,7 @@ describe("buildLeadDeliveryPayload", () => {
         bathrooms: "2",
         timeframe: "3-6 months",
         project: "",
+        overseasCashBuyer: true,
         propertyMatchOptIn: true,
         newsletterOptIn: true,
         source: "instagram",
@@ -79,6 +81,7 @@ describe("buildLeadDeliveryPayload", () => {
       "project",
       "property match opt-in",
       "newsletter opt-in",
+      "overseas cash buyer",
       "source",
       "campaign",
       "landing page",
@@ -96,6 +99,7 @@ describe("buildLeadDeliveryPayload", () => {
       firstName: "Surya",
       email: "person@example.com",
       interest: "buy",
+      overseasCashBuyer: false,
       propertyMatchOptIn: false,
       newsletterOptIn: false,
     };
@@ -114,22 +118,23 @@ describe("buildLeadDeliveryPayload", () => {
       eventId: "event-1",
       leadId: "lead-1",
       submittedAt: "2026-08-29T12:00:00.000Z",
-      firstName: "=HYPERLINK(\"https://example.test\")",
+      firstName: '=HYPERLINK("https://example.test")',
       email: "person@example.com",
       phone: "+44 7000 000000",
       interest: "buy",
+      overseasCashBuyer: false,
       propertyMatchOptIn: false,
       newsletterOptIn: false,
       landingPage:
         "https://hausofestate.com/register-interest?email=private@example.com",
     });
 
-    expect(payload.row.name).toBe("'=HYPERLINK(\"https://example.test\")");
+    expect(payload.row.name).toBe('\'=HYPERLINK("https://example.test")');
     expect(payload.row.phone).toBe("'+44 7000 000000");
     expect(payload.row.landingPage).toBe("/register-interest");
   });
 
-  it("upgrades immutable version 1 outbox payloads without inventing consent", () => {
+  it("upgrades version 1 without trusting injected newer qualifier state", () => {
     const current = buildLeadDeliveryPayload({
       eventId: "event-1",
       leadId: "lead-1",
@@ -137,12 +142,36 @@ describe("buildLeadDeliveryPayload", () => {
       firstName: "Surya",
       email: "person@example.com",
       interest: "buy",
+      overseasCashBuyer: false,
       propertyMatchOptIn: false,
       newsletterOptIn: true,
     });
-    const legacyRow: Record<string, unknown> = { ...current.row };
-    delete legacyRow.propertyMatchOptIn;
+    const legacyRow: Record<string, unknown> = {
+      ...current.row,
+      propertyMatchOptIn: true,
+    };
+    delete legacyRow.overseasCashBuyer;
     const legacy = { ...current, schemaVersion: "1.0", row: legacyRow };
+
+    expect(normalizeLeadDeliveryPayload(legacy)).toEqual(current);
+    expect(normalizeLeadDeliveryPayload({ ...legacy, row: {} })).toBeNull();
+  });
+
+  it("upgrades version 2 while preserving its property-match choice", () => {
+    const current = buildLeadDeliveryPayload({
+      eventId: "event-1",
+      leadId: "lead-1",
+      submittedAt: "2026-08-29T12:00:00.000Z",
+      firstName: "Surya",
+      email: "person@example.com",
+      interest: "buy",
+      overseasCashBuyer: false,
+      propertyMatchOptIn: true,
+      newsletterOptIn: true,
+    });
+    const legacyRow: Record<string, unknown> = { ...current.row };
+    delete legacyRow.overseasCashBuyer;
+    const legacy = { ...current, schemaVersion: "2.0", row: legacyRow };
 
     expect(normalizeLeadDeliveryPayload(legacy)).toEqual(current);
     expect(normalizeLeadDeliveryPayload({ ...legacy, row: {} })).toBeNull();

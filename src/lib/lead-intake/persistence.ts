@@ -5,10 +5,7 @@ import {
   PROPERTY_MATCH_CONSENT_WORDING,
   newsletterConsentWordingFor,
 } from "./contract";
-import {
-  LeadConflictError,
-  LeadRateLimitError,
-} from "./errors";
+import { LeadConflictError, LeadRateLimitError } from "./errors";
 import type { NormalizedLeadIntake } from "./normalize";
 import type { PublishedProjectContext } from "./project";
 
@@ -204,6 +201,7 @@ export function createPrismaLeadIntakeStore(
               consentGiven: input.enquiryConsentGiven,
               propertyMatchOptIn: input.propertyMatchOptIn,
               newsletterOptIn: input.newsletterOptIn,
+              overseasCashBuyer: input.overseasCashBuyer,
               formVersion: input.formVersion,
               privacyNoticeVersion: input.privacyNoticeVersion,
               formSurface: input.context.surface,
@@ -345,6 +343,7 @@ export function createPrismaLeadIntakeStore(
             project: project?.title,
             propertyMatchOptIn: input.propertyMatchOptIn,
             newsletterOptIn: input.newsletterOptIn,
+            overseasCashBuyer: input.overseasCashBuyer,
             source: input.context.utmSource ?? input.context.surface,
             campaign: input.context.utmCampaign,
             landingPage: input.context.pagePath,

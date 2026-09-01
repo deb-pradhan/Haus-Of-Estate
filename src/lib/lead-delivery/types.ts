@@ -1,4 +1,4 @@
-export const LEAD_DELIVERY_SCHEMA_VERSION = "2.0" as const;
+export const LEAD_DELIVERY_SCHEMA_VERSION = "3.0" as const;
 export const LEAD_DELIVERY_EVENT_TYPE = "lead.created" as const;
 
 export const LEAD_DELIVERY_STATUSES = {
@@ -27,6 +27,7 @@ export interface LeadExcelRow {
   project: string;
   propertyMatchOptIn: boolean;
   newsletterOptIn: boolean;
+  overseasCashBuyer: boolean;
   source: string;
   campaign: string;
   landingPage: string;
@@ -61,6 +62,7 @@ export interface LeadDeliveryPayloadInput {
   project?: string | null;
   propertyMatchOptIn: boolean;
   newsletterOptIn: boolean;
+  overseasCashBuyer: boolean;
   source?: string | null;
   campaign?: string | null;
   landingPage?: string | null;
@@ -113,7 +115,10 @@ export interface LeadDeliveryTransport {
 
 export interface LeadDeliveryLogger {
   info(event: string, fields?: Record<string, number | string | boolean>): void;
-  error(event: string, fields?: Record<string, number | string | boolean>): void;
+  error(
+    event: string,
+    fields?: Record<string, number | string | boolean>,
+  ): void;
 }
 
 export interface LeadDeliveryWorkerOptions {

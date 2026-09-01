@@ -21,6 +21,7 @@ export const EXCEL_LEAD_TABLE_HEADINGS = [
   "project",
   "property match opt-in",
   "newsletter opt-in",
+  "overseas cash buyer",
   "source",
   "campaign",
   "landing page",
@@ -91,6 +92,7 @@ export function buildLeadDeliveryPayload(
       project: optionalCell(input.project),
       propertyMatchOptIn: input.propertyMatchOptIn,
       newsletterOptIn: input.newsletterOptIn,
+      overseasCashBuyer: input.overseasCashBuyer,
       source: optionalCell(input.source),
       campaign: optionalCell(input.campaign),
       landingPage: landingPageCell(input.landingPage),
@@ -139,6 +141,7 @@ export function isLeadDeliveryPayload(
     candidate.leadId.length > 0 &&
     typeof row.propertyMatchOptIn === "boolean" &&
     typeof row.newsletterOptIn === "boolean" &&
+    typeof row.overseasCashBuyer === "boolean" &&
     row.status === "New" &&
     row.leadId === candidate.leadId &&
     stringCells.every((key) => typeof row[key] === "string")
@@ -146,8 +149,8 @@ export function isLeadDeliveryPayload(
 }
 
 /**
- * Upgrades immutable 1.0 outbox records so a rolling deployment does not
- * dead-letter leads that were queued before the match-alert column existed.
+ * Upgrades immutable 1.0 and 2.0 outbox records so a rolling deployment does
+ * not dead-letter leads queued before newer operational columns existed.
  */
 export function normalizeLeadDeliveryPayload(
   value: unknown,
@@ -164,7 +167,7 @@ export function normalizeLeadDeliveryPayload(
   };
   const row = candidate.row;
   if (
-    candidate.schemaVersion !== "1.0" ||
+    (candidate.schemaVersion !== "1.0" && candidate.schemaVersion !== "2.0") ||
     candidate.eventType !== LEAD_DELIVERY_EVENT_TYPE ||
     typeof candidate.eventId !== "string" ||
     !candidate.eventId ||
@@ -176,10 +179,24 @@ export function normalizeLeadDeliveryPayload(
     return null;
   }
 
+  if (
+    candidate.schemaVersion === "2.0" &&
+    typeof row.propertyMatchOptIn !== "boolean"
+  ) {
+    return null;
+  }
+
   const upgraded = {
     ...candidate,
     schemaVersion: LEAD_DELIVERY_SCHEMA_VERSION,
-    row: { ...row, propertyMatchOptIn: false },
+    row: {
+      ...row,
+      propertyMatchOptIn:
+        candidate.schemaVersion === "2.0"
+          ? (row.propertyMatchOptIn as boolean)
+          : false,
+      overseasCashBuyer: false,
+    },
   };
   return isLeadDeliveryPayload(upgraded) ? upgraded : null;
 }

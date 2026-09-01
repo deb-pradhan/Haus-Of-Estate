@@ -20,6 +20,7 @@ const payload = buildLeadDeliveryPayload({
   firstName: "Surya",
   email: "person@example.com",
   interest: "buy",
+  overseasCashBuyer: false,
   propertyMatchOptIn: false,
   newsletterOptIn: false,
 });
@@ -37,7 +38,7 @@ describe("PowerAutomateLeadDeliveryTransport", () => {
       .mockResolvedValueOnce(
         new Response(
           JSON.stringify({
-            schemaVersion: "2.0",
+            schemaVersion: "3.0",
             eventId: "event-1",
             leadId: "lead-1",
             rowAdded: true,
@@ -59,7 +60,9 @@ describe("PowerAutomateLeadDeliveryTransport", () => {
       "https://login.microsoftonline.com/tenant-id/oauth2/v2.0/token",
     );
     expect(tokenRequest.method).toBe("POST");
-    expect(String(tokenRequest.body)).toContain("grant_type=client_credentials");
+    expect(String(tokenRequest.body)).toContain(
+      "grant_type=client_credentials",
+    );
     expect(String(tokenRequest.body)).toContain("client_id=client-id");
 
     const [flowUrl, flowRequest] = fetchMock.mock.calls[1];
@@ -68,7 +71,7 @@ describe("PowerAutomateLeadDeliveryTransport", () => {
       Authorization: "Bearer token",
       "Content-Type": "application/json",
       "Idempotency-Key": "event-1",
-      "X-Haus-Event-Version": "2.0",
+      "X-Haus-Event-Version": "3.0",
     });
     expect(JSON.parse(String(flowRequest.body))).toEqual(payload);
   });
@@ -86,7 +89,7 @@ describe("PowerAutomateLeadDeliveryTransport", () => {
         async () =>
           new Response(
             JSON.stringify({
-              schemaVersion: "2.0",
+              schemaVersion: "3.0",
               eventId: "event-1",
               leadId: "lead-1",
               rowAdded: false,
@@ -145,7 +148,7 @@ describe("PowerAutomateLeadDeliveryTransport", () => {
       new Response(JSON.stringify({ accepted: true }), { status: 201 }),
       new Response(
         JSON.stringify({
-          schemaVersion: "2.0",
+          schemaVersion: "3.0",
           eventId: "different-event",
           leadId: "lead-1",
           rowAdded: true,
@@ -155,7 +158,7 @@ describe("PowerAutomateLeadDeliveryTransport", () => {
       ),
       new Response(
         JSON.stringify({
-          schemaVersion: "2.0",
+          schemaVersion: "3.0",
           eventId: "event-1",
           leadId: "lead-1",
           rowAdded: true,
@@ -205,12 +208,14 @@ describe("PowerAutomateLeadDeliveryTransport", () => {
   });
 
   it("shares one timeout budget across token and flow requests", async () => {
-    const fetchMock = vi.fn().mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({ access_token: "token", expires_in: 3600 }),
-        { status: 200 },
-      ),
-    );
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ access_token: "token", expires_in: 3600 }),
+          { status: 200 },
+        ),
+      );
     const clock = vi
       .fn()
       .mockReturnValueOnce(1_000)

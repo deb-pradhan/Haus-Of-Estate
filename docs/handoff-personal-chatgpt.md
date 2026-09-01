@@ -1,6 +1,6 @@
 # Haus of Estate implementation handoff
 
-Updated: 31 August 2026
+Updated: 1 September 2026
 
 ## Repository and branch safety
 
@@ -15,9 +15,9 @@ Updated: 31 August 2026
 
 ## Qualifier milestone implemented
 
-The shared three-step enquiry form now treats the requested first response or
-shortlist as fulfilment of the enquiry. It adds two independent, unchecked
-marketing choices:
+The shared three-step enquiry form treats the requested first response or
+shortlist as fulfilment of the enquiry. It presents two independent, unchecked
+email choices:
 
 1. Recurring property and opportunity emails matching the submitted brief.
 2. The general Haus of Estate newsletter.
@@ -28,27 +28,35 @@ no automated match is promised. The confirmation screen explains exactly which
 choices were made and links to Haus accounts on Instagram, LinkedIn, Facebook,
 Pinterest, YouTube, and X.
 
-The API contract carries `propertyMatchOptIn`. PostgreSQL stores one immutable
+The contact step also shows the same six social links before submission and an
+optional `I am a cash buyer purchasing from overseas` qualifier for buyer and
+investor briefs. This is stored as adviser context, not marketing consent, and
+is unchecked by default.
+
+The API contract carries `propertyMatchOptIn`, `newsletterOptIn`, and
+`overseasCashBuyer`. PostgreSQL stores one immutable
 Lead snapshot per enquiry, a current match-subscription state, and append-only
 match consent/withdrawal evidence containing the exact wording, form/privacy
 versions, source, campaign, and page context. Match and newsletter state are
 committed with the lead and outbox in one serializable transaction.
 
-The Excel/Power Automate contract is version `2.0` and adds `property match
-opt-in` immediately before `newsletter opt-in`. Pending immutable v1 outbox
-events are upgraded safely with match consent set to false. Delivery remains
-disabled by default.
+The Excel/Power Automate contract is version `3.0` and carries separate
+`property match opt-in`, `newsletter opt-in`, and `overseas cash buyer`
+columns. Pending immutable v1/v2 outbox events are upgraded safely with missing
+values set to false. Delivery remains disabled by default.
 
-The privacy page now distinguishes one-off enquiry handling, recurring match
-emails, and newsletters. Launch is still blocked because the company number,
-registered address, and privacy-controller details are not confirmed.
+The privacy page distinguishes one-off enquiry handling, overseas purchase
+context, recurring match emails, and newsletters. Launch is still blocked
+because the company number, registered address, and privacy-controller details
+are not confirmed.
 
 ## Verification completed
 
 - Prisma schema validation and client generation pass.
 - TypeScript passes.
-- 69 Vitest tests pass.
-- 11 Playwright desktop/mobile lead-intake tests pass.
+- 78 Vitest tests pass.
+- 12 Playwright desktop/mobile lead-intake tests pass, including a 320px
+  overflow check.
 - ESLint passes for all files changed in this milestone.
 - The repository-wide lint command still fails on pre-existing unrelated files;
   do not attribute those baseline errors to this branch.
@@ -58,7 +66,7 @@ registered address, and privacy-controller details are not confirmed.
 - Sonia/legal approval of exact form and privacy wording.
 - Tanu approval of the existing non-PII conversion-event mapping.
 - Confirmed legal/controller details for the privacy policy.
-- Restricted Excel workbook and approved `property match opt-in` column.
+- Restricted Excel workbook and approved qualifier/consent columns.
 - Updated authenticated Power Automate flow and staging end-to-end test.
 - Railway backup, live-schema comparison, migration approval, and secrets.
 

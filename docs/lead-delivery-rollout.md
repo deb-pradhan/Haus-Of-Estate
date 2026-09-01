@@ -45,11 +45,11 @@ company-managed account.
    the HTTP trigger and every Excel or email action that handles lead data,
    wherever those settings are offered, so contact details are hidden from
    normal flow run history.
-2. Reject payloads unless `schemaVersion` is `2.0` and `eventType` is
+2. Reject payloads unless `schemaVersion` is `3.0` and `eventType` is
    `lead.created`.
 3. Add a hidden `LeadDeliveryState` control table in the same restricted
    workbook with `event ID`, `lead ID`, `row added at`, and `notification sent
-   at` columns. It contains no contact data and records which actions completed.
+at` columns. It contains no contact data and records which actions completed.
    Create or retrieve its record before performing either action.
 4. If `row added at` is empty, list rows from the approved lead table by the
    exact `lead ID` column. Append `triggerBody()?['row']` only when that Lead ID
@@ -64,7 +64,7 @@ company-managed account.
 
    ```json
    {
-     "schemaVersion": "2.0",
+     "schemaVersion": "3.0",
      "eventId": "stable-outbox-id",
      "leadId": "stable-lead-id",
      "rowAdded": true,
@@ -90,14 +90,14 @@ The Excel table headings, in order, must be:
 
 `submission time`, `lead ID`, `name`, `email`, `phone`, `interest`, `market`,
 `location`, `property type`, `bedrooms`, `bathrooms`, `timeframe`, `project`,
-`property match opt-in`, `newsletter opt-in`, `source`, `campaign`, `landing
-page`, `status`, `owner`, and `notes`.
+`property match opt-in`, `newsletter opt-in`, `overseas cash buyer`, `source`,
+`campaign`, `landing page`, `status`, `owner`, and `notes`.
 
 The application sends this versioned contract:
 
 ```json
 {
-  "schemaVersion": "2.0",
+  "schemaVersion": "3.0",
   "eventId": "stable-outbox-id",
   "eventType": "lead.created",
   "leadId": "stable-lead-id",
@@ -117,6 +117,7 @@ The application sends this versioned contract:
     "project": "",
     "propertyMatchOptIn": true,
     "newsletterOptIn": true,
+    "overseasCashBuyer": true,
     "source": "instagram",
     "campaign": "bio",
     "landingPage": "/register-interest",
@@ -129,14 +130,15 @@ The application sends this versioned contract:
 
 Map the camel-case row properties to the corresponding displayed Excel headings
 in the order above. The request also includes `Idempotency-Key: <eventId>` and
-`X-Haus-Event-Version: 2.0`. User-controlled values that begin with an Excel
+`X-Haus-Event-Version: 3.0`. User-controlled values that begin with an Excel
 formula character are prefixed with an apostrophe before delivery, preventing
 formula execution while preserving the displayed value.
 
-The worker deterministically upgrades any immutable pending version `1.0`
-outbox record to version `2.0` with `propertyMatchOptIn: false` before delivery.
-This preserves pre-upgrade leads without inventing consent. The flow itself only
-needs to accept version `2.0` after the application upgrade.
+The worker deterministically upgrades immutable pending version `1.0` or `2.0`
+outbox records to version `3.0`. Missing property-match consent and overseas
+cash-buyer context are set to false. This preserves pre-upgrade leads without
+inventing either consent or enquiry context. The flow itself only needs to
+accept version `3.0` after the application upgrade.
 
 ## Railway services
 
@@ -173,7 +175,8 @@ configure them.
    may now run `prisma migrate deploy`, which applies only the additive
    migration before the new application starts. When the qualifier branch is
    deployed later, the same controlled process applies
-   `20260831100000_lead_intake_qualifiers`.
+   `20260831100000_lead_intake_qualifiers`, followed by
+   `20260901004000_overseas_cash_buyer_qualifier`.
 5. Configure the workbook, authenticated flow, service principal, and worker
    secrets. Leave delivery false.
 6. In staging, enable delivery and submit one tracked test lead. Confirm exactly
