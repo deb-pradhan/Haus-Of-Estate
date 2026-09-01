@@ -14,24 +14,30 @@ export const POST_FIELDS = `
   "readMins": round(length(pt::text(body)) / 1125)
 `
 
+// Draft documents only exist in authenticated draft perspective. This keeps
+// public reads published-only while allowing reviewers to preview every
+// editorial workflow state before release.
+const VISIBLE_EDITORIAL_DOCUMENT =
+  '(status == "published" || _originalId in path("drafts.**"))'
+
 export const POSTS_QUERY = `
-  *[_type == "post" && status == "published"] | order(publishedAt desc) [$start...$end] {
+  *[_type == "post" && ${VISIBLE_EDITORIAL_DOCUMENT}] | order(publishedAt desc) [$start...$end] {
     ${POST_FIELDS}
   }
 `
 
 export const POSTS_COUNT_QUERY = `
-  count(*[_type == "post" && status == "published"])
+  count(*[_type == "post" && ${VISIBLE_EDITORIAL_DOCUMENT}])
 `
 
 export const FEATURED_POST_QUERY = `
-  *[_type == "post" && status == "published" && featured == true][0] {
+  *[_type == "post" && ${VISIBLE_EDITORIAL_DOCUMENT} && featured == true][0] {
     ${POST_FIELDS}
   }
 `
 
 export const POST_BY_SLUG_QUERY = `
-  *[_type == "post" && slug.current == $slug && status == "published"][0] {
+  *[_type == "post" && slug.current == $slug && ${VISIBLE_EDITORIAL_DOCUMENT}][0] {
     ${POST_FIELDS},
     body[]{
       ...,
@@ -41,17 +47,17 @@ export const POST_BY_SLUG_QUERY = `
 `
 
 export const POSTS_BY_CATEGORY_QUERY = `
-  *[_type == "post" && status == "published" && $slug in categories[]->slug.current] | order(publishedAt desc) [$start...$end] {
+  *[_type == "post" && ${VISIBLE_EDITORIAL_DOCUMENT} && $slug in categories[]->slug.current] | order(publishedAt desc) [$start...$end] {
     ${POST_FIELDS}
   }
 `
 
 export const POSTS_BY_CATEGORY_COUNT_QUERY = `
-  count(*[_type == "post" && status == "published" && $slug in categories[]->slug.current])
+  count(*[_type == "post" && ${VISIBLE_EDITORIAL_DOCUMENT} && $slug in categories[]->slug.current])
 `
 
 export const RELATED_POSTS_QUERY = `
-  *[_type == "post" && status == "published" && _id != $postId && count(categories[@._ref in $categoryIds]) > 0] | order(publishedAt desc) [0...3] {
+  *[_type == "post" && ${VISIBLE_EDITORIAL_DOCUMENT} && _id != $postId && count(categories[@._ref in $categoryIds]) > 0] | order(publishedAt desc) [0...3] {
     ${POST_FIELDS}
   }
 `
@@ -63,13 +69,13 @@ export const CATEGORIES_QUERY = `
 `
 
 export const POST_SLUGS_QUERY = `
-  *[_type == "post" && status == "published" && defined(slug.current)] {
+  *[_type == "post" && ${VISIBLE_EDITORIAL_DOCUMENT} && defined(slug.current)] {
     "slug": slug.current
   }
 `
 
 export const SEO_QUERY = `
-  *[_type == "post" && slug.current == $slug][0] {
+  *[_type == "post" && slug.current == $slug && ${VISIBLE_EDITORIAL_DOCUMENT}][0] {
     title,
     subtitle,
     seo,
@@ -93,14 +99,14 @@ const ROLE_CARD_FIELDS = `
 `
 
 export const ROLES_QUERY = `
-  *[_type == "role" && status == "open"]
+  *[_type == "role" && (status == "open" || _originalId in path("drafts.**"))]
     | order(featured desc, publishedAt desc) {
       ${ROLE_CARD_FIELDS}
     }
 `
 
 export const ROLE_BY_SLUG_QUERY = `
-  *[_type == "role" && slug.current == $slug && status == "open"][0] {
+  *[_type == "role" && slug.current == $slug && (status == "open" || _originalId in path("drafts.**"))][0] {
     ${ROLE_CARD_FIELDS},
     description,
     responsibilities,
@@ -111,7 +117,7 @@ export const ROLE_BY_SLUG_QUERY = `
 `
 
 export const ROLE_SLUGS_QUERY = `
-  *[_type == "role" && status == "open" && defined(slug.current)] {
+  *[_type == "role" && (status == "open" || _originalId in path("drafts.**")) && defined(slug.current)] {
     "slug": slug.current
   }
 `
@@ -148,7 +154,7 @@ const PROPERTY_CARD_FIELDS = `
 `
 
 export const PROPERTIES_QUERY = `
-  *[_type == "property" && status == "published"]
+  *[_type == "property" && ${VISIBLE_EDITORIAL_DOCUMENT}]
     | order(featured desc, publishedAt desc) {
       ${PROPERTY_CARD_FIELDS}
     }
@@ -157,7 +163,7 @@ export const PROPERTIES_QUERY = `
 // Server-side filtered listing. Pass empty-string params to skip a filter.
 // $availability / $intent match against the array fields (membership).
 export const PROPERTIES_FILTERED_QUERY = `
-  *[_type == "property" && status == "published"
+  *[_type == "property" && ${VISIBLE_EDITORIAL_DOCUMENT}
     && ($category == "" || category == $category)
     && ($availability == "" || $availability in availability)
     && ($intent == "" || $intent in listingType)
@@ -168,14 +174,14 @@ export const PROPERTIES_FILTERED_QUERY = `
 `
 
 export const FEATURED_PROPERTIES_QUERY = `
-  *[_type == "property" && status == "published" && featured == true]
+  *[_type == "property" && ${VISIBLE_EDITORIAL_DOCUMENT} && featured == true]
     | order(publishedAt desc) [0...3] {
       ${PROPERTY_CARD_FIELDS}
     }
 `
 
 export const PROPERTY_BY_SLUG_QUERY = `
-  *[_type == "property" && slug.current == $slug && status == "published"][0] {
+  *[_type == "property" && slug.current == $slug && ${VISIBLE_EDITORIAL_DOCUMENT}][0] {
     ${PROPERTY_CARD_FIELDS},
     description,
     keyFeatures,
@@ -188,7 +194,7 @@ export const PROPERTY_BY_SLUG_QUERY = `
 `
 
 export const PROPERTY_SLUGS_QUERY = `
-  *[_type == "property" && status == "published" && defined(slug.current)] {
+  *[_type == "property" && ${VISIBLE_EDITORIAL_DOCUMENT} && defined(slug.current)] {
     "slug": slug.current
   }
 `

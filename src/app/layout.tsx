@@ -3,6 +3,10 @@ import { Inter, Cormorant_Garamond } from "next/font/google";
 import Script from "next/script";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SessionProvider } from "@/lib/auth/client";
+import {
+  isSanityLivePreviewConfigured,
+  SanityLive,
+} from "@/sanity/live";
 import { draftMode } from "next/headers";
 import { SOCIAL_PROFILE_URLS } from "@/config/social";
 import { HAUS_SITE_ORIGIN } from "@/lib/share";
@@ -180,11 +184,17 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <SessionProvider>
           <TooltipProvider delayDuration={300}>{children}</TooltipProvider>
           {isDraftModeEnabled && (
-            <div className="fixed bottom-4 right-4 z-50 rounded-full bg-estate-700 px-4 py-2 text-sm text-white shadow-lg">
-              Preview Mode
-            </div>
+            <a
+              href="/api/draft-mode/disable"
+              className="fixed bottom-4 right-4 z-50 inline-flex min-h-11 items-center rounded-full bg-estate-700 px-4 py-2 text-sm font-medium text-white shadow-lg"
+            >
+              Exit preview
+            </a>
           )}
         </SessionProvider>
+        <SanityLive
+          includeDrafts={isDraftModeEnabled && isSanityLivePreviewConfigured}
+        />
       </body>
     </html>
   );

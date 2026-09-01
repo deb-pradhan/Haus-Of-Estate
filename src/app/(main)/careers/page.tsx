@@ -11,7 +11,7 @@ import {
   GraduationCap,
   CalendarClock,
 } from 'lucide-react'
-import { sanityFetch } from '@/sanity'
+import { sanityFetch } from '@/sanity/live'
 import { ROLES_QUERY } from '@/sanity/queries'
 import { ApplicationForm } from '@/components/careers/application-form'
 import { HR_INBOX } from '@/lib/careers'

@@ -6,6 +6,8 @@ const baseURL = `http://127.0.0.1:${port}`;
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: false,
+  forbidOnly: Boolean(process.env.CI),
+  retries: process.env.CI ? 1 : 0,
   workers: 1,
   timeout: 45_000,
   expect: { timeout: 7_500 },
@@ -42,6 +44,9 @@ export default defineConfig({
       DATABASE_URL:
         process.env.DATABASE_URL ??
         "postgresql://johndoe:randompassword@127.0.0.1:5432/mydb?schema=public",
+      SANITY_API_READ_TOKEN: '',
+      SANITY_API_BROWSER_TOKEN: '',
+      SANITY_REVALIDATE_SECRET: '',
     },
   },
 });
