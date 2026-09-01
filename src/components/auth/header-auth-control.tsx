@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { CircleUserRound, Loader2, LogIn, LogOut } from "lucide-react";
+import { Bookmark, CircleUserRound, Loader2, LogIn, LogOut } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuthSession } from "@/lib/auth/client";
+import { useSavedContent } from "@/components/saved-content";
 
 function loginHref(pathname: string, searchParams: URLSearchParams) {
   const search = searchParams.toString();
@@ -26,6 +27,7 @@ export function HeaderAuthControl() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { data: session, status } = useAuthSession();
+  const { enabled: savedContentEnabled } = useSavedContent();
   const [signingOut, setSigningOut] = useState(false);
 
   if (status === "loading") {
@@ -83,6 +85,15 @@ export function HeaderAuthControl() {
           )}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        {savedContentEnabled && (
+          <DropdownMenuItem asChild className="min-h-10 cursor-pointer">
+            <Link href="/saved">
+              <Bookmark />
+              Saved items
+            </Link>
+          </DropdownMenuItem>
+        )}
+        {savedContentEnabled && <DropdownMenuSeparator />}
         <DropdownMenuItem
           disabled={signingOut}
           onSelect={() => void handleSignOut()}

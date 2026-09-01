@@ -59,6 +59,11 @@ enum AuthActionPurpose {
   PASSWORD_RESET
 }
 
+enum SavedContentType {
+  PROPERTY
+  ARTICLE
+}
+
 model User {
   id             String    @id @default(cuid())
   email          String    @unique
@@ -68,7 +73,7 @@ model User {
   role           UserRole  @default(BUYER)
   passwordHash   String?
   // The physical legacy Boolean remains unmanaged during expand/contract.
-  emailVerified DateTime? @map("emailVerifiedAt")
+  emailVerified  DateTime? @map("emailVerifiedAt")
   savedListings  String[]  @default([])
   sessionVersion Int       @default(0)
   disabledAt     DateTime?
@@ -86,6 +91,7 @@ model User {
   notifications    Notification[]
   leads            Lead[]
   authActionTokens AuthActionToken[]
+  savedContent     SavedContent[]
 
   @@index([email])
   @@index([role])
@@ -357,6 +363,18 @@ model AuthThrottle {
 
   @@unique([scope, keyHash])
   @@index([blockedUntil])
+}
+
+model SavedContent {
+  id               String           @id @default(cuid())
+  userId           String
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contentType      SavedContentType
+  sanityDocumentId String
+  createdAt        DateTime         @default(now())
+
+  @@unique([userId, contentType, sanityDocumentId])
+  @@index([userId, contentType, createdAt])
 }
 
 model Lead {

@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { safeReturnTo } from "@/lib/auth/safe-return-to";
+import { isSavedContentEnabled } from "@/lib/features";
 
-const PROTECTED_PATHS = ["/saved", "/account", "/messages", "/viewings"];
+const ALWAYS_PROTECTED_PATHS = ["/account", "/messages", "/viewings"];
 const GUEST_ONLY_PATHS = ["/auth/login", "/auth/register"];
 
 function matches(pathname: string, routes: string[]): boolean {
@@ -15,7 +16,11 @@ export default auth((request) => {
   const { pathname, search } = request.nextUrl;
   const signedIn = Boolean(request.auth?.user?.id);
 
-  if (!signedIn && matches(pathname, PROTECTED_PATHS)) {
+  const protectedPaths = isSavedContentEnabled()
+    ? ["/saved", ...ALWAYS_PROTECTED_PATHS]
+    : ALWAYS_PROTECTED_PATHS;
+
+  if (!signedIn && matches(pathname, protectedPaths)) {
     const loginUrl = new URL("/auth/login", request.url);
     loginUrl.searchParams.set("returnTo", `${pathname}${search}`);
     return NextResponse.redirect(loginUrl);

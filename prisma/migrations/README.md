@@ -19,7 +19,8 @@ Do not run the baseline against an existing Haus database. Before deploying:
    ```
 
 4. Let Railway's pre-deploy command apply
-   `20260901001000_auth_hardening` only after Deb approves setting
+   `20260901001000_auth_hardening` and each later additive migration only after
+   Deb approves setting
    `HAUS_DATABASE_MIGRATIONS_APPROVED=20260901001000_auth_hardening@<reviewed-sha256>`
    for that deployment. The blocked pre-deploy output prints the exact value;
    Deb must compare its checksum with the reviewed migration before approval.
@@ -28,8 +29,13 @@ Do not run the baseline against an existing Haus database. Before deploying:
    any new pending migration requires its own exact pending-set approval.
 
 Never mark the auth-hardening migration as applied unless its SQL was applied
-and verified independently. A new empty database can run both migrations with
+and verified independently. A new empty database can run all migrations with
 `prisma migrate deploy`.
+
+`20260901002000_saved_content` is the additive migration for account-owned
+Sanity references. Apply it only after auth hardening is present and with its
+own reviewed checksum approval. It stores immutable Sanity document IDs and
+does not copy properties or articles into the dormant Prisma property catalog.
 
 The auth migration expands the old verification representation safely. The
 legacy Boolean `User.emailVerified` remains in place for deployment overlap and
