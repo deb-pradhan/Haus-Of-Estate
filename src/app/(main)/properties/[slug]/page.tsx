@@ -17,7 +17,12 @@ import { PROPERTY_BY_SLUG_QUERY, PROPERTY_SLUGS_QUERY } from '@/sanity/queries'
 import { PortableTextRenderer } from '@/components/blog'
 import { LeadEoiTrigger } from '@/components/lead-eoi/lead-eoi-trigger'
 import { LeadProjectContextRegistration } from '@/components/lead-eoi/lead-project-context'
+import { PurchaseReadiness } from '@/components/property/purchase-readiness'
 import { toEmbedUrl } from '@/lib/embed-video'
+import {
+  isPurchaseReadinessVisible,
+  resolvePurchaseReadiness,
+} from '@/lib/purchase-readiness'
 import { DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGES } from '@/lib/seo'
 
 interface LocationBenefit {
@@ -34,7 +39,8 @@ interface PropertyDetail {
   city: string
   country?: string
   developer?: string
-  listingType?: string[]
+  availability?: string[] | null
+  listingType?: string[] | null
   unitType: string
   unitNumber?: string
   bedrooms?: number
@@ -135,6 +141,29 @@ export default async function PropertyDetailPage({
     property.listingType?.length === 1 && property.listingType[0] === 'rent'
       ? 'rent'
       : 'buy'
+  const projectContext = {
+    slug: property.slug,
+    title: property.title,
+    community: property.community,
+    masterDevelopment: property.masterDevelopment,
+    city: property.city,
+    country: property.country,
+    unitType: property.unitType,
+    bedrooms: property.bedrooms,
+    bathrooms: property.bathrooms,
+    listingType: property.listingType ?? undefined,
+  }
+  const showPurchaseReadiness = isPurchaseReadinessVisible(
+    process.env.PURCHASE_READINESS_ENABLED === 'true',
+    property.listingType,
+  )
+  const purchaseReadiness = showPurchaseReadiness
+    ? resolvePurchaseReadiness({
+        city: property.city,
+        country: property.country,
+        availability: property.availability,
+      })
+    : null
 
   const facts: { icon: typeof BedDouble; label: string; value: string }[] = []
   if (typeof property.bedrooms === 'number') {
@@ -193,18 +222,7 @@ export default async function PropertyDetailPage({
   return (
     <div className="min-h-screen bg-background">
       <LeadProjectContextRegistration
-        project={{
-          slug: property.slug,
-          title: property.title,
-          community: property.community,
-          masterDevelopment: property.masterDevelopment,
-          city: property.city,
-          country: property.country,
-          unitType: property.unitType,
-          bedrooms: property.bedrooms,
-          bathrooms: property.bathrooms,
-          listingType: property.listingType,
-        }}
+        project={projectContext}
       />
       {/* Top bar */}
       <div className="border-b border-border bg-surface">
@@ -289,6 +307,14 @@ export default async function PropertyDetailPage({
                 {property.summary}
               </p>
             )}
+
+            {purchaseReadiness ? (
+              <PurchaseReadiness
+                fallbackHref={enquiryHref}
+                guidance={purchaseReadiness}
+                project={projectContext}
+              />
+            ) : null}
 
             {/* Key features */}
             {property.keyFeatures && property.keyFeatures.length > 0 && (
