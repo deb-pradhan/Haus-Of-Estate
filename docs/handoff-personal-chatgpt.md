@@ -1,6 +1,6 @@
 # Haus of Estate implementation handoff
 
-Updated: 1 September 2026
+Updated: 2 September 2026
 
 ## Repository and branch safety
 
@@ -90,6 +90,24 @@ guide` request with its own delivery wording, alongside a separate optional
 newsletter checkbox. Receiving the guide must not silently subscribe someone
 to recurring marketing.
 
+## Homepage country-filter correction
+
+The homepage hero previously had a separate hard-coded `Location` selector
+containing cities, even though the shared EOI form had already moved to country
+selection. Draft PR `#11` fixes that independently on
+`suryak02/homepage-country-filter`:
+
+- The compact search control now reads `Country` and defaults to `Any country`.
+- It offers United Kingdom, United Arab Emirates, Indonesia, and Cyprus.
+- Canonical country names continue through the existing `location` query key,
+  which already searches the Sanity `country` field as well as legacy city and
+  community links.
+- Analytics now includes `selected_country` while temporarily retaining
+  `selected_location` for Tanu's existing GTM mapping.
+
+City, area, or community remains available in the fuller lead-enquiry journey;
+the compact homepage control intentionally starts at country level.
+
 ## Verification completed
 
 - Prisma schema validation and client generation pass.
@@ -99,6 +117,8 @@ to recurring marketing.
   overflow check.
 - The contact-first browser suite also covers required privacy acknowledgement,
   the country/city split, old-version replay safety, and UAE adviser routing.
+- The combined product preview passes 248 Vitest tests, TypeScript, and a
+  production build after the homepage country-filter merge.
 - ESLint passes for all files changed in this milestone.
 - The repository-wide lint command still fails on pre-existing unrelated files;
   do not attribute those baseline errors to this branch.
