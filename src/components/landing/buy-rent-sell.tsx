@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
-  MapPin,
+  Globe2,
   Building2,
   BedDouble,
   Search,
@@ -24,15 +24,11 @@ import {
   buildPropertiesHref,
 } from "@/lib/property-taxonomy";
 
-const LOCATIONS = [
-  "Dubai",
-  "Abu Dhabi",
-  "Sharjah",
-  "London",
-  "Cardiff",
-  "Manchester",
-  "Birmingham",
-  "Bali, Indonesia",
+const COUNTRIES = [
+  "United Kingdom",
+  "United Arab Emirates",
+  "Indonesia",
+  "Cyprus",
 ];
 
 const BEDROOMS = [
@@ -76,7 +72,7 @@ export function BuyRentSell() {
   const [category, setCategory] = useState<Category>("residential");
   const [availability, setAvailability] = useState<Availability>("ready");
   const [intent, setIntent] = useState<Intent>("sale");
-  const [location, setLocation] = useState("");
+  const [country, setCountry] = useState("");
   const [type, setType] = useState("");
   const [beds, setBeds] = useState("");
   const [loading, setLoading] = useState(false);
@@ -113,7 +109,9 @@ export function BuyRentSell() {
       availability,
       intent: effectiveIntent,
       property_type: type || null,
-      selected_location: location || null,
+      selected_country: country || null,
+      // Preserve the existing GTM field while Tanu migrates the mapping.
+      selected_location: country || null,
       bedrooms: hideBeds ? null : beds || null,
     });
 
@@ -122,7 +120,7 @@ export function BuyRentSell() {
       availability,
       intent: effectiveIntent,
       type: type || undefined,
-      location: location || undefined,
+      location: country || undefined,
       beds: hideBeds ? undefined : beds || undefined,
     });
 
@@ -240,17 +238,17 @@ export function BuyRentSell() {
                   </select>
                 </Field>
 
-                <Field icon={MapPin} label="Location" bordered>
+                <Field icon={Globe2} label="Country" bordered>
                   <select
-                    aria-label="Preferred location"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
+                    aria-label="Country of interest"
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
                     className="w-full bg-transparent text-sm text-foreground outline-none"
                   >
-                    <option value="">Any location</option>
-                    {LOCATIONS.map((l) => (
-                      <option key={l} value={l}>
-                        {l}
+                    <option value="">Any country</option>
+                    {COUNTRIES.map((countryOption) => (
+                      <option key={countryOption} value={countryOption}>
+                        {countryOption}
                       </option>
                     ))}
                   </select>
