@@ -2,6 +2,14 @@
 
 Updated: 7 September 2026
 
+## Blog share rail clearance
+
+Draft PR #3 now places the desktop article share rail 128px from the viewport
+top, leaving 27px below the 101px header. The change is included in the local
+integration preview. Browser checks passed at 1280px and 1435px, including the
+Properties menu; the mobile sharing fallback also fits and opens at 390px.
+Targeted lint passed. Hreflang remains deferred pending equivalent localized URLs.
+
 ## Repository and branch safety
 
 - Repository: `deb-pradhan/Haus-Of-Estate`
