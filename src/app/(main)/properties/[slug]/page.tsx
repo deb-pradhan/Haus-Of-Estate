@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import type { Metadata } from 'next'
+import type { ComponentProps } from 'react'
 import {
   ArrowLeft,
   ArrowRight,
@@ -17,11 +18,15 @@ import { PROPERTY_BY_SLUG_QUERY, PROPERTY_SLUGS_QUERY } from '@/sanity/queries'
 import { PortableTextRenderer } from '@/components/blog'
 import { toEmbedUrl } from '@/lib/embed-video'
 import { DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGES } from '@/lib/seo'
+import { canonicalHausUrl } from '@/lib/share'
+import { ContentShare } from '@/components/share/content-share'
 
 interface LocationBenefit {
   destination?: string
   time?: string
 }
+
+type PortableTextContent = ComponentProps<typeof PortableTextRenderer>['content']
 
 interface PropertyDetail {
   _id: string
@@ -43,7 +48,7 @@ interface PropertyDetail {
   view?: string
   completionStatus?: string
   summary: string
-  description?: unknown
+  description?: PortableTextContent
   keyFeatures?: string[]
   amenities?: string[]
   locationBenefits?: LocationBenefit[]
@@ -125,6 +130,7 @@ export default async function PropertyDetailPage({
   if (!property) notFound()
 
   const enquiryEmail = property.enquiryEmail || 'info@hausofestate.com'
+  const canonicalUrl = canonicalHausUrl(`/properties/${property.slug}`)
   const enquiryHref = `mailto:${enquiryEmail}?subject=${encodeURIComponent(
     `Enquiry — ${property.title}`,
   )}`
@@ -224,6 +230,7 @@ export default async function PropertyDetailPage({
                 ? ` · ${COMPLETION_LABEL[property.completionStatus] ?? property.completionStatus}`
                 : ''}
             </p>
+
             <h1 className="mt-2 font-serif text-3xl font-medium text-estate-700 md:text-4xl">
               {property.title}
             </h1>
@@ -239,6 +246,15 @@ export default async function PropertyDetailPage({
               )}
               {property.developer && <span>· {property.developer}</span>}
             </p>
+
+            <div className="mt-4 lg:hidden">
+              <ContentShare
+                url={canonicalUrl}
+                title={property.title}
+                text={`View ${property.title} on Haus of Estate`}
+                contentLabel="this property"
+              />
+            </div>
 
             {/* Fact strip */}
             <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -261,7 +277,7 @@ export default async function PropertyDetailPage({
             {/* Description */}
             {property.description ? (
               <div className="mt-10">
-                <PortableTextRenderer content={property.description as any} />
+                <PortableTextRenderer content={property.description} />
               </div>
             ) : (
               <p className="mt-10 text-base leading-relaxed text-muted-foreground">
@@ -404,6 +420,17 @@ export default async function PropertyDetailPage({
                   {enquiryEmail}
                 </a>
               </p>
+              <div className="mt-5 hidden border-t border-border pt-5 lg:block">
+                <p className="mb-2 text-xs font-medium text-muted-foreground">
+                  Share this property
+                </p>
+                <ContentShare
+                  url={canonicalUrl}
+                  title={property.title}
+                  text={`View ${property.title} on Haus of Estate`}
+                  contentLabel="this property"
+                />
+              </div>
             </div>
           </aside>
         </div>

@@ -10,13 +10,14 @@ import {
   AuthorCard,
   BlogSidebar,
   ReadingProgress,
-  ShareLinks,
 } from '@/components/blog'
+import { ContentShare } from '@/components/share/content-share'
 import { FALLBACK_IMAGES, FALLBACK_ALTS } from '@/sanity/fallbackImages'
 import { readingTimeFromBlocks } from '@/lib/reading-time'
 import type { Post, PostSummary } from '@/sanity/types'
 import type { Metadata } from 'next'
 import { DEFAULT_OG_IMAGE } from '@/lib/seo'
+import { HAUS_SITE_ORIGIN, canonicalHausUrl } from '@/lib/share'
 
 // Revalidate every 60s so edits in Sanity (e.g. a replaced cover image)
 // propagate to the statically-generated post pages without a full rebuild.
@@ -98,6 +99,8 @@ async function PostContent({ slug }: { slug: string }) {
   const authorName = post.author?.name || 'Haus of Estate'
   const primaryCategory = post.categories?.[0]
   const tags = (post.categories || []).map((c) => ({ title: c.title, slug: c.slug }))
+  const canonicalUrl = canonicalHausUrl(`/blog/${post.slug}`)
+  const shareText = post.subtitle || `Read ${post.title} on Haus of Estate`
 
   const blogPostingJsonLd = {
     '@context': 'https://schema.org',
@@ -112,11 +115,11 @@ async function PostContent({ slug }: { slug: string }) {
     publisher: {
       '@type': 'Organization',
       name: 'Haus of Estate',
-      url: 'https://hausofestate.com',
+      url: HAUS_SITE_ORIGIN,
     },
     mainEntityOfPage: {
       '@type': 'WebPage',
-      '@id': `https://hausofestate.com/blog/${post.slug}`,
+      '@id': `${HAUS_SITE_ORIGIN}/blog/${post.slug}`,
     },
   }
 
@@ -188,10 +191,14 @@ async function PostContent({ slug }: { slug: string }) {
             </span>
           </div>
 
-          {/* Mobile share (sidebar carries it on desktop) */}
-          <div className="mt-6 flex items-center gap-3 border-t border-border/70 pt-5 lg:hidden">
-            <span className="text-sm font-medium text-slate-700">Share</span>
-            <ShareLinks title={post.title} slug={post.slug} />
+          {/* Compact share action below desktop-rail breakpoint. */}
+          <div className="mt-6 border-t border-border/70 pt-5 xl:hidden">
+            <ContentShare
+              url={canonicalUrl}
+              title={post.title}
+              text={shareText}
+              contentLabel="this article"
+            />
           </div>
         </header>
 
@@ -210,8 +217,22 @@ async function PostContent({ slug }: { slug: string }) {
         )}
 
         {/* Body + sidebar */}
-        <div className="mt-12 grid gap-12 lg:grid-cols-12 lg:gap-16">
-          <div className="min-w-0 lg:col-span-8">
+        <div className="mt-12 grid gap-12 lg:grid-cols-12 lg:gap-16 xl:grid-cols-[3rem_minmax(0,1fr)_20rem] xl:gap-8">
+          <div className="hidden xl:block">
+            <div className="sticky top-32">
+              <p className="mb-2 text-center text-[10px] font-semibold uppercase text-muted-foreground">
+                Share
+              </p>
+              <ContentShare
+                url={canonicalUrl}
+                title={post.title}
+                text={shareText}
+                contentLabel="this article"
+                variant="rail"
+              />
+            </div>
+          </div>
+          <div className="min-w-0 lg:col-span-8 xl:col-auto">
             {post.body && <PortableTextRenderer content={post.body} />}
             {post.author && (
               <div className="mt-14 border-t border-border pt-10">
@@ -219,10 +240,8 @@ async function PostContent({ slug }: { slug: string }) {
               </div>
             )}
           </div>
-          <div className="lg:col-span-4">
+          <div className="lg:col-span-4 xl:col-auto">
             <BlogSidebar
-              title={post.title}
-              slug={post.slug}
               tags={tags}
               related={relatedPosts || []}
             />
