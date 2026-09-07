@@ -56,7 +56,7 @@ export function BlogCard({ post, variant = 'default', index = 0 }: BlogCardProps
       <Link href={`/blog/${post.slug}`} className="group flex items-start gap-3">
         {imageUrl && (
           <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-stone-100">
-            <Image src={imageUrl} alt={alt} fill sizes="56px" className="object-cover" />
+            <Image src={imageUrl} alt={alt} fill sizes="56px" className="object-contain" />
           </div>
         )}
         <div className="min-w-0">
@@ -79,14 +79,14 @@ export function BlogCard({ post, variant = 'default', index = 0 }: BlogCardProps
         href={`/blog/${post.slug}`}
         className="flex flex-1 flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-estate-700/50 focus-visible:ring-inset"
       >
-        <div className="relative aspect-[16/10] overflow-hidden bg-stone-100">
+        <div className="relative aspect-video overflow-hidden bg-stone-100">
           {imageUrl && (
             <Image
               src={imageUrl}
               alt={alt}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 380px"
-              className="object-cover transition-transform duration-[800ms] ease-out group-hover:scale-[1.06]"
+              className="object-contain"
             />
           )}
           {eyebrow && (
