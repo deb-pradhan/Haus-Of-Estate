@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   Globe2,
+  MapPin,
   Building2,
   BedDouble,
   Search,
@@ -23,13 +24,7 @@ import {
   bedroomsHidden,
   buildPropertiesHref,
 } from "@/lib/property-taxonomy";
-
-const COUNTRIES = [
-  "United Kingdom",
-  "United Arab Emirates",
-  "Indonesia",
-  "Cyprus",
-];
+import type { PropertyLocationGroup } from "@/lib/property-locations";
 
 const BEDROOMS = [
   { value: "0", label: "Studio" },
@@ -73,6 +68,11 @@ export function BuyRentSell() {
   const [availability, setAvailability] = useState<Availability>("ready");
   const [intent, setIntent] = useState<Intent>("sale");
   const [country, setCountry] = useState("");
+  const [city, setCity] = useState("");
+  const [locationGroups, setLocationGroups] = useState<
+    PropertyLocationGroup[]
+  >([]);
+  const [locationsLoading, setLocationsLoading] = useState(true);
   const [type, setType] = useState("");
   const [beds, setBeds] = useState("");
   const [loading, setLoading] = useState(false);
@@ -83,6 +83,39 @@ export function BuyRentSell() {
   const effectiveIntent: Intent = offPlan ? "sale" : intent;
   const typeOptions = typesFor(category, availability);
   const hideBeds = bedroomsHidden(category, type);
+  const cities = useMemo(
+    () =>
+      locationGroups.find((group) => group.country === country)?.cities ?? [],
+    [country, locationGroups],
+  );
+
+  useEffect(() => {
+    let active = true;
+
+    fetch("/api/property-locations", {
+      headers: { Accept: "application/json" },
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Property locations unavailable");
+        return (await response.json()) as {
+          locations?: PropertyLocationGroup[];
+        };
+      })
+      .then(({ locations }) => {
+        if (!active) return;
+        setLocationGroups(locations ?? []);
+      })
+      .catch(() => {
+        if (active) setLocationGroups([]);
+      })
+      .finally(() => {
+        if (active) setLocationsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   function changeCategory(next: Category) {
     setCategory(next);
@@ -110,8 +143,9 @@ export function BuyRentSell() {
       intent: effectiveIntent,
       property_type: type || null,
       selected_country: country || null,
+      selected_city: city || null,
       // Preserve the existing GTM field while Tanu migrates the mapping.
-      selected_location: country || null,
+      selected_location: city || country || null,
       bedrooms: hideBeds ? null : beds || null,
     });
 
@@ -120,7 +154,8 @@ export function BuyRentSell() {
       availability,
       intent: effectiveIntent,
       type: type || undefined,
-      location: country || undefined,
+      country: country || undefined,
+      city: city || undefined,
       beds: hideBeds ? undefined : beds || undefined,
     });
 
@@ -140,7 +175,7 @@ export function BuyRentSell() {
         }}
       />
 
-      <div className="relative z-10 mx-auto max-w-5xl px-4 py-20 text-center md:px-6 md:py-28">
+      <div className="relative z-10 mx-auto max-w-6xl px-4 py-20 text-center md:px-6 md:py-28">
         <p className="font-serif text-xs font-medium uppercase tracking-[0.3em] text-gold-400">
           UK · UAE · International
         </p>
@@ -213,13 +248,13 @@ export function BuyRentSell() {
             <form
               onSubmit={handleSubmit}
               noValidate
-              className="mx-auto mt-5 max-w-4xl rounded-2xl border border-white/15 bg-surface p-2 shadow-2xl shadow-black/25 md:rounded-full"
+              className="mx-auto mt-5 max-w-6xl rounded-2xl border border-white/15 bg-surface p-2 shadow-2xl shadow-black/25 lg:rounded-full"
             >
               <div
-                className={`grid gap-2 md:items-center ${
+                className={`grid gap-2 md:grid-cols-2 lg:items-center ${
                   hideBeds
-                    ? "md:grid-cols-[1fr_1fr_auto]"
-                    : "md:grid-cols-[1fr_1fr_1fr_auto]"
+                    ? "lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]"
+                    : "lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.65fr)_auto]"
                 }`}
               >
                 <Field icon={Building2} label="Property type">
@@ -242,13 +277,46 @@ export function BuyRentSell() {
                   <select
                     aria-label="Country of interest"
                     value={country}
-                    onChange={(e) => setCountry(e.target.value)}
+                    disabled={locationsLoading || locationGroups.length === 0}
+                    onChange={(e) => {
+                      setCountry(e.target.value);
+                      setCity("");
+                    }}
                     className="w-full bg-transparent text-sm text-foreground outline-none"
                   >
-                    <option value="">Any country</option>
-                    {COUNTRIES.map((countryOption) => (
-                      <option key={countryOption} value={countryOption}>
-                        {countryOption}
+                    <option value="">
+                      {locationsLoading
+                        ? "Loading countries..."
+                        : locationGroups.length === 0
+                          ? "Countries unavailable"
+                          : "Any country"}
+                    </option>
+                    {locationGroups.map((group) => (
+                      <option key={group.country} value={group.country}>
+                        {group.country}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+
+                <Field icon={MapPin} label="City" bordered>
+                  <select
+                    aria-label="City of interest"
+                    value={city}
+                    disabled={!country || cities.length === 0}
+                    onChange={(e) => setCity(e.target.value)}
+                    className="w-full bg-transparent text-sm text-foreground outline-none"
+                  >
+                    <option value="">
+                      {!country
+                        ? "Choose a country first"
+                        : cities.length === 0
+                          ? "No live cities"
+                          : "Any city"}
+                    </option>
+                    {cities.map((cityOption) => (
+                      <option key={cityOption} value={cityOption}>
+                        {cityOption}
                       </option>
                     ))}
                   </select>
@@ -275,7 +343,9 @@ export function BuyRentSell() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex items-center justify-center gap-2 rounded-xl bg-estate-700 px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-estate-600 disabled:cursor-not-allowed disabled:opacity-70 md:rounded-full"
+                  className={`flex items-center justify-center gap-2 rounded-xl bg-estate-700 px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-estate-600 disabled:cursor-not-allowed disabled:opacity-70 lg:col-span-1 lg:rounded-full ${
+                    hideBeds ? "md:col-span-1" : "md:col-span-2"
+                  }`}
                 >
                   <Search className="h-4 w-4" />
                   {loading ? "Finding your match…" : "Find my match"}
@@ -380,7 +450,7 @@ function Field({
   return (
     <label
       className={`flex items-center gap-3 px-4 py-2.5 text-left md:px-5 ${
-        bordered ? "md:border-l md:border-border" : ""
+        bordered ? "lg:border-l lg:border-border" : ""
       }`}
     >
       <Icon className="h-4 w-4 shrink-0 text-estate-700" strokeWidth={1.75} />

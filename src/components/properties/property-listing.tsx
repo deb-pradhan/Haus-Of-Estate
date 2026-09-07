@@ -52,6 +52,8 @@ export interface PropertyListingSearchParams {
   availability?: string
   intent?: string
   type?: string
+  country?: string
+  city?: string
   location?: string
   beds?: string
 }
@@ -77,6 +79,8 @@ type FilterKey =
   | 'availability'
   | 'intent'
   | 'type'
+  | 'country'
+  | 'city'
   | 'location'
   | 'beds'
 
@@ -105,6 +109,8 @@ export async function PropertyListing({
   if (availability === 'off-plan') intent = 'sale'
 
   const type = params.type?.trim() || ''
+  const country = params.country?.trim() || ''
+  const city = params.city?.trim() || ''
   const location = params.location?.trim() || ''
   const bedsRaw = params.beds ? parseInt(params.beds, 10) : NaN
 
@@ -124,9 +130,20 @@ export async function PropertyListing({
   })
   const fetched = properties ?? []
 
-  // ── Remaining JS filters (location + beds) ────────────────────────────
+  // ── Remaining JS filters (geography + beds) ──────────────────────────
+  const countryLC = country.toLocaleLowerCase('en-GB')
+  const cityLC = city.toLocaleLowerCase('en-GB')
   const locLC = location.toLowerCase()
   const list = fetched.filter((p) => {
+    if (
+      countryLC &&
+      p.country?.trim().toLocaleLowerCase('en-GB') !== countryLC
+    ) {
+      return false
+    }
+    if (cityLC && p.city?.trim().toLocaleLowerCase('en-GB') !== cityLC) {
+      return false
+    }
     if (locLC) {
       const hay = [p.community, p.city, p.country, p.masterDevelopment]
         .filter(Boolean)
@@ -154,6 +171,8 @@ export async function PropertyListing({
   if (intent && availability !== 'off-plan')
     activeFilters.push({ label: INTENT_LABELS[intent], key: 'intent' })
   if (type) activeFilters.push({ label: type, key: 'type' })
+  if (country) activeFilters.push({ label: country, key: 'country' })
+  if (city) activeFilters.push({ label: city, key: 'city' })
   if (location) activeFilters.push({ label: location, key: 'location' })
   if (minBeds !== null)
     activeFilters.push({
@@ -171,6 +190,9 @@ export async function PropertyListing({
       availability: remove === 'availability' ? undefined : availability || undefined,
       intent: remove === 'intent' ? undefined : intent || undefined,
       type: remove === 'type' ? undefined : type || undefined,
+      country: remove === 'country' ? undefined : country || undefined,
+      city:
+        remove === 'country' || remove === 'city' ? undefined : city || undefined,
       location: remove === 'location' ? undefined : location || undefined,
       beds: remove === 'beds' || minBeds === null ? undefined : minBeds,
     })

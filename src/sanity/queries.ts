@@ -124,6 +124,13 @@ export const ROLE_SLUGS_QUERY = `
 
 // ── Properties ────────────────────────────────────────────────────────
 
+// Older records pre-date listingState. Treat them as active until the
+// approval-gated taxonomy backfill has run.
+const DISCOVERABLE_PROPERTY = `
+  ${VISIBLE_EDITORIAL_DOCUMENT} &&
+  coalesce(listingState, "active") in ["active", "reserved", "under_offer"]
+`
+
 const PROPERTY_CARD_FIELDS = `
   _id,
   title,
@@ -154,7 +161,7 @@ const PROPERTY_CARD_FIELDS = `
 `
 
 export const PROPERTIES_QUERY = `
-  *[_type == "property" && ${VISIBLE_EDITORIAL_DOCUMENT}]
+  *[_type == "property" && ${DISCOVERABLE_PROPERTY}]
     | order(featured desc, publishedAt desc) {
       ${PROPERTY_CARD_FIELDS}
     }
@@ -163,10 +170,10 @@ export const PROPERTIES_QUERY = `
 // Server-side filtered listing. Pass empty-string params to skip a filter.
 // $availability / $intent match against the array fields (membership).
 export const PROPERTIES_FILTERED_QUERY = `
-  *[_type == "property" && ${VISIBLE_EDITORIAL_DOCUMENT}
-    && ($category == "" || category == $category)
-    && ($availability == "" || $availability in availability)
-    && ($intent == "" || $intent in listingType)
+  *[_type == "property" && ${DISCOVERABLE_PROPERTY}
+    && ($category == "" || coalesce(category, "residential") == $category)
+    && ($availability == "" || $availability in coalesce(availability, ["ready"]))
+    && ($intent == "" || $intent in coalesce(listingType, ["sale"]))
     && ($type == "" || unitType == $type)
   ] | order(featured desc, publishedAt desc) {
       ${PROPERTY_CARD_FIELDS}
@@ -174,10 +181,20 @@ export const PROPERTIES_FILTERED_QUERY = `
 `
 
 export const FEATURED_PROPERTIES_QUERY = `
-  *[_type == "property" && ${VISIBLE_EDITORIAL_DOCUMENT} && featured == true]
+  *[_type == "property" && ${DISCOVERABLE_PROPERTY} && featured == true]
     | order(publishedAt desc) [0...3] {
       ${PROPERTY_CARD_FIELDS}
     }
+`
+
+export const PROPERTY_LOCATION_OPTIONS_QUERY = `
+  *[_type == "property" && ${DISCOVERABLE_PROPERTY}
+    && defined(country) && country != ""
+    && defined(city) && city != ""
+  ] {
+    country,
+    city
+  }
 `
 
 export const PROPERTY_BY_SLUG_QUERY = `
