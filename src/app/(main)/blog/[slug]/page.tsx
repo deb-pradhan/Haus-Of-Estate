@@ -230,7 +230,7 @@ async function PostContent({ slug }: { slug: string }) {
         {/* Body + sidebar */}
         <div className="mt-12 grid gap-12 lg:grid-cols-12 lg:gap-16 xl:grid-cols-[3rem_minmax(0,1fr)_20rem] xl:gap-8">
           <div className="hidden xl:block">
-            <div className="sticky top-24">
+            <div className="sticky top-32">
               <p className="mb-2 text-center text-[10px] font-semibold uppercase text-muted-foreground">
                 Share
               </p>
