@@ -1,5 +1,5 @@
 import { buildPropertyLocationGroups } from '@/lib/property-locations'
-import { sanityFetch } from '@/sanity'
+import { sanityFetch } from '@/sanity/live'
 import { PROPERTY_LOCATION_OPTIONS_QUERY } from '@/sanity/queries'
 
 interface PropertyLocationRecord {
