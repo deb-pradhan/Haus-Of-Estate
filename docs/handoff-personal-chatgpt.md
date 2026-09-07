@@ -2,6 +2,15 @@
 
 Updated: 7 September 2026
 
+## Blog thumbnail fitting
+
+The `suryak02/blog-thumbnail-fit` branch changes blog grid images to a stable
+16:9 frame with `object-contain` and removes image hover zoom. Related-article
+thumbnails also contain the full image in their existing square frame. The
+integration preview retains saved-article controls. Verified real artwork at
+1435px desktop and 390px mobile widths, hover behavior, and sidebar fitting;
+targeted integration lint passed. Featured banners and author avatars are unchanged.
+
 ## Blog share rail clearance
 
 Draft PR #3 now places the desktop article share rail 128px from the viewport
