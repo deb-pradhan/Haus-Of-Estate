@@ -1,6 +1,6 @@
 # Haus of Estate implementation handoff
 
-Updated: 2 September 2026
+Updated: 7 September 2026
 
 ## Repository and branch safety
 
@@ -90,51 +90,129 @@ guide` request with its own delivery wording, alongside a separate optional
 newsletter checkbox. Receiving the guide must not silently subscribe someone
 to recurring marketing.
 
-## Homepage country-filter correction
+## Dynamic country and city search
 
-The homepage hero previously had a separate hard-coded `Location` selector
-containing cities, even though the shared EOI form had already moved to country
-selection. Draft PR `#11` fixes that independently on
+Sonia's latest requirement is a dependent `Country -> City` property search,
+not another hard-coded country list. Draft PR `#11` now implements this on
 `suryak02/homepage-country-filter`:
 
-- The compact search control now reads `Country` and defaults to `Any country`.
-- It offers United Kingdom, United Arab Emirates, Indonesia, and Cyprus.
-- Canonical country names continue through the existing `location` query key,
-  which already searches the Sanity `country` field as well as legacy city and
-  community links.
-- Analytics now includes `selected_country` while temporarily retaining
-  `selected_location` for Tanu's existing GTM mapping.
+- A read-only same-origin endpoint derives distinct country/city pairs from
+  currently published, discoverable Sanity properties.
+- Selecting a country constrains the city selector; changing country clears a
+  stale city selection.
+- `/properties` carries exact `country` and `city` query parameters and exposes
+  removable filter chips. Legacy broad `location` links remain compatible.
+- Public discovery excludes sold, rented and withdrawn records when the new
+  lifecycle field is present. Older records with no lifecycle value are treated
+  as active until the approved taxonomy backfill runs.
+- Older records missing category, availability or listing intent retain narrow
+  residential/ready/sale compatibility defaults instead of disappearing from
+  the current homepage journey.
+- Analytics now adds `selected_country` and `selected_city` while temporarily
+  retaining `selected_location` for Tanu's existing mapping.
 
-City, area, or community remains available in the fuller lead-enquiry journey;
-the compact homepage control intentionally starts at country level.
+The current published inventory truthfully produces only `United Arab Emirates
+-> Dubai`. Sharjah will appear automatically after an eligible Sharjah record is
+completed and published; no speculative cities are shown.
+
+## Azizi Florence staging scaffold
+
+Draft PR `#12` on `suryak02/azizi-florence-content-scaffold` targets editorial
+workflow PR `#5`. It contains one importable, staging-only draft at
+`scripts/azizi-florence.staging-draft.ndjson` with only these confirmed facts:
+
+- Azizi Florence, slug `azizi-florence`.
+- Community/development `Florence`.
+- Sharjah, United Arab Emirates.
+- Developer `Azizi Developments`.
+- Native draft ID, workflow status `draft`, and `featured: false`.
+
+No dataset has been mutated. The scaffold deliberately omits price, currency,
+sizes, unit mix, category, property type, sale/rent intent, ready/off-plan state,
+completion, payment plan, availability, verification, copy, media, publication
+date and approvals. No QR code is present. It must not be imported into
+production or published until Sonia supplies the missing facts/assets and the
+PR #5 editorial gates are satisfied.
+
+## AI sales agent scope
+
+Do not build a second chatbot. The future sales journey should compose PR #8's
+guarded Haus Property Assistant with the existing `LeadEoiForm`, lead API,
+PostgreSQL consent records, UTM attribution and Power Automate outbox.
+
+The smallest future MVP is an editable qualification brief, approved inventory
+search, up to three real property cards, and an explicit handoff into the
+existing lead form. The model must never submit a lead, store/transmit the raw
+conversation, initiate payments or make eligibility, legal, tax, mortgage or
+investment decisions. Before that work starts, Sonia must approve the login
+gate, qualification fields/order, allowed listing states, placement, handoff
+owner/SLA and customer copy.
+
+## Meta, GTM and hreflang
+
+The application already has a GTM loader, attribution capture and PII-free lead
+and assistant data-layer events. Haus has not yet supplied company-owned GTM,
+GA4 or Meta dataset access. A real consent-management layer must be implemented
+before Meta/GA4 tags: default-denied Analytics and Marketing categories,
+withdrawal/settings controls, and truthful cookie/privacy wording. Only a
+persisted `lead_submit_success` should map to Meta `Lead`; property search is a
+search event, not a lead. Names, email addresses, phone numbers, messages, raw
+prompts and full referrers must never enter analytics events.
+
+Hreflang is not currently appropriate. Haus has one English URL set and no
+equivalent localized routes, translations or reciprocal alternate mappings.
+Selling properties in multiple countries is inventory targeting, not page
+localization. Revisit only after real paired locale URLs and content exist.
 
 ## Verification completed
 
 - Prisma schema validation and client generation pass.
 - TypeScript passes.
 - 78 Vitest tests pass.
-- 12 Playwright desktop/mobile lead-intake tests pass, including a 320px
-  overflow check.
+- 45 Playwright desktop/mobile integration tests pass, including lead intake,
+  content sharing, authentication, bot protection, saved content, editorial
+  workflow, purchase readiness and the assistant.
 - The contact-first browser suite also covers required privacy acknowledgement,
   the country/city split, old-version replay safety, and UAE adviser routing.
-- The combined product preview passes 248 Vitest tests, TypeScript, and a
-  production build after the homepage country-filter merge.
+- The combined product preview passes 248 Vitest tests, TypeScript, Sanity
+  schema validation and a production build after the country/city merge.
+- PR #11's API returns the live `United Arab Emirates -> Dubai` hierarchy. The
+  desktop journey returns both published Dubai listings with exact URL filters,
+  and the responsive form was verified at 390x844.
+- The Florence NDJSON parses as one document with exactly ten approved fields;
+  no Sanity write was performed.
 - ESLint passes for all files changed in this milestone.
 - The repository-wide lint command still fails on pre-existing unrelated files;
   do not attribute those baseline errors to this branch.
+- Local Sanity Live preview still needs the exact `127.0.0.1:3210` CORS origin,
+  and two existing homepage images emit missing `sizes` warnings.
 
 ## External dependencies before enablement
 
 - Sonia/legal approval of exact form and privacy wording.
+- Sonia's Florence pricing, currency, sizes, unit mix, availability, factual
+  copy and approved image assets.
 - Tanu approval of the existing non-PII conversion-event mapping.
+- Tanu/Haus-owned GTM, GA4 and Meta dataset IDs, domain/ad-account ownership,
+  staging access, UTM convention and test-event sign-off.
 - Confirmed legal/controller details for the privacy policy.
+- Approved CMP behavior and corrected cookie/privacy disclosures before any
+  advertising or analytics tags are enabled.
 - Restricted Excel workbook and approved qualifier/consent columns.
 - Updated authenticated Power Automate flow and staging end-to-end test.
 - Railway backup, live-schema comparison, migration approval, and secrets.
+- Sanity staging dataset, exact CORS origins, preview tokens, content roles and
+  the property taxonomy/availability backfill.
+- Deb's approval of any AI sales-agent branch, AI Gateway ownership/model/budget
+  controls, DPIA/vendor review and production release process.
 
 ## Next independent branches
 
-1. `suryak02/content-sharing` from current `origin/main`.
-2. `suryak02/purchase-readiness-prototype` stacked on the lead foundation.
-3. Sanity editorial workflow, then auth hardening and saved content.
-4. AI property assistant only after those platform foundations and reviews.
+1. Review/merge dynamic search PR `#11`; keep it independent from lead work.
+2. Complete Florence facts/assets in staging through PR `#12` after PR `#5` is
+   available and Sonia responds. Do not publish the current scaffold.
+3. Create a separate consent/paid-tracking branch before enabling GA4 or Meta.
+4. Scope `suryak02/ai-sales-agent-mvp` only after country/city, lead intake,
+   editorial workflow and Property Assistant PR `#8` are reconciled.
+5. Keep Latest News, PDF newsletters and the exact LinkedIn workflow as later
+   work until Marketing defines what “LinkedIn integration” means.
