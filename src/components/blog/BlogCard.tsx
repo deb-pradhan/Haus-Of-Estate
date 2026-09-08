@@ -69,6 +69,11 @@ export function BlogCard({ post, variant = 'default', index = 0 }: BlogCardProps
       style={{ animationDelay: `${Math.min(index, 8) * 70}ms`, animationFillMode: 'both' }}
       className="group flex animate-fade-up flex-col overflow-hidden rounded-2xl border border-border/70 bg-surface transition-all duration-300 hover:-translate-y-1.5 hover:border-transparent hover:shadow-[0_20px_50px_-20px_rgba(30,31,33,0.28)] motion-reduce:animate-none"
     >
+      {eyebrow && (
+        <div className="flex min-h-16 items-center px-6 py-3">
+          <span className="text-xs font-semibold text-ink-900">{eyebrow}</span>
+        </div>
+      )}
       <div className="relative aspect-video overflow-hidden bg-stone-100">
         {imageUrl && (
           <Image
@@ -78,11 +83,6 @@ export function BlogCard({ post, variant = 'default', index = 0 }: BlogCardProps
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 380px"
             className="object-contain"
           />
-        )}
-        {eyebrow && (
-          <span className="absolute left-4 top-4 rounded-full bg-white/85 px-3 py-1 text-xs font-semibold text-ink-900 shadow-sm backdrop-blur-md">
-            {eyebrow}
-          </span>
         )}
       </div>
 
