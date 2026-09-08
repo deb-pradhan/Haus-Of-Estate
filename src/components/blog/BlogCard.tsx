@@ -75,6 +75,15 @@ export function BlogCard({ post, variant = 'default', index = 0 }: BlogCardProps
       style={{ animationDelay: `${Math.min(index, 8) * 70}ms`, animationFillMode: 'both' }}
       className="group relative flex animate-fade-up flex-col overflow-hidden rounded-2xl border border-border/70 bg-surface transition-all duration-300 hover:-translate-y-1.5 hover:border-transparent hover:shadow-[0_20px_50px_-20px_rgba(30,31,33,0.28)] motion-reduce:animate-none"
     >
+      <div className="flex min-h-16 items-center justify-between gap-3 px-6 py-3">
+        <span className="text-xs font-semibold text-ink-900">{eyebrow}</span>
+        <SaveContentButton
+          contentType="ARTICLE"
+          sanityDocumentId={post._id}
+          title={post.title}
+          className="shrink-0"
+        />
+      </div>
       <Link
         href={`/blog/${post.slug}`}
         className="flex flex-1 flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-estate-700/50 focus-visible:ring-inset"
@@ -88,11 +97,6 @@ export function BlogCard({ post, variant = 'default', index = 0 }: BlogCardProps
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 380px"
               className="object-cover transition-transform duration-[800ms] ease-out group-hover:scale-[1.06]"
             />
-          )}
-          {eyebrow && (
-            <span className="absolute left-4 top-4 max-w-[calc(100%-5rem)] truncate rounded-full bg-white/85 px-3 py-1 text-xs font-semibold text-ink-900 shadow-sm backdrop-blur-md">
-              {eyebrow}
-            </span>
           )}
         </div>
 
@@ -133,12 +137,6 @@ export function BlogCard({ post, variant = 'default', index = 0 }: BlogCardProps
           </div>
         </div>
       </Link>
-      <SaveContentButton
-        contentType="ARTICLE"
-        sanityDocumentId={post._id}
-        title={post.title}
-        className="absolute right-3 top-3 z-10"
-      />
     </article>
   )
 }

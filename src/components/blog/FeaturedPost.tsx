@@ -47,6 +47,18 @@ export function FeaturedPost({ post }: FeaturedPostProps) {
 
   return (
     <article className="group relative overflow-hidden rounded-[1.5rem] bg-ink-900 ring-1 ring-black/5 md:rounded-[2rem]">
+      <div className="flex min-h-16 items-center justify-between gap-3 px-6 py-3 sm:px-9">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span className="text-xs font-semibold uppercase text-gold-400">Featured</span>
+          {eyebrow && <span className="text-xs font-medium text-white">{eyebrow}</span>}
+        </div>
+        <SaveContentButton
+          contentType="ARTICLE"
+          sanityDocumentId={post._id}
+          title={post.title}
+          className="shrink-0"
+        />
+      </div>
       <Link
         href={`/blog/${post.slug}`}
         className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-inset"
@@ -70,20 +82,6 @@ export function FeaturedPost({ post }: FeaturedPostProps) {
         <div className="absolute inset-x-0 bottom-0 p-6 sm:p-9 lg:p-12">
           <div className="flex items-end justify-between gap-6">
           <div className="max-w-2xl">
-            <div className="flex items-center gap-3">
-              <span className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-gold-400">
-                Featured
-              </span>
-              {eyebrow && (
-                <>
-                  <span className="h-3 w-px bg-white/30" />
-                  <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
-                    {eyebrow}
-                  </span>
-                </>
-              )}
-            </div>
-
             <h2 className="mt-4 font-serif text-[1.9rem] font-medium leading-[1.08] text-white sm:text-4xl lg:text-[3.15rem] lg:leading-[1.03]">
               {post.title}
             </h2>
@@ -120,12 +118,6 @@ export function FeaturedPost({ post }: FeaturedPostProps) {
           </div>
         </div>
       </Link>
-      <SaveContentButton
-        contentType="ARTICLE"
-        sanityDocumentId={post._id}
-        title={post.title}
-        className="absolute right-4 top-4 z-10 sm:right-6 sm:top-6"
-      />
     </article>
   )
 }
