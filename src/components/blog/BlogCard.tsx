@@ -49,7 +49,7 @@ export function BlogCard({ post, variant = 'default', index = 0 }: BlogCardProps
       <Link href={`/blog/${post.slug}`} className="group flex items-start gap-3">
         {imageUrl && (
           <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-stone-100">
-            <Image src={imageUrl} alt={alt} fill sizes="56px" className="object-cover" />
+            <Image src={imageUrl} alt={alt} fill sizes="56px" className="object-contain" />
           </div>
         )}
         <div className="min-w-0">
@@ -69,20 +69,20 @@ export function BlogCard({ post, variant = 'default', index = 0 }: BlogCardProps
       style={{ animationDelay: `${Math.min(index, 8) * 70}ms`, animationFillMode: 'both' }}
       className="group flex animate-fade-up flex-col overflow-hidden rounded-2xl border border-border/70 bg-surface transition-all duration-300 hover:-translate-y-1.5 hover:border-transparent hover:shadow-[0_20px_50px_-20px_rgba(30,31,33,0.28)] motion-reduce:animate-none"
     >
-      <div className="relative aspect-[16/10] overflow-hidden bg-stone-100">
+      {eyebrow && (
+        <div className="flex min-h-16 items-center px-6 py-3">
+          <span className="text-xs font-semibold text-ink-900">{eyebrow}</span>
+        </div>
+      )}
+      <div className="relative aspect-video overflow-hidden bg-stone-100">
         {imageUrl && (
           <Image
             src={imageUrl}
             alt={alt}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 380px"
-            className="object-cover transition-transform duration-[800ms] ease-out group-hover:scale-[1.06]"
+            className="object-contain"
           />
-        )}
-        {eyebrow && (
-          <span className="absolute left-4 top-4 rounded-full bg-white/85 px-3 py-1 text-xs font-semibold text-ink-900 shadow-sm backdrop-blur-md">
-            {eyebrow}
-          </span>
         )}
       </div>
 
