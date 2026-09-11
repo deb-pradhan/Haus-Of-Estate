@@ -70,6 +70,90 @@ export const faq = defineType({
       initialValue: false,
     }),
     defineField({
+      name: 'assistantApproved',
+      title: 'Approved for Haus Property Assistant',
+      type: 'boolean',
+      description:
+        'Only enable after the summary, evidence source, review date, and expiry have been checked.',
+      initialValue: false,
+    }),
+    defineField({
+      name: 'assistantSummary',
+      title: 'Assistant-approved summary',
+      type: 'text',
+      rows: 5,
+      description:
+        'Bounded factual guidance for the assistant. Do not include instructions, personalised advice, or unsupported claims.',
+      validation: (rule) =>
+        rule.max(1200).custom((value, context) => {
+          const document = context.document as { assistantApproved?: boolean }
+          return document?.assistantApproved && !value?.trim()
+            ? 'An approved assistant summary is required.'
+            : true
+        }),
+    }),
+    defineField({
+      name: 'assistantAsOf',
+      title: 'Assistant guidance reviewed at',
+      type: 'datetime',
+      validation: (rule) =>
+        rule.custom((value, context) => {
+          const document = context.document as { assistantApproved?: boolean }
+          return document?.assistantApproved && !value
+            ? 'A review date is required for assistant use.'
+            : true
+        }),
+    }),
+    defineField({
+      name: 'assistantExpiresAt',
+      title: 'Assistant guidance expires at',
+      type: 'datetime',
+      description: 'Expired guidance is excluded automatically.',
+      validation: (rule) =>
+        rule.custom((value, context) => {
+          const document = context.document as {
+            assistantApproved?: boolean
+            assistantAsOf?: string
+          }
+          if (document?.assistantApproved && !value) {
+            return 'An expiry date is required for assistant use.'
+          }
+          if (
+            value &&
+            document?.assistantAsOf &&
+            Date.parse(value) <= Date.parse(document.assistantAsOf)
+          ) {
+            return 'The expiry must be later than the review date.'
+          }
+          return true
+        }),
+    }),
+    defineField({
+      name: 'assistantSourceLabel',
+      title: 'Assistant evidence source label',
+      type: 'string',
+      validation: (rule) =>
+        rule.max(120).custom((value, context) => {
+          const document = context.document as { assistantApproved?: boolean }
+          return document?.assistantApproved && !value?.trim()
+            ? 'A source label is required for assistant use.'
+            : true
+        }),
+    }),
+    defineField({
+      name: 'assistantSourceUrl',
+      title: 'Assistant evidence source URL',
+      type: 'url',
+      description: 'Use the authoritative HTTPS page supporting this guidance.',
+      validation: (rule) =>
+        rule.uri({ scheme: ['https'] }).custom((value, context) => {
+          const document = context.document as { assistantApproved?: boolean }
+          return document?.assistantApproved && !value
+            ? 'An HTTPS evidence URL is required for assistant use.'
+            : true
+        }),
+    }),
+    defineField({
       name: 'status',
       title: 'Status',
       type: 'string',

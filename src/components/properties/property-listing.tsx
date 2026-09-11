@@ -6,6 +6,8 @@ import { PROPERTIES_FILTERED_QUERY } from '@/sanity/queries'
 import { EmptyStateCTA } from '@/components/properties/empty-state-cta'
 import { Breadcrumbs } from '@/components/properties/breadcrumbs'
 import { SaveContentButton } from '@/components/saved-content'
+import { PropertyAssistantSearchEntry } from '@/components/property-assistant/property-assistant-search-entry'
+import { isPropertyAssistantEnabled } from '@/lib/features'
 import {
   type Category,
   type Availability,
@@ -90,6 +92,7 @@ export async function PropertyListing({
   heading?: React.ReactNode
   intro?: string
 }) {
+  const assistantEnabled = isPropertyAssistantEnabled()
   // ── Normalise the taxonomy selection ──────────────────────────────────
   const category: '' | Category =
     forceCategory ?? (isCategory(params.category) ? params.category : '')
@@ -213,6 +216,7 @@ export async function PropertyListing({
       {/* Listings */}
       <section className="bg-background px-4 py-16 md:px-6 md:py-24">
         <div className="mx-auto max-w-6xl">
+          {assistantEnabled && <PropertyAssistantSearchEntry />}
           {showBreadcrumbs && (
             <Breadcrumbs
               className="mb-8"
