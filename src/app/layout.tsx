@@ -2,7 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Cormorant_Garamond } from "next/font/google";
 import { GoogleTagManager } from "@/components/analytics/google-tag-manager";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { SavedContentProvider } from "@/components/saved-content";
 import { SessionProvider } from "@/lib/auth/client";
+import { isSavedContentEnabled } from "@/lib/features";
 import { draftMode } from "next/headers";
 import "./globals.css";
 
@@ -147,6 +149,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const { isEnabled: isDraftModeEnabled } = await draftMode();
+  const savedContentEnabled = isSavedContentEnabled();
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -165,7 +168,9 @@ export default async function RootLayout({
           Skip to main content
         </a>
         <SessionProvider>
-          <TooltipProvider delayDuration={300}>{children}</TooltipProvider>
+          <SavedContentProvider enabled={savedContentEnabled}>
+            <TooltipProvider delayDuration={300}>{children}</TooltipProvider>
+          </SavedContentProvider>
           {isDraftModeEnabled && (
             <div className="fixed bottom-4 right-4 z-50 rounded-full bg-estate-700 px-4 py-2 text-sm text-white shadow-lg">
               Preview Mode

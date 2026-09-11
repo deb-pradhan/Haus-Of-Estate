@@ -29,6 +29,7 @@ export default defineConfig({
         "playwright-only-throttle-secret-with-at-least-32-bytes",
       AUTH_TRUST_HOST: "true",
       AUTH_GOOGLE_ENABLED: "false",
+      SAVED_CONTENT_ENABLED: "true",
       NEXT_PUBLIC_GTM_ID: "GTM-TEST123",
       NEXT_PUBLIC_SITE_URL: `http://127.0.0.1:${port}`,
     },

@@ -3,6 +3,13 @@ import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
 import { urlFor } from '@/sanity'
 import { FALLBACK_IMAGES, FALLBACK_ALTS } from '@/sanity/fallbackImages'
+import { SaveContentButton } from '@/components/saved-content'
+
+type SanityImage = {
+  alt?: string
+  url?: string
+  asset?: { url?: string }
+} & Record<string, unknown>
 
 interface FeaturedPostProps {
   post: {
@@ -10,8 +17,8 @@ interface FeaturedPostProps {
     title: string
     subtitle?: string
     slug: string
-    featuredImage?: any
-    author?: { name: string; avatar?: any; role?: string }
+    featuredImage?: SanityImage
+    author?: { name: string; avatar?: SanityImage; role?: string }
     categories?: Array<{ title: string; slug: string; color?: string }>
     publishedAt: string
     readMins?: number
@@ -39,43 +46,42 @@ export function FeaturedPost({ post }: FeaturedPostProps) {
   })
 
   return (
-    <Link
-      href={`/blog/${post.slug}`}
-      className="group relative block overflow-hidden rounded-[1.5rem] bg-ink-900 ring-1 ring-black/5 md:rounded-[2rem]"
-    >
-      <div className="relative aspect-[4/5] w-full sm:aspect-[16/10] lg:aspect-[21/9]">
-        {imageUrl && (
-          <Image
-            src={imageUrl}
-            alt={alt}
-            fill
-            priority
-            sizes="(max-width: 1024px) 100vw, 1216px"
-            className="object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.04]"
-          />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-ink-900 via-ink-900/55 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-ink-900/60 via-transparent to-transparent" />
+    <article className="group relative overflow-hidden rounded-[1.5rem] bg-ink-900 ring-1 ring-black/5 md:rounded-[2rem]">
+      <div className="flex min-h-16 items-center justify-between gap-3 px-6 py-3 sm:px-9">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span className="text-xs font-semibold uppercase text-gold-400">Featured</span>
+          {eyebrow && <span className="text-xs font-medium text-white">{eyebrow}</span>}
+        </div>
+        <SaveContentButton
+          contentType="ARTICLE"
+          sanityDocumentId={post._id}
+          title={post.title}
+          className="shrink-0"
+        />
       </div>
+      <Link
+        href={`/blog/${post.slug}`}
+        className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-inset"
+      >
+        <div className="relative aspect-[4/5] w-full sm:aspect-[16/10] lg:aspect-[21/9]">
+          {imageUrl && (
+            <Image
+              src={imageUrl}
+              alt={alt}
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 1216px"
+              className="object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.04]"
+            />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-ink-900 via-ink-900/55 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-ink-900/60 via-transparent to-transparent" />
+        </div>
 
-      {/* Content */}
-      <div className="absolute inset-x-0 bottom-0 p-6 sm:p-9 lg:p-12">
-        <div className="flex items-end justify-between gap-6">
+        {/* Content */}
+        <div className="absolute inset-x-0 bottom-0 p-6 sm:p-9 lg:p-12">
+          <div className="flex items-end justify-between gap-6">
           <div className="max-w-2xl">
-            <div className="flex items-center gap-3">
-              <span className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-gold-400">
-                Featured
-              </span>
-              {eyebrow && (
-                <>
-                  <span className="h-3 w-px bg-white/30" />
-                  <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
-                    {eyebrow}
-                  </span>
-                </>
-              )}
-            </div>
-
             <h2 className="mt-4 font-serif text-[1.9rem] font-medium leading-[1.08] text-white sm:text-4xl lg:text-[3.15rem] lg:leading-[1.03]">
               {post.title}
             </h2>
@@ -109,8 +115,9 @@ export function FeaturedPost({ post }: FeaturedPostProps) {
           <span className="hidden h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white text-ink-900 transition-all duration-300 group-hover:bg-gold-400 lg:flex">
             <ArrowUpRight className="h-6 w-6 transition-transform duration-300 group-hover:rotate-45" />
           </span>
+          </div>
         </div>
-      </div>
-    </Link>
+      </Link>
+    </article>
   )
 }
