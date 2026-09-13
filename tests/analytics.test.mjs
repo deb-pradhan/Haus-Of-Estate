@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  analyticsPage, CONSENT_KEY, consentFromStorage, getAnalyticsConsent,
+  analyticsPage, analyticsHosts, CONSENT_KEY, consentFromStorage, getAnalyticsConsent,
   saveAnalyticsConsent, syncAnalytics, stopAnalytics, trackAnalytics,
   installAnalyticsNavigationGuard, subscribeConsent,
 } from "../src/lib/analytics.ts";
@@ -16,6 +16,20 @@ test("public-page allowlist excludes private, preview, draft, local and non-prod
   assert.deepEqual(analyticsPage("https://hausofestate.com/properties/azizi-florence?email=private@example.com#contact"), {
     page_path: "/properties/azizi-florence", page_location: "https://hausofestate.com/properties/azizi-florence", page_referrer: "", page_title: "properties",
   });
+});
+
+test("only explicitly named demo hosts can opt in; wildcards and arbitrary previews remain excluded", () => {
+  assert.deepEqual(analyticsHosts(), ["hausofestate.com", "www.hausofestate.com"]);
+  assert.deepEqual(analyticsHosts(" localhost, DEMO.hausofestate.com "), ["localhost", "demo.hausofestate.com"]);
+  assert.deepEqual(analyticsHosts("*.vercel.app,http://localhost,localhost:3000"), []);
+  assert.equal(analyticsPage("http://localhost:3131/"), null);
+  assert.equal(analyticsPage("http://localhost:3131/", false, true, "localhost")?.page_location, "https://hausofestate.com/");
+  assert.equal(analyticsPage("https://review.vercel.app/", false, true, "review.vercel.app")?.page_path, "/");
+  assert.equal(analyticsPage("https://other.vercel.app/", false, true, "review.vercel.app"), null);
+  assert.equal(analyticsPage("https://hausofestate.com/", false, true, "localhost"), null);
+  assert.equal(analyticsPage("http://localhost:3131/auth/login", false, true, "localhost"), null);
+  assert.equal(analyticsPage("http://localhost:3131/", true, true, "localhost"), null);
+  assert.equal(analyticsPage("http://localhost:3131/", false, false, "localhost"), null);
 });
 
 test("consent is versioned, expiring and fail-closed", () => {

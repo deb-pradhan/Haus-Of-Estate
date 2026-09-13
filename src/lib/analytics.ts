@@ -17,9 +17,17 @@ export function publicPath(pathname: string): string | null {
     ? path : null;
 }
 
-export function analyticsPage(href: string, draft = false, production = true) {
+export function analyticsHosts(configured?: string): string[] {
+  if (!configured?.trim()) return ["hausofestate.com", "www.hausofestate.com"];
+  // Exact hostnames only: no wildcard, URL, path or port. An invalid explicit
+  // list fails closed rather than silently enabling the default hosts.
+  return configured.split(",").map((host) => host.trim().toLowerCase())
+    .filter((host) => /^[a-z0-9]+(?:[.-][a-z0-9]+)*$/.test(host));
+}
+
+export function analyticsPage(href: string, draft = false, production = true, allowedHosts?: string) {
   const url = new URL(href);
-  if (!production || draft || !["hausofestate.com", "www.hausofestate.com"].includes(url.hostname)) return null;
+  if (!production || draft || !analyticsHosts(allowedHosts).includes(url.hostname)) return null;
   if ([...url.searchParams.keys()].some((key) => /preview|draft|token|secret/i.test(key))) return null;
   const path = publicPath(url.pathname);
   if (!path) return null;
@@ -76,6 +84,7 @@ declare global {
 let running = false;
 let draftMode = false;
 let production = false;
+let allowedHosts: string | undefined;
 let lastPath: string | null = null;
 
 function gtag(...args: unknown[]) {
@@ -89,7 +98,7 @@ const deniedAds = { ad_storage: "denied", ad_user_data: "denied", ad_personaliza
 
 export function trackAnalytics(event: AnalyticsEvent, values: Record<string, unknown> = {}) {
   if (typeof window === "undefined" || !running || getAnalyticsConsent() !== "granted") return;
-  const page = analyticsPage(window.location.href, draftMode, production);
+  const page = analyticsPage(window.location.href, draftMode, production, allowedHosts);
   if (!page) return;
   const payload: Record<string, unknown> = { event, ...page };
   if (event === "haus_page_view") {
@@ -140,10 +149,13 @@ export function stopAnalytics(reload = true) {
   if (reload) window.location.reload();
 }
 
-export function syncAnalytics(options: { gtmId?: string; draft: boolean; production: boolean }) {
+export type AnalyticsOptions = { gtmId?: string; draft: boolean; production: boolean; allowedHosts?: string };
+
+export function syncAnalytics(options: AnalyticsOptions) {
   draftMode = options.draft;
   production = options.production;
-  const page = analyticsPage(window.location.href, draftMode, production);
+  allowedHosts = options.allowedHosts;
+  const page = analyticsPage(window.location.href, draftMode, production, allowedHosts);
   if (getAnalyticsConsent() !== "granted" || !page || !/^GTM-[A-Z0-9]+$/.test(options.gtmId || "")) {
     stopAnalytics();
     return;
@@ -176,7 +188,7 @@ export function installAnalyticsNavigationGuard() {
     history[method] = function (data, unused, url) {
       if (running && url) {
         const destination = new URL(String(url), window.location.href);
-        if (!analyticsPage(destination.href, draftMode, production)) {
+        if (!analyticsPage(destination.href, draftMode, production, allowedHosts)) {
           stopAnalytics(false);
           // A new document guarantees no public-page tag survives into auth,
           // Studio, a draft URL, or any other excluded route.
@@ -202,7 +214,7 @@ export function trackPublicClick(event: MouseEvent) {
   const url = new URL(href, window.location.href);
   const method = url.protocol === "tel:" ? "phone" : url.protocol === "mailto:" ? "email" : ["wa.me", "api.whatsapp.com"].includes(url.hostname) ? "whatsapp" : null;
   if (method) { trackAnalytics("haus_contact_click", { contact_method: method }); return; }
-  if (url.origin !== window.location.origin || !analyticsPage(url.href, draftMode, production)) return;
+  if (url.origin !== window.location.origin || !analyticsPage(url.href, draftMode, production, allowedHosts)) return;
   if (/^\/properties\/(?!residential$|commercial$)/.test(url.pathname)) trackAnalytics("haus_property_click", { content_path: url.pathname });
   else if (url.pathname.startsWith("/blog/")) trackAnalytics("haus_article_click", { content_path: url.pathname });
   else if (url.pathname === "/contact") trackAnalytics("haus_contact_click", { contact_method: "contact" });

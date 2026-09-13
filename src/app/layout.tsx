@@ -142,6 +142,7 @@ const jsonLd = {
 // Google Tag Manager: no-op until the founder sets NEXT_PUBLIC_GTM_ID once the
 // GTM container exists. Without the env var, no analytics markup is rendered.
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID;
+const ANALYTICS_ALLOWED_HOSTS = process.env.NEXT_PUBLIC_ANALYTICS_ALLOWED_HOSTS;
 
 export default async function RootLayout({
   children,
@@ -164,7 +165,8 @@ export default async function RootLayout({
           <ConsentManager
             gtmId={GTM_ID}
             draft={isDraftModeEnabled}
-            production={process.env.NODE_ENV === "production" && process.env.VERCEL_ENV !== "preview"}
+            allowedHosts={ANALYTICS_ALLOWED_HOSTS}
+            production={process.env.NODE_ENV === "production" && (process.env.VERCEL_ENV !== "preview" || Boolean(ANALYTICS_ALLOWED_HOSTS?.trim()))}
           />
         </Suspense>
         <a
