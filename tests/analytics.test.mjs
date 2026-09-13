@@ -13,6 +13,7 @@ test("public-page allowlist excludes private, preview, draft, local and non-prod
   for (const href of ["http://localhost:3000/", "https://preview.vercel.app/", "https://hausofestate.com/?preview=true", "https://hausofestate.com/?sanity-preview-secret=abc"]) assert.equal(analyticsPage(href), null);
   assert.equal(analyticsPage("https://hausofestate.com/blog/article", true), null);
   assert.equal(analyticsPage("https://hausofestate.com/", false, false), null);
+  assert.equal(analyticsPage("https://hausofestate.com/register-interest")?.page_path, "/register-interest");
   assert.deepEqual(analyticsPage("https://hausofestate.com/properties/azizi-florence?email=private@example.com#contact"), {
     page_path: "/properties/azizi-florence", page_location: "https://hausofestate.com/properties/azizi-florence", page_referrer: "", page_title: "properties",
   });
@@ -58,6 +59,9 @@ test("runtime gates scripts, drops backlog and PII, deduplicates pages, revokes 
   try {
     syncAnalytics(config);
     trackAnalytics("haus_property_search", { email: "private@example.com" });
+    for (const event of ["form_view", "form_start", "lead_submit_success", "newsletter_opt_in", "property_assistant_opened", "property_assistant_results_shown", "property_assistant_adviser_handoff"]) {
+      trackAnalytics(event, { form_version: "2026-09-01.v4", surface: "modal", route_scope: "home", result_count: 2 });
+    }
     assert.equal(scripts.length, 0);
     assert.equal(window.dataLayer, undefined);
     saveAnalyticsConsent("denied");
@@ -84,6 +88,44 @@ test("runtime gates scripts, drops backlog and PII, deduplicates pages, revokes 
     assert.deepEqual(Object.keys(search).sort(), ["availability", "category", "event", "form_location", "intent", "page_location", "page_path", "page_referrer", "page_title"].sort());
     assert.equal(search.event, "haus_property_search");
     assert.doesNotMatch(JSON.stringify(search), /lead_form_submit|private@example|secret|user-1/);
+    const leadNames = ["form_view", "form_start", "lead_submit_success", "newsletter_opt_in"];
+    for (const event of leadNames) {
+      trackAnalytics(event, {
+        form_name: "private@example.com", form_version: "2026-09-01.v4", surface: "modal",
+        interest: "buy", step: 2, has_project: true,
+        first_name: "Private Person", email: "private@example.com", project_title: "Private Project", city: "Private City", user_id: "user-1", newsletter_preferences: "secret",
+      });
+    }
+    const leadEvents = window.dataLayer.filter((entry) => leadNames.includes(entry.event));
+    assert.deepEqual(leadEvents.map((entry) => entry.event), leadNames);
+    for (const entry of leadEvents) {
+      assert.equal(entry.form_name, "lead_eoi");
+      assert.equal(entry.surface, "modal");
+      assert.equal(entry.interest, "buy");
+      assert.equal(entry.step, 2);
+      assert.equal(entry.has_project, true);
+      assert.deepEqual(Object.keys(entry).sort(), ["event", "page_path", "page_location", "page_title", "page_referrer", "form_name", "form_version", "surface", "interest", "step", "has_project"].sort());
+    }
+    trackAnalytics("form_view", { form_version: "private@example.com", surface: "modal" });
+    trackAnalytics("form_view", { form_version: "2026-09-01.v4", surface: "private@example.com" });
+    assert.equal(window.dataLayer.filter((entry) => leadNames.includes(entry.event)).length, 4);
+    trackAnalytics("form_view", { form_version: "2026-09-01.v4", surface: "register_interest", interest: "private@example.com", step: 99, has_project: "private@example.com" });
+    assert.equal(window.dataLayer.at(-1).interest, null);
+    assert.equal(window.dataLayer.at(-1).step, null);
+    assert.equal(window.dataLayer.at(-1).has_project, null);
+
+    for (const event of ["property_assistant_opened", "property_assistant_results_shown", "property_assistant_adviser_handoff"]) {
+      trackAnalytics(event, { route_scope: "home", result_count: 999, prompt: "secret", message: "Private Person", conversation_id: "user-1" });
+    }
+    const assistantEvents = window.dataLayer.filter((entry) => entry.event?.startsWith("property_assistant_"));
+    assert.equal(assistantEvents.length, 3);
+    assert.equal(assistantEvents[1].result_count, 3);
+    assert.equal(assistantEvents[0].result_count, undefined);
+    trackAnalytics("property_assistant_results_shown", { route_scope: "home", result_count: NaN });
+    trackAnalytics("property_assistant_results_shown", { route_scope: "home", result_count: Infinity });
+    trackAnalytics("property_assistant_opened", { route_scope: "properties" });
+    assert.equal(window.dataLayer.filter((entry) => entry.event?.startsWith("property_assistant_")).length, 3);
+    assert.doesNotMatch(JSON.stringify(window.dataLayer), /private@example|Private Person|Private Project|Private City|user-1|secret/);
     const beforeInvalid = events().length;
     trackAnalytics("lead_form_submit", { email: "private@example.com" });
     trackAnalytics("haus_contact_click", { contact_method: "private@example.com" });
@@ -102,8 +144,12 @@ test("runtime gates scripts, drops backlog and PII, deduplicates pages, revokes 
     saveAnalyticsConsent("denied");
     syncAnalytics(config);
     const revokedCount = events().length;
+    const allRevokedCount = window.dataLayer.length;
     trackAnalytics("haus_contact_click", { contact_method: "phone" });
+    trackAnalytics("lead_submit_success", { form_version: "2026-09-01.v4", surface: "newsletter", interest: "newsletter_only" });
+    trackAnalytics("property_assistant_opened", { route_scope: "home" });
     assert.equal(events().length, revokedCount);
+    assert.equal(window.dataLayer.length, allRevokedCount);
     assert.equal(calls.reload, 1);
     assert.equal(getAnalyticsConsent(), "denied");
     assert.match(document.cookie, /Max-Age=0/);

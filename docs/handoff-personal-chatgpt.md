@@ -1,6 +1,19 @@
 # Haus of Estate implementation handoff
 
-Updated: 7 September 2026
+Updated: 13 September 2026
+
+## Current release structure
+
+Surya has replaced the earlier per-feature branch workflow with two cumulative
+releases. Release 1 (`suryak02/technical-seo-fixes`) contains SEO and consented
+GA4 through GTM and is next for Deb to deploy. Release 2
+(`suryak02/azizi-florence-content-scaffold`, PR #12) contains Release 1 plus
+all existing features, Florence, careers and standalone Sanity setup.
+Continue subsequent work on Release 2; do not create a new branch per feature.
+Personalised follow-up emails are the next milestone within Release 2.
+See `docs/releases.md` and `docs/standalone-sanity-studio.md` for the current
+setup. Historical statements below about missing Sanity access and separate
+feature PRs describe the earlier audit, not the current release workflow.
 
 ## Blog thumbnail fitting
 
@@ -19,7 +32,7 @@ integration preview. Browser checks passed at 1280px and 1435px, including the
 Properties menu; the mobile sharing fallback also fits and opens at 390px.
 Targeted lint passed. Hreflang remains deferred pending equivalent localized URLs.
 
-## Repository and branch safety
+## Historical branch structure (superseded by the release structure above)
 
 - Repository: `deb-pradhan/Haus-Of-Estate`
 - Developer: Surya (`suryak02`)
@@ -223,13 +236,13 @@ localization. Revisit only after real paired locale URLs and content exist.
 - Deb's approval of any AI sales-agent branch, AI Gateway ownership/model/budget
   controls, DPIA/vendor review and production release process.
 
-## Next independent branches
+## Subsequent work on Release 2
 
-1. Review/merge dynamic search PR `#11`; keep it independent from lead work.
-2. Complete Florence facts/assets in staging through PR `#12` after PR `#5` is
-   available and Sonia responds. Do not publish the current scaffold.
-3. Create a separate consent/paid-tracking branch before enabling GA4 or Meta.
-4. Scope `suryak02/ai-sales-agent-mvp` only after country/city, lead intake,
-   editorial workflow and Property Assistant PR `#8` are reconciled.
+1. Review the cumulative PR #12 after Release 1, preserving every merged feature.
+2. Use the sibling standalone Studio with Deb's invited Sanity administrator
+   account; local setup does not publish Florence or alter existing records.
+3. Finish GA4 verification when company GTM/GA4 access arrives. Meta remains off.
+4. Define and implement personalised email follow-ups as the next milestone on
+   this same Release 2 branch, including separate consent and unsubscribe handling.
 5. Keep Latest News, PDF newsletters and the exact LinkedIn workflow as later
    work until Marketing defines what “LinkedIn integration” means.

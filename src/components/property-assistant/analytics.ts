@@ -1,3 +1,5 @@
+import { trackAnalytics } from "@/lib/analytics";
+
 export type AssistantRouteScope = "home" | "properties" | "property_detail";
 
 type AssistantAnalyticsEvent =
@@ -27,19 +29,12 @@ export function buildAssistantAnalyticsPayload(event: AssistantAnalyticsEvent) {
     event: event.name,
     route_scope: event.routeScope,
     ...(event.name === "property_assistant_results_shown"
-      ? { result_count: Math.max(0, Math.min(3, Math.trunc(event.resultCount))) }
+      ? { result_count: Number.isFinite(event.resultCount) ? Math.max(0, Math.min(3, Math.trunc(event.resultCount))) : 0 }
       : {}),
   };
 }
 
 export function emitAssistantAnalytics(event: AssistantAnalyticsEvent) {
-  if (typeof window === "undefined") return;
-  window.dataLayer = window.dataLayer || [];
-  window.dataLayer.push(buildAssistantAnalyticsPayload(event));
-}
-
-declare global {
-  interface Window {
-    dataLayer?: Record<string, unknown>[];
-  }
+  const { event: name, ...details } = buildAssistantAnalyticsPayload(event);
+  trackAnalytics(name, details);
 }

@@ -5,10 +5,6 @@ import { ConsentManager } from "@/components/analytics/consent-manager";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SavedContentProvider } from "@/components/saved-content";
 import { SessionProvider } from "@/lib/auth/client";
-import {
-  isSanityLivePreviewConfigured,
-  SanityLive,
-} from "@/sanity/live";
 import { isSavedContentEnabled } from "@/lib/features";
 import { draftMode } from "next/headers";
 import { SOCIAL_PROFILE_URLS } from "@/config/social";
@@ -188,9 +184,6 @@ export default async function RootLayout({
             </a>
           )}
         </SessionProvider>
-        <SanityLive
-          includeDrafts={isDraftModeEnabled && isSanityLivePreviewConfigured}
-        />
       </body>
     </html>
   );

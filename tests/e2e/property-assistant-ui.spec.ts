@@ -302,14 +302,12 @@ test("authenticated results stay validated and hand off an editable brief", asyn
   );
   const resultsEvent = await page.evaluate(() =>
     window.dataLayer?.find(
-      (event) => event.event === "property_assistant_results_shown",
+      (event) => "event" in event && event.event === "property_assistant_results_shown",
     ),
   );
-  expect(resultsEvent).toEqual({
-    event: "property_assistant_results_shown",
-    route_scope: "properties",
-    result_count: 3,
-  });
+  // Functional assistant use/sign-in does not grant analytics consent.
+  expect(resultsEvent).toBeUndefined();
+  await expect(page.locator("#haus-gtm")).toHaveCount(0);
 
   await assistantInput.fill("Which is available now?");
   await page.getByRole("button", { name: "Send question" }).click();

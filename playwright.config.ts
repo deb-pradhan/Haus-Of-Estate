@@ -30,12 +30,13 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `npm run dev -- --hostname 127.0.0.1 --port ${port}`,
+    command: `npm run dev -- --webpack --hostname 127.0.0.1 --port ${port}`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     env: {
       ...process.env,
+      HAUS_NEXT_DIST_DIR: ".next-e2e",
       LEAD_INTAKE_ENABLED: "true",
       LEAD_DELIVERY_ENABLED: "false",
       PURCHASE_READINESS_ENABLED: "true",

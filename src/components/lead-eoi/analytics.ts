@@ -1,4 +1,5 @@
 import type { LeadInterest, LeadSurface } from "./types";
+import { trackAnalytics } from "@/lib/analytics";
 
 export type LeadAnalyticsEventName =
   | "form_view"
@@ -16,23 +17,10 @@ interface LeadAnalyticsEvent {
   has_project?: boolean;
 }
 
-declare global {
-  interface Window {
-    dataLayer?: Record<string, unknown>[];
-  }
-}
-
-/** Pushes a deliberately small, PII-free event shape for GTM consumers. */
+/** The shared boundary drops events until analytics consent is granted. */
 export function trackLeadEvent(
   event: LeadAnalyticsEventName,
   details: Omit<LeadAnalyticsEvent, "event" | "form_name">,
 ) {
-  if (typeof window === "undefined") return;
-
-  window.dataLayer = window.dataLayer ?? [];
-  window.dataLayer.push({
-    event,
-    form_name: "lead_eoi",
-    ...details,
-  });
+  trackAnalytics(event, details);
 }
