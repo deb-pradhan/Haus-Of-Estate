@@ -48,6 +48,23 @@ test('linked worktrees require an explicit app path before any setup', async (t)
   assert.equal((await setupStandaloneStudio({ sourceRoot: app, appPath: canonical.app })).changes.length, 8)
 })
 
+test('treats LF and CRLF as equivalent while preserving existing Studio bytes', async (t) => {
+  const { app, target } = await fixture(t)
+  const first = await setupStandaloneStudio({ appPath: app })
+  const expected = new Map()
+  for (const name of first.changes) {
+    const content = await readFile(join(target, name), 'utf8')
+    const windowsContent = content.replaceAll('\r\n', '\n').replaceAll('\n', '\r\n')
+    expected.set(name, windowsContent)
+    await writeFile(join(target, name), windowsContent)
+  }
+  assert.deepEqual((await setupStandaloneStudio({ appPath: app, check: true })).changes, [])
+  assert.deepEqual((await setupStandaloneStudio({ appPath: app })).changes, [])
+  for (const [name, content] of expected) {
+    assert.equal(await readFile(join(target, name), 'utf8'), content)
+  }
+})
+
 test('preflights conflicts before writing even previously missing files', async (t) => {
   const { app, target } = await fixture(t)
   await mkdir(target)

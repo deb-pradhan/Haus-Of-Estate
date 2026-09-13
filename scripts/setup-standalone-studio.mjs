@@ -25,6 +25,10 @@ function templatePath(value) {
   return JSON.stringify(value).slice(1, -1).replaceAll("'", "\\'")
 }
 
+function normalizeNewlines(value) {
+  return value.replaceAll('\r\n', '\n')
+}
+
 /** Prepare only local Studio files. This never calls Sanity's cloud APIs. */
 export async function setupStandaloneStudio({
   appPath,
@@ -72,7 +76,7 @@ export async function setupStandaloneStudio({
   const conflicts = []
   const unchanged = []
   for (const name of managedFiles) {
-    const expected = (await readFile(new URL(`${name}.template`, templateRoot), 'utf8'))
+    const expected = normalizeNewlines(await readFile(new URL(`${name}.template`, templateRoot), 'utf8'))
       .replaceAll('__APP_RELATIVE_PATH__', templatePath(appRelative))
     const destination = join(target, name)
     const entry = await inspect(destination)
@@ -80,7 +84,9 @@ export async function setupStandaloneStudio({
       throw new Error(`Refusing to replace a non-regular file or symlink: ${destination}`)
     }
     const existing = entry ? await readFile(destination, 'utf8') : null
-    if (existing === expected) {
+    // Git autocrlf may check out templates with CRLF while Studio files use LF.
+    // Compare their content without rewriting either file's line endings.
+    if (existing !== null && normalizeNewlines(existing) === expected) {
       unchanged.push(name)
     } else {
       changes.push({ name, destination, expected, existing })
