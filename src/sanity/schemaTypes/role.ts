@@ -125,6 +125,7 @@ export const role = defineType({
       name: 'status',
       title: 'Status',
       type: 'string',
+      description: 'Public vacancies are limited to the approved September hiring list in content/careers-roles.json. Close retired records; do not delete their history.',
       options: {
         list: [
           { title: 'Draft', value: 'draft' },

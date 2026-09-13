@@ -666,7 +666,7 @@ export default function AboutPage() {
                 Build your career with us.
               </h2>
               <p className="mt-5 text-base leading-relaxed text-muted-foreground">
-                We&apos;re a 24-hour business across three continents, hiring people who put the client first. Explore our current internship and full-time vacancies, then apply with your CV, LinkedIn profile and a short cover letter.
+                We&apos;re a 24-hour business across three continents, hiring people who put the client first. Explore our current opportunities, then apply with your CV, LinkedIn profile and a short cover letter.
               </p>
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                 <Button asChild size="lg" className="bg-estate-700 text-white hover:bg-estate-700/90">
@@ -684,19 +684,19 @@ export default function AboutPage() {
                 <div className="rounded-2xl border border-border bg-surface p-6">
                   <Briefcase className="h-6 w-6 text-gold-500" />
                   <h3 className="mt-4 font-serif text-lg font-medium text-estate-700">
-                    Full-time roles
+                    Current opportunities
                   </h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                    Property consultants, client managers and marketing specialists across the UK and UAE.
+                    See our current openings on the Careers page.
                   </p>
                 </div>
                 <div className="rounded-2xl border border-border bg-surface p-6">
                   <GraduationCap className="h-6 w-6 text-gold-500" />
                   <h3 className="mt-4 font-serif text-lg font-medium text-estate-700">
-                    Internships
+                    Role details
                   </h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                    Hands-on placements for those starting out — real work, real mentorship, real responsibility.
+                    Contact our team to discuss a current opportunity.
                   </p>
                 </div>
                 <div className="rounded-2xl border border-border bg-surface p-6 sm:col-span-2">

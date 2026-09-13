@@ -13,6 +13,7 @@ export default defineConfig({
   test: {
     environment: "node",
     include: [
+      "tests/careers.test.ts",
       "src/**/*.test.ts",
       "src/**/*.test.tsx",
       "tests/unit/**/*.test.ts",

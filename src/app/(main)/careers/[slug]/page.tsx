@@ -1,4 +1,6 @@
 import { notFound } from 'next/navigation'
+import { draftMode } from 'next/headers'
+import type { ComponentProps } from 'react'
 import Link from 'next/link'
 import {
   ArrowLeft,
@@ -9,39 +11,35 @@ import {
   Check,
 } from 'lucide-react'
 import { sanityFetch } from '@/sanity/live'
-import { ROLE_BY_SLUG_QUERY, ROLE_SLUGS_QUERY } from '@/sanity/queries'
+import { ROLE_BY_SLUG_QUERY, ROLES_QUERY } from '@/sanity/queries'
+import { resolveCareerRole, resolveCareerRoles, type CareerRole } from '@/lib/career-roles'
+import { HR_INBOX } from '@/lib/careers'
 import { DEFAULT_OG_IMAGES } from '@/lib/seo'
 import { PortableTextRenderer } from '@/components/blog'
 import { ApplicationForm } from '@/components/careers/application-form'
 import type { Metadata } from 'next'
 
-interface RoleDetail {
-  _id: string
-  title: string
-  slug: string
-  department?: string
-  location: string
-  employmentType?: string
-  summary: string
-  description?: unknown
-  responsibilities?: string[]
-  requirements?: string[]
-  niceToHave?: string[]
-  applyEmail?: string
-  featured?: boolean
-  publishedAt?: string
-}
-
 interface RolePageProps {
   params: Promise<{ slug: string }>
 }
 
+async function getVisibleCareerRole(slug: string) {
+  if (!resolveCareerRole(slug)) return null
+  const [{ data }, { isEnabled: draftPreview }] = await Promise.all([
+    sanityFetch<{ role: CareerRole | null }>({
+      // The envelope distinguishes an absent brief from a failed CMS request.
+      query: `{ "role": ${ROLE_BY_SLUG_QUERY} }`,
+      params: { slug },
+    }),
+    draftMode(),
+  ])
+  if (!data) throw new Error('Unable to load the current career opportunity')
+  return draftPreview ? data.role : resolveCareerRole(slug, data.role)
+}
+
 export async function generateMetadata({ params }: RolePageProps): Promise<Metadata> {
   const { slug } = await params
-  const { data } = await sanityFetch<RoleDetail>({
-    query: ROLE_BY_SLUG_QUERY,
-    params: { slug },
-  })
+  const data = await getVisibleCareerRole(slug)
   if (!data) return { title: 'Role Not Found' }
   return {
     title: `${data.title} — Careers`,
@@ -58,26 +56,18 @@ export async function generateMetadata({ params }: RolePageProps): Promise<Metad
 }
 
 export async function generateStaticParams() {
-  const { data } = await sanityFetch<Array<{ slug: string }>>({ query: ROLE_SLUGS_QUERY })
-  return data?.map((r) => ({ slug: r.slug })) || []
+  const { data } = await sanityFetch<CareerRole[]>({ query: ROLES_QUERY })
+  return data === null ? [] : resolveCareerRoles(data).map(({ slug }) => ({ slug }))
 }
 
 export const revalidate = 60
 
 export default async function RolePage({ params }: RolePageProps) {
   const { slug } = await params
-  const { data: role } = await sanityFetch<RoleDetail>({
-    query: ROLE_BY_SLUG_QUERY,
-    params: { slug },
-  })
+  const role = await getVisibleCareerRole(slug)
   if (!role) notFound()
 
-  const applyEmail = role.applyEmail || 'info@hausofestate.com'
-  const applyHref = `mailto:${applyEmail}?subject=${encodeURIComponent(
-    `Application — ${role.title}`,
-  )}&body=${encodeURIComponent(
-    `Hi Haus of Estate team,\n\nI'd like to apply for the ${role.title} role.\n\nA short note about me:\n[…]\n\nMy CV is attached.\n\nThanks,\n`,
-  )}`
+  const applyEmail = role.applyEmail || HR_INBOX
 
   return (
     <div className="min-h-screen">
@@ -99,9 +89,9 @@ export default async function RolePage({ params }: RolePageProps) {
           </h1>
 
           <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-white/80">
-            <span className="inline-flex items-center gap-1.5">
+            {role.location && <span className="inline-flex items-center gap-1.5">
               <MapPin className="h-4 w-4" /> {role.location}
-            </span>
+            </span>}
             {role.employmentType && (
               <span className="inline-flex items-center gap-1.5">
                 <Briefcase className="h-4 w-4" /> {role.employmentType}
@@ -132,9 +122,14 @@ export default async function RolePage({ params }: RolePageProps) {
         <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[1.4fr_1fr]">
           {/* Main content */}
           <div className="space-y-10">
+            {!role.description && !role.summary && (
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                Contact our team for details about this opportunity, or apply using the form.
+              </p>
+            )}
             {role.description ? (
               <div className="prose prose-neutral max-w-none">
-                <PortableTextRenderer content={role.description as any} />
+                <PortableTextRenderer content={role.description as ComponentProps<typeof PortableTextRenderer>['content']} />
               </div>
             ) : null}
 

@@ -6,20 +6,40 @@ import {
   type CvAttachment,
 } from "@/lib/email/resend";
 import {
-  CV_ALLOWED_MIME,
-  CV_MAX_BYTES,
+  APPLICATION_MAX_BYTES,
+  CV_SIZE_ERROR,
+  normalizeApplicationUrl,
+  validateCvFile,
   EXPERIENCE_AREA_OPTIONS,
   OPPORTUNITY_TYPE_OPTIONS,
   YEARS_OF_EXPERIENCE_OPTIONS,
 } from "@/lib/careers";
+import { getCareerRole } from "@/sanity/careers";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const URL_RE = /^https?:\/\/[^\s]+$/i;
-
 export async function POST(request: Request) {
+  const tooLarge = () => NextResponse.json({ error: CV_SIZE_ERROR }, { status: 413 });
+  if (Number(request.headers.get("content-length")) > APPLICATION_MAX_BYTES) return tooLarge();
   let form: FormData;
   try {
-    form = await request.formData();
+    // Bound chunked requests too, before parsing files into memory.
+    const reader = request.body?.getReader();
+    if (!reader) throw new Error("Missing body");
+    const chunks: Uint8Array[] = [];
+    let size = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > APPLICATION_MAX_BYTES) {
+        await reader.cancel();
+        return tooLarge();
+      }
+      chunks.push(value);
+    }
+    form = await new Response(Buffer.concat(chunks), {
+      headers: { "content-type": request.headers.get("content-type") ?? "" },
+    }).formData();
   } catch {
     return NextResponse.json(
       { error: "Expected multipart/form-data" },
@@ -38,15 +58,15 @@ export async function POST(request: Request) {
   }
 
   const roleSlug = str("roleSlug");
-  const roleTitle = str("roleTitle");
   const fullName = str("fullName");
   const email = str("email");
   const phone = str("phone");
   const location = str("location");
   const yearsOfExperience = str("yearsOfExperience");
   const opportunityType = str("opportunityType");
-  const linkedinUrl = str("linkedinUrl");
-  const portfolioUrl = str("portfolioUrl");
+  const linkedinUrl = normalizeApplicationUrl(str("linkedinUrl"));
+  const portfolioUrl = normalizeApplicationUrl(str("portfolioUrl"));
+  const cvUrl = normalizeApplicationUrl(str("cvUrl"));
   const coverNote = str("coverNote");
   const consent = form.get("consent") === "true" || form.get("consent") === "on";
   const experienceAreas = form
@@ -55,8 +75,12 @@ export async function POST(request: Request) {
     .map((v) => v.trim());
 
   const errors: Record<string, string> = {};
+  for (const [name, value] of form.entries()) {
+    if (name !== "cv" && value instanceof File && value.size > 0) {
+      errors.portfolioUrl = "Portfolio files cannot be uploaded here. Paste a portfolio sharing link instead.";
+    }
+  }
 
-  if (!roleTitle) errors.roleTitle = "Role title is required";
   if (!roleSlug) errors.roleSlug = "Role slug is required";
   if (!fullName) errors.fullName = "Full name is required";
   if (!email) errors.email = "Email is required";
@@ -90,12 +114,13 @@ export async function POST(request: Request) {
   );
   if (invalidArea) errors.experienceAreas = "Invalid area of experience";
 
-  if (linkedinUrl && !URL_RE.test(linkedinUrl)) {
-    errors.linkedinUrl = "LinkedIn must be a full https:// URL";
+  if (linkedinUrl === null) {
+    errors.linkedinUrl = "Enter a complete LinkedIn link starting with https://";
   }
-  if (portfolioUrl && !URL_RE.test(portfolioUrl)) {
-    errors.portfolioUrl = "Portfolio must be a full https:// URL";
+  if (portfolioUrl === null) {
+    errors.portfolioUrl = "Enter a complete portfolio sharing link starting with https://";
   }
+  if (cvUrl === null) errors.cvUrl = "Enter a complete CV sharing link starting with https://";
   if (coverNote.length > 4000) {
     errors.coverNote = "Cover note must be 4000 characters or fewer";
   }
@@ -103,26 +128,27 @@ export async function POST(request: Request) {
     errors.consent = "You need to consent to our processing of your data";
   }
 
-  // ── CV file (required) ──────────────────────────────────────────────
+  // A CV file or link is required. Portfolio links are separate and optional.
   const cvFile = form.get("cv");
   let cv: CvAttachment | undefined;
-  if (!(cvFile instanceof File) || cvFile.size === 0) {
-    errors.cv = "Please attach your CV";
-  } else if (cvFile.size > CV_MAX_BYTES) {
-    errors.cv = "Your CV must be 5MB or smaller";
-  } else if (
-    cvFile.type &&
-    !CV_ALLOWED_MIME.includes(cvFile.type) &&
-    !/\.(pdf|docx?|DOCX?|PDF)$/.test(cvFile.name)
-  ) {
-    errors.cv = "CV must be a PDF, DOC or DOCX file";
-  } else {
-    const buf = Buffer.from(await cvFile.arrayBuffer());
+  const file = cvFile instanceof File && cvFile.size > 0 ? cvFile : undefined;
+  const cvError = file ? validateCvFile(file) : (!cvUrl ? validateCvFile() : undefined);
+  if (cvError) errors.cv = cvError;
+  if (file && !cvError) {
+    const buf = Buffer.from(await file.arrayBuffer());
     cv = {
-      filename: cvFile.name || "cv.pdf",
+      filename: file.name || "cv.pdf",
       content: buf.toString("base64"),
     };
   }
+
+  let role;
+  try {
+    role = await getCareerRole(roleSlug);
+  } catch {
+    return NextResponse.json({ error: "We couldn't check current opportunities. Please try again shortly or email hr@hausofestate.com directly." }, { status: 503 });
+  }
+  if (!role) errors.roleSlug = "This role is no longer accepting applications. Choose a current opportunity on our careers page.";
 
   if (Object.keys(errors).length > 0) {
     return NextResponse.json(
@@ -133,7 +159,7 @@ export async function POST(request: Request) {
 
   const payload: ApplicationPayload = {
     roleSlug,
-    roleTitle,
+    roleTitle: role!.title,
     fullName,
     email,
     phone,
@@ -143,6 +169,7 @@ export async function POST(request: Request) {
     opportunityType: opportunityType || undefined,
     linkedinUrl: linkedinUrl || undefined,
     portfolioUrl: portfolioUrl || undefined,
+    cvUrl: cvUrl || undefined,
     coverNote: coverNote || undefined,
     cv,
   };
@@ -160,9 +187,13 @@ export async function POST(request: Request) {
     );
   }
 
-  sendApplicationConfirmationToApplicant(payload).catch((e) => {
+  let confirmationSent = false;
+  try {
+    await sendApplicationConfirmationToApplicant(payload);
+    confirmationSent = true;
+  } catch (e) {
     console.error("[applications] confirmation email failed:", e);
-  });
+  }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, confirmationSent });
 }
