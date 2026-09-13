@@ -43,15 +43,42 @@ async function reachPreferences(
 test("opens after three seconds, only once per session, and restores focus", async ({
   page,
 }) => {
+  // Freeze before navigation: streamed HTML can finish loading after the real
+  // three-second timer has already elapsed. Start measuring once the UI hydrates.
+  const clockStart = Date.now();
+  await page.clock.install({ time: clockStart });
+  await page.clock.pauseAt(clockStart + 60_000);
+  await page.addInitScript(() => {
+    const target = window as typeof window & { leadOpenedAt: number[] };
+    target.leadOpenedAt = [];
+    window.addEventListener("haus:lead-modal-open", () => {
+      target.leadOpenedAt.push(Date.now());
+    });
+  });
   await page.goto("/");
-  await page.waitForTimeout(2_500);
+  const category = page.getByRole("group", { name: "Category", exact: true });
+  const commercial = category.getByRole("button", { name: "Commercial", exact: true });
+  await commercial.click();
+  await expect(commercial).toHaveAttribute("aria-pressed", "true");
+  const timerStart = await page.evaluate(() => Date.now());
+  const openedAt = () => page.evaluate(
+    () => (window as typeof window & { leadOpenedAt: number[] }).leadOpenedAt,
+  );
+  await page.clock.runFor(2_500);
+  expect(await openedAt()).toEqual([]);
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect(page.getByRole("dialog")).toBeVisible({ timeout: 1_500 });
+  await page.clock.runFor(500);
+  await expect.poll(openedAt).toEqual([timerStart + 3_000]);
+  // The timer requests the lazy modal at exactly three seconds. Allow its
+  // downloaded component and React's follow-up rendering timers to complete.
+  await page.clock.resume();
+  await expect(page.getByRole("dialog")).toBeVisible();
 
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await page.goto("/about");
-  await page.waitForTimeout(3_200);
+  await page.getByRole("contentinfo").getByRole("link", { name: "About us", exact: true }).click();
+  await expect(page).toHaveURL(/\/about$/);
+  await page.clock.runFor(3_200);
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
   const trigger = page.getByRole("button", { name: "Speak to an advisor" });
@@ -86,7 +113,7 @@ test("manual opening cancels the pending automatic popup", async ({ page }) => {
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });
 
-test("preserves attribution, separates consent, retries, and emits no PII", async ({
+test("preserves attribution, separates consent, retries, and records no analytics without consent", async ({
   page,
 }) => {
   const submissions: Record<string, unknown>[] = [];
@@ -172,7 +199,7 @@ test("preserves attribution, separates consent, retries, and emits no PII", asyn
 
   const events = await page.evaluate(() => window.dataLayer ?? []);
   const leadEvents = events.filter((event) =>
-    typeof event.event === "string" &&
+    "event" in event && typeof event.event === "string" &&
     [
       "form_view",
       "form_start",
@@ -180,12 +207,11 @@ test("preserves attribution, separates consent, retries, and emits no PII", asyn
       "newsletter_opt_in",
     ].includes(event.event),
   );
-  expect(leadEvents.map((event) => event.event)).toEqual([
-    "form_view",
-    "form_start",
-    "lead_submit_success",
-    "newsletter_opt_in",
-  ]);
+  // Newsletter/property-match consent does not grant optional analytics consent.
+  // These functional E2Es use next dev; the production consent suite and unit
+  // runtime tests exercise consented measurement without bypassing its gate.
+  expect(leadEvents).toEqual([]);
+  await expect(page.locator("#haus-gtm")).toHaveCount(0);
   const serializedEvents = JSON.stringify(events);
   expect(serializedEvents).not.toContain("Surya");
   expect(serializedEvents).not.toContain("surya@example.com");
