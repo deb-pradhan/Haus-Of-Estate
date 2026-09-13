@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { trackAnalytics } from "@/lib/analytics";
 import {
   ArrowRight,
   BedDouble,
@@ -49,12 +50,6 @@ const INTENT_TABS: { id: Intent; label: string }[] = [
   { id: "rent", label: "Rent" },
 ];
 
-declare global {
-  interface Window {
-    dataLayer?: Record<string, unknown>[];
-  }
-}
-
 export function HomepagePropertySearch() {
   const router = useRouter();
   const { openSeller } = useLeadModals();
@@ -87,16 +82,10 @@ export function HomepagePropertySearch() {
     if (loading) return;
 
     setLoading(true);
-    window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push({
-      event: "lead_form_submit",
-      form_location: "homepage_hero",
+    trackAnalytics("haus_property_search", {
       category,
       availability,
       intent: effectiveIntent,
-      property_type: type || null,
-      selected_location: location || null,
-      bedrooms: hideBeds ? null : beds || null,
     });
 
     setSubmitted(true);
@@ -121,10 +110,10 @@ export function HomepagePropertySearch() {
           className="mx-auto mt-9 max-w-xl rounded-2xl border border-white/15 bg-surface p-6 text-center shadow-2xl shadow-black/25"
         >
           <p className="font-serif text-lg font-medium text-estate-700">
-            Thank you — we&apos;ll reply within 2 hours.
+            Finding properties for your search…
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
-            We&apos;re matching you with a vetted agent for your search now.
+            Your search results will open shortly.
           </p>
         </div>
       ) : (

@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, ReactNode } from "react";
 import dynamic from "next/dynamic";
+import { trackAnalytics } from "@/lib/analytics";
 
 const AccountModal = dynamic(() =>
   import("./account-modal").then((module) => module.AccountModal),
@@ -38,8 +39,8 @@ export function LeadModalProvider({ children }: { children: ReactNode }) {
     <ModalContext.Provider
       value={{
         openAccount: () => setAccountOpen(true),
-        openBuyer: () => setBuyerOpen(true),
-        openSeller: () => setSellerOpen(true),
+        openBuyer: () => { trackAnalytics("haus_contact_click", { contact_method: "enquiry" }); setBuyerOpen(true); },
+        openSeller: () => { trackAnalytics("haus_contact_click", { contact_method: "enquiry" }); setSellerOpen(true); },
       }}
     >
       {children}

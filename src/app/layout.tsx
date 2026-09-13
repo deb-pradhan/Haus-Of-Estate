@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Cormorant_Garamond } from "next/font/google";
-import Script from "next/script";
+import { Suspense } from "react";
 import { draftMode } from "next/headers";
+import { ConsentManager } from "@/components/analytics/consent-manager";
 import "./globals.css";
 
 const inter = Inter({
@@ -135,8 +136,8 @@ const jsonLd = {
   ],
 };
 
-// Google Tag Manager: no-op until the founder sets NEXT_PUBLIC_GTM_ID once the
-// GTM container exists. Without the env var, no analytics markup is rendered.
+// Optional until the GA4/GTM account is connected. The client loads GTM only
+// after analytics consent, on a public production page outside draft mode.
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID;
 
 export default async function RootLayout({
@@ -153,27 +154,11 @@ export default async function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        {GTM_ID && (
-          <Script id="gtm-init" strategy="afterInteractive">
-            {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','${GTM_ID}');`}
-          </Script>
-        )}
       </head>
       <body className={`${inter.variable} ${cormorant.variable}`}>
-        {GTM_ID && (
-          <noscript>
-            <iframe
-              src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
-              height="0"
-              width="0"
-              style={{ display: "none", visibility: "hidden" }}
-            />
-          </noscript>
-        )}
+        <Suspense fallback={null}>
+          <ConsentManager gtmId={GTM_ID} draft={isDraftModeEnabled} production={process.env.NODE_ENV === "production" && process.env.VERCEL_ENV !== "preview"} />
+        </Suspense>
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-estate-700 focus:px-4 focus:py-2 focus:text-white focus:shadow-lg"
