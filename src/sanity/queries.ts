@@ -1,3 +1,5 @@
+import { APPROVED_CAREER_ROLES } from '@/lib/career-roles'
+
 export const POST_FIELDS = `
   _id,
   title,
@@ -82,6 +84,7 @@ export const SEO_QUERY = `
 
 const ROLE_CARD_FIELDS = `
   _id,
+  status,
   title,
   "slug": slug.current,
   department,
@@ -92,15 +95,17 @@ const ROLE_CARD_FIELDS = `
   publishedAt
 `
 
+const APPROVED_ROLE_FILTER = `!(_id in path("drafts.**")) && slug.current in ${JSON.stringify(APPROVED_CAREER_ROLES.map((role) => role.slug))}`
+
 export const ROLES_QUERY = `
-  *[_type == "role" && status == "open"]
+  *[_type == "role" && ${APPROVED_ROLE_FILTER}]
     | order(featured desc, publishedAt desc) {
       ${ROLE_CARD_FIELDS}
     }
 `
 
 export const ROLE_BY_SLUG_QUERY = `
-  *[_type == "role" && slug.current == $slug && status == "open"][0] {
+  *[_type == "role" && slug.current == $slug && ${APPROVED_ROLE_FILTER}][0] {
     ${ROLE_CARD_FIELDS},
     description,
     responsibilities,
@@ -111,7 +116,7 @@ export const ROLE_BY_SLUG_QUERY = `
 `
 
 export const ROLE_SLUGS_QUERY = `
-  *[_type == "role" && status == "open" && defined(slug.current)] {
+  *[_type == "role" && status == "open" && ${APPROVED_ROLE_FILTER}] {
     "slug": slug.current
   }
 `

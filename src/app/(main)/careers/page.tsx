@@ -8,13 +8,9 @@ import {
   Compass,
   ShieldCheck,
   Users,
-  GraduationCap,
-  CalendarClock,
 } from 'lucide-react'
-import { sanityFetch } from '@/sanity'
-import { ROLES_QUERY } from '@/sanity/queries'
-import { ApplicationForm } from '@/components/careers/application-form'
-import { HR_INBOX } from '@/lib/careers'
+import { getCareerRoles } from '@/sanity/careers'
+import type { CareerRole } from '@/lib/career-roles'
 import { LifeAtHoE } from '@/components/careers/life-at-hoe'
 import { DEFAULT_OG_IMAGES } from '@/lib/seo'
 
@@ -29,18 +25,6 @@ function WhatsAppGlyph({ className }: { className?: string }) {
       <path d="M16 .5C7.44.5.5 7.44.5 16c0 2.83.74 5.49 2.04 7.79L.5 31.5l7.93-2.07A15.45 15.45 0 0 0 16 31.5C24.56 31.5 31.5 24.56 31.5 16S24.56.5 16 .5zm0 28a12.45 12.45 0 0 1-6.36-1.74l-.46-.27-4.71 1.23 1.26-4.59-.3-.47A12.5 12.5 0 1 1 16 28.5zm6.86-9.36c-.38-.19-2.22-1.1-2.57-1.22-.34-.13-.59-.19-.84.19s-.96 1.22-1.18 1.47-.43.28-.81.09c-2.2-1.1-3.65-1.97-5.1-4.46-.39-.66.39-.62 1.11-2.05.13-.25.06-.47-.03-.66s-.84-2.03-1.15-2.78c-.3-.73-.61-.63-.84-.64h-.72c-.25 0-.66.09-1.01.47s-1.32 1.29-1.32 3.13 1.35 3.62 1.54 3.87c.19.25 2.66 4.06 6.45 5.69.9.39 1.6.62 2.15.79.9.29 1.72.25 2.37.15.72-.11 2.22-.91 2.53-1.78.31-.88.31-1.62.22-1.78s-.34-.25-.72-.44z" />
     </svg>
   )
-}
-
-interface RoleCard {
-  _id: string
-  title: string
-  slug: string
-  department?: string
-  location: string
-  employmentType?: string
-  summary: string
-  featured?: boolean
-  publishedAt?: string
 }
 
 const VALUES = [
@@ -74,12 +58,12 @@ const SUB_NAV = [
 export const metadata: Metadata = {
   title: 'Careers',
   description:
-    'Join Haus of Estate — part-time and full-time jobs across the UK, UAE and beyond.',
+    'Explore current opportunities at Haus of Estate.',
   alternates: { canonical: '/careers' },
   openGraph: {
     title: 'Careers — Haus of Estate',
     description:
-      'Part-time and full-time jobs at Haus of Estate.',
+      'Explore current opportunities at Haus of Estate.',
     url: '/careers',
     type: 'website',
     images: DEFAULT_OG_IMAGES,
@@ -89,12 +73,12 @@ export const metadata: Metadata = {
 export const revalidate = 60
 
 export default async function CareersPage() {
-  const { data: roles } = await sanityFetch<RoleCard[]>({ query: ROLES_QUERY })
+  const roles = await getCareerRoles().catch(() => null)
   const openRoles = roles ?? []
 
-  const byDept = new Map<string, RoleCard[]>()
+  const byDept = new Map<string, CareerRole[]>()
   for (const r of openRoles) {
-    const dept = r.department || 'Other'
+    const dept = r.department || 'Current opportunities'
     if (!byDept.has(dept)) byDept.set(dept, [])
     byDept.get(dept)!.push(r)
   }
@@ -199,26 +183,28 @@ export default async function CareersPage() {
               Jobs
             </p>
             <h2 className="mt-3 font-serif text-3xl font-medium text-estate-700 md:text-4xl">
-              Part-time &amp; full-time jobs
+              Current opportunities
             </h2>
           </div>
 
           {departments.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border bg-surface p-10 text-center">
               <h3 className="font-serif text-xl font-medium text-estate-700">
-                No live jobs at this moment.
+                {roles ? 'No live jobs at this moment.' : 'We couldn’t load current opportunities.'}
               </h3>
               <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-                Check back soon — we publish new roles here as they open.
+                {roles ? 'Check back soon — we publish new roles here as they open.' : 'Please try again shortly or email hr@hausofestate.com.'}
               </p>
             </div>
           ) : (
             <div className="space-y-12">
               {departments.map(([dept, list]) => (
                 <div key={dept}>
-                  <h3 className="mb-4 font-serif text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                    {dept}
-                  </h3>
+                  {(departments.length > 1 || dept !== 'Current opportunities') && (
+                    <h3 className="mb-4 font-serif text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                      {dept}
+                    </h3>
+                  )}
                   <ul className="overflow-hidden rounded-2xl border border-border bg-surface">
                     {list.map((role, i) => (
                       <li
@@ -243,9 +229,9 @@ export default async function CareersPage() {
                             </p>
                           </div>
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground md:justify-end">
-                            <span className="inline-flex items-center gap-1.5">
+                            {role.location && <span className="inline-flex items-center gap-1.5">
                               <MapPin className="h-3.5 w-3.5" /> {role.location}
-                            </span>
+                            </span>}
                             {role.employmentType && (
                               <span className="inline-flex items-center gap-1.5">
                                 <Briefcase className="h-3.5 w-3.5" />{' '}

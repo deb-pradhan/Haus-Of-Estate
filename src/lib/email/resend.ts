@@ -78,13 +78,14 @@ export interface ApplicationPayload {
   opportunityType?: string;
   linkedinUrl?: string;
   portfolioUrl?: string;
+  cvUrl?: string;
   coverNote?: string;
   cv?: CvAttachment;
 }
 
 export async function sendApplicationToTeam(app: ApplicationPayload) {
   const client = getResend();
-  if (!client) return { success: true, mock: true };
+  if (!client) throw new Error("Careers email delivery is not configured");
 
   const rows: Array<[string, string]> = [
     ["Role applied for", `${escapeHtml(app.roleTitle)} (${escapeHtml(app.roleSlug)})`],
@@ -119,6 +120,7 @@ export async function sendApplicationToTeam(app: ApplicationPayload) {
         : "—",
     ],
     ["CV attached", app.cv ? escapeHtml(app.cv.filename) : "— (none)"],
+    ["CV sharing link", app.cvUrl ? `<a href="${escapeHtml(app.cvUrl)}">${escapeHtml(app.cvUrl)}</a>` : "—"],
   );
 
   const rowsHtml = rows
@@ -133,7 +135,7 @@ export async function sendApplicationToTeam(app: ApplicationPayload) {
 <p style="font-family:system-ui,sans-serif;font-size:14px;white-space:pre-wrap;background:#f7f5f1;padding:14px;border-radius:8px">${escapeHtml(app.coverNote)}</p>`
     : "";
 
-  return client.emails.send({
+  const result = await client.emails.send({
     from: FROM,
     to: CAREERS_INBOX,
     replyTo: app.email,
@@ -145,12 +147,14 @@ ${coverHtml}`,
       ? [{ filename: app.cv.filename, content: app.cv.content }]
       : undefined,
   });
+  if (result.error || !result.data?.id) throw new Error("Careers email was not accepted by the provider");
+  return result.data;
 }
 
 export async function sendApplicationConfirmationToApplicant(app: ApplicationPayload) {
   const client = getResend();
-  if (!client) return { success: true, mock: true };
-  return client.emails.send({
+  if (!client) throw new Error("Careers email delivery is not configured");
+  const result = await client.emails.send({
     from: FROM,
     to: app.email,
     subject: `We've received your application — ${app.roleTitle}`,
@@ -159,6 +163,8 @@ export async function sendApplicationConfirmationToApplicant(app: ApplicationPay
 <p style="font-family:system-ui,sans-serif">In the meantime, no follow-up needed — we read every application.</p>
 <p style="font-family:system-ui,sans-serif">— The Haus of Estate team</p>`,
   });
+  if (result.error || !result.data?.id) throw new Error("Careers email was not accepted by the provider");
+  return result.data;
 }
 
 export async function sendLeadNotificationToAdmin(lead: {
