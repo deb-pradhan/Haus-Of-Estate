@@ -1,120 +1,148 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { sendLeadNotificationToAdmin } from "@/lib/email/resend";
+import { attemptImmediateLeadDelivery } from "@/lib/lead-delivery";
+import {
+  LeadConflictError,
+  LeadInfrastructureError,
+  LeadOriginError,
+  LeadRateLimitError,
+  LeadValidationError,
+} from "@/lib/lead-intake/errors";
+import { notifyLegacyLead } from "@/lib/lead-intake/legacy";
+import { normalizeLeadRequest } from "@/lib/lead-intake/normalize";
+import {
+  assertAllowedLeadOrigin,
+  extractClientAddress,
+  hashClientAddress,
+  isHoneypotFilled,
+  isLeadIntakeEnabled,
+  isV2LeadPayload,
+} from "@/lib/lead-intake/security";
+import { submitLeadIntake } from "@/lib/lead-intake/service";
+
+export const runtime = "nodejs";
+
+const MAX_BODY_BYTES = 64 * 1_024;
+
+function errorResponse(
+  error: string,
+  status: number,
+  extra?: Record<string, unknown>,
+) {
+  return NextResponse.json({ error, ...extra }, { status });
+}
+
+function isPrismaFailure(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as { code?: unknown; name?: unknown };
+  return (
+    (typeof candidate.code === "string" && candidate.code.startsWith("P")) ||
+    (typeof candidate.name === "string" && candidate.name.includes("Prisma"))
+  );
+}
+
+async function parseBody(request: Request): Promise<unknown> {
+  const contentLength = Number(request.headers.get("content-length") ?? "0");
+  if (Number.isFinite(contentLength) && contentLength > MAX_BODY_BYTES) {
+    throw new LeadValidationError("Invalid submission");
+  }
+  try {
+    const reader = request.body?.getReader();
+    if (!reader) throw new LeadValidationError("Invalid submission");
+
+    const decoder = new TextDecoder();
+    let rawBody = "";
+    let bytesRead = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      bytesRead += value.byteLength;
+      if (bytesRead > MAX_BODY_BYTES) {
+        await reader.cancel();
+        throw new LeadValidationError("Invalid submission");
+      }
+      rawBody += decoder.decode(value, { stream: true });
+    }
+    rawBody += decoder.decode();
+    return JSON.parse(rawBody) as unknown;
+  } catch {
+    throw new LeadValidationError("Invalid submission");
+  }
+}
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const {
-      intent,
-      firstName,
-      surname,
-      email,
-      mobile,
-      consentGiven,
-      buyOrRent,
-      useType,
-      bedrooms,
-      area,
-      market,
-      sellOrRent,
-      propertyType,
-      location,
-      size,
-      viewType,
-      urgency,
-    } = body;
+    const body = await parseBody(request);
+    const v2Payload = isV2LeadPayload(body);
 
-    // ── Validation ─────────────────────────────────────────────────────────────
-    if (!firstName || !email || !mobile) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      );
-    }
-    if (!consentGiven) {
-      return NextResponse.json(
-        { error: "Consent required" },
-        { status: 400 }
-      );
+    assertAllowedLeadOrigin(request);
+    if (isHoneypotFilled(body)) {
+      throw new LeadValidationError("Invalid submission");
     }
 
-    // ── Lead scoring (same logic as funnel route) ───────────────────────────────
-    let score = 0;
-    if (intent === "buyer") score += 30;
-    else if (intent === "seller") score += 25;
-    else score += 10;
+    if (!isLeadIntakeEnabled()) {
+      if (v2Payload) {
+        return errorResponse("Lead intake is temporarily unavailable", 503);
+      }
+    }
 
-    if (useType === "investment") score += 15;
-    if (urgency === "distress") score += 25;
-    else if (urgency === "urgent") score += 15;
+    const input = normalizeLeadRequest(body);
+    const ipHash = hashClientAddress(extractClientAddress(request));
+    const result = await submitLeadIntake(input, ipHash);
 
-    const tier = score >= 60 ? "hot" : score >= 35 ? "warm" : "nurture";
+    let deliveryOutcome: Awaited<ReturnType<typeof attemptImmediateLeadDelivery>> =
+      "disabled";
+    if (result.created && result.outboxId) {
+      try {
+        deliveryOutcome = await attemptImmediateLeadDelivery(result.outboxId);
+      } catch {
+        console.error("Immediate lead delivery failed");
+      }
+    }
 
-    // ── Routing ────────────────────────────────────────────────────────────────
-    let routing = "general";
-    if (market === "dubai" && (area === "palm" || buyOrRent === "buy"))
-      routing = "luxury";
-    else if (intent === "invest") routing = "investment";
-    else if (buyOrRent === "rent" || sellOrRent === "rent") routing = "leasing";
+    if (!v2Payload && result.created && deliveryOutcome === "disabled") {
+      void notifyLegacyLead(input, result).catch(() => {
+        console.error("Legacy lead notification failed");
+      });
+    }
 
-    // ── Upsert lead (update if exists, create if not) ─────────────────────────
-    const existingLead = await db.lead.findFirst({ where: { email } });
-
-    const leadData = {
-      firstName,
-      surname: surname ?? null,
-      email,
-      phone: mobile ?? null,
-      intent: intent ?? "account",
-      market: market ?? null,
-      buyOrRent: buyOrRent ?? null,
-      useType: useType ?? null,
-      bedrooms: bedrooms ?? null,
-      area: area ?? null,
-      sellOrRent: sellOrRent ?? null,
-      propertyType: propertyType ?? null,
-      location: location ?? null,
-      size: size ?? null,
-      viewType: viewType ?? null,
-      urgency: urgency ?? null,
-      score,
-      tier,
-      routing,
-      consentGiven,
-      source: "modal" as const,
-    };
-
-    const lead = existingLead
-      ? await db.lead.update({
-          where: { id: existingLead.id },
-          data: { ...leadData, updatedAt: new Date() },
-        })
-      : await db.lead.create({ data: leadData });
-
-    // ── Async admin notification (non-blocking) ────────────────────────────────
-    sendLeadNotificationToAdmin({
-      email,
-      firstName,
-      intent: intent ?? "account",
-      tier,
-      score,
-      phone: mobile,
-    }).catch((err) =>
-      console.error("Failed to send lead notification:", err)
-    );
-
-    return NextResponse.json({
-      success: true,
-      tier,
-      score,
-      leadId: lead.id,
-    });
-  } catch (error) {
-    console.error("Leads API error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
+      {
+        success: true,
+        status: result.created ? "created" : "duplicate",
+        tier: result.tier,
+        score: result.score,
+        leadId: result.leadId,
+        submissionId: result.submissionId,
+      },
+      { status: result.created ? 201 : 200 },
     );
+  } catch (error) {
+    if (error instanceof LeadValidationError) {
+      return errorResponse("Invalid submission", 400, {
+        fieldErrors: error.fieldErrors,
+      });
+    }
+    if (error instanceof LeadOriginError) {
+      return errorResponse("Origin not allowed", 403);
+    }
+    if (error instanceof LeadConflictError) {
+      return errorResponse("Submission ID already used", 409);
+    }
+    if (error instanceof LeadRateLimitError) {
+      return NextResponse.json(
+        { error: "Too many submissions" },
+        {
+          status: 429,
+          headers: { "Retry-After": String(error.retryAfterSeconds) },
+        },
+      );
+    }
+    if (error instanceof LeadInfrastructureError || isPrismaFailure(error)) {
+      console.error("Lead intake infrastructure failure");
+      return errorResponse("Lead intake is temporarily unavailable", 503);
+    }
+
+    console.error("Lead intake request failed");
+    return errorResponse("Internal server error", 500);
   }
 }

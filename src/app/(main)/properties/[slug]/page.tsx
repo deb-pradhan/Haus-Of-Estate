@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { draftMode } from 'next/headers'
 import type { Metadata } from 'next'
 import { urlFor } from '@/sanity'
 import { sanityFetch } from '@/sanity/live'
@@ -71,9 +72,12 @@ export default async function PropertyDetailPage({
 
   if (!property) notFound()
 
+  const { isEnabled: draftPreview } = await draftMode()
+
   return (
     <PropertyDetailView
       property={property}
+      draftPreview={draftPreview}
       media={{
         hero: property.featuredImage ? {
           src: urlFor(property.featuredImage).width(1600).height(900).url(),

@@ -22,9 +22,33 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+export interface BuyerInitialBrief {
+  intent?: "buy" | "rent";
+  market?: "dubai" | "uk" | "bali";
+  bedrooms?: "1" | "2" | "3" | "4" | "5+";
+  area?:
+    | "marina"
+    | "downtown"
+    | "palm"
+    | "jbr"
+    | "business_bay"
+    | "london"
+    | "manchester"
+    | "birmingham"
+    | "liverpool"
+    | "edinburgh"
+    | "canggu"
+    | "seminyak"
+    | "ubud"
+    | "uluwatu"
+    | "sanur"
+    | "other";
+}
+
 interface BuyerModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialBrief?: BuyerInitialBrief;
 }
 
 const BEDROOM_OPTIONS = ["1", "2", "3", "4", "5+"];
@@ -58,13 +82,28 @@ const AREAS = {
 
 type Market = keyof typeof AREAS;
 
-export function BuyerModal({ open, onOpenChange }: BuyerModalProps) {
+function initialArea(brief?: BuyerInitialBrief) {
+  if (!brief?.market || !brief.area) return null;
+  return AREAS[brief.market].some((candidate) => candidate.id === brief.area)
+    ? brief.area
+    : null;
+}
+
+export function BuyerModal({
+  open,
+  onOpenChange,
+  initialBrief,
+}: BuyerModalProps) {
   const [step, setStep] = useState(1);
-  const [intent, setIntent] = useState<"buy" | "rent" | null>(null);
+  const [intent, setIntent] = useState<"buy" | "rent" | null>(
+    initialBrief?.intent ?? null,
+  );
   const [useType, setUseType] = useState<"personal" | "investment" | null>(null);
-  const [bedrooms, setBedrooms] = useState<string | null>(null);
-  const [area, setArea] = useState<string | null>(null);
-  const [market, setMarket] = useState<Market>("dubai");
+  const [bedrooms, setBedrooms] = useState<string | null>(
+    initialBrief?.bedrooms ?? null,
+  );
+  const [area, setArea] = useState<string | null>(() => initialArea(initialBrief));
+  const [market, setMarket] = useState<Market>(initialBrief?.market ?? "dubai");
   const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
@@ -113,7 +152,7 @@ export function BuyerModal({ open, onOpenChange }: BuyerModalProps) {
     setErrors({});
     setIsSubmitting(true);
     try {
-      await fetch("/api/leads", {
+      const response = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -129,7 +168,14 @@ export function BuyerModal({ open, onOpenChange }: BuyerModalProps) {
           consentGiven: consent,
         }),
       });
-    } catch (_) {}
+      if (!response.ok) throw new Error("Lead request was not accepted");
+    } catch {
+      setErrors({
+        form: "We could not send your enquiry. Please check your connection and try again.",
+      });
+      setIsSubmitting(false);
+      return;
+    }
     setIsSubmitting(false);
     setStep(6);
   };
@@ -161,6 +207,9 @@ export function BuyerModal({ open, onOpenChange }: BuyerModalProps) {
                 {step === 3 && "How many bedrooms?"}
                 {step === 4 && "Which area interests you?"}
               </DialogTitle>
+              <DialogDescription className="sr-only">
+                Review and edit the property brief before sending an enquiry.
+              </DialogDescription>
             </DialogHeader>
           )}
 
@@ -173,6 +222,7 @@ export function BuyerModal({ open, onOpenChange }: BuyerModalProps) {
               ].map((opt) => (
                 <button
                   key={opt.id}
+                  aria-pressed={intent === opt.id}
                   onClick={() => { setIntent(opt.id as "buy" | "rent"); setStep(2); }}
                   className={cn(
                     "flex w-full items-center gap-4 rounded-xl border-2 p-4 text-left transition-all duration-200",
@@ -198,6 +248,7 @@ export function BuyerModal({ open, onOpenChange }: BuyerModalProps) {
           {step === 2 && (
             <div className="space-y-3">
               <button
+                aria-pressed={useType === "personal"}
                 onClick={() => { setUseType("personal"); setStep(3); }}
                 className={cn(
                   "flex w-full items-center gap-4 rounded-xl border-2 p-4 text-left transition-all duration-200",
@@ -219,6 +270,7 @@ export function BuyerModal({ open, onOpenChange }: BuyerModalProps) {
                 {useType === "personal" && <Check className="ml-auto h-5 w-5 text-estate-700" />}
               </button>
               <button
+                aria-pressed={useType === "investment"}
                 onClick={() => { setUseType("investment"); setStep(3); }}
                 className={cn(
                   "flex w-full items-center gap-4 rounded-xl border-2 p-4 text-left transition-all duration-200",
@@ -255,6 +307,7 @@ export function BuyerModal({ open, onOpenChange }: BuyerModalProps) {
                 {BEDROOM_OPTIONS.map((opt) => (
                   <button
                     key={opt}
+                    aria-pressed={bedrooms === opt}
                     onClick={() => { setBedrooms(opt); setStep(4); }}
                     className={cn(
                       "rounded-full border-2 px-5 py-2.5 text-sm font-medium transition-all duration-200",
@@ -285,6 +338,7 @@ export function BuyerModal({ open, onOpenChange }: BuyerModalProps) {
                   {(["dubai", "uk", "bali"] as Market[]).map((m) => (
                     <button
                       key={m}
+                      aria-pressed={market === m}
                       onClick={() => { setMarket(m); setArea(null); }}
                       className={cn(
                         "flex-1 rounded-lg border-2 py-2 text-xs font-medium capitalize transition-all duration-200",
@@ -357,6 +411,11 @@ export function BuyerModal({ open, onOpenChange }: BuyerModalProps) {
                   </label>
                   {errors.consent && <p className="text-xs text-destructive">{errors.consent}</p>}
                 </div>
+                {errors.form && (
+                  <p className="text-sm text-destructive" role="alert">
+                    {errors.form}
+                  </p>
+                )}
                 <Button type="submit" disabled={isSubmitting} className="h-11 w-full bg-estate-700 text-white hover:bg-estate-600 disabled:opacity-50">
                   {isSubmitting ? <div className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Submitting...</div> : <><ArrowRight className="mr-1.5 h-4 w-4" /> Submit</>}
                 </Button>
@@ -374,7 +433,7 @@ export function BuyerModal({ open, onOpenChange }: BuyerModalProps) {
                 <Check className="h-7 w-7 text-estate-700" />
               </div>
               <DialogTitle className="font-serif text-2xl font-medium text-estate-700">
-                You're all set{firstName ? `, ${firstName}` : ""}. 🎉
+                You&apos;re all set{firstName ? `, ${firstName}` : ""}. 🎉
               </DialogTitle>
               <DialogDescription className="mt-2 text-sm text-muted-foreground">
                 One of our agents will be in touch within 2 hours with properties matching your criteria.

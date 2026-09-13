@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useLeadModals } from "@/components/lead-modal/modal-context";
 import { client, urlFor } from "@/sanity";
 import { FEATURED_PROPERTIES_QUERY } from "@/sanity/queries";
+import { SaveContentButton } from "@/components/saved-content";
 
 interface FeaturedProperty {
   _id: string;
@@ -64,67 +65,75 @@ function PropertyCard({
   property: FeaturedProperty;
 }) {
   return (
-    <Link
-      href={`/properties/${property.slug}`}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-estate-700/5"
-    >
-      <div className="relative aspect-[4/3] overflow-hidden bg-estate-700">
-        {property.featuredImage ? (
-          <Image
-            src={urlFor(property.featuredImage).width(800).height(600).url()}
-            alt={buildAlt(property)}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-estate-600 to-estate-800">
-            <Building2 className="h-10 w-10 text-white/30" />
-          </div>
-        )}
-        <div className="absolute left-3 top-3 flex flex-wrap items-center gap-1.5">
-          {property.completionStatus && (
-            <span className="rounded-full bg-surface/95 px-3 py-1 text-[11px] font-semibold text-estate-700 shadow-sm">
-              {COMPLETION_LABEL[property.completionStatus] ??
-                property.completionStatus}
-            </span>
+    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-estate-700/5">
+      <Link
+        href={`/properties/${property.slug}`}
+        className="flex flex-1 flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-estate-700/50 focus-visible:ring-inset"
+      >
+        <div className="relative aspect-[4/3] overflow-hidden bg-estate-700">
+          {property.featuredImage ? (
+            <Image
+              src={urlFor(property.featuredImage).width(800).height(600).url()}
+              alt={buildAlt(property)}
+              fill
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-estate-600 to-estate-800">
+              <Building2 className="h-10 w-10 text-white/30" />
+            </div>
           )}
-          {saleRentLabel(property.listingType) && (
-            <span className="rounded-full bg-estate-700/90 px-3 py-1 text-[11px] font-semibold text-white shadow-sm">
-              {saleRentLabel(property.listingType)}
-            </span>
-          )}
-        </div>
-      </div>
-
-      <div className="flex flex-1 flex-col p-4">
-        <p className="font-serif text-[11px] font-semibold uppercase tracking-widest text-gold-500">
-          {property.unitType}
-        </p>
-        <h3 className="mt-1 font-serif text-lg font-medium text-estate-700">
-          {property.title}
-        </h3>
-        <p className="mt-1.5 flex-1 text-xs leading-relaxed text-muted-foreground">
-          {property.summary}
-        </p>
-        <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
-          <span className="font-serif text-base font-semibold text-estate-700">
-            {property.priceDisplay || "Price on application"}
-          </span>
-          <span className="flex items-center gap-3 text-xs text-muted-foreground">
-            {typeof property.bedrooms === "number" && (
-              <span className="flex items-center gap-1">
-                <Bed className="h-3.5 w-3.5" />
-                {property.bedrooms === 0 ? "Studio" : property.bedrooms}
+          <div className="absolute left-3 top-3 flex max-w-[calc(100%-4.25rem)] flex-wrap items-center gap-1.5">
+            {property.completionStatus && (
+              <span className="rounded-full bg-surface/95 px-3 py-1 text-[11px] font-semibold text-estate-700 shadow-sm">
+                {COMPLETION_LABEL[property.completionStatus] ??
+                  property.completionStatus}
               </span>
             )}
-            <span className="flex items-center gap-1">
-              <MapPin className="h-3.5 w-3.5" />
-              {property.city}
-            </span>
-          </span>
+            {saleRentLabel(property.listingType) && (
+              <span className="rounded-full bg-estate-700/90 px-3 py-1 text-[11px] font-semibold text-white shadow-sm">
+                {saleRentLabel(property.listingType)}
+              </span>
+            )}
+          </div>
         </div>
-      </div>
-    </Link>
+
+        <div className="flex flex-1 flex-col p-4">
+          <p className="font-serif text-[11px] font-semibold uppercase tracking-widest text-gold-500">
+            {property.unitType}
+          </p>
+          <h3 className="mt-1 font-serif text-lg font-medium text-estate-700">
+            {property.title}
+          </h3>
+          <p className="mt-1.5 flex-1 text-xs leading-relaxed text-muted-foreground">
+            {property.summary}
+          </p>
+          <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+            <span className="font-serif text-base font-semibold text-estate-700">
+              {property.priceDisplay || "Price on application"}
+            </span>
+            <span className="flex items-center gap-3 text-xs text-muted-foreground">
+              {typeof property.bedrooms === "number" && (
+                <span className="flex items-center gap-1">
+                  <Bed className="h-3.5 w-3.5" />
+                  {property.bedrooms === 0 ? "Studio" : property.bedrooms}
+                </span>
+              )}
+              <span className="flex items-center gap-1">
+                <MapPin className="h-3.5 w-3.5" />
+                {property.city}
+              </span>
+            </span>
+          </div>
+        </div>
+      </Link>
+      <SaveContentButton
+        contentType="PROPERTY"
+        sanityDocumentId={property._id}
+        title={property.title}
+        className="absolute right-3 top-3 z-10"
+      />
+    </article>
   );
 }
 

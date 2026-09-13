@@ -3,7 +3,15 @@ import Image from 'next/image'
 import type { ComponentProps } from 'react'
 import { ArrowLeft, ArrowRight, MapPin, BedDouble, Bath, Maximize2, Building2, Check } from 'lucide-react'
 import { PortableTextRenderer } from '@/components/blog'
+import { LeadEoiTrigger } from '@/components/lead-eoi/lead-eoi-trigger'
+import { LeadProjectContextRegistration } from '@/components/lead-eoi/lead-project-context'
+import { PurchaseReadiness } from '@/components/property/purchase-readiness'
+import { SaveContentButton } from '@/components/saved-content'
+import { ContentShare } from '@/components/share/content-share'
 import { toEmbedUrl } from '@/lib/embed-video'
+import { isPurchaseReadinessVisible, resolvePurchaseReadiness } from '@/lib/purchase-readiness'
+import { sanityDocumentIdSchema } from '@/lib/saved-content/contracts'
+import { canonicalHausUrl } from '@/lib/share'
 
 interface LocationBenefit {
   destination?: string
@@ -19,6 +27,8 @@ export interface PropertyDetail {
   city: string
   country?: string
   developer?: string
+  availability?: string[] | null
+  listingType?: string[] | null
   unitType?: string
   unitNumber?: string
   bedrooms?: number
@@ -51,15 +61,44 @@ const COMPLETION_LABEL: Record<string, string> = {
   'completed-offplan': 'Completed & off-plan',
 }
 
-export function PropertyDetailView({ property, media, preview }: {
+export function PropertyDetailView({ property, media, preview, draftPreview = false }: {
   property: PropertyDetail
   media: PropertyMedia
   preview?: { kind: 'development' | 'home-type' }
+  draftPreview?: boolean
 }) {
   const enquiryEmail = property.enquiryEmail || 'info@hausofestate.com'
   const enquiryHref = `mailto:${enquiryEmail}?subject=${encodeURIComponent(
     `Enquiry — ${property.title}`,
   )}`
+  // Sanity's draft perspective can normalize draft IDs to their published ID.
+  // The page also passes Draft Mode so those records cannot trigger public actions.
+  const publicActionsEnabled = !preview && !draftPreview && sanityDocumentIdSchema.safeParse(property._id).success
+  const canonicalUrl = canonicalHausUrl(`/properties/${property.slug}`)
+  const enquiryInterest =
+    property.listingType?.length === 1 && property.listingType[0] === 'rent'
+      ? 'rent'
+      : 'buy'
+  const projectContext = {
+    slug: property.slug,
+    title: property.title,
+    community: property.community,
+    masterDevelopment: property.masterDevelopment,
+    city: property.city,
+    country: property.country,
+    unitType: property.unitType,
+    bedrooms: property.bedrooms,
+    bathrooms: property.bathrooms,
+    listingType: property.listingType ?? undefined,
+  }
+  const purchaseReadiness = publicActionsEnabled && isPurchaseReadinessVisible(
+    process.env.PURCHASE_READINESS_ENABLED === 'true',
+    property.listingType,
+  ) ? resolvePurchaseReadiness({
+    city: property.city,
+    country: property.country,
+    availability: property.availability,
+  }) : null
 
   const facts: { icon: typeof BedDouble; label: string; value: string }[] = []
   if (typeof property.bedrooms === 'number') {
@@ -117,12 +156,18 @@ export function PropertyDetailView({ property, media, preview }: {
 
   return (
     <div className="min-h-screen bg-background">
+      {publicActionsEnabled && <LeadProjectContextRegistration project={projectContext} />}
       {preview && (
         <div className="border-b border-gold-500/30 bg-gold-500/10 px-4 py-4 text-sm text-estate-700">
           <div className="mx-auto max-w-6xl">
             <p className="font-semibold">Local draft preview · Not published</p>
             <p className="mt-1">{preview.kind === 'home-type' ? 'A collection of home designs, not an individual available unit.' : 'Community overview for editorial review.'} Artist’s impressions illustrate proposed designs and facilities.</p>
           </div>
+        </div>
+      )}
+      {draftPreview && !preview && (
+        <div className="border-b border-gold-500/30 bg-gold-500/10 px-4 py-4 text-sm text-estate-700">
+          <p className="mx-auto max-w-6xl font-semibold">Sanity preview · Public actions disabled</p>
         </div>
       )}
       {/* Top bar */}
@@ -144,6 +189,7 @@ export function PropertyDetailView({ property, media, preview }: {
             src={media.hero.src}
             alt={media.hero.alt}
             fill
+            sizes="100vw"
             className="object-cover"
             priority
             unoptimized={Boolean(preview)}
@@ -165,9 +211,20 @@ export function PropertyDetailView({ property, media, preview }: {
                 ? ` · ${COMPLETION_LABEL[property.completionStatus] ?? property.completionStatus}`
                 : ''}
             </p>
-            <h1 className="mt-2 font-serif text-3xl font-medium text-estate-700 md:text-4xl">
-              {property.title}
-            </h1>
+            <div className="mt-2 flex flex-wrap items-start justify-between gap-4">
+              <h1 className="min-w-0 flex-1 font-serif text-3xl font-medium text-estate-700 md:text-4xl">
+                {property.title}
+              </h1>
+              {publicActionsEnabled && (
+                <SaveContentButton
+                  contentType="PROPERTY"
+                  sanityDocumentId={property._id}
+                  title={property.title}
+                  showLabel
+                  className="shrink-0"
+                />
+              )}
+            </div>
             <p className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-muted-foreground">
               <MapPin className="h-4 w-4" />
               <span>
@@ -183,6 +240,17 @@ export function PropertyDetailView({ property, media, preview }: {
 
             {preview?.kind === 'home-type' && (
               <Link href="/dev/property-previews/azizi-florence" className="mt-4 inline-flex text-sm text-estate-700 underline underline-offset-4">View the Florence community overview</Link>
+            )}
+
+            {publicActionsEnabled && (
+              <div className="mt-4 lg:hidden">
+                <ContentShare
+                  url={canonicalUrl}
+                  title={property.title}
+                  text={`View ${property.title} on Haus of Estate`}
+                  contentLabel="this property"
+                />
+              </div>
             )}
 
             {/* Fact strip */}
@@ -212,6 +280,14 @@ export function PropertyDetailView({ property, media, preview }: {
               <p className="mt-10 text-base leading-relaxed text-muted-foreground">
                 {property.summary}
               </p>
+            )}
+
+            {purchaseReadiness && (
+              <PurchaseReadiness
+                fallbackHref={enquiryHref}
+                guidance={purchaseReadiness}
+                project={projectContext}
+              />
             )}
 
             {/* Key features */}
@@ -311,6 +387,7 @@ export function PropertyDetailView({ property, media, preview }: {
                         src={img.src}
                         alt={img.alt}
                         fill
+                        sizes="(max-width: 640px) 100vw, 50vw"
                         unoptimized={Boolean(preview)}
                         className="object-cover"
                       />
@@ -347,32 +424,56 @@ export function PropertyDetailView({ property, media, preview }: {
                 </>
               ) : (
                 <>
-              <p className="font-serif text-xs font-medium uppercase tracking-[0.22em] text-gold-500">
-                Enquire
-              </p>
-              <p className="mt-2 font-serif text-2xl font-semibold text-estate-700">
-                {property.priceDisplay || 'Price on application'}
-              </p>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                Pricing, exact sizes and current availability are confirmed on
-                enquiry. We&apos;ll connect you with a vetted agent for this
-                community — no obligation.
-              </p>
-              <a
-                href={enquiryHref}
-                className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-estate-700 px-6 text-sm font-medium text-white shadow-sm transition-colors hover:bg-estate-600"
-              >
-                Enquire about this property <ArrowRight className="h-4 w-4" />
-              </a>
-              <p className="mt-3 text-center text-xs text-muted-foreground">
-                Or email{' '}
-                <a
-                  href={`mailto:${enquiryEmail}`}
-                  className="text-estate-700 underline-offset-4 hover:underline"
-                >
-                  {enquiryEmail}
-                </a>
-              </p>
+                  <p className="font-serif text-xs font-medium uppercase tracking-[0.22em] text-gold-500">
+                    Enquire
+                  </p>
+                  <p className="mt-2 font-serif text-2xl font-semibold text-estate-700">
+                    {property.priceDisplay || 'Price on application'}
+                  </p>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    Pricing, exact sizes and current availability are confirmed on
+                    enquiry. We&apos;ll connect you with a vetted agent for this
+                    community — no obligation.
+                  </p>
+                  {publicActionsEnabled ? (
+                    <>
+                      <LeadEoiTrigger
+                        fallbackHref={enquiryHref}
+                        options={{
+                          interest: enquiryInterest,
+                          project: projectContext,
+                          surface: 'manual_cta',
+                        }}
+                        className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-estate-700 px-6 text-sm font-medium text-white shadow-sm transition-colors hover:bg-estate-600"
+                      >
+                        Enquire about this property <ArrowRight className="h-4 w-4" />
+                      </LeadEoiTrigger>
+                      <p className="mt-3 text-center text-xs text-muted-foreground">
+                        Or email{' '}
+                        <a
+                          href={`mailto:${enquiryEmail}`}
+                          className="text-estate-700 underline-offset-4 hover:underline"
+                        >
+                          {enquiryEmail}
+                        </a>
+                      </p>
+                      <div className="mt-5 hidden border-t border-border pt-5 lg:block">
+                        <p className="mb-2 text-xs font-medium text-muted-foreground">
+                          Share this property
+                        </p>
+                        <ContentShare
+                          url={canonicalUrl}
+                          title={property.title}
+                          text={`View ${property.title} on Haus of Estate`}
+                          contentLabel="this property"
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <button type="button" disabled className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-md bg-estate-700/15 px-4 py-3 text-sm font-medium text-estate-700/70">
+                      Enquiries disabled in preview
+                    </button>
+                  )}
                 </>
               )}
             </div>
