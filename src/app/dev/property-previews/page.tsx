@@ -20,7 +20,13 @@ export default async function PropertyPreviewsPage() {
   return (
     <div className="min-h-screen bg-background px-4 py-12 md:px-6 md:py-16">
       <div className="mx-auto max-w-6xl">
-        <p className="text-xs font-medium uppercase tracking-[0.22em] text-gold-500">Haus of Estate · Local drafts</p>
+        <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <Link href="/" className="hover:text-estate-700 hover:underline">Home</Link>
+          <span aria-hidden>/</span>
+          <Link href="/properties" className="hover:text-estate-700 hover:underline">Properties</Link>
+          <span aria-hidden>/</span>
+          <span aria-current="page">Azizi Florence</span>
+        </nav>
         <div className="mt-4 rounded-xl border border-gold-500/30 bg-gold-500/10 px-4 py-3 text-xs leading-relaxed text-estate-700">
           <strong>Draft preview · not published.</strong> Prices apply to Clusters 1 & 2. Sizes, payment plans, handover and availability await confirmation. Enquiries are disabled.
         </div>
@@ -64,7 +70,7 @@ export default async function PropertyPreviewsPage() {
               const prices = homes.map(({ document }) => document.priceCurrency === 'AED' ? document.priceAmount : undefined)
               const startingPrice = prices.every((price): price is number => typeof price === 'number') ? Math.min(...prices) : undefined
               return (
-                <section key={id} id={id} aria-labelledby={`${id}-title`} className="mt-10 scroll-mt-8 md:mt-12">
+                <section key={id} id={id} aria-labelledby={`${id}-title`} className="mt-10 scroll-mt-24 md:mt-12 md:scroll-mt-32">
                   <div className="mb-5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
                     <h3 id={`${id}-title`} className="font-serif text-sm uppercase tracking-[0.24em] text-estate-700">{title}</h3>
                     {startingPrice !== undefined && <p className="text-sm text-estate-700">From {formatPrice(startingPrice)} <span className="text-xs text-muted-foreground">· Clusters 1 & 2</span></p>}

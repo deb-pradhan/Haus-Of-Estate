@@ -25,7 +25,7 @@ import {
   LayoutGrid,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { useLeadModals } from "@/components/lead-modal";
 import { cn } from "@/lib/utils";
 import {
@@ -226,6 +226,8 @@ export function Header() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-80 overflow-y-auto p-0">
+                <SheetTitle className="sr-only">Site navigation</SheetTitle>
+                <SheetDescription className="sr-only">Browse properties, services and information about Haus of Estate.</SheetDescription>
                 <MobileNav
                   pathname={pathname}
                   onClose={() => setMobileOpen(false)}
