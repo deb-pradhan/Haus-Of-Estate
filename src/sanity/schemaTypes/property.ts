@@ -497,7 +497,20 @@ export const property = defineType({
       name: 'gallery',
       title: 'Gallery',
       type: 'array',
-      of: [defineArrayMember({ type: 'image', options: { hotspot: true } })],
+      of: [
+        defineArrayMember({
+          type: 'image',
+          options: { hotspot: true },
+          fields: [
+            defineField({
+              name: 'alt',
+              title: 'Alt Text',
+              type: 'string',
+              description: 'Describe this image for accessibility. Add when preparing new gallery images.',
+            }),
+          ],
+        }),
+      ],
     }),
     defineField({
       name: 'videoUrl',
