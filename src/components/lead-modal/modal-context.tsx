@@ -11,9 +11,13 @@ import {
   LeadEoiProvider,
   useLeadEoi,
 } from "@/components/lead-eoi/lead-eoi-controller";
-import { AccountModal } from "./account-modal";
-import { BuyerModal, type BuyerInitialBrief } from "./buyer-modal";
-import { SellerModal } from "./seller-modal";
+import dynamic from "next/dynamic";
+import { trackAnalytics } from "@/lib/analytics";
+import type { BuyerInitialBrief } from "./buyer-modal";
+
+const AccountModal = dynamic(() => import("./account-modal").then((module) => module.AccountModal));
+const BuyerModal = dynamic(() => import("./buyer-modal").then((module) => module.BuyerModal));
+const SellerModal = dynamic(() => import("./seller-modal").then((module) => module.SellerModal));
 
 const COUNTRY_LABELS: Record<
   NonNullable<BuyerInitialBrief["market"]>,
@@ -98,6 +102,7 @@ function LegacyLeadModalProvider({ children }: { children: ReactNode }) {
   }, []);
 
   function notifyLeadModalOpen() {
+    trackAnalytics("haus_contact_click", { contact_method: "enquiry" });
     window.dispatchEvent(new CustomEvent("haus:lead-modal-open"));
   }
 
@@ -128,8 +133,8 @@ function LegacyLeadModalProvider({ children }: { children: ReactNode }) {
       }}
     >
       {children}
-      <AccountModal open={accountOpen} onOpenChange={setAccountOpen} />
-      <BuyerModal
+      {accountOpen && <AccountModal open={accountOpen} onOpenChange={setAccountOpen} />}
+      {buyerOpen && <BuyerModal
         key={buyerSession}
         open={buyerOpen}
         onOpenChange={(open) => {
@@ -137,8 +142,8 @@ function LegacyLeadModalProvider({ children }: { children: ReactNode }) {
           if (!open) setBuyerBrief(undefined);
         }}
         initialBrief={buyerBrief}
-      />
-      <SellerModal open={sellerOpen} onOpenChange={setSellerOpen} />
+      />}
+      {sellerOpen && <SellerModal open={sellerOpen} onOpenChange={setSellerOpen} />}
     </ModalContext.Provider>
   );
 }

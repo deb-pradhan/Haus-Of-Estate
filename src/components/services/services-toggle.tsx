@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
+import dynamic from "next/dynamic";
 import {
   ArrowRight,
   ArrowLeft,
@@ -21,9 +22,20 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { PhoneInput } from "@/components/ui/phone-input";
 import type { Country } from "react-phone-number-input";
 import { cn } from "@/lib/utils";
+
+const PhoneInput = dynamic(
+  () => import("@/components/ui/phone-input").then((module) => module.PhoneInput),
+  {
+    loading: () => (
+      <div
+        aria-hidden
+        className="h-12 animate-pulse rounded-xl border-2 border-border bg-surface"
+      />
+    ),
+  },
+);
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

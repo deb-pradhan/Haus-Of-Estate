@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useLeadModals } from "@/components/lead-modal/modal-context";
 import { SocialProfileLinks } from "@/components/social/social-profile-links";
+import { CookieSettingsButton } from "@/components/analytics/consent-manager";
 
 const COMPANY_PHONE_DISPLAY = "+44 7496 033321";
 const COMPANY_PHONE_HREF = "tel:+447496033321";
@@ -159,6 +160,7 @@ export function Footer() {
       <div className="border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-white/60 md:flex-row md:px-6">
           <span>&copy; {year} Haus of Estate. All rights reserved.</span>
+          <CookieSettingsButton />
           <span>UK English · Prices indicative · Subject to availability</span>
         </div>
       </div>

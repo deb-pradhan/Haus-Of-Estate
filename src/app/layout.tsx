@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Cormorant_Garamond } from "next/font/google";
-import { GoogleTagManager } from "@/components/analytics/google-tag-manager";
+import { Suspense } from "react";
+import { ConsentManager } from "@/components/analytics/consent-manager";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SavedContentProvider } from "@/components/saved-content";
 import { SessionProvider } from "@/lib/auth/client";
@@ -157,9 +158,15 @@ export default async function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <GoogleTagManager containerId={GTM_ID} />
       </head>
       <body className={`${inter.variable} ${cormorant.variable}`}>
+        <Suspense fallback={null}>
+          <ConsentManager
+            gtmId={GTM_ID}
+            draft={isDraftModeEnabled}
+            production={process.env.NODE_ENV === "production" && process.env.VERCEL_ENV !== "preview"}
+          />
+        </Suspense>
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-estate-700 focus:px-4 focus:py-2 focus:text-white focus:shadow-lg"

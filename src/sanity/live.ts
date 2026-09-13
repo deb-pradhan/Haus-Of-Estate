@@ -20,9 +20,11 @@ export { SanityLive };
 export async function sanityFetch<const T>({
   query,
   params = {},
+  throwOnError = false,
 }: {
   query: string;
   params?: QueryParams;
+  throwOnError?: boolean;
 }): Promise<{ data: T | null }> {
   try {
     // Keep source-map encoding off until every URL, comparison, metadata field,
@@ -33,6 +35,7 @@ export async function sanityFetch<const T>({
     console.error("Sanity fetch failed", {
       message: error instanceof Error ? error.message : "Unknown error",
     });
+    if (throwOnError) throw error;
     return { data: null };
   }
 }

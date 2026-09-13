@@ -1,14 +1,14 @@
-"use client";
-
-import { useEffect, useState } from "react";
+import { draftMode } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 import { Bed, MapPin, ArrowRight, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useLeadModals } from "@/components/lead-modal/modal-context";
-import { client, urlFor } from "@/sanity";
+import { OpenBuyerButton } from "@/components/lead-modal/open-buyer-button";
+import { urlFor } from "@/sanity";
+import { sanityFetch } from "@/sanity/live";
 import { FEATURED_PROPERTIES_QUERY } from "@/sanity/queries";
 import { SaveContentButton } from "@/components/saved-content";
+import { sanityDocumentIdSchema } from "@/lib/saved-content/contracts";
 
 interface FeaturedProperty {
   _id: string;
@@ -61,8 +61,10 @@ function buildAlt(property: FeaturedProperty): string {
 
 function PropertyCard({
   property,
+  canSave,
 }: {
   property: FeaturedProperty;
+  canSave: boolean;
 }) {
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-estate-700/5">
@@ -76,6 +78,7 @@ function PropertyCard({
               src={urlFor(property.featuredImage).width(800).height(600).url()}
               alt={buildAlt(property)}
               fill
+              sizes="(max-width: 767px) calc(100vw - 2rem), (max-width: 1279px) 33vw, 400px"
               className="object-cover transition-transform duration-500 group-hover:scale-105"
             />
           ) : (
@@ -127,37 +130,28 @@ function PropertyCard({
           </div>
         </div>
       </Link>
-      <SaveContentButton
-        contentType="PROPERTY"
-        sanityDocumentId={property._id}
-        title={property.title}
-        className="absolute right-3 top-3 z-10"
-      />
+      {canSave && sanityDocumentIdSchema.safeParse(property._id).success && (
+        <SaveContentButton
+          contentType="PROPERTY"
+          sanityDocumentId={property._id}
+          title={property.title}
+          className="absolute right-3 top-3 z-10"
+        />
+      )}
     </article>
   );
 }
 
-export function PropertyShowcase() {
-  const { openBuyer } = useLeadModals();
-  const [properties, setProperties] = useState<FeaturedProperty[] | null>(null);
-
-  useEffect(() => {
-    let active = true;
-    client
-      .fetch<FeaturedProperty[]>(FEATURED_PROPERTIES_QUERY)
-      .then((data) => {
-        if (active) setProperties(data ?? []);
-      })
-      .catch(() => {
-        if (active) setProperties([]);
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  // Don't render the section until we know there's something to show.
-  if (properties !== null && properties.length === 0) return null;
+export async function PropertyShowcase() {
+  const [{ data }, { isEnabled: draftPreview }] = await Promise.all([
+    sanityFetch<FeaturedProperty[]>({
+      query: FEATURED_PROPERTIES_QUERY,
+      throwOnError: true,
+    }),
+    draftMode(),
+  ]);
+  const properties = data ?? [];
+  if (properties.length === 0) return null;
 
   return (
     <section className="px-4 py-16 md:px-6 md:py-24">
@@ -175,22 +169,11 @@ export function PropertyShowcase() {
           </p>
         </div>
 
-        {properties === null ? (
-          <div className="grid gap-6 md:grid-cols-3">
-            {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                className="h-80 animate-pulse rounded-2xl border border-border bg-surface"
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-3">
-            {properties.map((p) => (
-              <PropertyCard key={p._id} property={p} />
-            ))}
-          </div>
-        )}
+        <div className="grid gap-6 md:grid-cols-3">
+          {properties.map((p) => (
+            <PropertyCard key={p._id} property={p} canSave={!draftPreview} />
+          ))}
+        </div>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Link href="/properties">
@@ -201,12 +184,9 @@ export function PropertyShowcase() {
               View all properties <ArrowRight className="ml-1.5 h-4 w-4" />
             </Button>
           </Link>
-          <Button
-            onClick={openBuyer}
-            className="bg-estate-700 text-white hover:bg-estate-600"
-          >
+          <OpenBuyerButton className="bg-estate-700 text-white hover:bg-estate-600">
             Find me something like this <ArrowRight className="ml-1.5 h-4 w-4" />
-          </Button>
+          </OpenBuyerButton>
         </div>
       </div>
     </section>

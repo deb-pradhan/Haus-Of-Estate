@@ -9,6 +9,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:seo": "node --experimental-strip-types --test tests/technical-seo.test.mjs",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "db:generate": "prisma generate",
@@ -16,7 +17,10 @@
     "db:migrate:approved": "node scripts/run-approved-migrations.mjs",
     "lead-delivery:worker": "tsx scripts/process-lead-deliveries.ts",
     "studio:dev": "sanity dev",
-    "studio:validate": "sanity schema validate"
+    "studio:validate": "sanity schema validate",
+    "studio:setup": "node scripts/setup-standalone-studio.mjs --install",
+    "studio:setup:check": "node scripts/setup-standalone-studio.mjs --check",
+    "studio:setup:test": "node --test scripts/setup-standalone-studio.test.mjs"
   },
   "dependencies": {
     "@ai-sdk/react": "^4.0.90",
