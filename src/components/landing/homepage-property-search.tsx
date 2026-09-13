@@ -232,7 +232,7 @@ export function HomepagePropertySearch() {
 
       {!submitted && (
         <p className="mt-4 text-xs text-white/55">
-          Free &amp; without obligation · Replied to within 2 working hours
+          Browse matching properties · Free &amp; without obligation
         </p>
       )}
 

@@ -139,6 +139,7 @@ const jsonLd = {
 // Optional until the GA4/GTM account is connected. The client loads GTM only
 // after analytics consent, on a public production page outside draft mode.
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID;
+const ANALYTICS_ALLOWED_HOSTS = process.env.NEXT_PUBLIC_ANALYTICS_ALLOWED_HOSTS;
 
 export default async function RootLayout({
   children,
@@ -157,7 +158,12 @@ export default async function RootLayout({
       </head>
       <body className={`${inter.variable} ${cormorant.variable}`}>
         <Suspense fallback={null}>
-          <ConsentManager gtmId={GTM_ID} draft={isDraftModeEnabled} production={process.env.NODE_ENV === "production" && process.env.VERCEL_ENV !== "preview"} />
+          <ConsentManager
+            gtmId={GTM_ID}
+            draft={isDraftModeEnabled}
+            allowedHosts={ANALYTICS_ALLOWED_HOSTS}
+            production={process.env.NODE_ENV === "production" && (process.env.VERCEL_ENV !== "preview" || Boolean(ANALYTICS_ALLOWED_HOSTS?.trim()))}
+          />
         </Suspense>
         <a
           href="#main-content"

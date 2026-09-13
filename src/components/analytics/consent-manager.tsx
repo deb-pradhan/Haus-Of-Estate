@@ -5,9 +5,10 @@ import { usePathname, useSearchParams } from "next/navigation";
 import {
   analyticsPage, getAnalyticsConsent, installAnalyticsNavigationGuard, publicPath,
   saveAnalyticsConsent, SETTINGS_EVENT, subscribeConsent, syncAnalytics, trackPublicClick,
+  type AnalyticsOptions,
 } from "@/lib/analytics";
 
-export function ConsentManager({ gtmId, draft, production }: { gtmId?: string; draft: boolean; production: boolean }) {
+export function ConsentManager({ gtmId, draft, production, allowedHosts }: AnalyticsOptions) {
   const pathname = usePathname();
   const search = useSearchParams();
   const consent = useSyncExternalStore(subscribeConsent, getAnalyticsConsent, () => "unknown" as const);
@@ -16,7 +17,7 @@ export function ConsentManager({ gtmId, draft, production }: { gtmId?: string; d
 
   useEffect(() => {
     const showSettings = () => setSettingsOpen(true);
-    const resume = () => syncAnalytics({ gtmId, draft, production });
+    const resume = () => syncAnalytics({ gtmId, draft, production, allowedHosts });
     const visibility = () => { if (document.visibilityState === "visible") resume(); };
     // Render after hydration so server and browser agree on local consent.
     const timer = window.setTimeout(() => setMounted(true), 0);
@@ -33,20 +34,20 @@ export function ConsentManager({ gtmId, draft, production }: { gtmId?: string; d
       document.removeEventListener("click", trackPublicClick, true);
       removeGuard();
     };
-  }, [gtmId, draft, production]);
+  }, [gtmId, draft, production, allowedHosts]);
 
   useEffect(() => {
-    syncAnalytics({ gtmId, draft, production });
-  }, [consent, pathname, search, gtmId, draft, production]);
+    syncAnalytics({ gtmId, draft, production, allowedHosts });
+  }, [consent, pathname, search, gtmId, draft, production, allowedHosts]);
 
   // Suppress the prompt along with analytics on private/draft/preview routes.
   const publicScreen = mounted && !draft && publicPath(pathname);
-  const eligible = mounted && analyticsPage(window.location.href, draft, production);
+  const eligible = mounted && analyticsPage(window.location.href, draft, production, allowedHosts);
   if (!publicScreen || (!settingsOpen && (!eligible || consent !== "unknown" || !gtmId))) return null;
 
   function choose(value: "granted" | "denied") {
     saveAnalyticsConsent(value);
-    syncAnalytics({ gtmId, draft, production });
+    syncAnalytics({ gtmId, draft, production, allowedHosts });
     setSettingsOpen(false);
   }
 
