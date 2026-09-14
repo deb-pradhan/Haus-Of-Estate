@@ -127,6 +127,12 @@ Sources: [CBUAE currency and official symbol](https://centralbank.ae/en/our-oper
 - The actual local exchange-rate endpoint returned HTTP 200 with rates dated
   14 September 2026. A local enquiry with the database absent returned HTTP 503
   and did not claim it was saved.
+- Florence browser checks confirmed GBP conversion across all five home types,
+  preserved original ranges on villa details, and remembered GBP after navigation
+  and reload. Removed the remaining preview-only “Planned community amenities”
+  label and “proposed designs” wording; seven property-detail tests and focused
+  lint passed after that copy change. Unavailable-rate fallback has automated
+  coverage but was not separately simulated in the browser.
 - Email acceptance/retry tests use a mocked provider. Company calendar booking,
   database persistence, real inbox receipt and GA4 collection remain unverified.
 

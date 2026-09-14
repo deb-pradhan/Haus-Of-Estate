@@ -163,7 +163,7 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
         <div className="border-b border-gold-500/30 bg-gold-500/10 px-4 py-4 text-sm text-estate-700">
           <div className="mx-auto max-w-6xl">
             <p className="font-semibold">Local draft preview · Not published</p>
-            <p className="mt-1">{preview.kind === 'home-type' ? 'A collection of home designs, not an individual available unit.' : 'Community overview for editorial review.'} Artist’s impressions illustrate proposed designs and facilities.</p>
+            <p className="mt-1">{preview.kind === 'home-type' ? 'A collection of home designs, not an individual available unit.' : 'Community overview for editorial review.'} Artist’s impressions illustrate the home designs and facilities.</p>
           </div>
         </div>
       )}
@@ -313,7 +313,7 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
             {property.amenities && property.amenities.length > 0 && (
               <div className="mt-10">
                 <h2 className="font-serif text-xl font-medium text-estate-700">
-                  {preview ? 'Planned community amenities' : 'Community amenities'}
+                  Community amenities
                 </h2>
                 <ul className="mt-4 grid gap-2 sm:grid-cols-2">
                   {property.amenities.map((a) => (

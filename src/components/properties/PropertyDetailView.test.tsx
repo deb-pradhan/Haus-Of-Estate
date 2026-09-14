@@ -94,7 +94,7 @@ describe('shared property details', () => {
     expect(html).toContain('Local draft preview')
     expect(html).toContain('Awaiting confirmation')
     expect(html).toContain('View the Florence community overview')
-    expect(html).toContain('Planned community amenities')
+    expect(html).toContain('Community amenities')
     expect(html).toContain(media.hero.src)
     expect(html).toContain(media.gallery[0].src)
     expect(html).toContain('Enquiries disabled in preview')
