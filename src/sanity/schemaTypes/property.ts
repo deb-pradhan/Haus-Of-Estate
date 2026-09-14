@@ -226,7 +226,7 @@ export const property = defineType({
       title: 'Sale price (display text)',
       type: 'string',
       description:
-        'Free text — e.g. "From £140,000" or "Price on application". The brand shows prices in GBP (£).',
+        'Original price wording, including ranges or qualifications. Enter the numeric amount and ISO currency below to enable indicative GBP, USD and AED display conversions; this text is preserved alongside them.',
       initialValue: 'Price on application',
     }),
     defineField({

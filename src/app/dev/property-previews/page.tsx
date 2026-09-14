@@ -2,8 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { loadPropertyPreviews } from '@/lib/property-previews'
-
-const formatPrice = (amount: number) => `AED ${new Intl.NumberFormat('en-GB').format(amount)}`
+import { PropertyPrice } from '@/components/currency/property-price'
 
 export default async function PropertyPreviewsPage() {
   const previews = await loadPropertyPreviews()
@@ -73,7 +72,7 @@ export default async function PropertyPreviewsPage() {
                 <section key={id} id={id} aria-labelledby={`${id}-title`} className="mt-10 scroll-mt-24 md:mt-12 md:scroll-mt-32">
                   <div className="mb-5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
                     <h3 id={`${id}-title`} className="font-serif text-sm uppercase tracking-[0.24em] text-estate-700">{title}</h3>
-                    {startingPrice !== undefined && <p className="text-sm text-estate-700">From {formatPrice(startingPrice)} <span className="text-xs text-muted-foreground">· Clusters 1 & 2</span></p>}
+                    {startingPrice !== undefined && <p className="text-sm text-estate-700"><PropertyPrice amount={startingPrice} currency="AED" prefix="From " /> <span className="text-xs text-muted-foreground">· Clusters 1 & 2</span></p>}
                   </div>
                   <div className={`grid gap-6 md:grid-cols-2 ${homes.length > 2 ? 'lg:grid-cols-3' : ''}`}>
                     {homes.map(({ document, media }) => (
@@ -83,7 +82,7 @@ export default async function PropertyPreviewsPage() {
                         </div>
                         <div className="p-5 md:p-6">
                           <h4 className="font-serif text-2xl font-medium text-estate-700">{document.bedrooms}-bedroom {title.toLowerCase()}</h4>
-                          {document.priceAmount !== undefined && document.priceCurrency === 'AED' && <p className="mt-2 text-sm text-estate-700">From {formatPrice(document.priceAmount)}</p>}
+                          {document.priceAmount !== undefined && document.priceCurrency === 'AED' && <p className="mt-2 text-sm text-estate-700"><PropertyPrice amount={document.priceAmount} currency={document.priceCurrency} prefix="From " /></p>}
                           <span className="mt-5 flex items-center justify-between border-t border-border pt-4 text-sm text-estate-700">Explore the designs <ArrowRight aria-hidden className="h-4 w-4" /></span>
                         </div>
                       </Link>

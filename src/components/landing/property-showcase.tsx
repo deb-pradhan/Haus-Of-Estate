@@ -9,8 +9,10 @@ import { sanityFetch } from "@/sanity/live";
 import { FEATURED_PROPERTIES_QUERY } from "@/sanity/queries";
 import { SaveContentButton } from "@/components/saved-content";
 import { sanityDocumentIdSchema } from "@/lib/saved-content/contracts";
+import { PropertyPrice } from "@/components/currency/property-price";
+import { propertyPriceInput, type PropertyPricing } from "@/lib/currency";
 
-interface FeaturedProperty {
+interface FeaturedProperty extends PropertyPricing {
   _id: string;
   title: string;
   slug: string;
@@ -113,7 +115,7 @@ function PropertyCard({
           </p>
           <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
             <span className="font-serif text-base font-semibold text-estate-700">
-              {property.priceDisplay || "Price on application"}
+              <PropertyPrice {...propertyPriceInput(property)} />
             </span>
             <span className="flex items-center gap-3 text-xs text-muted-foreground">
               {typeof property.bedrooms === "number" && (

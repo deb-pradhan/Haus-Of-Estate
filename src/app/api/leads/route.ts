@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { DatabaseUnavailableError } from "@/lib/db-errors";
 import { attemptImmediateLeadDelivery } from "@/lib/lead-delivery";
 import {
   LeadConflictError,
@@ -137,7 +138,7 @@ export async function POST(request: Request) {
         },
       );
     }
-    if (error instanceof LeadInfrastructureError || isPrismaFailure(error)) {
+    if (error instanceof LeadInfrastructureError || error instanceof DatabaseUnavailableError || isPrismaFailure(error)) {
       console.error("Lead intake infrastructure failure");
       return errorResponse("Lead intake is temporarily unavailable", 503);
     }

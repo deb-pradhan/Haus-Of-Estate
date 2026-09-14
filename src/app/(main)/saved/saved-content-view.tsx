@@ -16,8 +16,10 @@ import { SaveContentButton, useSavedContent } from "@/components/saved-content";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { urlFor } from "@/sanity";
+import { PropertyPrice } from "@/components/currency/property-price";
+import { propertyPriceInput, type PropertyPricing } from "@/lib/currency";
 
-interface SavedDocument {
+interface SavedDocument extends PropertyPricing {
   _id: string;
   _type: "property" | "post";
   title: string;
@@ -132,9 +134,7 @@ function SavedCard({ item }: { item: SavedItem }) {
             {isProperty ? (
               <>
                 <span className="font-serif text-base font-semibold text-estate-700">
-                  {item.content.priceDisplay ||
-                    item.content.rentPriceDisplay ||
-                    "Price on application"}
+                  <PropertyPrice {...propertyPriceInput(item.content)} />
                 </span>
                 {(item.content.community || item.content.city) && (
                   <span className="inline-flex items-center gap-1">

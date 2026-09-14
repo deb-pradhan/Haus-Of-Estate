@@ -1,4 +1,5 @@
 import type { LeadDeliveryWorkerOptions } from "./types";
+import { z } from "zod";
 
 const DEFAULT_POWER_AUTOMATE_SCOPE =
   "https://service.flow.microsoft.com//.default";
@@ -6,6 +7,11 @@ const DEFAULT_POWER_AUTOMATE_SCOPE =
 export interface LeadDeliveryEnvironment {
   [key: string]: string | undefined;
   LEAD_DELIVERY_ENABLED?: string;
+  LEAD_DELIVERY_PROVIDER?: string;
+  LEAD_NOTIFICATION_TO?: string;
+  ZEPTOMAIL_API_URL?: string;
+  ZEPTOMAIL_SEND_MAIL_TOKEN?: string;
+  ZEPTOMAIL_FROM_EMAIL?: string;
   LEAD_DELIVERY_BATCH_SIZE?: string;
   LEAD_DELIVERY_MAX_ATTEMPTS?: string;
   LEAD_DELIVERY_LEASE_SECONDS?: string;
@@ -26,6 +32,57 @@ export interface PowerAutomateConfig {
   clientSecret: string;
   scope: string;
   timeoutMs: number;
+}
+
+export interface ZeptoMailConfig {
+  apiUrl: string;
+  token: string;
+  fromEmail: string;
+  toEmail: string;
+  timeoutMs: number;
+}
+
+// Copy the endpoint from the account's SMTP/API tab. Do not infer its region
+// from a visitor's location or forward the credential to arbitrary hosts.
+const ZEPTOMAIL_ENDPOINTS = new Set([
+  "https://api.zeptomail.com/v1.1/email",
+  "https://api.zeptomail.eu/v1.1/email",
+  "https://api.zeptomail.in/v1.1/email",
+]);
+
+export function readLeadDeliveryProvider(
+  environment: LeadDeliveryEnvironment = process.env,
+): "powerautomate" | "zeptomail" {
+  const provider = environment.LEAD_DELIVERY_PROVIDER?.trim().toLowerCase();
+  if (!provider || provider === "powerautomate") return "powerautomate";
+  if (provider === "zeptomail") return "zeptomail";
+  throw new Error("LEAD_DELIVERY_PROVIDER must be powerautomate or zeptomail");
+}
+
+function hausMailbox(value: string | undefined, name: string): string {
+  const address = required(value, name).toLowerCase();
+  if (!z.email().safeParse(address).success || !address.endsWith("@hausofestate.com")) {
+    throw new Error(`${name} must be one @hausofestate.com email address`);
+  }
+  return address;
+}
+
+export function readZeptoMailConfig(
+  environment: LeadDeliveryEnvironment = process.env,
+): ZeptoMailConfig {
+  const apiUrl = required(environment.ZEPTOMAIL_API_URL, "ZEPTOMAIL_API_URL");
+  if (!ZEPTOMAIL_ENDPOINTS.has(apiUrl)) {
+    throw new Error("ZEPTOMAIL_API_URL must be an approved regional /v1.1/email HTTPS endpoint");
+  }
+  const token = required(environment.ZEPTOMAIL_SEND_MAIL_TOKEN, "ZEPTOMAIL_SEND_MAIL_TOKEN");
+  if (/\s/.test(token)) throw new Error("ZEPTOMAIL_SEND_MAIL_TOKEN must be the bare Send API key");
+  return {
+    apiUrl,
+    token,
+    fromEmail: hausMailbox(environment.ZEPTOMAIL_FROM_EMAIL, "ZEPTOMAIL_FROM_EMAIL"),
+    toEmail: hausMailbox(environment.LEAD_NOTIFICATION_TO, "LEAD_NOTIFICATION_TO"),
+    timeoutMs: positiveInteger(environment.LEAD_DELIVERY_TIMEOUT_MS, 8_000, 30_000),
+  };
 }
 
 function positiveInteger(

@@ -12,13 +12,15 @@ import { toEmbedUrl } from '@/lib/embed-video'
 import { isPurchaseReadinessVisible, resolvePurchaseReadiness } from '@/lib/purchase-readiness'
 import { sanityDocumentIdSchema } from '@/lib/saved-content/contracts'
 import { canonicalHausUrl } from '@/lib/share'
+import { PropertyPrice } from '@/components/currency/property-price'
+import { propertyPriceInput, type PropertyPricing } from '@/lib/currency'
 
 interface LocationBenefit {
   destination?: string
   time?: string
 }
 
-export interface PropertyDetail {
+export interface PropertyDetail extends PropertyPricing {
   _id: string
   title: string
   slug: string
@@ -404,7 +406,7 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
               {preview ? (
                 <>
                   <p className="font-serif text-xs font-medium uppercase tracking-[0.22em] text-gold-500">Listing details</p>
-                  <p className="mt-2 font-serif text-2xl font-semibold text-estate-700">{property.priceDisplay || 'Awaiting confirmation'}</p>
+                  <p className="mt-2 font-serif text-2xl font-semibold text-estate-700"><PropertyPrice {...propertyPriceInput(property)} fallback="Awaiting confirmation" /></p>
                   <dl className="mt-5 space-y-4 text-sm">
                     {[
                       ...(!property.priceDisplay ? [['Pricing', undefined]] : []),
@@ -428,7 +430,7 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
                     Enquire
                   </p>
                   <p className="mt-2 font-serif text-2xl font-semibold text-estate-700">
-                    {property.priceDisplay || 'Price on application'}
+                    <PropertyPrice {...propertyPriceInput(property)} />
                   </p>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                     Pricing, exact sizes and current availability are confirmed on

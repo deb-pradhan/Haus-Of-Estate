@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { useLeadModals } from "@/components/lead-modal";
 import { HeaderAuthControl } from "@/components/auth/header-auth-control";
+import { CurrencySelector } from "@/components/currency/currency-selector";
 import { cn } from "@/lib/utils";
 import {
   buildPropertiesMenu,
@@ -215,6 +216,7 @@ export function Header() {
 
           {/* Right-side actions */}
           <div className="flex items-center gap-2">
+            <CurrencySelector />
             <Suspense
               fallback={
                 <span

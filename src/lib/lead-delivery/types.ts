@@ -66,6 +66,7 @@ export interface LeadDeliveryPayloadInput {
   source?: string | null;
   campaign?: string | null;
   landingPage?: string | null;
+  message?: string | null;
 }
 
 export interface LeadDeliveryOutboxRecord {

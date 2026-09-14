@@ -44,6 +44,14 @@ Publication remains a separate action; drafts are visible in Studio rather
 than the normal public property catalogue. Snagging is now available at
 `/snagging`, linked from Services, desktop/mobile navigation and the footer.
 
+Sonia's 14 September demo feedback is tracked in
+`docs/sonia-demo-follow-ups-2026-09-14.md`: snagging education and Fatima's
+article, confirmed calendar bookings (company calendar setup pending),
+GBP/USD/AED display choices with dated indicative rates, and optional Zoho
+transactional staff notifications. The image brief names Desire, Adifah and
+Likith. Real appointment confirmation, email receipt and GA4 collection remain
+separate verification steps after the relevant company services are connected.
+
 ## Personalised follow-ups — next Release 2 milestone
 
 This milestone follows consolidation and local CMS setup on the same branch.

@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { DatabaseUnavailableError } from "@/lib/db-errors";
 import {
   LEAD_FORM_VERSION,
   PRIVACY_NOTICE_VERSION,
@@ -190,6 +191,7 @@ describe("POST /api/leads", () => {
     [new LeadConflictError(), 409],
     [new LeadRateLimitError(60), 429],
     [new LeadInfrastructureError(), 503],
+    [new DatabaseUnavailableError(), 503],
   ])(
     "maps expected service errors without leaking details",
     async (error, status) => {

@@ -347,6 +347,7 @@ export function createPrismaLeadIntakeStore(
             source: input.context.utmSource ?? input.context.surface,
             campaign: input.context.utmCampaign,
             landingPage: input.context.pagePath,
+            message: input.contact.message,
           });
           await transaction.leadDeliveryOutbox.create({
             data: {

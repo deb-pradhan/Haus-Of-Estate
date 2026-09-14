@@ -98,7 +98,7 @@ export function buildLeadDeliveryPayload(
       landingPage: landingPageCell(input.landingPage),
       status: "New",
       owner: "",
-      notes: "",
+      notes: optionalCell(input.message),
     },
   };
 }

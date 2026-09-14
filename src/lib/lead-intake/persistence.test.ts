@@ -126,6 +126,25 @@ function database(overrides: Record<string, unknown> = {}) {
 }
 
 describe("Prisma lead intake transaction", () => {
+  it("keeps the enquiry message in the durable lead and operational outbox only", async () => {
+    const { client, transaction } = database();
+    const store = createPrismaLeadIntakeStore(client as never);
+    const request = submission(false, false);
+    request.input.contact.message = "Please contact me about access arrangements.";
+    request.payloadHash = hashNormalizedLead(request.input);
+    await store.persistSubmission(request);
+    expect(transaction.lead.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ message: request.input.contact.message }),
+    }));
+    expect(transaction.leadDeliveryOutbox.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ payload: expect.objectContaining({
+        schemaVersion: "3.0", row: expect.objectContaining({ notes: request.input.contact.message }),
+      }) }),
+    });
+    expect(transaction.newsletterConsentEvent.create).not.toHaveBeenCalled();
+    expect(transaction.propertyMatchConsentEvent.create).not.toHaveBeenCalled();
+  });
+
   it("creates the lead, consent evidence, and delivery outbox together", async () => {
     const { client, transaction } = database();
     const store = createPrismaLeadIntakeStore(client as never);

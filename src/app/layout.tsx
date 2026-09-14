@@ -5,6 +5,7 @@ import { ConsentManager } from "@/components/analytics/consent-manager";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SavedContentProvider } from "@/components/saved-content";
 import { SessionProvider } from "@/lib/auth/client";
+import { CurrencyProvider } from "@/components/currency/currency-provider";
 import { isSavedContentEnabled } from "@/lib/features";
 import { draftMode } from "next/headers";
 import { SOCIAL_PROFILE_URLS } from "@/config/social";
@@ -173,7 +174,9 @@ export default async function RootLayout({
         </a>
         <SessionProvider>
           <SavedContentProvider enabled={savedContentEnabled}>
-            <TooltipProvider delayDuration={300}>{children}</TooltipProvider>
+            <CurrencyProvider>
+              <TooltipProvider delayDuration={300}>{children}</TooltipProvider>
+            </CurrencyProvider>
           </SavedContentProvider>
           {isDraftModeEnabled && (
             <a

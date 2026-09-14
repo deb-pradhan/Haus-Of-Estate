@@ -4,13 +4,17 @@ import {
   isLeadDeliveryEnabled,
   readLeadDeliveryWorkerOptions,
   readPowerAutomateConfig,
+  readLeadDeliveryProvider,
+  readZeptoMailConfig,
   type LeadDeliveryEnvironment,
 } from "./config";
 import { PowerAutomateLeadDeliveryTransport } from "./power-automate";
+import { ZeptoMailLeadDeliveryTransport } from "./zeptomail";
 import { createPrismaLeadDeliveryOutboxRepository } from "./prisma-outbox";
 import type {
   LeadDeliveryLogger,
   LeadDeliveryWorkerResult,
+  LeadDeliveryTransport,
 } from "./types";
 import {
   processLeadDeliveryOutboxId,
@@ -26,6 +30,14 @@ export const leadDeliveryLogger: LeadDeliveryLogger = {
   },
 };
 
+export function createConfiguredLeadDeliveryTransport(
+  environment: LeadDeliveryEnvironment = process.env,
+): LeadDeliveryTransport {
+  return readLeadDeliveryProvider(environment) === "zeptomail"
+    ? new ZeptoMailLeadDeliveryTransport(readZeptoMailConfig(environment))
+    : new PowerAutomateLeadDeliveryTransport(readPowerAutomateConfig(environment));
+}
+
 function configuredDependencies(
   environment: LeadDeliveryEnvironment,
   workerPrefix: string,
@@ -33,9 +45,7 @@ function configuredDependencies(
   const workerId = `${workerPrefix}-${randomUUID()}`;
   return {
     repository: createPrismaLeadDeliveryOutboxRepository(),
-    transport: new PowerAutomateLeadDeliveryTransport(
-      readPowerAutomateConfig(environment),
-    ),
+    transport: createConfiguredLeadDeliveryTransport(environment),
     logger: leadDeliveryLogger,
     options: readLeadDeliveryWorkerOptions(workerId, environment),
   };

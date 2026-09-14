@@ -1,5 +1,6 @@
 import { client } from "@/sanity";
 import type { SavedContentTypeValue } from "./contracts";
+import type { PropertyPricing } from "@/lib/currency";
 
 const SAVED_DOCUMENT_FIELDS = `
   _id,
@@ -22,7 +23,12 @@ const SAVED_DOCUMENT_FIELDS = `
   bathrooms,
   sizeDisplay,
   priceDisplay,
-  rentPriceDisplay
+  priceAmount,
+  priceCurrency,
+  rentPriceDisplay,
+  rentAmount,
+  rentCurrency,
+  rentPeriod
 `;
 
 const PUBLISHED_DOCUMENT_BY_ID_QUERY = `
@@ -49,7 +55,7 @@ const PUBLISHED_DOCUMENTS_BY_ID_QUERY = `
   }
 `;
 
-export type PublishedSavedDocument = {
+export type PublishedSavedDocument = PropertyPricing & {
   _id: string;
   _type: "property" | "post";
   title: string;

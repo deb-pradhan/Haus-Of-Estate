@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { OriginalPriceText } from "@/components/currency/property-price";
 import { ArrowRight, Building2, CalendarDays, MapPin } from "lucide-react";
 import { useEffect } from "react";
 import {
@@ -404,7 +405,7 @@ export function AssistantPropertyResults({
                 </p>
               )}
               <p className="mt-2 text-sm font-semibold text-estate-700">
-                {property.priceDisplay || property.rentPriceDisplay || "Price on application"}
+                <OriginalPriceText text={property.priceDisplay || property.rentPriceDisplay || "Price on application"} />
               </p>
             </div>
           </Link>

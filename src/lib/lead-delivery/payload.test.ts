@@ -121,6 +121,7 @@ describe("buildLeadDeliveryPayload", () => {
       firstName: '=HYPERLINK("https://example.test")',
       email: "person@example.com",
       phone: "+44 7000 000000",
+      message: '=HYPERLINK("https://example.test")',
       interest: "buy",
       overseasCashBuyer: false,
       propertyMatchOptIn: false,
@@ -131,6 +132,7 @@ describe("buildLeadDeliveryPayload", () => {
 
     expect(payload.row.name).toBe('\'=HYPERLINK("https://example.test")');
     expect(payload.row.phone).toBe("'+44 7000 000000");
+    expect(payload.row.notes).toBe('\'=HYPERLINK("https://example.test")');
     expect(payload.row.landingPage).toBe("/register-interest");
   });
 

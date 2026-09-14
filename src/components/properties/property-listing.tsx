@@ -9,6 +9,8 @@ import { Breadcrumbs } from '@/components/properties/breadcrumbs'
 import { SaveContentButton } from '@/components/saved-content'
 import { PropertyAssistantSearchEntry } from '@/components/property-assistant/property-assistant-search-entry'
 import { isPropertyAssistantEnabled } from '@/lib/features'
+import { PropertyPrice } from '@/components/currency/property-price'
+import { propertyPriceInput, type PropertyPricing } from '@/lib/currency'
 import {
   type Category,
   type Availability,
@@ -24,7 +26,7 @@ import {
   buildPropertiesHref,
 } from '@/lib/property-taxonomy'
 
-interface PropertyCard {
+interface PropertyCard extends PropertyPricing {
   _id: string
   title: string
   slug: string
@@ -317,10 +319,6 @@ export async function PropertyListing({
                         rentContextGlobal ||
                         (p.listingType?.includes('rent') &&
                           !p.listingType?.includes('sale'))
-                      const price =
-                        cardRentContext && p.rentPriceDisplay
-                          ? p.rentPriceDisplay
-                          : p.priceDisplay || 'Price on application'
                       const showBeds =
                         typeof p.bedrooms === 'number' &&
                         !bedroomsHidden(p.category, p.unitType)
@@ -375,7 +373,7 @@ export async function PropertyListing({
                               </p>
                               <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
                                 <span className="font-serif text-base font-semibold text-estate-700">
-                                  {price}
+                                  <PropertyPrice {...propertyPriceInput(p, Boolean(cardRentContext))} />
                                 </span>
                                 <span className="flex items-center gap-3 text-xs text-muted-foreground">
                                   {showBeds && (
