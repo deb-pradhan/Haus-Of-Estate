@@ -59,8 +59,9 @@ The supplied `npm create sanity@latest` initializer refused to scaffold because
 the CLI has no authenticated account. The same standalone local configuration
 was prepared using the existing schemas instead. The requested
 `sanity-best-practices` skill was installed successfully in the parent workspace.
-Use `npx.cmd sanity login` inside the Studio for CLI access. Sign-in and checking
-the invited account's editor permissions remain pending.
+The invited account was authenticated in both the Studio and CLI on
+14 September 2026. Six Florence drafts and 22 prepared images were uploaded
+and verified under that account; see `docs/florence-sanity-import-2026-09-14.md`.
 
 Nothing in setup imports, publishes, deletes, or updates Sanity documents,
 deploys a Studio/schema, or creates a project/dataset. Production content and

@@ -38,7 +38,9 @@
     ".next-analytics/types/**/*.ts",
     ".next-analytics/dev/types/**/*.ts",
     ".next-e2e/types/**/*.ts",
-    ".next-e2e/dev/types/**/*.ts"
+    ".next-e2e/dev/types/**/*.ts",
+    ".next-demo/types/**/*.ts",
+    ".next-demo/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

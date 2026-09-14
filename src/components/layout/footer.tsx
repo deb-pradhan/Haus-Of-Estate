@@ -91,6 +91,7 @@ export function Footer() {
           <FooterButton onClick={openBuyer}>Buy a property</FooterButton>
           <FooterButton onClick={openBuyer}>Rent a property</FooterButton>
           <FooterButton onClick={openSeller}>Sell or let</FooterButton>
+          <FooterLink href="/snagging">Snagging inspections</FooterLink>
           <FooterLink href="/renovations">Renovations</FooterLink>
           <FooterLink href="/list-property">List your property</FooterLink>
         </FooterCol>

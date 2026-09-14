@@ -159,6 +159,7 @@ interface NavAction {
 type ServiceEntry = NavItem | NavAction;
 
 const SERVICES_ITEMS: ServiceEntry[] = [
+  { href: "/snagging", label: "Snagging", desc: "Pre-handover property inspections. Request a quote.", icon: ClipboardList },
   { href: "/services#property-management", label: "Property Management", desc: "Tenancy, maintenance and compliance, handled.", icon: ClipboardList },
   { href: "/services#staging", label: "Staging", desc: "Present a home for viewings, photography and marketing.", icon: Sparkles },
   { href: "/services#furnishing", label: "Furnishing", desc: "Move-in ready interiors for new builds and rentals.", icon: Sofa },

@@ -12,7 +12,7 @@ const LEAD_EVENTS = new Set(["form_view", "form_start", "lead_submit_success", "
 const ASSISTANT_EVENTS = new Set(["property_assistant_opened", "property_assistant_results_shown", "property_assistant_adviser_handoff"]);
 
 const PUBLIC_PAGES = new Set([
-  "/", "/about", "/team", "/services", "/renovations", "/faq", "/contact",
+  "/", "/about", "/team", "/services", "/snagging", "/renovations", "/faq", "/contact",
   "/list-property", "/register-interest", "/careers", "/blog", "/properties", "/properties/residential",
   "/properties/commercial", "/legal/privacy-policy", "/legal/cookie-policy", "/legal/terms-of-service",
 ]);

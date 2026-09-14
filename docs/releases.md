@@ -19,7 +19,8 @@ previews, and the September careers update. No new feature branch is needed.
 Included features: newsletter/signup consent capture; contact-first enquiries;
 login, recovery and bot protection; saved properties/articles; canonical sharing;
 blog artwork corrections; inventory-driven country/city search; guarded AskHaus;
-purchase-readiness information; editorial workflow; Florence; and careers.
+purchase-readiness information; editorial workflow; Florence; careers; and
+the dedicated snagging inspection service and quote-enquiry page.
 Keep backend-dependent feature flags subject to their existing service setup.
 
 PR #12 targets Release 1 until Deb merges that release, then retargets `main`.
@@ -34,6 +35,14 @@ property model. See `docs/standalone-sanity-studio.md`. The embedded/legacy
 Studio code is retained for compatibility; new local work uses the sibling.
 The accepted Florence source documents and media retain their existing format.
 Local preview records are not automatically imported or published.
+
+On 14 September 2026, Surya explicitly authorised the Florence upload and
+confirmed existing amenities. The six Florence entries and 22 prepared images
+were imported into Sanity as native drafts, with present-tense copy. Existing
+property documents were preserved. See `docs/florence-sanity-import-2026-09-14.md`.
+Publication remains a separate action; drafts are visible in Studio rather
+than the normal public property catalogue. Snagging is now available at
+`/snagging`, linked from Services, desktop/mobile navigation and the footer.
 
 ## Personalised follow-ups — next Release 2 milestone
 
@@ -66,8 +75,9 @@ to designated test recipients, not mock transport success.
 - Exercise public search, Florence previews, saved items, lead forms, account
   routes, careers and consent behaviour on desktop/mobile.
 - GA4: company account/container access and real DebugView/Realtime receipt pending.
-- Sanity: the local sign-in screen is available; authenticate with Deb's invited
-  account before claiming authenticated editing or draft-preview verification.
+- Sanity: the invited account is authenticated in the local Studio and CLI;
+  six Florence drafts and their image references were verified after upload.
+  App draft preview still needs its server token and appropriate CORS setup.
 - Database, transactional email and staff delivery: verify configured services
   separately from API-intercepted browser tests. Newsletter preferences are
   recorded today; personalised campaign delivery is the next milestone.
