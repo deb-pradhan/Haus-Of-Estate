@@ -18,6 +18,15 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# Next.js embeds public configuration at build time. Railway only exposes
+# service variables to Docker builds when the matching arguments are declared.
+# Database passwords and Sanity/email tokens remain runtime-only secrets.
+ARG NEXT_PUBLIC_SITE_URL
+ARG NEXT_PUBLIC_SANITY_PROJECT_ID
+ARG NEXT_PUBLIC_SANITY_DATASET
+ARG NEXT_PUBLIC_GTM_ID
+ARG NEXT_PUBLIC_ANALYTICS_ALLOWED_HOSTS
+ARG NEXT_PUBLIC_SANITY_SOCIAL_CAMPAIGNS_ENABLED
 RUN npx prisma generate
 RUN npm run build
 

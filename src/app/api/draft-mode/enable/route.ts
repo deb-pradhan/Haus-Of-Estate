@@ -2,8 +2,9 @@ import { defineEnableDraftMode } from "next-sanity/draft-mode";
 import { client } from "@/sanity";
 
 const token = process.env.SANITY_API_READ_TOKEN;
-const browserToken = process.env.SANITY_API_BROWSER_TOKEN;
-const handler = token && browserToken
+// Authenticated server rendering does not require exposing a token to the
+// browser. A separate Viewer token is optional for live updates outside Studio.
+const handler = token
   ? defineEnableDraftMode({ client: client.withConfig({ token }) })
   : null;
 

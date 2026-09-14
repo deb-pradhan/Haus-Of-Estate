@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import { draftMode } from 'next/headers'
 import { MapPin, BedDouble, Building2, X } from 'lucide-react'
 import { urlFor } from '@/sanity'
 import { sanityFetch } from '@/sanity/live'
@@ -99,7 +100,8 @@ export async function PropertyListing({
   heading?: React.ReactNode
   intro?: string
 }) {
-  const assistantEnabled = isPropertyAssistantEnabled()
+  const { isEnabled: draftPreview } = await draftMode()
+  const assistantEnabled = isPropertyAssistantEnabled() && !draftPreview
   // ── Normalise the taxonomy selection ──────────────────────────────────
   const category: '' | Category =
     forceCategory ?? (isCategory(params.category) ? params.category : '')
@@ -217,6 +219,13 @@ export async function PropertyListing({
 
   return (
     <div className="min-h-screen">
+      {draftPreview && (
+        <div className="border-b border-gold-500/30 bg-gold-500/10 px-4 py-4 text-sm text-estate-700">
+          <p className="mx-auto max-w-6xl">
+            <strong>Sanity draft preview.</strong> This catalogue includes unpublished content. Saving is disabled while reviewing drafts.
+          </p>
+        </div>
+      )}
       {/* Hero */}
       <section className="bg-estate-700 px-4 py-20 md:px-6 md:py-24">
         <div className="mx-auto max-w-4xl text-center">
@@ -390,12 +399,14 @@ export async function PropertyListing({
                               </div>
                             </div>
                           </Link>
-                          <SaveContentButton
-                            contentType="PROPERTY"
-                            sanityDocumentId={p._id}
-                            title={p.title}
-                            className="absolute right-3 top-3 z-10"
-                          />
+                          {!draftPreview && (
+                            <SaveContentButton
+                              contentType="PROPERTY"
+                              sanityDocumentId={p._id}
+                              title={p.title}
+                              className="absolute right-3 top-3 z-10"
+                            />
+                          )}
                         </article>
                       )
                     })}
