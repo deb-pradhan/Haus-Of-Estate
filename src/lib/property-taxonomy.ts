@@ -103,6 +103,8 @@ export const ALL_UNIT_TYPES: readonly string[] = Array.from(
     ...LEGACY_RESIDENTIAL_UNIT_TYPES,
     ...TYPES_BY_CATEGORY.commercial,
     ...OFFPLAN_TYPES_BY_CATEGORY.commercial,
+    // Mixed community overviews are developments, not a single home type.
+    'Development',
   ]),
 )
 

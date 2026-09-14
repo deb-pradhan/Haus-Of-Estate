@@ -150,7 +150,7 @@ export const property = defineType({
       title: 'Unit Type',
       type: 'string',
       description:
-        'Primary offering. For a development/community showcase, use the generic type (e.g. "Apartment" or "Mansion"); per-unit variants go in Key Features.',
+        'Primary offering. Choose Development for a mixed community overview. Use the specific type (e.g. Villa or Townhouse) for a home collection or individual listing.',
       options: {
         list: ALL_UNIT_TYPES.map((value) => ({ title: value, value })),
       },

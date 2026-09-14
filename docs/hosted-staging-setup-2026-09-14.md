@@ -54,18 +54,28 @@ Authenticated reads on 14 September confirmed all six native drafts in
 home types contain the supplied AED starting amounts/ranges. There are no
 Florence documents in the published perspective.
 
-Document validation returned **13 errors and zero warnings**: `availability`
-and `listingType` are missing on all six; `unitType` is also missing on the
-mixed community overview. This differs from schema-definition validation,
-which checks whether the schema itself is valid. The uploaded documents are
-prepared drafts, not completed publish-ready listings.
+The initial document audit returned **13 errors and zero warnings**: missing
+`availability` and `listingType` on all six, plus `unitType` on the mixed overview.
+Document validation checks saved records; schema-definition validation checks
+the schema itself. These were different checks and should not be conflated.
 
-The user's sale intent is established. Confirm whether homes are ready,
-off-plan or mixed before filling availability; existing amenities do not prove
-home completion. Resolve how to represent the mixed overview without assigning
-a misleading single-home classification. Native publication also requires the
-existing content/SEO approval fields and workflow status. Do not invent those
-approvals or change the live content simply to make drafts visible in a demo.
+Surya subsequently confirmed **off-plan**, with sale intent already established.
+All six actual Sanity drafts now have `availability: ["off-plan"]` and
+`listingType: ["sale"]`. The mixed overview has `unitType: "Development"`, an
+additive schema option that avoids calling an entire mixed community one Villa.
+The five home types retain their existing Villa/Townhouse classifications.
+Fresh-revision-guarded transactions and exact before/after comparisons confirmed
+prices, images, copy and all other fields were preserved. Audit receipts are in
+`.git/florence-sanity-classification-2026-09-14/`.
+
+Final validation of the six actual amended records returned **zero errors and
+zero warnings**. Twelve focused taxonomy/assistant/editorial checks, lint and
+TypeScript also passed after adding the Development option.
+
+Native publication still requires the existing content/SEO approval fields and
+workflow status. All six remain drafts; no approval or publication was invented.
+Historical preparation/import bundles remain snapshots of their original inputs;
+the amended Sanity records are the current content source.
 
 ## Local setup cancellation
 

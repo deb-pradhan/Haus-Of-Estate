@@ -31,6 +31,19 @@ The source NDJSON files and preview bundle keep their original source IDs.
 
 ## Verification and recovery
 
+### Classification follow-up
+
+Surya confirmed off-plan status after the import. All six actual Sanity drafts
+now have `availability: ["off-plan"]` and `listingType: ["sale"]`. The overview
+uses the additive `Development` type; the five home collections keep their
+Villa/Townhouse types. Revision-guarded patches preserved all other fields and
+assets. Status and approval fields remain unchanged; nothing was published.
+The mutation receipts are in `.git/florence-sanity-classification-2026-09-14/`.
+Historical source/preparation bundles are retained unchanged.
+Final validation of all six amended Sanity documents: zero errors, zero warnings.
+
+### Original import recovery
+
 `scripts/import-florence-drafts.mjs` is restricted to these six Florence slugs
 and checks all 22 file hashes before uploading. It creates native drafts in
 one transaction and never replaces an existing document. Its default mode is
