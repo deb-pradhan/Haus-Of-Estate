@@ -27,37 +27,9 @@ function escapeHtml(text: string): string {
     .replace(/'/g, "&#039;");
 }
 
-export async function sendWelcomeEmail(to: string, name: string) {
-  const client = getResend();
-  if (!client) return { success: true, mock: true };
-  return client.emails.send({
-    from: FROM,
-    to,
-    subject: "Welcome to Haus of Estate",
-    html: `<h1>Welcome, ${name}</h1>
-<p>Thank you for joining Haus of Estate. Your account has been created successfully.</p>
-<p>We'll be in touch within 2 hours with property opportunities tailored to your needs.</p>`,
-  });
+function sanitizeSubject(text: string): string {
+  return text.replace(/[\r\n]+/g, " ").replace(/\s+/g, " ").trim();
 }
-
-export async function sendLoginAlertEmail(
-  to: string,
-  name: string,
-  device: string
-) {
-  const client = getResend();
-  if (!client) return { success: true, mock: true };
-  return client.emails.send({
-    from: FROM,
-    to,
-    subject: "New login to your Haus of Estate account",
-    html: `<p>Hi ${name},</p>
-<p>We noticed a new sign-in to your account.</p>
-<p><strong>Device/Browser:</strong> ${device}</p>
-<p>If this wasn't you, please contact us immediately at ${ADMIN}.</p>`,
-  });
-}
-
 // ── Careers ──────────────────────────────────────────────────────────
 
 export interface CvAttachment {
@@ -78,13 +50,14 @@ export interface ApplicationPayload {
   opportunityType?: string;
   linkedinUrl?: string;
   portfolioUrl?: string;
+  cvUrl?: string;
   coverNote?: string;
   cv?: CvAttachment;
 }
 
 export async function sendApplicationToTeam(app: ApplicationPayload) {
   const client = getResend();
-  if (!client) return { success: true, mock: true };
+  if (!client) throw new Error("Careers email delivery is not configured");
 
   const rows: Array<[string, string]> = [
     ["Role applied for", `${escapeHtml(app.roleTitle)} (${escapeHtml(app.roleSlug)})`],
@@ -119,6 +92,7 @@ export async function sendApplicationToTeam(app: ApplicationPayload) {
         : "—",
     ],
     ["CV attached", app.cv ? escapeHtml(app.cv.filename) : "— (none)"],
+    ["CV sharing link", app.cvUrl ? `<a href="${escapeHtml(app.cvUrl)}">${escapeHtml(app.cvUrl)}</a>` : "—"],
   );
 
   const rowsHtml = rows
@@ -133,7 +107,7 @@ export async function sendApplicationToTeam(app: ApplicationPayload) {
 <p style="font-family:system-ui,sans-serif;font-size:14px;white-space:pre-wrap;background:#f7f5f1;padding:14px;border-radius:8px">${escapeHtml(app.coverNote)}</p>`
     : "";
 
-  return client.emails.send({
+  const result = await client.emails.send({
     from: FROM,
     to: CAREERS_INBOX,
     replyTo: app.email,
@@ -145,12 +119,14 @@ ${coverHtml}`,
       ? [{ filename: app.cv.filename, content: app.cv.content }]
       : undefined,
   });
+  if (result.error || !result.data?.id) throw new Error("Careers email was not accepted by the provider");
+  return result.data;
 }
 
 export async function sendApplicationConfirmationToApplicant(app: ApplicationPayload) {
   const client = getResend();
-  if (!client) return { success: true, mock: true };
-  return client.emails.send({
+  if (!client) throw new Error("Careers email delivery is not configured");
+  const result = await client.emails.send({
     from: FROM,
     to: app.email,
     subject: `We've received your application — ${app.roleTitle}`,
@@ -159,6 +135,8 @@ export async function sendApplicationConfirmationToApplicant(app: ApplicationPay
 <p style="font-family:system-ui,sans-serif">In the meantime, no follow-up needed — we read every application.</p>
 <p style="font-family:system-ui,sans-serif">— The Haus of Estate team</p>`,
   });
+  if (result.error || !result.data?.id) throw new Error("Careers email was not accepted by the provider");
+  return result.data;
 }
 
 export async function sendLeadNotificationToAdmin(lead: {
@@ -173,17 +151,21 @@ export async function sendLeadNotificationToAdmin(lead: {
     lead.tier === "hot" ? "🔥" : lead.tier === "warm" ? "📈" : "🌱";
   const client = getResend();
   if (!client) return { success: true, mock: true };
+  const tier = lead.tier ?? "unknown";
+  const email = escapeHtml(lead.email);
   return client.emails.send({
     from: FROM,
     to: ADMIN,
-    subject: `${tierEmoji} New ${(lead.tier ?? "unknown").toUpperCase()} Lead: ${lead.firstName} (${lead.intent}) — Score: ${lead.score}`,
+    subject: sanitizeSubject(
+      `${tierEmoji} New ${tier.toUpperCase()} Lead: ${lead.firstName} (${lead.intent}) — Score: ${lead.score}`,
+    ),
     html: `<h2>New Lead Notification</h2>
 <table style="border-collapse:collapse">
-<tr><td style="padding:8px;border:1px solid #ddd"><strong>Name</strong></td><td style="padding:8px;border:1px solid #ddd">${lead.firstName}</td></tr>
-<tr><td style="padding:8px;border:1px solid #ddd"><strong>Email</strong></td><td style="padding:8px;border:1px solid #ddd"><a href="mailto:${lead.email}">${lead.email}</a></td></tr>
-<tr><td style="padding:8px;border:1px solid #ddd"><strong>Phone</strong></td><td style="padding:8px;border:1px solid #ddd">${lead.phone ?? "—"}</td></tr>
-<tr><td style="padding:8px;border:1px solid #ddd"><strong>Intent</strong></td><td style="padding:8px;border:1px solid #ddd">${lead.intent}</td></tr>
-<tr><td style="padding:8px;border:1px solid #ddd"><strong>Tier</strong></td><td style="padding:8px;border:1px solid #ddd">${(lead.tier ?? "unknown").toUpperCase()}</td></tr>
+<tr><td style="padding:8px;border:1px solid #ddd"><strong>Name</strong></td><td style="padding:8px;border:1px solid #ddd">${escapeHtml(lead.firstName)}</td></tr>
+<tr><td style="padding:8px;border:1px solid #ddd"><strong>Email</strong></td><td style="padding:8px;border:1px solid #ddd"><a href="mailto:${email}">${email}</a></td></tr>
+<tr><td style="padding:8px;border:1px solid #ddd"><strong>Phone</strong></td><td style="padding:8px;border:1px solid #ddd">${escapeHtml(lead.phone ?? "—")}</td></tr>
+<tr><td style="padding:8px;border:1px solid #ddd"><strong>Intent</strong></td><td style="padding:8px;border:1px solid #ddd">${escapeHtml(lead.intent)}</td></tr>
+<tr><td style="padding:8px;border:1px solid #ddd"><strong>Tier</strong></td><td style="padding:8px;border:1px solid #ddd">${escapeHtml(tier.toUpperCase())}</td></tr>
 <tr><td style="padding:8px;border:1px solid #ddd"><strong>Score</strong></td><td style="padding:8px;border:1px solid #ddd">${lead.score}</td></tr>
 </table>`,
   });

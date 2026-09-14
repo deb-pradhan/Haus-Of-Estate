@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Keep browser-test builds separate from the local development server.
+  distDir: process.env.HAUS_NEXT_DIST_DIR || ".next",
   output: "standalone",
   async redirects() {
     return [

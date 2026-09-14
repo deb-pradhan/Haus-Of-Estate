@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { Property } from "@/types";
-import { formatPrice } from "@/data/mock";
+import { PropertyPrice } from "@/components/currency/property-price";
 import { cn } from "@/lib/utils";
 
 interface PropertyCardProps {
@@ -62,7 +62,7 @@ export function PropertyCard({
 
           <div className="absolute bottom-3 left-3">
             <span className="font-serif text-xl font-semibold text-white">
-              {formatPrice(property.price)}
+              <PropertyPrice amount={property.price} currency={property.currency} />
             </span>
           </div>
         </div>
@@ -198,7 +198,7 @@ function VideoCard({
           </div>
           <div className="flex items-center justify-between">
             <span className="font-serif text-xl font-semibold text-white">
-              {formatPrice(property.price)}
+              <PropertyPrice amount={property.price} currency={property.currency} />
             </span>
             <div className="flex items-center gap-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}

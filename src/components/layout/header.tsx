@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import {
   Menu,
   X,
@@ -25,8 +25,10 @@ import {
   LayoutGrid,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { useLeadModals } from "@/components/lead-modal";
+import { HeaderAuthControl } from "@/components/auth/header-auth-control";
+import { CurrencySelector } from "@/components/currency/currency-selector";
 import { cn } from "@/lib/utils";
 import {
   buildPropertiesMenu,
@@ -158,6 +160,7 @@ interface NavAction {
 type ServiceEntry = NavItem | NavAction;
 
 const SERVICES_ITEMS: ServiceEntry[] = [
+  { href: "/snagging", label: "Snagging", desc: "Pre-handover property inspections. Request a quote.", icon: ClipboardList },
   { href: "/services#property-management", label: "Property Management", desc: "Tenancy, maintenance and compliance, handled.", icon: ClipboardList },
   { href: "/services#staging", label: "Staging", desc: "Present a home for viewings, photography and marketing.", icon: Sparkles },
   { href: "/services#furnishing", label: "Furnishing", desc: "Move-in ready interiors for new builds and rentals.", icon: Sofa },
@@ -213,6 +216,17 @@ export function Header() {
 
           {/* Right-side actions */}
           <div className="flex items-center gap-2">
+            <CurrencySelector />
+            <Suspense
+              fallback={
+                <span
+                  aria-label="Checking sign-in status"
+                  className="inline-flex h-10 w-10 animate-pulse rounded-lg bg-muted sm:w-20"
+                />
+              }
+            >
+              <HeaderAuthControl />
+            </Suspense>
             {/* Mobile / tablet trigger */}
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
@@ -226,6 +240,8 @@ export function Header() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-80 overflow-y-auto p-0">
+                <SheetTitle className="sr-only">Site navigation</SheetTitle>
+                <SheetDescription className="sr-only">Browse properties, services and information about Haus of Estate.</SheetDescription>
                 <MobileNav
                   pathname={pathname}
                   onClose={() => setMobileOpen(false)}

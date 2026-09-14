@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { trackAnalytics } from "@/lib/analytics";
 import {
   ArrowRight,
   BedDouble,
   Building2,
+  Globe2,
   MapPin,
   Search,
   Tag,
@@ -24,17 +25,7 @@ import {
   buildPropertiesHref,
   typesFor,
 } from "@/lib/property-taxonomy";
-
-const LOCATIONS = [
-  "Dubai",
-  "Abu Dhabi",
-  "Sharjah",
-  "London",
-  "Cardiff",
-  "Manchester",
-  "Birmingham",
-  "Bali, Indonesia",
-];
+import type { PropertyLocationGroup } from "@/lib/property-locations";
 
 const BEDROOMS = [
   { value: "0", label: "Studio" },
@@ -56,7 +47,10 @@ export function HomepagePropertySearch() {
   const [category, setCategory] = useState<Category>("residential");
   const [availability, setAvailability] = useState<Availability>("ready");
   const [intent, setIntent] = useState<Intent>("sale");
-  const [location, setLocation] = useState("");
+  const [country, setCountry] = useState("");
+  const [city, setCity] = useState("");
+  const [locationGroups, setLocationGroups] = useState<PropertyLocationGroup[]>([]);
+  const [locationsLoading, setLocationsLoading] = useState(true);
   const [type, setType] = useState("");
   const [beds, setBeds] = useState("");
   const [loading, setLoading] = useState(false);
@@ -66,6 +60,29 @@ export function HomepagePropertySearch() {
   const effectiveIntent: Intent = offPlan ? "sale" : intent;
   const typeOptions = typesFor(category, availability);
   const hideBeds = bedroomsHidden(category, type);
+  const cities = locationGroups.find((group) => group.country === country)?.cities ?? [];
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/property-locations", {
+      headers: { Accept: "application/json" },
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Property locations unavailable");
+        return (await response.json()) as { locations?: PropertyLocationGroup[] };
+      })
+      .then(({ locations }) => {
+        if (!controller.signal.aborted) setLocationGroups(locations ?? []);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setLocationGroups([]);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLocationsLoading(false);
+      });
+    return () => controller.abort();
+  }, []);
 
   function changeCategory(next: Category) {
     setCategory(next);
@@ -95,7 +112,8 @@ export function HomepagePropertySearch() {
         availability,
         intent: effectiveIntent,
         type: type || undefined,
-        location: location || undefined,
+        country: country || undefined,
+        city: city || undefined,
         beds: hideBeds ? undefined : beds || undefined,
       }),
     );
@@ -158,13 +176,13 @@ export function HomepagePropertySearch() {
           <form
             onSubmit={handleSubmit}
             noValidate
-            className="mx-auto mt-5 max-w-4xl rounded-2xl border border-white/15 bg-surface p-2 shadow-2xl shadow-black/25 md:rounded-full"
+            className="mx-auto mt-5 max-w-6xl rounded-2xl border border-white/15 bg-surface p-2 shadow-2xl shadow-black/25 lg:rounded-full"
           >
             <div
-              className={`grid gap-2 md:items-center ${
+              className={`grid gap-2 md:grid-cols-2 lg:items-center ${
                 hideBeds
-                  ? "md:grid-cols-[1fr_1fr_auto]"
-                  : "md:grid-cols-[1fr_1fr_1fr_auto]"
+                  ? "lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]"
+                  : "lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.65fr)_auto]"
               }`}
             >
               <Field icon={Building2} label="Property type">
@@ -183,17 +201,50 @@ export function HomepagePropertySearch() {
                 </select>
               </Field>
 
-              <Field icon={MapPin} label="Location" bordered>
+              <Field icon={Globe2} label="Country" bordered>
                 <select
-                  aria-label="Preferred location"
-                  value={location}
-                  onChange={(event) => setLocation(event.target.value)}
+                  aria-label="Country of interest"
+                  value={country}
+                  disabled={locationsLoading || locationGroups.length === 0}
+                  onChange={(event) => {
+                    setCountry(event.target.value);
+                    setCity("");
+                  }}
                   className="w-full bg-transparent text-sm text-foreground outline-none"
                 >
-                  <option value="">Any location</option>
-                  {LOCATIONS.map((locationOption) => (
-                    <option key={locationOption} value={locationOption}>
-                      {locationOption}
+                  <option value="">
+                    {locationsLoading
+                      ? "Loading countries..."
+                      : locationGroups.length === 0
+                        ? "Countries unavailable"
+                        : "Any country"}
+                  </option>
+                  {locationGroups.map((group) => (
+                    <option key={group.country} value={group.country}>
+                      {group.country}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
+              <Field icon={MapPin} label="City" bordered>
+                <select
+                  aria-label="City of interest"
+                  value={city}
+                  disabled={!country || cities.length === 0}
+                  onChange={(event) => setCity(event.target.value)}
+                  className="w-full bg-transparent text-sm text-foreground outline-none"
+                >
+                  <option value="">
+                    {!country
+                      ? "Choose a country first"
+                      : cities.length === 0
+                        ? "No live cities"
+                        : "Any city"}
+                  </option>
+                  {cities.map((cityOption) => (
+                    <option key={cityOption} value={cityOption}>
+                      {cityOption}
                     </option>
                   ))}
                 </select>
@@ -220,7 +271,7 @@ export function HomepagePropertySearch() {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex items-center justify-center gap-2 rounded-xl bg-estate-700 px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-estate-600 disabled:cursor-not-allowed disabled:opacity-70 md:rounded-full"
+                className={`flex items-center justify-center gap-2 rounded-xl bg-estate-700 px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-estate-600 disabled:cursor-not-allowed disabled:opacity-70 lg:col-span-1 lg:rounded-full ${hideBeds ? "md:col-span-1" : "md:col-span-2"}`}
               >
                 <Search className="h-4 w-4" />
                 {loading ? "Finding your match…" : "Find my match"}
@@ -232,7 +283,7 @@ export function HomepagePropertySearch() {
 
       {!submitted && (
         <p className="mt-4 text-xs text-white/55">
-          Browse matching properties · Free &amp; without obligation
+          Browse current listings · Filter by country, city and property type
         </p>
       )}
 
@@ -310,7 +361,7 @@ function Field({
   return (
     <label
       className={`flex items-center gap-3 px-4 py-2.5 text-left md:px-5 ${
-        bordered ? "md:border-l md:border-border" : ""
+        bordered ? "lg:border-l lg:border-border" : ""
       }`}
     >
       <Icon className="h-4 w-4 shrink-0 text-estate-700" strokeWidth={1.75} />

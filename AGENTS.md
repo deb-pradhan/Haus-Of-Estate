@@ -1,0 +1,20 @@
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
+
+# Release branches and ongoing work
+
+- Release 1 is `suryak02/technical-seo-fixes`: SEO and consented GA4 through GTM, next for Deb to review/deploy.
+- Release 2 is `suryak02/azizi-florence-content-scaffold`: the cumulative website overhaul, Florence, standalone Sanity setup, and subsequent personalised follow-up milestone.
+- Continue all subsequent feature work on the existing Release 2 branch. Do not create a branch per feature or revive the superseded feature branches. Create a new branch only when Surya explicitly requests it.
+- Release 2 must retain the Release 1 changes. Commit in reviewable increments on that same branch.
+- Do not push directly to `main`, deploy production, publish Sanity content, or send customer campaigns as part of preparing a release.
+- The standalone Studio is a sibling of the canonical app (`../studio-haus-of-estate`), with project `jdxbkry4` / dataset `production`. Reuse the app's current schema source; preserve existing documents and the accepted Florence format.
+- Preserve uncommitted handoffs and local assets. Worktrees are working copies, not new feature branches.
+- See `docs/releases.md` for release ownership, verification and pending service access.

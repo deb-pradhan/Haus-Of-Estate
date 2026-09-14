@@ -1,3 +1,5 @@
+import { APPROVED_CAREER_ROLES } from '@/lib/career-roles'
+
 export const POST_FIELDS = `
   _id,
   title,
@@ -14,24 +16,30 @@ export const POST_FIELDS = `
   "readMins": round(length(pt::text(body)) / 1125)
 `
 
+// Draft documents only exist in authenticated draft perspective. This keeps
+// public reads published-only while allowing reviewers to preview every
+// editorial workflow state before release.
+const VISIBLE_EDITORIAL_DOCUMENT =
+  '(status == "published" || _originalId in path("drafts.**"))'
+
 export const POSTS_QUERY = `
-  *[_type == "post" && status == "published"] | order(publishedAt desc) [$start...$end] {
+  *[_type == "post" && ${VISIBLE_EDITORIAL_DOCUMENT}] | order(publishedAt desc) [$start...$end] {
     ${POST_FIELDS}
   }
 `
 
 export const POSTS_COUNT_QUERY = `
-  count(*[_type == "post" && status == "published"])
+  count(*[_type == "post" && ${VISIBLE_EDITORIAL_DOCUMENT}])
 `
 
 export const FEATURED_POST_QUERY = `
-  *[_type == "post" && status == "published" && featured == true][0] {
+  *[_type == "post" && ${VISIBLE_EDITORIAL_DOCUMENT} && featured == true][0] {
     ${POST_FIELDS}
   }
 `
 
 export const POST_BY_SLUG_QUERY = `
-  *[_type == "post" && slug.current == $slug && status == "published"][0] {
+  *[_type == "post" && slug.current == $slug && ${VISIBLE_EDITORIAL_DOCUMENT}][0] {
     ${POST_FIELDS},
     body[]{
       ...,
@@ -41,17 +49,17 @@ export const POST_BY_SLUG_QUERY = `
 `
 
 export const POSTS_BY_CATEGORY_QUERY = `
-  *[_type == "post" && status == "published" && $slug in categories[]->slug.current] | order(publishedAt desc) [$start...$end] {
+  *[_type == "post" && ${VISIBLE_EDITORIAL_DOCUMENT} && $slug in categories[]->slug.current] | order(publishedAt desc) [$start...$end] {
     ${POST_FIELDS}
   }
 `
 
 export const POSTS_BY_CATEGORY_COUNT_QUERY = `
-  count(*[_type == "post" && status == "published" && $slug in categories[]->slug.current])
+  count(*[_type == "post" && ${VISIBLE_EDITORIAL_DOCUMENT} && $slug in categories[]->slug.current])
 `
 
 export const RELATED_POSTS_QUERY = `
-  *[_type == "post" && status == "published" && _id != $postId && count(categories[@._ref in $categoryIds]) > 0] | order(publishedAt desc) [0...3] {
+  *[_type == "post" && ${VISIBLE_EDITORIAL_DOCUMENT} && _id != $postId && count(categories[@._ref in $categoryIds]) > 0] | order(publishedAt desc) [0...3] {
     ${POST_FIELDS}
   }
 `
@@ -63,13 +71,13 @@ export const CATEGORIES_QUERY = `
 `
 
 export const POST_SLUGS_QUERY = `
-  *[_type == "post" && status == "published" && defined(slug.current)] {
+  *[_type == "post" && ${VISIBLE_EDITORIAL_DOCUMENT} && defined(slug.current)] {
     "slug": slug.current
   }
 `
 
 export const SEO_QUERY = `
-  *[_type == "post" && slug.current == $slug][0] {
+  *[_type == "post" && slug.current == $slug && ${VISIBLE_EDITORIAL_DOCUMENT}][0] {
     title,
     subtitle,
     seo,
@@ -82,6 +90,7 @@ export const SEO_QUERY = `
 
 const ROLE_CARD_FIELDS = `
   _id,
+  status,
   title,
   "slug": slug.current,
   department,
@@ -92,15 +101,20 @@ const ROLE_CARD_FIELDS = `
   publishedAt
 `
 
+// Fetch approved records in every editorial state: the public resolver must see
+// explicit closures so it does not replace them with an open title-only fallback.
+// Native draft records are visible only in the authenticated draft perspective.
+const APPROVED_ROLE_FILTER = `(!(_id in path("drafts.**")) || _originalId in path("drafts.**")) && slug.current in ${JSON.stringify(APPROVED_CAREER_ROLES.map((role) => role.slug))}`
+
 export const ROLES_QUERY = `
-  *[_type == "role" && status == "open"]
+  *[_type == "role" && ${APPROVED_ROLE_FILTER}]
     | order(featured desc, publishedAt desc) {
       ${ROLE_CARD_FIELDS}
     }
 `
 
 export const ROLE_BY_SLUG_QUERY = `
-  *[_type == "role" && slug.current == $slug && status == "open"][0] {
+  *[_type == "role" && slug.current == $slug && ${APPROVED_ROLE_FILTER}][0] {
     ${ROLE_CARD_FIELDS},
     description,
     responsibilities,
@@ -111,12 +125,19 @@ export const ROLE_BY_SLUG_QUERY = `
 `
 
 export const ROLE_SLUGS_QUERY = `
-  *[_type == "role" && status == "open" && defined(slug.current)] {
+  *[_type == "role" && (status == "open" || _originalId in path("drafts.**")) && ${APPROVED_ROLE_FILTER}] {
     "slug": slug.current
   }
 `
 
 // ── Properties ────────────────────────────────────────────────────────
+
+// Older records pre-date listingState. Treat them as active until the
+// approval-gated taxonomy backfill has run.
+const DISCOVERABLE_PROPERTY = `
+  ${VISIBLE_EDITORIAL_DOCUMENT} &&
+  coalesce(listingState, "active") in ["active", "reserved", "under_offer"]
+`
 
 const PROPERTY_CARD_FIELDS = `
   _id,
@@ -137,7 +158,12 @@ const PROPERTY_CARD_FIELDS = `
   sizeDisplay,
   plotSizeDisplay,
   priceDisplay,
+  priceAmount,
+  priceCurrency,
   rentPriceDisplay,
+  rentAmount,
+  rentCurrency,
+  rentPeriod,
   paymentPlan,
   view,
   completionStatus,
@@ -148,7 +174,7 @@ const PROPERTY_CARD_FIELDS = `
 `
 
 export const PROPERTIES_QUERY = `
-  *[_type == "property" && status == "published"]
+  *[_type == "property" && ${DISCOVERABLE_PROPERTY}]
     | order(featured desc, publishedAt desc) {
       ${PROPERTY_CARD_FIELDS}
     }
@@ -157,10 +183,10 @@ export const PROPERTIES_QUERY = `
 // Server-side filtered listing. Pass empty-string params to skip a filter.
 // $availability / $intent match against the array fields (membership).
 export const PROPERTIES_FILTERED_QUERY = `
-  *[_type == "property" && status == "published"
-    && ($category == "" || category == $category)
-    && ($availability == "" || $availability in availability)
-    && ($intent == "" || $intent in listingType)
+  *[_type == "property" && ${DISCOVERABLE_PROPERTY}
+    && ($category == "" || coalesce(category, "residential") == $category)
+    && ($availability == "" || $availability in coalesce(availability, ["ready"]))
+    && ($intent == "" || $intent in coalesce(listingType, ["sale"]))
     && ($type == "" || unitType == $type)
   ] | order(featured desc, publishedAt desc) {
       ${PROPERTY_CARD_FIELDS}
@@ -168,14 +194,24 @@ export const PROPERTIES_FILTERED_QUERY = `
 `
 
 export const FEATURED_PROPERTIES_QUERY = `
-  *[_type == "property" && status == "published" && featured == true]
+  *[_type == "property" && ${DISCOVERABLE_PROPERTY} && featured == true]
     | order(publishedAt desc) [0...3] {
       ${PROPERTY_CARD_FIELDS}
     }
 `
 
+export const PROPERTY_LOCATION_OPTIONS_QUERY = `
+  *[_type == "property" && ${DISCOVERABLE_PROPERTY}
+    && defined(country) && country != ""
+    && defined(city) && city != ""
+  ] {
+    country,
+    city
+  }
+`
+
 export const PROPERTY_BY_SLUG_QUERY = `
-  *[_type == "property" && slug.current == $slug && status == "published"][0] {
+  *[_type == "property" && slug.current == $slug && ${VISIBLE_EDITORIAL_DOCUMENT}][0] {
     ${PROPERTY_CARD_FIELDS},
     description,
     keyFeatures,
@@ -188,7 +224,7 @@ export const PROPERTY_BY_SLUG_QUERY = `
 `
 
 export const PROPERTY_SLUGS_QUERY = `
-  *[_type == "property" && status == "published" && defined(slug.current)] {
+  *[_type == "property" && ${VISIBLE_EDITORIAL_DOCUMENT} && defined(slug.current)] {
     "slug": slug.current
   }
 `

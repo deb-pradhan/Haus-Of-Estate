@@ -1,8 +1,9 @@
 import type { MetadataRoute } from 'next'
-import { sanityFetch } from '@/sanity'
+import { sanityFetch } from '@/sanity/live'
 import { POST_SLUGS_QUERY, PROPERTY_SLUGS_QUERY } from '@/sanity/queries'
+import { HAUS_SITE_ORIGIN } from '@/lib/share'
 
-const SITE_URL = 'https://hausofestate.com'
+const SITE_URL = HAUS_SITE_ORIGIN
 
 // Static routes with sensible SEO weighting.
 const STATIC_ROUTES: Array<{
@@ -14,6 +15,7 @@ const STATIC_ROUTES: Array<{
   { path: '/properties', changeFrequency: 'daily', priority: 0.9 },
   { path: '/about', changeFrequency: 'monthly', priority: 0.7 },
   { path: '/services', changeFrequency: 'monthly', priority: 0.7 },
+  { path: '/snagging', changeFrequency: 'monthly', priority: 0.6 },
   { path: '/renovations', changeFrequency: 'monthly', priority: 0.6 },
   { path: '/team', changeFrequency: 'monthly', priority: 0.6 },
   { path: '/careers', changeFrequency: 'weekly', priority: 0.6 },
@@ -21,6 +23,13 @@ const STATIC_ROUTES: Array<{
   { path: '/blog', changeFrequency: 'weekly', priority: 0.7 },
   { path: '/list-property', changeFrequency: 'monthly', priority: 0.6 },
   { path: '/contact', changeFrequency: 'monthly', priority: 0.7 },
+  ...(process.env.LEAD_INTAKE_ENABLED === 'true'
+    ? [{
+        path: '/register-interest',
+        changeFrequency: 'monthly' as const,
+        priority: 0.8,
+      }]
+    : []),
   { path: '/legal/privacy-policy', changeFrequency: 'yearly', priority: 0.3 },
   { path: '/legal/terms-of-service', changeFrequency: 'yearly', priority: 0.3 },
   { path: '/legal/cookie-policy', changeFrequency: 'yearly', priority: 0.3 },
