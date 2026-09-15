@@ -1,5 +1,30 @@
 # Haus releases
 
+## Restart checkpoint — 15 September 2026
+
+Surya requested saving work before restarting the PC. The Haus website, local
+Studio and related project servers were stopped; checks of ports 3000, 3001,
+3110, 3333 and 55432 found no listeners. Resume services only when requested.
+
+- Continue on the existing Release 2 branch below. Preserve local uncommitted
+  handoffs, `CLAUDE.md`, ignored environment files and local assets.
+- The current backend recommendation and remaining implementation/access work
+  are recorded in `docs/hosted-staging-setup-2026-09-14.md`. It is a plan, not a
+  completed hosted deployment: Railway test environment plus its own PostgreSQL,
+  existing Sanity, and a proposed shared Resend sender. Durable lead delivery
+  still needs its Resend adapter; company hosting/email access remains pending.
+- Florence work is explicitly paused. All six records remain Sanity drafts;
+  public publication waits for Surya's discussion with Deb and Sonia. Do not
+  change or publish the properties while resuming unrelated backend work.
+- The only article-artwork pack to send is `artifacts/SEND-TO-DESIGNERS.zip`.
+  It contains nine original covers, labelled previews and designer instructions.
+  Older packs and working folders are archived under `artifacts/_archive/`.
+  Contacts: Desire, Adifah and Likith; target 1920 × 1080, 16:9, full bleed.
+- GA4/GTM IDs and access remain pending Sonia/Deb. The 15 September reminder
+  was delivered. Do not add a second tracking snippet or claim real receipt.
+- Main, production deployment, customer campaigns and Sanity publication remain
+  separate from saving or resuming this work.
+
 ## Release 1 — next to deploy
 
 Branch: `suryak02/technical-seo-fixes`, [PR #15](https://github.com/deb-pradhan/Haus-Of-Estate/pull/15), reviewed against `main`.
