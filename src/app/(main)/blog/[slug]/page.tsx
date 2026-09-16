@@ -215,14 +215,14 @@ async function PostContent({ slug }: { slug: string }) {
 
         {/* Hero image */}
         {imageUrl && (
-          <div className="relative mt-8 aspect-[16/10] overflow-hidden rounded-2xl bg-stone-100 sm:aspect-[16/9] md:rounded-3xl">
+          <div className="relative mt-8 aspect-video overflow-hidden rounded-2xl bg-stone-100 md:rounded-3xl">
             <Image
               src={imageUrl}
               alt={alt}
               fill
               priority
               sizes="(max-width: 1152px) 100vw, 1152px"
-              className="object-cover"
+              className="object-contain"
             />
           </div>
         )}

@@ -67,7 +67,10 @@ function readItems(payload: unknown): SavedItem[] {
 function savedImageUrl(content: SavedDocument): string | null {
   if (!content.featuredImage) return null;
   try {
-    return urlFor(content.featuredImage).width(800).height(500).fit("crop").url();
+    const image = urlFor(content.featuredImage);
+    return content._type === "post"
+      ? image.ignoreImageParams().width(800).fit("max").url()
+      : image.width(800).height(500).fit("crop").url();
   } catch {
     return null;
   }
@@ -99,14 +102,14 @@ function SavedCard({ item }: { item: SavedItem }) {
         href={href}
         className="flex flex-1 flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-estate-700/50 focus-visible:ring-inset"
       >
-        <div className="relative aspect-[16/10] overflow-hidden bg-estate-700/8">
+        <div className={`relative overflow-hidden bg-estate-700/8 ${isProperty ? "aspect-[16/10]" : "aspect-video"}`}>
           {imageUrl ? (
             <Image
               src={imageUrl}
               alt={item.content.title}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 380px"
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              className={isProperty ? "object-cover transition-transform duration-500 group-hover:scale-105" : "object-contain"}
             />
           ) : (
             <div className="flex h-full items-center justify-center bg-gradient-to-br from-estate-700/5 to-gold-400/15">

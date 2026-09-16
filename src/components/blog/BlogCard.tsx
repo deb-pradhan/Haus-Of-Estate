@@ -55,8 +55,8 @@ export function BlogCard({ post, variant = 'default', index = 0 }: BlogCardProps
     return (
       <Link href={`/blog/${post.slug}`} className="group flex items-start gap-3">
         {imageUrl && (
-          <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-stone-100">
-            <Image src={imageUrl} alt={alt} fill sizes="56px" className="object-contain" />
+          <div className="relative aspect-video w-24 flex-shrink-0 overflow-hidden rounded-lg bg-stone-100">
+            <Image src={imageUrl} alt={alt} fill sizes="96px" className="object-contain" />
           </div>
         )}
         <div className="min-w-0">
