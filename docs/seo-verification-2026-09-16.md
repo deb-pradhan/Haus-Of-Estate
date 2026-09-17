@@ -229,3 +229,51 @@ Their Google requests were intercepted, so they never proved GA4 receipt.
 confirms several existing fixes plus prepared Release 1/2 work, but speed
 targets, live deployment, account setup/measurement, content revision and other
 acceptance gaps remain. There is no evidence here of ranking or traffic gains.
+
+## How to verify the speed targets — 17 September
+
+**No GA4 access is needed for the Lighthouse/PageSpeed speed tests.** Account
+access is a separate requirement for proving analytics collection. The six
+existing code checks did not measure LCP or TBT. No speed run was performed
+when adding this procedure.
+
+1. Confirm the current Release 1 and main commits, then test their production
+   builds on equivalent infrastructure with the same CMS content. Keep the
+   existing Release 2 working copy intact. A local production build can help
+   diagnose browser work; it does not establish deployed network/server speed.
+   Do not use `next dev` for acceptance measurements or compare local dev with
+   hosted production. A protected test site can be measured with Lighthouse
+   in an authorised browser without opening it to public indexing.
+2. Run Lighthouse Performance in mobile mode with fixed Lighthouse/Chrome
+   versions, viewport, CPU/network throttling and cache policy. Record whether
+   consent is unset, rejected or accepted. Once the actual third-party tags
+   are configured, test the accepted state too; placeholder/stub tags do not
+   establish their real performance cost.
+3. Start with the homepage, then `/properties`, a published property detail,
+   `/blog` and a published article. Extend coverage across public page
+   templates and the audit's affected URLs before claiming sitewide success.
+   Ensure each test renders the real intended page, not an error or login gate.
+4. Proposed acceptance protocol: five comparable mobile runs per page/build,
+   retaining all HTML/JSON reports. Report the median and full range, with
+   **median LCP <2.5 seconds and median TBT <200 milliseconds** as the initial
+   lab criterion. These repetition/aggregation choices are our proposed test
+   protocol, not a Google mandate or a criterion stated in the original audit.
+   Investigate unstable or recurring failed runs rather than hiding them in
+   a passing median. Record commit, URL, date, environment and consent state.
+5. Compare baseline and release under those same conditions. If LCP fails,
+   inspect the largest element, server response and its resource/render delay.
+   If TBT fails, inspect long JavaScript tasks and third-party execution.
+   Rerun the affected pages after a fix. Measure cumulative Release 2 separately
+   because its additional features can change performance.
+6. After deployment, verify real-user LCP using PageSpeed Insights/CrUX or
+   Search Console when sufficient traffic exists. Google's good threshold is
+   **LCP ≤2.5 seconds at the 75th percentile**, assessed separately for mobile
+   and desktop; the original audit asks for the stricter wording “below”.
+   Public CrUX data covers a rolling 28-day window, so early results mix old
+   and new releases. A new/private test URL may have no field data. TBT is a
+   lab metric; field responsiveness uses INP, and passing LCP/TBT alone does
+   not establish a full Core Web Vitals pass.
+
+Sources: [Google LCP guidance](https://web.dev/articles/lcp),
+[Google TBT measurement guidance](https://web.dev/articles/tbt),
+[PageSpeed Insights lab/field data](https://developers.google.com/speed/docs/insights/v5/about).

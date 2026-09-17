@@ -56,6 +56,12 @@ Google Cloud credentials are not the requested input.
 
 ## Next finish line
 
+Update, 17 September: Desire directed Surya to **Fatima** to identify the
+designers responsible for the outstanding blog covers. Do not assign those
+images to Adifah or assume Fatima created them. Surya also asked for an
+immediate reminder to discuss the email setup with Sonia; the reminder was
+given in the conversation, and no message was sent to Sonia.
+
 Agree the existing company email accounts and owners, a monitored team inbox,
 whether Excel is still required, and access to an isolated hosted test site and
 database. Surya does not want a local backend. A Vercel link could demonstrate

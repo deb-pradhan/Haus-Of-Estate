@@ -45,6 +45,12 @@ additional 3:2 cover found in the current CMS read. Generic fallback covers and
 near-16:9 images are separate, lower-priority artwork decisions. Adifah is not
 assigned an outstanding task based on assumptions.
 
+Update, 17 September: Desire asked Surya to contact **Fatima**, who may know
+which designers created the remaining covers. Fatima is the next contact for
+identifying those owners; she is not assumed to be the designer herself.
+Desire and Likith remain the sources of the received artwork. The requirement
+remains full-bleed 1920 × 1080 (16:9), with no white padding.
+
 ## Website changes and verification
 
 - Article hero: 16:9 at mobile and desktop, preserving the full artwork.
@@ -69,4 +75,3 @@ The Airport post already had a draft; all those earlier draft fields were
 preserved. Review the complete draft before any publication decision.
 Publication remains separate under the standing release instructions in
 `AGENTS.md`.
-
