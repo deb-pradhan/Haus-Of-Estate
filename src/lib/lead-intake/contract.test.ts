@@ -22,6 +22,77 @@ function request(overrides: Record<string, unknown> = {}) {
 }
 
 describe("lead intake v2 contract", () => {
+  it("accepts a general question without opting into marketing", () => {
+    const result = leadIntakeV2Schema.parse(request({
+      interest: "general_enquiry",
+      contact: {
+        firstName: "Alex",
+        email: "alex@example.com",
+        message: "  What services do you offer?  ",
+      },
+      context: { surface: "query_page", pagePath: "/enquire" },
+    }));
+
+    expect(result.contact.message).toBe("What services do you offer?");
+    expect(result.newsletterOptIn).toBe(false);
+    expect(result.propertyMatchOptIn).toBe(false);
+    expect(result.overseasCashBuyer).toBe(false);
+  });
+
+  it.each(["general_enquiry", "buy", "rent", "invest", "sell_let"])(
+    "requires a question for %s on the query page",
+    (interest) => {
+      for (const message of [undefined, "", " \n\t "]) {
+        const result = leadIntakeV2Schema.safeParse(request({
+          interest,
+          contact: { firstName: "Alex", email: "alex@example.com", message },
+          context: { surface: "query_page", pagePath: "/enquire" },
+        }));
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.error.issues).toEqual(expect.arrayContaining([
+            expect.objectContaining({ path: ["contact", "message"] }),
+          ]));
+        }
+      }
+    },
+  );
+
+  it("keeps the question length limit and excludes newsletter-only query submissions", () => {
+    const base = request({
+      interest: "general_enquiry",
+      contact: { firstName: "Alex", email: "alex@example.com", message: "a".repeat(2_000) },
+      context: { surface: "query_page", pagePath: "/enquire" },
+    });
+    expect(leadIntakeV2Schema.safeParse(base).success).toBe(true);
+    expect(leadIntakeV2Schema.safeParse({
+      ...base,
+      contact: { ...base.contact, message: "a".repeat(2_001) },
+    }).success).toBe(false);
+    expect(leadIntakeV2Schema.safeParse({
+      ...base,
+      interest: "newsletter_only",
+      newsletterOptIn: true,
+    }).success).toBe(false);
+  });
+
+  it.each(["propertyMatchOptIn", "overseasCashBuyer"])(
+    "rejects %s on a general enquiry",
+    (field) => {
+      const result = leadIntakeV2Schema.safeParse(request({
+        interest: "general_enquiry",
+        contact: { firstName: "Alex", email: "alex@example.com", message: "Please explain your services." },
+        [field]: true,
+      }));
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues).toEqual(expect.arrayContaining([
+          expect.objectContaining({ path: [field] }),
+        ]));
+      }
+    },
+  );
+
   it("keeps ordinary enquiries valid with both marketing choices clear", () => {
     const result = leadIntakeV2Schema.safeParse(request());
     expect(result.success).toBe(true);

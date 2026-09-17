@@ -22,6 +22,7 @@ export const leadInterestSchema = z.enum([
   "rent",
   "invest",
   "sell_let",
+  "general_enquiry",
   "newsletter_only",
 ]);
 
@@ -84,6 +85,7 @@ export const leadIntakeV2Schema = z
           "manual_cta",
           "newsletter",
           "register_interest",
+          "query_page",
         ]),
         pagePath: z.string().trim().min(1).max(500),
         referrer: optionalString(1_000),
@@ -137,6 +139,29 @@ export const leadIntakeV2Schema = z
         code: "custom",
         path: ["newsletterOptIn"],
         message: "Confirm that you want to receive the newsletter.",
+      });
+    }
+
+    if (
+      (input.interest === "general_enquiry" ||
+        input.context.surface === "query_page") &&
+      !input.contact.message
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["contact", "message"],
+        message: "Tell us what you would like help with.",
+      });
+    }
+
+    if (
+      input.context.surface === "query_page" &&
+      input.interest === "newsletter_only"
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["interest"],
+        message: "Choose a topic for your question.",
       });
     }
 

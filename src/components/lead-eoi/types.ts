@@ -1,4 +1,5 @@
 export type LeadInterest =
+  | "general_enquiry"
   | "buy"
   | "rent"
   | "invest"
@@ -6,6 +7,7 @@ export type LeadInterest =
   | "newsletter_only";
 
 export type LeadSurface =
+  | "query_page"
   | "modal"
   | "manual_cta"
   | "newsletter"

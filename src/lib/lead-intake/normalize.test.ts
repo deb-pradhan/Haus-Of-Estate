@@ -88,6 +88,27 @@ function hashQualifierContractShape(input: NormalizedLead): string {
 }
 
 describe("normalizeLeadRequest", () => {
+  it("clears hidden property context for general questions and retains campaign attribution", () => {
+    const request = v2({
+      interest: "general_enquiry",
+      preferences: { market: "Dubai", location: "Marina", bedrooms: "2" },
+      project: { slug: "old-property-selection" },
+      contact: { firstName: "Alex", email: "alex@example.com", message: "  What services do you offer?  " },
+      context: { surface: "query_page", pagePath: "/enquire?utm_source=instagram", utmSource: "instagram", utmCampaign: "have-a-query" },
+    });
+    const result = normalizeLeadRequest(request);
+    expect(Object.values(result.preferences).every((value) => value === undefined)).toBe(true);
+    expect(result.project).toBeUndefined();
+    expect(result.contact.message).toBe("What services do you offer?");
+    expect(result.context).toMatchObject({ surface: "query_page", pagePath: "/enquire", utmSource: "instagram", utmCampaign: "have-a-query" });
+    expect(hashNormalizedLead(result)).toBe(hashNormalizedLead(normalizeLeadRequest({
+      ...request, preferences: {}, project: undefined,
+    })));
+    expect(hashNormalizedLead(result)).not.toBe(hashNormalizedLead(normalizeLeadRequest({
+      ...request, contact: { ...request.contact, message: "Do you offer property management?" },
+    })));
+  });
+
   it("accepts an optional blank phone and normalizes contact/context fields", () => {
     const result = normalizeLeadRequest(v2());
 

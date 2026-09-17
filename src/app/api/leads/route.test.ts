@@ -76,6 +76,35 @@ afterEach(() => {
 });
 
 describe("POST /api/leads", () => {
+  it("accepts a social query through the existing persisted delivery flow", async () => {
+    const response = await POST(request(v2({
+      interest: "general_enquiry",
+      contact: { firstName: "Alex", email: "alex@example.com", message: "Can you help me understand the buying process?" },
+      context: { surface: "query_page", pagePath: "/enquire", utmSource: "instagram", utmCampaign: "have-a-query" },
+    })));
+
+    expect(response.status).toBe(201);
+    expect(mocks.submitLeadIntake).toHaveBeenCalledWith(expect.objectContaining({
+      interest: "general_enquiry",
+      contact: expect.objectContaining({ message: "Can you help me understand the buying process?" }),
+      context: expect.objectContaining({ surface: "query_page", utmSource: "instagram", utmCampaign: "have-a-query" }),
+      newsletterOptIn: false,
+      propertyMatchOptIn: false,
+    }), expect.any(String));
+    expect(mocks.attemptImmediateLeadDelivery).toHaveBeenCalledWith("outbox-id");
+    expect(mocks.notifyLegacyLead).not.toHaveBeenCalled();
+  });
+
+  it("rejects blank questions before persistence or delivery on the query page", async () => {
+    const response = await POST(request(v2({
+      contact: { firstName: "Alex", email: "alex@example.com", message: " \n " },
+      context: { surface: "query_page", pagePath: "/enquire" },
+    })));
+    expect(response.status).toBe(400);
+    expect(mocks.submitLeadIntake).not.toHaveBeenCalled();
+    expect(mocks.attemptImmediateLeadDelivery).not.toHaveBeenCalled();
+  });
+
   it("returns 201 only after a new submission is persisted", async () => {
     const response = await POST(request(v2()));
     expect(response.status).toBe(201);

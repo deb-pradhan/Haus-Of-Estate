@@ -126,6 +126,59 @@ function database(overrides: Record<string, unknown> = {}) {
 }
 
 describe("Prisma lead intake transaction", () => {
+  it("persists a social query and queues its question and source without marketing subscriptions", async () => {
+    const { client, transaction } = database();
+    const store = createPrismaLeadIntakeStore(client as never);
+    const input = normalizeLeadRequest({
+      submissionId: "6bd94ff9-6dc6-4eff-8cb0-1bda245e595a",
+      interest: "general_enquiry",
+      contact: { firstName: "Alex", email: "alex@example.com", message: "Can you explain your buying process?" },
+      privacyAcknowledged: true,
+      formVersion: LEAD_FORM_VERSION,
+      privacyNoticeVersion: PRIVACY_NOTICE_VERSION,
+      context: { surface: "query_page", pagePath: "/enquire", utmSource: "instagram", utmMedium: "social", utmCampaign: "have-a-query" },
+    });
+    await store.persistSubmission({
+      ...submission(),
+      input,
+      payloadHash: hashNormalizedLead(input),
+      scoring: { score: 10, tier: "nurture", routing: "general" },
+    });
+
+    expect(transaction.lead.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        intent: "general_enquiry",
+        message: "Can you explain your buying process?",
+        formSurface: "query_page",
+        pagePath: "/enquire",
+        utmSource: "instagram",
+        utmMedium: "social",
+        utmCampaign: "have-a-query",
+        routing: "general",
+        consentGiven: true,
+        propertyMatchOptIn: false,
+        newsletterOptIn: false,
+      }),
+    });
+    expect(transaction.leadDeliveryOutbox.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ payload: expect.objectContaining({
+        row: expect.objectContaining({
+          interest: "general_enquiry",
+          notes: "Can you explain your buying process?",
+          source: "instagram",
+          campaign: "have-a-query",
+          landingPage: "/enquire",
+          propertyMatchOptIn: false,
+          newsletterOptIn: false,
+        }),
+      }) }),
+    });
+    expect(transaction.newsletterSubscription.create).not.toHaveBeenCalled();
+    expect(transaction.newsletterConsentEvent.create).not.toHaveBeenCalled();
+    expect(transaction.propertyMatchSubscription.create).not.toHaveBeenCalled();
+    expect(transaction.propertyMatchConsentEvent.create).not.toHaveBeenCalled();
+  });
+
   it("keeps the enquiry message in the durable lead and operational outbox only", async () => {
     const { client, transaction } = database();
     const store = createPrismaLeadIntakeStore(client as never);

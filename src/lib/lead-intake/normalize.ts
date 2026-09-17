@@ -10,8 +10,7 @@ import {
 } from "./contract";
 import { LeadValidationError } from "./errors";
 
-export type NormalizedLeadInterest =
-  LeadIntakeV2Input["interest"] | "general_enquiry";
+export type NormalizedLeadInterest = LeadIntakeV2Input["interest"];
 
 export interface NormalizedLeadIntake {
   submissionId: string;
@@ -111,7 +110,10 @@ export function normalizeReferrer(
 }
 
 function fromV2(input: LeadIntakeV2Input): NormalizedLeadIntake {
-  const preferences = input.preferences ?? {};
+  // Switching from a property brief to a general question must not carry
+  // hidden property criteria into the saved enquiry or its staff notification.
+  const isGeneralEnquiry = input.interest === "general_enquiry";
+  const preferences = isGeneralEnquiry ? {} : (input.preferences ?? {});
   return {
     submissionId: input.submissionId,
     interest: input.interest,
@@ -123,7 +125,7 @@ function fromV2(input: LeadIntakeV2Input): NormalizedLeadIntake {
       bathrooms: compact(preferences.bathrooms),
       timeframe: compact(preferences.timeframe),
     },
-    project: input.project,
+    project: isGeneralEnquiry ? undefined : input.project,
     contact: {
       firstName: compact(input.contact.firstName)!,
       email: input.contact.email.trim().toLowerCase(),

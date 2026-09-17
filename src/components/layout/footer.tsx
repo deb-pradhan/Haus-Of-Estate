@@ -11,6 +11,7 @@ import {
 import { useLeadModals } from "@/components/lead-modal/modal-context";
 import { SocialProfileLinks } from "@/components/social/social-profile-links";
 import { CookieSettingsButton } from "@/components/analytics/consent-manager";
+import { useLeadEoi } from "@/components/lead-eoi/lead-eoi-controller";
 
 const COMPANY_PHONE_DISPLAY = "+44 7496 033321";
 const COMPANY_PHONE_HREF = "tel:+447496033321";
@@ -28,6 +29,7 @@ function WhatsAppGlyph() {
 
 export function Footer() {
   const { openBuyer, openSeller } = useLeadModals();
+  const { enabled: leadIntakeEnabled } = useLeadEoi();
   const year = new Date().getFullYear();
 
   return (
@@ -104,6 +106,7 @@ export function Footer() {
           <FooterLink href="/careers">Careers</FooterLink>
           <FooterLink href="/faq">FAQs</FooterLink>
           <FooterLink href="/contact">Contact us</FooterLink>
+          {leadIntakeEnabled ? <FooterLink href="/enquire">Have a query?</FooterLink> : null}
           <FooterLink href="/legal/privacy-policy">Privacy policy</FooterLink>
           <FooterLink href="/legal/terms-of-service">Terms of service</FooterLink>
           <FooterLink href="/legal/cookie-policy">Cookie policy</FooterLink>

@@ -28,6 +28,10 @@ const STATIC_ROUTES: Array<{
         path: '/register-interest',
         changeFrequency: 'monthly' as const,
         priority: 0.8,
+      }, {
+        path: '/enquire',
+        changeFrequency: 'monthly' as const,
+        priority: 0.6,
       }]
     : []),
   { path: '/legal/privacy-policy', changeFrequency: 'yearly', priority: 0.3 },

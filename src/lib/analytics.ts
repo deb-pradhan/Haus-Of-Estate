@@ -13,7 +13,7 @@ const ASSISTANT_EVENTS = new Set(["property_assistant_opened", "property_assista
 
 const PUBLIC_PAGES = new Set([
   "/", "/about", "/team", "/services", "/snagging", "/renovations", "/faq", "/contact",
-  "/list-property", "/register-interest", "/careers", "/blog", "/properties", "/properties/residential",
+  "/list-property", "/register-interest", "/enquire", "/careers", "/blog", "/properties", "/properties/residential",
   "/properties/commercial", "/legal/privacy-policy", "/legal/cookie-policy", "/legal/terms-of-service",
 ]);
 
@@ -125,13 +125,13 @@ export function trackAnalytics(event: AnalyticsEvent, values: Record<string, unk
     if (["residential", "commercial"].includes(String(values.category))) payload.category = values.category;
     if (["ready", "off-plan"].includes(String(values.availability))) payload.availability = values.availability;
   } else if (LEAD_EVENTS.has(event)) {
-    if (typeof values.surface !== "string" || !["modal", "manual_cta", "newsletter", "register_interest"].includes(values.surface)) return;
+    if (typeof values.surface !== "string" || !["modal", "manual_cta", "newsletter", "register_interest", "query_page"].includes(values.surface)) return;
     if (typeof values.form_version !== "string" || !/^\d{4}-\d{2}-\d{2}\.v[1-9]\d{0,2}$/.test(values.form_version)) return;
     payload.form_name = "lead_eoi";
     payload.form_version = values.form_version;
     payload.surface = values.surface;
     // Null explicitly clears previous event values from GTM's persistent layer.
-    payload.interest = typeof values.interest === "string" && ["buy", "rent", "invest", "sell_let", "newsletter_only"].includes(values.interest) ? values.interest : null;
+    payload.interest = typeof values.interest === "string" && ["buy", "rent", "invest", "sell_let", "newsletter_only", "general_enquiry"].includes(values.interest) ? values.interest : null;
     payload.step = typeof values.step === "number" && Number.isInteger(values.step) && values.step >= 1 && values.step <= 3 ? values.step : null;
     payload.has_project = typeof values.has_project === "boolean" ? values.has_project : null;
   } else if (ASSISTANT_EVENTS.has(event)) {

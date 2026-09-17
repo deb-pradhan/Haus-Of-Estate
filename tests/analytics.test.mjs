@@ -14,6 +14,7 @@ test("public-page allowlist excludes private, preview, draft, local and non-prod
   assert.equal(analyticsPage("https://hausofestate.com/blog/article", true), null);
   assert.equal(analyticsPage("https://hausofestate.com/", false, false), null);
   assert.equal(analyticsPage("https://hausofestate.com/register-interest")?.page_path, "/register-interest");
+  assert.equal(analyticsPage("https://hausofestate.com/enquire?utm_source=instagram")?.page_location, "https://hausofestate.com/enquire");
   assert.deepEqual(analyticsPage("https://hausofestate.com/properties/azizi-florence?email=private@example.com#contact"), {
     page_path: "/properties/azizi-florence", page_location: "https://hausofestate.com/properties/azizi-florence", page_referrer: "", page_title: "properties",
   });
@@ -113,6 +114,14 @@ test("runtime gates scripts, drops backlog and PII, deduplicates pages, revokes 
     assert.equal(window.dataLayer.at(-1).interest, null);
     assert.equal(window.dataLayer.at(-1).step, null);
     assert.equal(window.dataLayer.at(-1).has_project, null);
+
+    trackAnalytics("lead_submit_success", {
+      form_version: "2026-09-01.v4", surface: "query_page", interest: "general_enquiry",
+      message: "Private Person wants advice", email: "private@example.com", utm_campaign: "secret",
+    });
+    assert.equal(window.dataLayer.at(-1).surface, "query_page");
+    assert.equal(window.dataLayer.at(-1).interest, "general_enquiry");
+    assert.doesNotMatch(JSON.stringify(window.dataLayer.at(-1)), /Private Person|private@example|secret/);
 
     for (const event of ["property_assistant_opened", "property_assistant_results_shown", "property_assistant_adviser_handoff"]) {
       trackAnalytics(event, { route_scope: "home", result_count: 999, prompt: "secret", message: "Private Person", conversation_id: "user-1" });
