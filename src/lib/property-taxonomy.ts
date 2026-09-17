@@ -240,14 +240,6 @@ export function buildPropertiesMenu(): MenuColumn[] {
           },
         ],
       },
-      {
-        heading: 'Browse by type',
-        links: TYPES_BY_CATEGORY[category].map((type) => ({
-          label: type,
-          href: buildPropertiesHref({ category, type }),
-          muted: categoryMuted,
-        })),
-      },
     ]
 
     return {
