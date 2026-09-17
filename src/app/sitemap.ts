@@ -5,6 +5,17 @@ import { HAUS_SITE_ORIGIN } from '@/lib/share'
 
 const SITE_URL = HAUS_SITE_ORIGIN
 
+interface ContentSitemapEntry {
+  slug: string
+  _updatedAt?: string | null
+}
+
+function modificationMetadata(updatedAt: string | null | undefined) {
+  if (!updatedAt) return {}
+  const date = new Date(updatedAt)
+  return Number.isNaN(date.valueOf()) ? {} : { lastModified: date }
+}
+
 // Static routes with sensible SEO weighting.
 const STATIC_ROUTES: Array<{
   path: string
@@ -40,11 +51,9 @@ const STATIC_ROUTES: Array<{
 ]
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const now = new Date()
-
+  // Omit dates for static pages until their actual content revision is known.
   const staticEntries: MetadataRoute.Sitemap = STATIC_ROUTES.map((route) => ({
     url: `${SITE_URL}${route.path}`,
-    lastModified: now,
     changeFrequency: route.changeFrequency,
     priority: route.priority,
   }))
@@ -54,14 +63,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Pull dynamic blog post + property slugs from Sanity. Never let the
   // sitemap throw — fall back to static routes if anything goes wrong.
   try {
-    const { data: posts } = await sanityFetch<Array<{ slug: string }>>({
+    const { data: posts } = await sanityFetch<ContentSitemapEntry[]>({
       query: POST_SLUGS_QUERY,
     })
     for (const post of posts ?? []) {
       if (post?.slug) {
         dynamicEntries.push({
           url: `${SITE_URL}/blog/${post.slug}`,
-          lastModified: now,
+          ...modificationMetadata(post._updatedAt),
           changeFrequency: 'monthly',
           priority: 0.6,
         })
@@ -72,14 +81,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   try {
-    const { data: properties } = await sanityFetch<Array<{ slug: string }>>({
+    const { data: properties } = await sanityFetch<ContentSitemapEntry[]>({
       query: PROPERTY_SLUGS_QUERY,
     })
     for (const property of properties ?? []) {
       if (property?.slug) {
         dynamicEntries.push({
           url: `${SITE_URL}/properties/${property.slug}`,
-          lastModified: now,
+          ...modificationMetadata(property._updatedAt),
           changeFrequency: 'weekly',
           priority: 0.7,
         })

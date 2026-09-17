@@ -72,7 +72,8 @@ export const CATEGORIES_QUERY = `
 
 export const POST_SLUGS_QUERY = `
   *[_type == "post" && ${VISIBLE_EDITORIAL_DOCUMENT} && defined(slug.current)] {
-    "slug": slug.current
+    "slug": slug.current,
+    _updatedAt
   }
 `
 
@@ -225,7 +226,8 @@ export const PROPERTY_BY_SLUG_QUERY = `
 
 export const PROPERTY_SLUGS_QUERY = `
   *[_type == "property" && ${VISIBLE_EDITORIAL_DOCUMENT} && defined(slug.current)] {
-    "slug": slug.current
+    "slug": slug.current,
+    _updatedAt
   }
 `
 
