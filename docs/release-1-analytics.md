@@ -2,6 +2,14 @@
 
 Branch: `suryak02/technical-seo-fixes`. Keep this release ahead of the cumulative Florence / website overhaul branch. Deployment and publication of the GTM container remain separate from preparing the PR.
 
+Update, 18 September: Sonia acknowledged the access request at 23:26 UK on
+17 September and will arrange it in the morning. Await the company GTM ID/Edit,
+GA4 Measurement ID/Editor and Search Console Full invitations for
+`kommurisurya@gmail.com`; the reply did not grant access or supply IDs. Do not
+resend the request. PR #15 now also prepares the explicitly requested urgent
+careers closure and contact corrections; see
+[`urgent-careers-closure-2026-09-18.md`](urgent-careers-closure-2026-09-18.md).
+
 ## What the site implements
 
 - `NEXT_PUBLIC_GTM_ID` remains the only required application analytics setting. Leave it unset until the correct GTM container is ready. Its value is public, such as `GTM-ABC1234`, never a private token or a GA4 measurement ID.

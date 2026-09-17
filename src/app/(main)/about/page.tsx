@@ -20,7 +20,6 @@ import {
   Tag,
   Settings2,
   Plane,
-  Briefcase,
   Newspaper,
   Lightbulb,
   Mail,
@@ -40,7 +39,7 @@ import { TeamPreview } from "@/components/team/team-preview";
 // ── Contact details (kept in sync with the site footer) ──────────────────
 const COMPANY_PHONE_DISPLAY = "+44 7496 033321";
 const COMPANY_PHONE_HREF = "tel:+447496033321";
-const WHATSAPP_URL = "https://wa.me/447496033321";
+const WHATSAPP_URL = "https://wa.me/971585607033";
 const COMPANY_EMAIL = "info@hausofestate.com";
 
 const BELIEFS = [
@@ -701,66 +700,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ─── Careers ────────────────────────────────────────────────── */}
-      <section className="bg-subtle">
-        <div className="mx-auto max-w-6xl px-4 py-20 md:px-6 md:py-28">
-          <div className="grid gap-10 md:grid-cols-12 md:gap-16">
-            <div className="md:col-span-5">
-              <p className="font-serif text-sm font-medium uppercase tracking-[0.25em] text-gold-500">
-                Careers at Haus of Estate
-              </p>
-              <h2 className="mt-3 font-serif text-3xl font-medium leading-tight text-estate-700 md:text-4xl">
-                Build your career with us.
-              </h2>
-              <p className="mt-5 text-base leading-relaxed text-muted-foreground">
-                We&apos;re a 24-hour business across three continents, hiring people who put the client first. Explore our current internship and full-time vacancies, then apply with your CV, LinkedIn profile and a short cover letter.
-              </p>
-              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                <Button asChild size="lg" className="bg-estate-700 text-white hover:bg-estate-700/90">
-                  <Link href="/careers#jobs">
-                    Current opportunities <ArrowRight className="ml-1.5 h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" size="lg">
-                  <Link href="/careers#jobs">Apply now</Link>
-                </Button>
-              </div>
-            </div>
-            <div className="md:col-span-7">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-2xl border border-border bg-surface p-6">
-                  <Briefcase className="h-6 w-6 text-gold-500" />
-                  <h3 className="mt-4 font-serif text-lg font-medium text-estate-700">
-                    Full-time roles
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                    Property consultants, client managers and marketing specialists across the UK and UAE.
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-border bg-surface p-6">
-                  <GraduationCap className="h-6 w-6 text-gold-500" />
-                  <h3 className="mt-4 font-serif text-lg font-medium text-estate-700">
-                    Internships
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                    Hands-on placements for those starting out — real work, real mentorship, real responsibility.
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-border bg-surface p-6 sm:col-span-2">
-                  <ClipboardCheck className="h-6 w-6 text-gold-500" />
-                  <h3 className="mt-4 font-serif text-lg font-medium text-estate-700">
-                    How to apply
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                    Upload your CV, add your LinkedIn profile and a short cover letter on the careers page. We read every application and reply to those that fit.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* ─── Contact & social ───────────────────────────────────────── */}
       <section className="bg-surface">
         <div className="mx-auto max-w-6xl px-4 py-20 md:px-6 md:py-24">
@@ -869,7 +808,7 @@ export default function AboutPage() {
                 Take the next step
               </p>
               <h2 className="mt-3 font-serif text-3xl font-medium leading-tight md:text-5xl">
-                Ready to buy, rent, invest or build your career?
+                Ready to buy, rent or invest?
               </h2>
               <p className="mt-4 text-base leading-relaxed text-white/80 md:text-lg">
                 Contact Haus of Estate today. A 15-minute conversation is enough to know whether we&apos;re the right firm for what you&apos;re trying to do. No waiting list. No obligation.

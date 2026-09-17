@@ -91,6 +91,14 @@ export const viewport: Viewport = {
 };
 
 // Site-wide structured data (JSON-LD) for SEO rich results.
+const officeAddress = {
+  "@type": "PostalAddress",
+  streetAddress: "115 City Road, Unit A",
+  addressLocality: "Cardiff",
+  addressRegion: "Wales",
+  postalCode: "CF24 3BP",
+  addressCountry: "GB",
+};
 const jsonLd = {
   "@context": "https://schema.org",
   "@graph": [
@@ -100,6 +108,7 @@ const jsonLd = {
       name: SITE_NAME,
       url: SITE_URL,
       logo: `${SITE_URL}/Vector-1.svg`,
+      address: officeAddress,
       sameAs: [
         "https://www.instagram.com/haus_of_estate/",
         "https://www.linkedin.com/company/115804984/",
@@ -126,6 +135,7 @@ const jsonLd = {
       email: "info@hausofestate.com",
       areaServed: ["GB", "AE", "ID", "CY"],
       priceRange: "$$$",
+      address: officeAddress,
     },
     {
       "@type": "WebSite",

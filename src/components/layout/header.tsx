@@ -17,7 +17,6 @@ import {
   Sofa,
   PaintRoller,
   Users as UsersIcon,
-  Briefcase,
   HelpCircle,
   Info,
   Home,
@@ -35,7 +34,7 @@ import {
 } from "@/lib/property-taxonomy";
 
 const WHATSAPP_URL_HEADER =
-  "https://wa.me/447496033321?utm_source=site&utm_medium=header&utm_campaign=whatsapp";
+  "https://wa.me/971585607033?utm_source=site&utm_medium=header&utm_campaign=whatsapp";
 const COMPANY_EMAIL = "info@hausofestate.com";
 const COMPANY_PHONES = [
   { region: "UK", display: "+44 7496 033321", href: "tel:+447496033321" },
@@ -167,7 +166,6 @@ const SERVICES_ITEMS: ServiceEntry[] = [
 const ABOUT_ITEMS: NavItem[] = [
   { href: "/about", label: "About us", desc: "Our story and the standard we hold.", icon: Info },
   { href: "/team", label: "Our team", desc: "The advisors behind every introduction.", icon: UsersIcon },
-  { href: "/careers", label: "Careers", desc: "Jobs, internships and how to apply.", icon: Briefcase },
   { href: "/faq", label: "FAQs", desc: "Common questions, plain-English answers.", icon: HelpCircle },
 ];
 

@@ -6,7 +6,7 @@ const COMPANY_EMAIL = 'info@hausofestate.com'
 const COMPANY_PHONE_DISPLAY = '+44 7496 033321'
 const COMPANY_PHONE_HREF = 'tel:+447496033321'
 const WHATSAPP_URL =
-  'https://wa.me/447496033321?utm_source=site&utm_medium=contact&utm_campaign=whatsapp'
+  'https://wa.me/971585607033?utm_source=site&utm_medium=contact&utm_campaign=whatsapp'
 
 export const metadata: Metadata = {
   title: 'Contact',
@@ -41,7 +41,7 @@ const METHODS = [
   {
     icon: MessageCircle,
     label: 'WhatsApp',
-    value: 'Chat with us',
+    value: '+971 58 560 7033',
     href: WHATSAPP_URL,
     hint: 'The fastest way to reach our team.',
   },
@@ -110,6 +110,9 @@ export default function ContactPage() {
                 <h2 className="font-serif text-xl font-medium text-estate-700 md:text-2xl">
                   Offices in the UK &amp; UAE
                 </h2>
+                <address className="mt-3 text-base not-italic leading-relaxed text-muted-foreground">
+                  115 City Road, Unit A, Cardiff, Wales, United Kingdom, CF24 3BP
+                </address>
                 <p className="mt-2 text-base leading-relaxed text-muted-foreground">
                   A 24-hour business spread across the United Kingdom and the
                   United Arab Emirates, serving buyers, landlords and investors

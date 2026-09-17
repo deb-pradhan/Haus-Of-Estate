@@ -7,13 +7,13 @@ export type AnalyticsEvent = "haus_page_view" | "haus_property_click" | "haus_ar
 
 const PUBLIC_PAGES = new Set([
   "/", "/about", "/team", "/services", "/renovations", "/faq", "/contact",
-  "/list-property", "/careers", "/blog", "/properties", "/properties/residential",
+  "/list-property", "/blog", "/properties", "/properties/residential",
   "/properties/commercial", "/legal/privacy-policy", "/legal/cookie-policy", "/legal/terms-of-service",
 ]);
 
 export function publicPath(pathname: string): string | null {
   const path = pathname.replace(/\/$/, "") || "/";
-  return PUBLIC_PAGES.has(path) || /^\/(properties|blog|careers)\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(path)
+  return PUBLIC_PAGES.has(path) || /^\/(properties|blog)\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(path)
     ? path : null;
 }
 

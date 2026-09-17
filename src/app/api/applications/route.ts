@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { CAREERS_CLOSED_HEADERS, CAREERS_PUBLIC_ENABLED } from "@/lib/careers-availability";
 import {
   sendApplicationToTeam,
   sendApplicationConfirmationToApplicant,
@@ -17,6 +18,14 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const URL_RE = /^https?:\/\/[^\s]+$/i;
 
 export async function POST(request: Request) {
+  // Reject old/cached application forms before reading personal data or sending mail.
+  if (!CAREERS_PUBLIC_ENABLED) {
+    return NextResponse.json(
+      { error: "Applications are currently closed." },
+      { status: 404, headers: CAREERS_CLOSED_HEADERS },
+    );
+  }
+
   let form: FormData;
   try {
     form = await request.formData();
