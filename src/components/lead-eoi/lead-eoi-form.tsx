@@ -505,21 +505,21 @@ export function LeadEoiForm({
         </div>
         <h2 className="mt-5 font-serif text-3xl font-medium text-estate-700">
           {successValues.interest === "newsletter_only"
-            ? "Subscription confirmed"
+            ? "Email preferences saved"
             : supportsPropertyMatches(successValues.interest)
               ? "Brief received"
               : "Enquiry received"}
         </h2>
         <p className="mt-3 max-w-md text-sm leading-6 text-muted-foreground">
           {successValues.interest === "newsletter_only"
-            ? "You are subscribed to Haus of Estate property news and insights."
+            ? "We’ve saved your request for Haus of Estate property news and insights. Our newsletter is still being prepared; this confirms your saved request, not an email being sent."
             : successValues.propertyMatchOptIn && successValues.newsletterOptIn
-              ? "Our team will respond to your brief. You will also receive matching property opportunities and the Haus of Estate newsletter."
+              ? "We’ve saved your brief for the team, along with your requests for matching properties and the newsletter. Our email updates are still being prepared."
               : successValues.propertyMatchOptIn
-                ? "Our team will respond to your brief. You will also receive property opportunities matching it."
+                ? "We’ve saved your brief for the team and your request for matching properties. Our email updates are still being prepared."
                 : successValues.newsletterOptIn
-                  ? "Our team will respond to your enquiry. You are also subscribed to the Haus of Estate newsletter."
-                  : "Our team has your details and will respond about your enquiry as soon as possible."}
+                  ? "We’ve saved your enquiry for the team and your newsletter request. Our newsletter is still being prepared."
+                  : "We’ve saved your details for the Haus of Estate team to follow up on your enquiry."}
         </p>
         <p className="mt-6 text-xs font-semibold uppercase text-muted-foreground">
           Follow along
@@ -545,7 +545,7 @@ export function LeadEoiForm({
 
   const isNewsletterOnly = values.interest === "newsletter_only";
   const finalSubmitLabel = isNewsletterOnly
-    ? "Subscribe"
+    ? "Save email preferences"
     : supportsPropertyMatches(values.interest)
       ? "Send my brief"
       : "Send enquiry";
@@ -767,8 +767,9 @@ export function LeadEoiForm({
                   Optional email updates
                 </p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  These permissions are separate from this enquiry and are
-                  unchecked by default.
+                  Our email updates are still being prepared. You can save your
+                  preferences now. These choices are optional and separate from
+                  your enquiry.
                 </p>
               </div>
               {supportsPropertyMatches(values.interest) ? (

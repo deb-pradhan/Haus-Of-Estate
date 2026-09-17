@@ -299,13 +299,14 @@ test("freezes consent during a slow submission and announces success", async ({
   await reachPreferences(page, "Newsletter only");
   const consent = page.getByLabel(NEWSLETTER_LABEL);
   await consent.check();
-  await page.getByRole("button", { name: "Subscribe" }).click();
+  await page.getByRole("button", { name: "Save email preferences" }).click();
 
   await expect(consent).toBeDisabled();
   await expect(consent).toBeChecked();
   releaseResponse?.();
   const success = page.getByRole("status");
-  await expect(success).toContainText("Subscription confirmed");
+  await expect(success).toContainText("Email preferences saved");
+  await expect(success).toContainText("Our newsletter is still being prepared");
   await expect(success).toBeFocused();
 });
 
@@ -314,7 +315,7 @@ test("newsletter CTAs retain the entered email without prechecking consent", asy
 }) => {
   await page.goto("/about");
   await page.getByPlaceholder("Your email address").fill("reader@example.com");
-  await page.getByRole("button", { name: "Subscribe" }).click();
+  await page.getByRole("button", { name: "Register interest", exact: true }).click();
 
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();
@@ -329,7 +330,7 @@ test("newsletter CTAs retain the entered email without prechecking consent", asy
   ).toBeChecked();
   await dialog.getByRole("button", { name: "Continue" }).click();
   await expect(dialog.getByLabel(NEWSLETTER_LABEL)).not.toBeChecked();
-  await dialog.getByRole("button", { name: "Subscribe" }).click();
+  await dialog.getByRole("button", { name: "Save email preferences" }).click();
   await expect(dialog.getByLabel(NEWSLETTER_LABEL)).toBeFocused();
   await expect(
     dialog
@@ -368,9 +369,9 @@ test("@mobile renders and completes the compact three-step flow", async ({
   }));
   expect(mobileWidth.scroll).toBe(mobileWidth.client);
   await page.getByLabel(NEWSLETTER_LABEL).check();
-  await page.getByRole("button", { name: "Subscribe" }).click();
+  await page.getByRole("button", { name: "Save email preferences" }).click();
   await expect(
-    page.getByRole("heading", { name: "Subscription confirmed" }),
+    page.getByRole("heading", { name: "Email preferences saved" }),
   ).toBeVisible();
 });
 

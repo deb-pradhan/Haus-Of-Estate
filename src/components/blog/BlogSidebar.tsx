@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Mail } from 'lucide-react'
 import { useState } from 'react'
 import { useLeadModals } from '@/components/lead-modal'
+import { useLeadEoi } from '@/components/lead-eoi/lead-eoi-controller'
 import { BlogCard } from './BlogCard'
 import type { PostSummary } from '@/sanity/types'
 
@@ -19,6 +20,7 @@ interface BlogSidebarProps {
 
 export function BlogSidebar({ tags, related }: BlogSidebarProps) {
   const { openNewsletter } = useLeadModals()
+  const { enabled: leadIntakeEnabled } = useLeadEoi()
   const [newsletterEmail, setNewsletterEmail] = useState('')
 
   return (
@@ -62,11 +64,13 @@ export function BlogSidebar({ tags, related }: BlogSidebarProps) {
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-estate-700/10 text-estate-700">
           <Mail className="h-5 w-5" />
         </div>
-        <h3 className="mt-4 font-serif text-xl font-medium text-ink-900">Join our newsletter</h3>
+        <h3 className="mt-4 font-serif text-xl font-medium text-ink-900">Our newsletter is coming soon</h3>
         <p className="mt-1.5 text-sm leading-relaxed text-slate-700">
-          Market insights, investment guides and new opportunities — straight to your inbox.
+          {leadIntakeEnabled
+            ? 'Register your interest in future property news and insights. Email updates have not started yet.'
+            : 'Read our latest property news and guides on the blog while we prepare our email updates.'}
         </p>
-        <form
+        {leadIntakeEnabled ? <form
           onSubmit={(e) => {
             e.preventDefault()
             openNewsletter(newsletterEmail)
@@ -86,9 +90,9 @@ export function BlogSidebar({ tags, related }: BlogSidebarProps) {
             type="submit"
             className="w-full rounded-lg bg-estate-700 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-estate-700/90"
           >
-            Subscribe
+            Register interest
           </button>
-        </form>
+        </form> : <Link href="/blog" className="mt-4 inline-block text-sm font-semibold text-estate-700 underline underline-offset-4">Read our articles</Link>}
       </div>
     </aside>
   )

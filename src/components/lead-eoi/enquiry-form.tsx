@@ -429,6 +429,10 @@ export function EnquiryForm() {
         </div>
         <div className="space-y-3 rounded-lg bg-subtle p-4">
           <p className="text-sm font-semibold">Keep in touch (optional)</p>
+          <p className="text-xs leading-5 text-muted-foreground">
+            Our email updates are still being prepared. You can save your
+            preferences now.
+          </p>
           {supportsMatches ? (
             <label className="flex cursor-pointer items-start gap-3 text-sm leading-6">
               <input

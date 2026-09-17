@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLeadModals } from "@/components/lead-modal/modal-context";
+import { useLeadEoi } from "@/components/lead-eoi/lead-eoi-controller";
 import { TeamPreview } from "@/components/team/team-preview";
 import { SocialProfileLinks } from "@/components/social/social-profile-links";
 
@@ -220,6 +221,7 @@ const TESTIMONIALS = [
 
 export default function AboutPage() {
   const { openAccount, openNewsletter } = useLeadModals();
+  const { enabled: leadIntakeEnabled } = useLeadEoi();
   const [newsletterEmail, setNewsletterEmail] = useState("");
 
   return (
@@ -773,13 +775,15 @@ export default function AboutPage() {
         <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-16 md:flex-row md:items-center md:justify-between md:px-6 md:py-20">
           <div className="max-w-xl">
             <h2 className="font-serif text-2xl font-medium text-estate-700 md:text-3xl">
-              Receive the latest property opportunities &amp; market insights.
+              Our newsletter is coming soon.
             </h2>
             <p className="mt-2 text-sm text-muted-foreground md:text-base">
-              Cross-border property insight, straight to your inbox. No spam — unsubscribe anytime.
+              {leadIntakeEnabled
+                ? "Register your interest in future property news and insights. Email updates have not started yet."
+                : "Read our latest property news and guides on the blog while we prepare our email updates."}
             </p>
           </div>
-          <form
+          {leadIntakeEnabled ? <form
             onSubmit={(e) => {
               e.preventDefault();
               openNewsletter(newsletterEmail);
@@ -799,9 +803,9 @@ export default function AboutPage() {
               type="submit"
               className="flex shrink-0 items-center gap-1.5 rounded-full bg-gold-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-gold-400"
             >
-              Subscribe <ArrowRight className="h-4 w-4" />
+              Register interest <ArrowRight className="h-4 w-4" />
             </button>
-          </form>
+          </form> : <Button asChild variant="outline"><Link href="/blog">Read our articles</Link></Button>}
         </div>
       </section>
 

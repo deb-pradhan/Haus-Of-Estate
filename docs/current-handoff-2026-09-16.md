@@ -29,6 +29,35 @@ this review. The work remains on the existing cumulative Release 2 branch.
 
 ## Email system: shared understanding
 
+Clarification checked against Git history on 17 September: **Deb's original
+email integration is Resend**, introduced in `d761f468` on 12 April. Its default
+staff recipient was `admin@hausofestate.com`, overridable by `ADMIN_EMAIL`.
+The optional ZeptoMail adapter was added in our Release 2 work on 14 September
+(`7871946e`); its template recipient `info@hausofestate.com` is not evidence of
+the historical or current live inbox. Neither code path proves provider setup
+or delivery. The original blog Subscribe form only opened the account modal and
+did not forward its entered email or create a newsletter subscription.
+
+Current Release 2 captures explicit newsletter requests and consent when its
+hosted database is connected. Newsletter campaign sending and the public
+unsubscribe/provider-sync flow remain unfinished. Do not describe that capture
+as a working mailing system. The newsletter UI now says email updates are being
+prepared and acknowledges saved preferences only. About/blog newsletter forms
+are hidden when intake is disabled, with article links in their place, so they
+cannot silently fall back to the legacy account form. Existing consent wording,
+records and optional choices are preserved.
+
+No live subscriber totals or delivery history have been established. A fresh
+browser check on 17 September failed to resolve `hausofestate.com` from this PC;
+the web retrieval available was four weeks old and is not proof of the current
+deployment or a sitewide outage. No public signup was submitted. Deb/company
+account owner needs to identify production deployment, database and sender
+account, check existing subscription/lead records and delivery logs, and provide
+isolated hosted test access. Sonia/marketing needs to confirm the mailing-list
+and content owner and the approved newsletter service. Surya with Codex can
+implement and verify the integration. First acceptance: one approved test
+signup, actual inbox delivery and working unsubscribe; no customer campaign.
+
 The intended journey is a known visitor who separately permits personalised
 updates and interest capture, browses/saves relevant properties, and later gets
 a useful property/article selection after inactivity. For example, a person
@@ -102,6 +131,20 @@ unsubscribe/cancellation. Production release remains separate.
   Sanity draft read-back verified the exact two records; no schema was changed.
 
 ## Supporting records
+
+Further SEO work stays in Release 2 while Deb reviews Release 1. The seller
+page now has page-specific metadata and a self-referencing `/list-property`
+canonical. Sitemap modification dates come from Sanity `_updatedAt`; unknown
+dates are omitted rather than replaced with the generation time. These are
+technical corrections, not evidence of ranking gains or a completed SEO audit.
+Four sitemap regression tests, focused ESLint, production compilation and its
+TypeScript check passed. Built seller-page HTML confirms the canonical and OG
+URL resolve to `https://hausofestate.com/list-property`. The newsletter preview
+was walked through to its final consent step without submission; its readiness
+message is visible and marketing remains unchecked. Existing E2E assertions were
+updated for the new labels but that mocked browser suite was not rerun. Local
+preview now serves the production build at port 3217; database/email remain
+unavailable/disabled. No live signup, campaign, deployment or publication occurred.
 
 - [Artwork review](../artifacts/blog-cover-review-2026-09-16.html) — four matched images and exact outstanding list.
 - [SEO verification](seo-verification-2026-09-16.md) — original audit mapped to actual changes and remaining evidence.
