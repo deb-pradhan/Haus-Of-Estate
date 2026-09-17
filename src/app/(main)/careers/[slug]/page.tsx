@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { draftMode } from 'next/headers'
 import type { ComponentProps } from 'react'
+import { CAREERS_PUBLIC_ENABLED } from '@/lib/careers-availability'
 import Link from 'next/link'
 import {
   ArrowLeft,
@@ -38,6 +39,8 @@ async function getVisibleCareerRole(slug: string) {
 }
 
 export async function generateMetadata({ params }: RolePageProps): Promise<Metadata> {
+  if (!CAREERS_PUBLIC_ENABLED) notFound()
+
   const { slug } = await params
   const data = await getVisibleCareerRole(slug)
   if (!data) return { title: 'Role Not Found' }
@@ -56,6 +59,8 @@ export async function generateMetadata({ params }: RolePageProps): Promise<Metad
 }
 
 export async function generateStaticParams() {
+  if (!CAREERS_PUBLIC_ENABLED) return []
+
   const { data } = await sanityFetch<CareerRole[]>({ query: ROLES_QUERY })
   return data === null ? [] : resolveCareerRoles(data).map(({ slug }) => ({ slug }))
 }
@@ -63,6 +68,8 @@ export async function generateStaticParams() {
 export const revalidate = 60
 
 export default async function RolePage({ params }: RolePageProps) {
+  if (!CAREERS_PUBLIC_ENABLED) notFound()
+
   const { slug } = await params
   const role = await getVisibleCareerRole(slug)
   if (!role) notFound()

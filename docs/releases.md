@@ -1,5 +1,22 @@
 # Haus releases
 
+## Urgent careers hold — 18 September 2026
+
+Surya explicitly requested the careers takedown and independent H17 contact
+corrections on Release 1 / PR #15 for Deb's urgent review. This exception does
+not move the wider overhaul into Release 1. Carry the closure forward into
+Release 2 so it cannot restore public recruitment on a later deployment.
+
+`/careers`, every job URL and application intake must remain closed until Sonia
+approves reopening. Preserve records and application history. Her replacement
+headings/titles are held in `docs/urgent-careers-closure-2026-09-18.md`; the older
+five-role list is superseded, and no replacement vacancy is approved to go live.
+
+H12: Sonia acknowledged the Google request on 17 September at 23:26 UK.
+Awaiting account invitations and IDs, not another reply or another request.
+Production release remains Deb's approval/deployment step; verify public URLs
+afterwards before telling Sonia the takedown is live.
+
 ## Restart checkpoint — 15 September 2026
 
 Surya requested saving work before restarting the PC. The Haus website, local

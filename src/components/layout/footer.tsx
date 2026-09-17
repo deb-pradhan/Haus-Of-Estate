@@ -16,7 +16,7 @@ import { useLeadEoi } from "@/components/lead-eoi/lead-eoi-controller";
 const COMPANY_PHONE_DISPLAY = "+44 7496 033321";
 const COMPANY_PHONE_HREF = "tel:+447496033321";
 const WHATSAPP_URL =
-  "https://wa.me/447496033321?utm_source=site&utm_medium=footer&utm_campaign=whatsapp";
+  "https://wa.me/971585607033?utm_source=site&utm_medium=footer&utm_campaign=whatsapp";
 const COMPANY_EMAIL = "info@hausofestate.com";
 
 function WhatsAppGlyph() {
@@ -103,7 +103,6 @@ export function Footer() {
           <FooterLink href="/about">About us</FooterLink>
           <FooterLink href="/team">Our team</FooterLink>
           <FooterLink href="/blog">Blogs</FooterLink>
-          <FooterLink href="/careers">Careers</FooterLink>
           <FooterLink href="/faq">FAQs</FooterLink>
           <FooterLink href="/contact">Contact us</FooterLink>
           {leadIntakeEnabled ? <FooterLink href="/enquire">Have a query?</FooterLink> : null}
@@ -155,7 +154,7 @@ export function Footer() {
           </li>
           <li className="flex items-start gap-2.5 text-sm text-white/60">
             <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-gold-400" />
-            Offices in the UK &amp; UAE — serving clients worldwide
+            <address className="not-italic">115 City Road, Unit A, Cardiff, Wales, United Kingdom, CF24 3BP</address>
           </li>
         </FooterCol>
       </div>

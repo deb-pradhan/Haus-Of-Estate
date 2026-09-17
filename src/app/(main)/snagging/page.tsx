@@ -30,7 +30,7 @@ const ENQUIRY = [
   "Name and preferred contact details:",
   "Anything else you'd like inspected:",
 ].join("\n");
-const WHATSAPP_HREF = `https://wa.me/447496033321?text=${encodeURIComponent(ENQUIRY)}`;
+const WHATSAPP_HREF = `https://wa.me/971585607033?text=${encodeURIComponent(ENQUIRY)}`;
 const EMAIL_HREF = `mailto:info@hausofestate.com?subject=${encodeURIComponent("Snagging inspection quote")}&body=${encodeURIComponent(ENQUIRY)}`;
 
 const SNAGGING_GUIDE_HREF = "/blog/snag-it-before-you-sign-it-the-uae-buyer-s-guide-to-snagging";

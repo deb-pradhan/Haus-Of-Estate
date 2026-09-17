@@ -5,7 +5,7 @@ import { usePropertyAssistant } from "@/components/property-assistant/property-a
 import { cn } from "@/lib/utils";
 
 const WHATSAPP_URL =
-  "https://wa.me/447496033321?utm_source=site&utm_medium=float&utm_campaign=whatsapp";
+  "https://wa.me/971585607033?utm_source=site&utm_medium=float&utm_campaign=whatsapp";
 
 export function WhatsAppFloat() {
   const { enabled: assistantEnabled, isOpen: assistantOpen } =

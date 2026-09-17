@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
+import type { NextFetchEvent, NextMiddleware, NextRequest } from "next/server";
+import type { NextAuthRequest } from "next-auth";
 import { auth } from "@/auth";
 import { safeReturnTo } from "@/lib/auth/safe-return-to";
 import { isSavedContentEnabled } from "@/lib/features";
+import {
+  CAREERS_PUBLIC_ENABLED,
+  careersUnavailableResponse,
+  isCareersPath,
+} from "@/lib/careers-availability";
 
 const ALWAYS_PROTECTED_PATHS = ["/account", "/messages", "/viewings"];
 const GUEST_ONLY_PATHS = ["/auth/login", "/auth/register"];
@@ -12,7 +19,11 @@ function matches(pathname: string, routes: string[]): boolean {
   );
 }
 
-export default auth((request) => {
+// Give Auth.js the middleware overload, rather than its App Router handler overload.
+const handleAuthenticatedRequest: (
+  request: NextAuthRequest,
+  event: NextFetchEvent,
+) => ReturnType<NextMiddleware> = (request) => {
   const { pathname, search } = request.nextUrl;
   const signedIn = Boolean(request.auth?.user?.id);
 
@@ -35,15 +46,25 @@ export default auth((request) => {
   }
 
   return NextResponse.next();
-});
+};
+const authenticatedProxy = auth(handleAuthenticatedRequest);
+
+export default function proxy(request: NextRequest, event: NextFetchEvent) {
+  const { pathname } = request.nextUrl;
+
+  // Respond before any page/RSC output or cached job metadata can be served.
+  if (!CAREERS_PUBLIC_ENABLED && isCareersPath(pathname)) {
+    return careersUnavailableResponse();
+  }
+
+  // Keep session handling limited to the routes covered by Release 2's auth proxy.
+  if (matches(pathname, ["/saved", ...ALWAYS_PROTECTED_PATHS, ...GUEST_ONLY_PATHS])) {
+    return authenticatedProxy(request, event);
+  }
+
+  return NextResponse.next();
+}
 
 export const config = {
-  matcher: [
-    "/saved/:path*",
-    "/account/:path*",
-    "/messages/:path*",
-    "/viewings/:path*",
-    "/auth/login",
-    "/auth/register",
-  ],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };

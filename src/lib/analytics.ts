@@ -13,13 +13,13 @@ const ASSISTANT_EVENTS = new Set(["property_assistant_opened", "property_assista
 
 const PUBLIC_PAGES = new Set([
   "/", "/about", "/team", "/services", "/snagging", "/renovations", "/faq", "/contact",
-  "/list-property", "/register-interest", "/enquire", "/careers", "/blog", "/properties", "/properties/residential",
+  "/list-property", "/register-interest", "/enquire", "/blog", "/properties", "/properties/residential",
   "/properties/commercial", "/legal/privacy-policy", "/legal/cookie-policy", "/legal/terms-of-service",
 ]);
 
 export function publicPath(pathname: string): string | null {
   const path = pathname.replace(/\/$/, "") || "/";
-  return PUBLIC_PAGES.has(path) || /^\/(properties|blog|careers)\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(path)
+  return PUBLIC_PAGES.has(path) || /^\/(properties|blog)\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(path)
     ? path : null;
 }
 

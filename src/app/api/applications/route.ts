@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { CAREERS_CLOSED_HEADERS, CAREERS_PUBLIC_ENABLED } from "@/lib/careers-availability";
 import {
   sendApplicationToTeam,
   sendApplicationConfirmationToApplicant,
@@ -18,6 +19,14 @@ import { getCareerRole } from "@/sanity/careers";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export async function POST(request: Request) {
+  // Reject old/cached application forms before reading personal data or sending mail.
+  if (!CAREERS_PUBLIC_ENABLED) {
+    return NextResponse.json(
+      { error: "Applications are currently closed." },
+      { status: 404, headers: CAREERS_CLOSED_HEADERS },
+    );
+  }
+
   const tooLarge = () => NextResponse.json({ error: CV_SIZE_ERROR }, { status: 413 });
   if (Number(request.headers.get("content-length")) > APPLICATION_MAX_BYTES) return tooLarge();
   let form: FormData;

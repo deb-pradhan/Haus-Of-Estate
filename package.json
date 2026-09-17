@@ -11,6 +11,7 @@
     "test": "vitest run",
     "test:seo": "node --experimental-strip-types --test tests/technical-seo.test.mjs tests/analytics.test.mjs",
     "test:analytics:browser": "playwright test --config playwright.analytics.config.ts",
+    "test:careers-offline": "node --experimental-strip-types --test tests/careers-offline.test.mjs",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "db:generate": "prisma generate",

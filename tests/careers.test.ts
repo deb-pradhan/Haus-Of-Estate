@@ -6,6 +6,12 @@ import { APPLICATION_MAX_BYTES, CV_MAX_BYTES, normalizeApplicationUrl, validateC
 const { cmsFetch, send } = vi.hoisted(() => ({ cmsFetch: vi.fn(), send: vi.fn() }))
 vi.mock('@/sanity', () => ({ client: { fetch: cmsFetch } }))
 vi.mock('resend', () => ({ Resend: class { emails = { send } } }))
+// Preserve regression coverage for the retained intake implementation. The real
+// closed policy is tested separately in careers-closed.test.ts and HTTP checks.
+vi.mock('@/lib/careers-availability', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@/lib/careers-availability')>(),
+  CAREERS_PUBLIC_ENABLED: true,
+}))
 
 import { getCareerRole, getCareerRoles } from '@/sanity/careers'
 import { POST } from '@/app/api/applications/route'
@@ -46,8 +52,8 @@ beforeEach(() => {
 })
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllEnvs() })
 
-describe('September vacancies', () => {
-  it('exposes exactly the five approved titles when CMS has no matching briefs', () => {
+describe('preserved September role resolver (public careers remains closed)', () => {
+  it('retains the historical five-role fallback for regression coverage', () => {
     expect(resolveCareerRoles([]).map(role => role.title)).toEqual(['Content Managers', 'Real Estate Agents', 'PR Interns', 'Videographers', 'Lead Generators'])
     expect(resolveCareerRoles([]).every(role => !role.location && !role.employmentType && !role.summary)).toBe(true)
   })
