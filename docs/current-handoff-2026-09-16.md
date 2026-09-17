@@ -73,6 +73,34 @@ destination, sends a customer receipt and can be replied to. Then demonstrate
 one newsletter and one personalised follow-up with test addresses, including
 unsubscribe/cancellation. Production release remains separate.
 
+## 17 September: enquiry page and navigation
+
+- Built `/enquire` (“Have a query?”) on Release 2 for a future social-media
+  link. General/service, buying, renting, investing and selling/letting questions
+  share the existing `/api/leads` intake, saved consent and delivery outbox.
+  No new database migration or email provider is required for this page.
+- Questions, first name, email and privacy acknowledgement are required;
+  telephone and marketing opt-ins are optional. Country/city fields appear for
+  property topics. Questions and contact details are excluded from analytics.
+  Failed requests retain answers; success means the enquiry was saved, not that
+  a team/customer email was delivered. Intake feature flag also gates this page,
+  its footer link and sitemap entry.
+- Removed “Browse by type” and the Residential/Commercial descriptions from
+  both Properties menus. Property-type filters in the catalogue remain available.
+- Surya confirmed Al Furjan and Azizi Monaco Mansions. Corrected their native
+  Sanity drafts to Off-plan / sale, including completed-availability wording.
+  Verified published records and unrelated fields unchanged. Local before/after
+  backup is under `.git/off-plan-corrections-2026-09-17/`. Florence stays paused.
+- Local demo: `http://127.0.0.1:3217/`, enquiry page at `/enquire`. This frontend
+  preview uses an unreachable database target and disabled delivery; it cannot
+  prove hosted persistence, actual email or Excel receipt. No local database runs.
+- Verification: 68 targeted backend tests and six SEO/analytics checks passed;
+  TypeScript, focused ESLint and the production webpack build passed. Browser
+  checks covered desktop/mobile menus, required fields, optional topic fields,
+  clearing hidden property preferences and preserving answers on a real failed
+  local API request. Mocked persistence/outbox tests do not prove hosted delivery.
+  Sanity draft read-back verified the exact two records; no schema was changed.
+
 ## Supporting records
 
 - [Artwork review](../artifacts/blog-cover-review-2026-09-16.html) — four matched images and exact outstanding list.
