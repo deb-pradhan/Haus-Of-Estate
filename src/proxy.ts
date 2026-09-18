@@ -1,14 +1,55 @@
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import type { NextFetchEvent, NextMiddleware, NextRequest } from "next/server";
+import type { NextAuthRequest } from "next-auth";
+import { auth } from "@/auth";
+import { safeReturnTo } from "@/lib/auth/safe-return-to";
+import { isSavedContentEnabled } from "@/lib/features";
 import {
   CAREERS_PUBLIC_ENABLED,
   careersUnavailableResponse,
   isCareersPath,
 } from "@/lib/careers-availability";
 
-const GUEST_ONLY = ["/auth/login", "/auth/register"];
+const ALWAYS_PROTECTED_PATHS = ["/account", "/messages", "/viewings"];
+const GUEST_ONLY_PATHS = ["/auth/login", "/auth/register"];
 
-export default function proxy(request: NextRequest) {
+function matches(pathname: string, routes: string[]): boolean {
+  return routes.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
+  );
+}
+
+// Give Auth.js the middleware overload, rather than its App Router handler overload.
+const handleAuthenticatedRequest: (
+  request: NextAuthRequest,
+  event: NextFetchEvent,
+) => ReturnType<NextMiddleware> = (request) => {
+  const { pathname, search } = request.nextUrl;
+  const signedIn = Boolean(request.auth?.user?.id);
+
+  const protectedPaths = isSavedContentEnabled()
+    ? ["/saved", ...ALWAYS_PROTECTED_PATHS]
+    : ALWAYS_PROTECTED_PATHS;
+
+  if (!signedIn && matches(pathname, protectedPaths)) {
+    const loginUrl = new URL("/auth/login", request.url);
+    loginUrl.searchParams.set("returnTo", `${pathname}${search}`);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  if (signedIn && matches(pathname, GUEST_ONLY_PATHS)) {
+    const returnTo = safeReturnTo(
+      request.nextUrl.searchParams.get("returnTo"),
+      "/",
+    );
+    return NextResponse.redirect(new URL(returnTo, request.url));
+  }
+
+  return NextResponse.next();
+};
+const authenticatedProxy = auth(handleAuthenticatedRequest);
+
+export default function proxy(request: NextRequest, event: NextFetchEvent) {
   const { pathname } = request.nextUrl;
 
   // Respond before any page/RSC output or cached job metadata can be served.
@@ -16,13 +57,9 @@ export default function proxy(request: NextRequest) {
     return careersUnavailableResponse();
   }
 
-  if (GUEST_ONLY.some((p) => pathname.startsWith(p))) {
-    const sessionCookie =
-      request.cookies.get("next-auth.session-token") ||
-      request.cookies.get("__Secure-authjs.session-token");
-    if (sessionCookie) {
-      return NextResponse.redirect(new URL("/", request.url));
-    }
+  // Keep session handling limited to the routes covered by Release 2's auth proxy.
+  if (matches(pathname, ["/saved", ...ALWAYS_PROTECTED_PATHS, ...GUEST_ONLY_PATHS])) {
+    return authenticatedProxy(request, event);
   }
 
   return NextResponse.next();

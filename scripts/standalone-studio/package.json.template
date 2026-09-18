@@ -1,0 +1,29 @@
+{
+  "name": "studio-haus-of-estate",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22.12" },
+  "scripts": {
+    "dev": "sanity dev --host localhost",
+    "build": "sanity build",
+    "preview": "sanity start --host localhost",
+    "schema:validate": "sanity schemas validate",
+    "schema:extract": "sanity schemas extract --enforce-required-fields --path schema.json",
+    "typegen": "sanity schemas extract --enforce-required-fields --path schema.json && sanity typegen generate",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@sanity/vision": "6.9.2",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "sanity": "6.9.2",
+    "styled-components": "6.5.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,230 @@
+{
+  "schemaVersion": 1,
+  "project": {
+    "name": "Azizi Florence",
+    "slug": "azizi-florence",
+    "documentId": "drafts.property-azizi-florence"
+  },
+  "sourcePackage": {
+    "fileCount": 109,
+    "totalBytes": 3832154969
+  },
+  "brochure": {
+    "sourcePath": "Florence Brochure.pdf",
+    "sha256": "bc9c83b41c6ca197dfd0856bf237a158f7a60b06e19ff820c6352314c726bdcc",
+    "bytes": 169516927,
+    "pageCount": 139
+  },
+  "images": [
+    {
+      "id": "hero-aerial",
+      "role": "hero",
+      "galleryOrder": null,
+      "sourcePath": "01_Masterplan Cameras/Cam-01_Main_Aerial.jpg",
+      "sha256": "04f60d52f179debcced91596e0bf398faf904d00c2d0a0fc1d1cca0113cc4e98",
+      "bytes": 70346978,
+      "width": 10000,
+      "height": 5623,
+      "outputFile": "azizi-florence-hero-aerial.jpg",
+      "alt": "Aerial architectural render of Azizi Florence in Sharjah.",
+      "brochurePages": [
+        8
+      ],
+      "evidenceNotes": [
+        "Matches the aerial render in the supplied brochure on physical PDF page 8.",
+        "Masterplan visualisation; not an annotated site plan or evidence of completed construction."
+      ]
+    },
+    {
+      "id": "entrance-day",
+      "role": "gallery",
+      "galleryOrder": 1,
+      "sourcePath": "03_Gate Cameras/CAM-01_Wide-Day.jpg",
+      "sha256": "4f59bf85c89cdfc2dccc47593f43dc4d40efadba59c7e540e29ebd1826c3e533",
+      "bytes": 35766883,
+      "width": 8096,
+      "height": 4048,
+      "outputFile": "azizi-florence-entrance-day.jpg",
+      "alt": "Daytime architectural render of the Azizi Florence entrance.",
+      "brochurePages": [
+        13
+      ],
+      "evidenceNotes": [
+        "Source filename identifies a wide daytime gate view.",
+        "Brochure page 13 describes the arrival experience; this reference supports the subject, not a verified exact image match."
+      ]
+    },
+    {
+      "id": "villa-4br-front",
+      "role": "gallery",
+      "galleryOrder": 2,
+      "sourcePath": "02_Villas & Townhoses Cameras/4-BR Villa/Villa 4BR_V1_Front View_8K.jpg",
+      "sha256": "702da0ac13ac29d781e8ca5e7b25711c0f1b0041aade50164f25cb4e9059e925",
+      "bytes": 26774924,
+      "width": 8000,
+      "height": 4448,
+      "outputFile": "azizi-florence-villa-4br-front.jpg",
+      "alt": "Front-view architectural render of a four-bedroom villa at Azizi Florence.",
+      "brochurePages": [
+        36
+      ],
+      "evidenceNotes": [
+        "Four-bedroom classification comes from the source folder and filename; the brochure confirms four-bedroom standalone villas on page 36.",
+        "Do not translate the filename V1 into brochure Type A or Type B: an exact type match has not been verified."
+      ]
+    },
+    {
+      "id": "villa-5br-street",
+      "role": "gallery",
+      "galleryOrder": 3,
+      "sourcePath": "02_Villas & Townhoses Cameras/5-BR Villa/Villa 5BR_V1_Front Street View_8K.jpg",
+      "sha256": "3e2b5ac6cdea40a1df6bdc5e0b2b11ede293036097efddc83e97e122c64e09cb",
+      "bytes": 27101600,
+      "width": 8000,
+      "height": 4496,
+      "outputFile": "azizi-florence-villa-5br-street.jpg",
+      "alt": "Street-view architectural render of a five-bedroom villa at Azizi Florence.",
+      "brochurePages": [
+        52
+      ],
+      "evidenceNotes": [
+        "Matches the supplied brochure's five-bedroom standalone villa Type A street view on physical PDF page 52.",
+        "Shows a representative design; no unit availability or commercial offer is implied."
+      ]
+    },
+    {
+      "id": "villa-6br-front",
+      "role": "gallery",
+      "galleryOrder": 4,
+      "sourcePath": "02_Villas & Townhoses Cameras/6-BR Villa/Villa 6BR_V1_Front View_8K.jpg",
+      "sha256": "9599f55c26e70ae678f30263aea811cdf1dd62e291a5a345db13ab0954d5928f",
+      "bytes": 27915882,
+      "width": 8000,
+      "height": 4496,
+      "outputFile": "azizi-florence-villa-6br-front.jpg",
+      "alt": "Front-view architectural render of a six-bedroom villa at Azizi Florence.",
+      "brochurePages": [
+        38
+      ],
+      "evidenceNotes": [
+        "Matches the supplied brochure's six-bedroom standalone villa Type A street view on physical PDF page 38.",
+        "Shows a representative design; no unit availability or commercial offer is implied."
+      ]
+    },
+    {
+      "id": "townhouse-front",
+      "role": "gallery",
+      "galleryOrder": 5,
+      "sourcePath": "02_Villas & Townhoses Cameras/Townhouse 4-Plex/Townhouse_4plex A_Front_8K.jpg",
+      "sha256": "ae98c4aeccebe967e3f09ae9ebcccf9c8ac208c2457cf50aa958fbbe4bb601c2",
+      "bytes": 25847422,
+      "width": 8000,
+      "height": 4500,
+      "outputFile": "azizi-florence-townhouse-front.jpg",
+      "alt": "Architectural render of a row of Azizi Florence townhouses.",
+      "brochurePages": [
+        76
+      ],
+      "evidenceNotes": [
+        "Matches the Novoli Type A four-plex townhouse street view on physical PDF page 76.",
+        "Four-plex means four connected residences; the brochure's bedroom configuration is 4, 3, 3, 4, not four bedrooms in every residence."
+      ]
+    },
+    {
+      "id": "townhouse-garden",
+      "role": "gallery",
+      "galleryOrder": 6,
+      "sourcePath": "02_Villas & Townhoses Cameras/Townhouse 4-Plex/Townhouse 4plex A_Backyard View _With Fance_8k.jpg",
+      "sha256": "e914d26da2a61cb19751d716cac4af18ed02ff52f53f4b2522f028aae53e4d8e",
+      "bytes": 21187227,
+      "width": 8000,
+      "height": 4444,
+      "outputFile": "azizi-florence-townhouse-garden.jpg",
+      "alt": "Architectural render of Azizi Florence townhouse gardens with boundary fences.",
+      "brochurePages": [
+        77
+      ],
+      "evidenceNotes": [
+        "Matches the Novoli Type A four-plex garden view on physical PDF page 77.",
+        "Selected the fenced version from a near-duplicate fenced/unfenced pair; retain the unfenced original in the source archive."
+      ]
+    },
+    {
+      "id": "townhouse-living",
+      "role": "gallery",
+      "galleryOrder": 7,
+      "sourcePath": "06_Interior Cameras/3BR Townhouse Interiors-Palette A/LIVING AREA_A_VIEW03_8K.jpeg",
+      "sha256": "fc5dfdfe4e98cc63b3602605ec19993a00c08ac5976761a08ce365df69c3e7ad",
+      "bytes": 25471179,
+      "width": 8000,
+      "height": 5200,
+      "outputFile": "azizi-florence-townhouse-living.jpg",
+      "alt": "Interior architectural render of a three-bedroom townhouse living area at Azizi Florence.",
+      "brochurePages": [
+        97
+      ],
+      "evidenceNotes": [
+        "Matches the three-bedroom townhouse living area, Palette A, on physical PDF page 97.",
+        "Interior rendering illustrates a design palette; furnishings or finishes should not be presented as contractual inclusions."
+      ]
+    },
+    {
+      "id": "childrens-play",
+      "role": "gallery",
+      "galleryOrder": 8,
+      "sourcePath": "04_Central Park Cameras/CAM-07_Children's Experiences_8K.jpg",
+      "sha256": "9d62e108edde38cae39271173392933804f3fa99a8f8387fb3969f263f5325ef",
+      "bytes": 41407217,
+      "width": 8000,
+      "height": 4464,
+      "outputFile": "azizi-florence-childrens-play.jpg",
+      "alt": "Architectural render of a children's play area at Azizi Florence.",
+      "brochurePages": [
+        22
+      ],
+      "evidenceNotes": [
+        "Source filename identifies children's experiences; brochure page 22 explicitly describes kids' play areas.",
+        "Brochure reference supports the amenity subject; no exact render match or operational availability is asserted."
+      ]
+    },
+    {
+      "id": "flower-garden",
+      "role": "gallery",
+      "galleryOrder": 9,
+      "sourcePath": "04_Central Park Cameras/CAM-11_Flower Garden_8K.jpg",
+      "sha256": "d5b2e3bc22353fb348f497097c6e11f02eef9c8c7f6a26443c913f8c6e3243cb",
+      "bytes": 43244943,
+      "width": 8000,
+      "height": 4496,
+      "outputFile": "azizi-florence-flower-garden.jpg",
+      "alt": "Architectural render of the flower garden at Azizi Florence.",
+      "brochurePages": [
+        19
+      ],
+      "evidenceNotes": [
+        "Source filename identifies the flower garden; brochure page 19 explicitly describes the flower garden.",
+        "Brochure reference supports the amenity subject; no exact render match or operational availability is asserted."
+      ]
+    },
+    {
+      "id": "cafe-amphitheatre",
+      "role": "gallery",
+      "galleryOrder": 10,
+      "sourcePath": "04_Central Park Cameras/CAM-21_Cafe & Amphi Theather_8K.jpg",
+      "sha256": "28463ad3afb558347627cc2a5c147cb0f547d0fc12bffd1382817a5a5e530f92",
+      "bytes": 11753947,
+      "width": 7680,
+      "height": 4320,
+      "outputFile": "azizi-florence-cafe-amphitheatre.jpg",
+      "alt": "Architectural render of a cafe and amphitheatre setting at Azizi Florence.",
+      "brochurePages": [
+        23,
+        25
+      ],
+      "evidenceNotes": [
+        "Source filename identifies a cafe and amphitheatre setting; brochure pages 23 and 25 describe outdoor theatre and outdoor cafes.",
+        "Brochure references support the amenity subjects; no exact render match or operational availability is asserted."
+      ]
+    }
+  ]
+}

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import {
   Menu,
   X,
@@ -24,8 +24,10 @@ import {
   LayoutGrid,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { useLeadModals } from "@/components/lead-modal";
+import { HeaderAuthControl } from "@/components/auth/header-auth-control";
+import { CurrencySelector } from "@/components/currency/currency-selector";
 import { cn } from "@/lib/utils";
 import {
   buildPropertiesMenu,
@@ -157,6 +159,7 @@ interface NavAction {
 type ServiceEntry = NavItem | NavAction;
 
 const SERVICES_ITEMS: ServiceEntry[] = [
+  { href: "/snagging", label: "Snagging", desc: "Pre-handover property inspections. Request a quote.", icon: ClipboardList },
   { href: "/services#property-management", label: "Property Management", desc: "Tenancy, maintenance and compliance, handled.", icon: ClipboardList },
   { href: "/services#staging", label: "Staging", desc: "Present a home for viewings, photography and marketing.", icon: Sparkles },
   { href: "/services#furnishing", label: "Furnishing", desc: "Move-in ready interiors for new builds and rentals.", icon: Sofa },
@@ -211,6 +214,17 @@ export function Header() {
 
           {/* Right-side actions */}
           <div className="flex items-center gap-2">
+            <CurrencySelector />
+            <Suspense
+              fallback={
+                <span
+                  aria-label="Checking sign-in status"
+                  className="inline-flex h-10 w-10 animate-pulse rounded-lg bg-muted sm:w-20"
+                />
+              }
+            >
+              <HeaderAuthControl />
+            </Suspense>
             {/* Mobile / tablet trigger */}
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
@@ -224,6 +238,8 @@ export function Header() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-80 overflow-y-auto p-0">
+                <SheetTitle className="sr-only">Site navigation</SheetTitle>
+                <SheetDescription className="sr-only">Browse properties, services and information about Haus of Estate.</SheetDescription>
                 <MobileNav
                   pathname={pathname}
                   onClose={() => setMobileOpen(false)}
@@ -505,11 +521,6 @@ const CATEGORY_ICONS: Record<Category, React.ComponentType<{ className?: string 
   commercial: Building2,
 };
 
-const CATEGORY_TAGLINES: Record<Category, string> = {
-  residential: "Homes, villas & investment residences.",
-  commercial: "Offices, retail, hospitality & land.",
-};
-
 // Featured visual for the desktop panel — a real render that reflects the
 // active category. Commercial has no live inventory, so it gets a refined,
 // muted "coming soon" treatment rather than a broken/empty slot.
@@ -529,11 +540,9 @@ const CATEGORY_FEATURE: Record<
   },
 };
 
-const BROWSE_BY_TYPE_HEADING = "Browse by type";
-
 // Reserved height so switching categories never shifts the panel. Sized to the
 // tallest column (residential) — commercial simply pads to match.
-const MEGA_PANEL_MIN_H = "min-h-[21rem]";
+const MEGA_PANEL_MIN_H = "min-h-[15rem]";
 
 function ComingSoonTag({ className }: { className?: string }) {
   return (
@@ -548,7 +557,7 @@ function ComingSoonTag({ className }: { className?: string }) {
   );
 }
 
-// Left-rail entry point — icon + label + tagline, activates the detail panel.
+// Left-rail entry point — icon and label, activates the detail panel.
 function MegaMenuRailItem({
   column,
   active,
@@ -569,7 +578,7 @@ function MegaMenuRailItem({
       onFocus={onActivate}
       onClick={onActivate}
       className={cn(
-        "group/rail relative flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+        "group/rail relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
         active ? "bg-estate-700/[0.06]" : "hover:bg-estate-700/[0.04]",
       )}
     >
@@ -599,14 +608,11 @@ function MegaMenuRailItem({
         >
           {column.label}
         </span>
-        <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">
-          {CATEGORY_TAGLINES[column.category]}
-        </span>
         {column.muted && <ComingSoonTag className="mt-1.5 inline-flex" />}
       </span>
       <ChevronRight
         className={cn(
-          "mt-1 h-4 w-4 shrink-0 self-start text-muted-foreground transition-all duration-200",
+          "h-4 w-4 shrink-0 text-muted-foreground transition-all duration-200",
           active
             ? "translate-x-0 opacity-70"
             : "-translate-x-1 opacity-0 group-hover/rail:translate-x-0 group-hover/rail:opacity-50",
@@ -636,7 +642,7 @@ function MegaMenuFeature({
           ? `${column.label} — register interest`
           : `${column.viewAllLabel}`
       }
-      className="group/feat relative hidden h-full min-h-[21rem] w-56 shrink-0 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-gold-400 lg:block xl:w-64"
+      className="group/feat relative hidden h-full min-h-[15rem] w-56 shrink-0 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-gold-400 lg:block xl:w-64"
     >
       <Image
         src={feature.src}
@@ -685,18 +691,11 @@ function MegaMenuDetail({
   column: MenuColumn;
   onNavigate: () => void;
 }) {
-  const availabilityGroups = column.groups.filter(
-    (group) => group.heading !== BROWSE_BY_TYPE_HEADING,
-  );
-  const typeGroup = column.groups.find(
-    (group) => group.heading === BROWSE_BY_TYPE_HEADING,
-  );
-
   return (
     <div className="flex h-full flex-col p-5">
       {/* Availability sub-sections: Ready (To buy / To rent) + Off-Plan (To buy) */}
       <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-        {availabilityGroups.map((group) => (
+        {column.groups.map((group) => (
           <div key={group.heading}>
             <p className="px-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
               {group.heading}
@@ -725,30 +724,6 @@ function MegaMenuDetail({
           </div>
         ))}
       </div>
-
-      {/* Browse by type — comfortable wrapped pill grid */}
-      {typeGroup && (
-        <div className="mt-5">
-          <p className="px-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            {typeGroup.heading}
-          </p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {typeGroup.links.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={onNavigate}
-                className={cn(
-                  "whitespace-nowrap rounded-full border border-border px-3 py-1.5 text-xs font-medium transition-colors hover:border-estate-700/30 hover:bg-estate-700/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
-                  link.muted ? "text-muted-foreground/80" : "text-estate-700",
-                )}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* View all {category} */}
       <Link
@@ -1114,13 +1089,6 @@ function MobilePropertyCategory({
   const [open, setOpen] = useState(false);
   const Icon = CATEGORY_ICONS[column.category];
 
-  const availabilityGroups = column.groups.filter(
-    (group) => group.heading !== BROWSE_BY_TYPE_HEADING,
-  );
-  const typeGroup = column.groups.find(
-    (group) => group.heading === BROWSE_BY_TYPE_HEADING,
-  );
-
   return (
     <div className="overflow-hidden rounded-xl border border-border/70 bg-subtle/30">
       <button
@@ -1149,9 +1117,6 @@ function MobilePropertyCategory({
             </span>
             {column.muted && <ComingSoonTag />}
           </span>
-          <span className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-            {CATEGORY_TAGLINES[column.category]}
-          </span>
         </span>
         <ChevronDown
           className={cn(
@@ -1163,7 +1128,7 @@ function MobilePropertyCategory({
       <Collapse open={open}>
         <div className="space-y-4 px-3 pb-4 pt-1">
           <div className="space-y-3">
-            {availabilityGroups.map((group) => (
+            {column.groups.map((group) => (
               <div key={group.heading}>
                 <p className="px-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                   {group.heading}
@@ -1190,29 +1155,6 @@ function MobilePropertyCategory({
               </div>
             ))}
           </div>
-
-          {typeGroup && (
-            <div>
-              <p className="px-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                {typeGroup.heading}
-              </p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {typeGroup.links.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={onClose}
-                    className={cn(
-                      "rounded-full border border-border bg-surface px-3 py-2 text-xs font-medium transition-colors hover:border-estate-700/30 hover:bg-estate-700/[0.05]",
-                      link.muted ? "text-muted-foreground/80" : "text-estate-700",
-                    )}
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
 
           <Link
             href={column.viewAllHref}

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, Users } from 'lucide-react'
-import { sanityFetch } from '@/sanity'
+import { sanityFetch } from '@/sanity/live'
 import { TEAM_MEMBERS_QUERY } from '@/sanity/queries'
 import { TeamGrid, type TeamMember } from '@/components/team/team-grid'
 import { DEFAULT_OG_IMAGES } from '@/lib/seo'
