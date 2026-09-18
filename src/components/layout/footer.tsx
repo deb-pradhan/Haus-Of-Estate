@@ -13,11 +13,12 @@ import {
   Youtube,
 } from "lucide-react";
 import { useLeadModals } from "@/components/lead-modal/modal-context";
+import { CookieSettingsButton } from "@/components/analytics/consent-manager";
 
 const COMPANY_PHONE_DISPLAY = "+44 7496 033321";
 const COMPANY_PHONE_HREF = "tel:+447496033321";
 const WHATSAPP_URL =
-  "https://wa.me/447496033321?utm_source=site&utm_medium=footer&utm_campaign=whatsapp";
+  "https://wa.me/971585607033?utm_source=site&utm_medium=footer&utm_campaign=whatsapp";
 const COMPANY_EMAIL = "info@hausofestate.com";
 
 const SOCIAL_LINK_CLASS = "h-4 w-4";
@@ -164,7 +165,6 @@ export function Footer() {
           <FooterLink href="/about">About us</FooterLink>
           <FooterLink href="/team">Our team</FooterLink>
           <FooterLink href="/blog">Blogs</FooterLink>
-          <FooterLink href="/careers">Careers</FooterLink>
           <FooterLink href="/faq">FAQs</FooterLink>
           <FooterLink href="/contact">Contact us</FooterLink>
           <FooterLink href="/legal/privacy-policy">Privacy policy</FooterLink>
@@ -215,7 +215,7 @@ export function Footer() {
           </li>
           <li className="flex items-start gap-2.5 text-sm text-white/60">
             <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-gold-400" />
-            Offices in the UK &amp; UAE — serving clients worldwide
+            <address className="not-italic">115 City Road, Unit A, Cardiff, Wales, United Kingdom, CF24 3BP</address>
           </li>
         </FooterCol>
       </div>
@@ -224,6 +224,7 @@ export function Footer() {
       <div className="border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-white/45 md:flex-row md:px-6">
           <span>&copy; {year} Haus of Estate. All rights reserved.</span>
+          <CookieSettingsButton />
           <span>UK English · Prices indicative · Subject to availability</span>
         </div>
       </div>

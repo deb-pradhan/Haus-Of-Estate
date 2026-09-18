@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import { CAREERS_PUBLIC_ENABLED } from '@/lib/careers-availability'
 import type { Metadata } from 'next'
 import {
   ArrowRight,
@@ -71,7 +73,7 @@ const SUB_NAV = [
   { href: '#life-at-hoe', label: 'Life at HoE' },
 ]
 
-export const metadata: Metadata = {
+export const metadata: Metadata = CAREERS_PUBLIC_ENABLED ? {
   title: 'Careers',
   description:
     'Join Haus of Estate — part-time and full-time jobs across the UK, UAE and beyond.',
@@ -84,11 +86,16 @@ export const metadata: Metadata = {
     type: 'website',
     images: DEFAULT_OG_IMAGES,
   },
+} : {
+  title: 'Page unavailable',
+  robots: { index: false, follow: false },
 }
 
 export const revalidate = 60
 
 export default async function CareersPage() {
+  if (!CAREERS_PUBLIC_ENABLED) notFound()
+
   const { data: roles } = await sanityFetch<RoleCard[]>({ query: ROLES_QUERY })
   const openRoles = roles ?? []
 

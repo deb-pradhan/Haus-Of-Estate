@@ -1,7 +1,18 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode } from "react";
-import { AccountModal, BuyerModal, SellerModal } from "@/components/lead-modal";
+import dynamic from "next/dynamic";
+import { trackAnalytics } from "@/lib/analytics";
+
+const AccountModal = dynamic(() =>
+  import("./account-modal").then((module) => module.AccountModal),
+);
+const BuyerModal = dynamic(() =>
+  import("./buyer-modal").then((module) => module.BuyerModal),
+);
+const SellerModal = dynamic(() =>
+  import("./seller-modal").then((module) => module.SellerModal),
+);
 
 interface ModalContextValue {
   openAccount: () => void;
@@ -28,14 +39,18 @@ export function LeadModalProvider({ children }: { children: ReactNode }) {
     <ModalContext.Provider
       value={{
         openAccount: () => setAccountOpen(true),
-        openBuyer: () => setBuyerOpen(true),
-        openSeller: () => setSellerOpen(true),
+        openBuyer: () => { trackAnalytics("haus_contact_click", { contact_method: "enquiry" }); setBuyerOpen(true); },
+        openSeller: () => { trackAnalytics("haus_contact_click", { contact_method: "enquiry" }); setSellerOpen(true); },
       }}
     >
       {children}
-      <AccountModal open={accountOpen} onOpenChange={setAccountOpen} />
-      <BuyerModal open={buyerOpen} onOpenChange={setBuyerOpen} />
-      <SellerModal open={sellerOpen} onOpenChange={setSellerOpen} />
+      {accountOpen && (
+        <AccountModal open={accountOpen} onOpenChange={setAccountOpen} />
+      )}
+      {buyerOpen && <BuyerModal open={buyerOpen} onOpenChange={setBuyerOpen} />}
+      {sellerOpen && (
+        <SellerModal open={sellerOpen} onOpenChange={setSellerOpen} />
+      )}
     </ModalContext.Provider>
   );
 }

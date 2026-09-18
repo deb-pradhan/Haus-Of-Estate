@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { CAREERS_PUBLIC_ENABLED } from '@/lib/careers-availability'
 import Link from 'next/link'
 import {
   ArrowLeft,
@@ -37,6 +38,8 @@ interface RolePageProps {
 }
 
 export async function generateMetadata({ params }: RolePageProps): Promise<Metadata> {
+  if (!CAREERS_PUBLIC_ENABLED) notFound()
+
   const { slug } = await params
   const { data } = await sanityFetch<RoleDetail>({
     query: ROLE_BY_SLUG_QUERY,
@@ -58,6 +61,8 @@ export async function generateMetadata({ params }: RolePageProps): Promise<Metad
 }
 
 export async function generateStaticParams() {
+  if (!CAREERS_PUBLIC_ENABLED) return []
+
   const { data } = await sanityFetch<Array<{ slug: string }>>({ query: ROLE_SLUGS_QUERY })
   return data?.map((r) => ({ slug: r.slug })) || []
 }
@@ -65,6 +70,8 @@ export async function generateStaticParams() {
 export const revalidate = 60
 
 export default async function RolePage({ params }: RolePageProps) {
+  if (!CAREERS_PUBLIC_ENABLED) notFound()
+
   const { slug } = await params
   const { data: role } = await sanityFetch<RoleDetail>({
     query: ROLE_BY_SLUG_QUERY,

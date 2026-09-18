@@ -12,22 +12,27 @@ const builder = createImageUrlBuilder(client)
 
 export { client }
 
-export function urlFor(source: any) {
+type SanityImageSource = Parameters<typeof builder.image>[0]
+
+export function urlFor(source: SanityImageSource) {
   return builder.image(source)
 }
 
 export async function sanityFetch<const T>({
   query,
   params = {},
+  throwOnError = false,
 }: {
   query: string
-  params?: Record<string, any>
+  params?: Record<string, unknown>
+  throwOnError?: boolean
 }): Promise<{ data: T | null }> {
   try {
     const data = await client.fetch(query, params)
     return { data }
   } catch (error) {
     console.error('Sanity fetch error:', error)
+    if (throwOnError) throw error
     return { data: null }
   }
 }

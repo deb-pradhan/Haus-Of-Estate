@@ -76,7 +76,7 @@ export default function CookiePolicyPage() {
               <div className="rounded-xl border border-border bg-surface p-5">
                 <h3 className="font-medium text-estate-700 mb-2">Performance Cookies</h3>
                 <p className="text-sm text-muted-foreground">
-                  These cookies collect anonymous information about how visitors use our website — such as which pages are most visited, where users come from, and how long they spend on each page. This helps us understand user behaviour and improve our website.
+                  With your permission, Google Analytics uses pseudonymous identifiers to measure visits and clicks on public pages. We exclude search text, form answers, email addresses, query strings, and full referrers from the analytics events we send.
                 </p>
                 <p className="mt-2 text-xs text-muted-foreground">
                   <strong>Legal basis:</strong> Consent required under PECR and UK GDPR.
@@ -96,7 +96,7 @@ export default function CookiePolicyPage() {
               <div className="rounded-xl border border-border bg-surface p-5">
                 <h3 className="font-medium text-estate-700 mb-2">Marketing Cookies</h3>
                 <p className="text-sm text-muted-foreground">
-                  These cookies track your browsing habits across websites to build a profile of your interests and show you relevant advertisements. They are also used to measure the effectiveness of advertising campaigns.
+                  Advertising tracking is disabled in our analytics setup. Accepting analytics does not enable advertising cookies or personalised advertising.
                 </p>
                 <p className="mt-2 text-xs text-muted-foreground">
                   <strong>Legal basis:</strong> Explicit consent required. We will not use marketing cookies without your permission.
@@ -110,7 +110,7 @@ export default function CookiePolicyPage() {
             <p>Some cookies on our website are set by third-party services. These include:</p>
             <ul className="mt-2 space-y-2 list-disc pl-5">
               <li>
-                <strong>Google Analytics:</strong> To understand how visitors use our website. Google Analytics collects data about page visits, time spent, and navigation patterns. This data is anonymous and helps us improve our website. You can opt out of Google Analytics by installing the{" "}
+                <strong>Google Analytics:</strong> When configured, this loads only after you accept analytics. You can reject it or withdraw consent using Cookie Settings in the footer. Withdrawal removes accessible Google Analytics cookies and reloads the page to stop loaded analytics scripts. We remember your choice in this browser for 180 days. You can also install the{" "}
                 <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer" className="text-trust-teal hover:underline">
                   Google Analytics Opt-out Browser Add-on
                 </a>.
@@ -190,7 +190,7 @@ export default function CookiePolicyPage() {
           <section>
             <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">6. Your Consent Choices</h2>
             <p>
-              When you first visit our website, you will be presented with a cookie consent banner that allows you to accept or reject non-essential cookies. You can change your preferences at any time by:
+              When analytics is available, the cookie banner lets you accept or reject it before it loads. You can change your analytics choice at any time by:
             </p>
             <ul className="mt-2 space-y-1 list-disc pl-5">
               <li>Clicking the "Cookie Settings" link in the footer of our website</li>
@@ -201,7 +201,7 @@ export default function CookiePolicyPage() {
               </li>
             </ul>
             <p className="mt-3">
-              <strong>Important:</strong> If you reject non-essential cookies, some features of our website may not function correctly. Strictly necessary cookies will still be set as they are required for the website to operate.
+              Rejecting analytics does not disable essential website features. Strictly necessary storage remains available. We save your analytics choice in local storage under haus.analytics-consent.v1 for up to 180 days so we can respect it on later visits.
             </p>
           </section>
 
