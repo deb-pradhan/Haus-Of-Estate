@@ -1,5 +1,30 @@
 # Haus releases
 
+## Current work — 21 September 2026
+
+Continue the same Release 2 branch and draft PR #16 against main. A fresh remote
+check began at R2 `f32b84d6` / main `20afdeeb`; there was no newer remote feature
+work to reconcile. Existing uncommitted handoffs and local assets are preserved.
+Do not reopen #12 or recreate the deleted SEO branch.
+
+H21 adds preparation of the three exact Cardiff commercial rental adverts and
+an opt-in Haus photo-logo display layer. Warehouse identity remains missing;
+it is excluded. See `docs/cardiff-commercial-preparation-2026-09-21.md` for
+saved-draft/validation evidence and the source discrepancies to resolve before
+publication. Existing H01/H08 drafts and paused Florence remain separate.
+
+H05/H17 retain their verified-live 18 September status. GA4 still reports no data
+and Surya's GTM list is still empty on 21 September. Request only the existing
+container ID/Edit access, not another GA4/Search Console invitation. The lead
+Google Sheet has already been received/read; decide Sheets versus Excel and
+hosted/email ownership before integration.
+
+All six tabs of Tanu's audit were read on 21 September. The recorded R1 homepage
+LCP 2.3s / TBT 20ms pass remains valid for that one 18 September lab run; broader
+content, sitemap, tracking and multi-page checks remain. Full status/owners are
+in `docs/backlog-reconciliation-2026-09-17.md`; H16's new Angela/Filemail reference
+is investigated separately in `docs/filemail-investigation-2026-09-21.md`.
+
 ## Current release position — 18 September 2026
 
 [PR #15](https://github.com/deb-pradhan/Haus-Of-Estate/pull/15) was merged into
