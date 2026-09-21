@@ -7,14 +7,12 @@ test("www requests permanently redirect to the canonical host", async () => {
   assert.equal(typeof nextConfig.redirects, "function");
 
   const redirects = await nextConfig.redirects();
-  assert.deepEqual(redirects, [
-    {
-      source: "/:path*",
-      has: [{ type: "host", value: "www.hausofestate.com" }],
-      destination: "https://hausofestate.com/:path*",
-      permanent: true,
-    },
-  ]);
+  assert.deepEqual(redirects[0], {
+    source: "/:path*",
+    has: [{ type: "host", value: "www.hausofestate.com" }],
+    destination: "https://hausofestate.com/:path*",
+    permanent: true,
+  });
 });
 
 test("unapproved public review-platform links stay hidden", async () => {

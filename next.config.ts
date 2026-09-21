@@ -12,6 +12,11 @@ const nextConfig: NextConfig = {
         destination: "https://hausofestate.com/:path*",
         permanent: true,
       },
+      {
+        source: "/ask",
+        destination: "/enquire",
+        permanent: false,
+      },
     ];
   },
   images: {

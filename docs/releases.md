@@ -7,6 +7,13 @@ check began at R2 `f32b84d6` / main `20afdeeb`; there was no newer remote featur
 work to reconcile. Existing uncommitted handoffs and local assets are preserved.
 Do not reopen #12 or recreate the deleted SEO branch.
 
+Social-bio follow-up: `/ask` is the short entry link to the existing standalone
+`/enquire` form. It uses a 307 redirect and preserves platform query tags.
+Next's config-routing checks, six SEO checks and focused lint passed; no full
+build was repeated for this config-only follow-up. This is prepared in R2, not
+a live link to promote: hosted enquiry, spreadsheet and email verification are
+still pending. See `docs/social-lead-links.md` for marketing handoff wording.
+
 H21 adds preparation of the three exact Cardiff commercial rental adverts and
 an opt-in Haus photo-logo display layer. Warehouse identity remains missing;
 it is excluded. See `docs/cardiff-commercial-preparation-2026-09-21.md` for
