@@ -2,6 +2,14 @@
 
 ## Current work — 21 September 2026
 
+**H01 now corrected live:** Surya's explicit instruction to remove the misleading
+completed status was applied narrowly to published Al Furjan and Azizi Monaco
+Mansions at 10:04:59 UTC. Public listing/home cards, both detail pages and their
+description metadata were verified Off-plan at 10:06:25 UTC. Existing drafts and
+all other property/blog content were preserved. This is a scoped CMS correction,
+not a Release 2 deployment or permission to release held content. Receipt:
+`docs/property-status-correction-2026-09-21.md`.
+
 Continue the same Release 2 branch and draft PR #16 against main. A fresh remote
 check began at R2 `f32b84d6` / main `20afdeeb`; there was no newer remote feature
 work to reconcile. Existing uncommitted handoffs and local assets are preserved.
