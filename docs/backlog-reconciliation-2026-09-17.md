@@ -1,4 +1,4 @@
-# Haus of Estate — H01–H21 reconciliation
+# Haus of Estate — H01–H22 reconciliation
 
 Baseline checked 17 September 2026; reconciled late 18 September after Deb merged and deployed Release 1, and updated 21 September for the weekend Cardiff and Filemail requests. H05/H17 remain completed with 18 September live evidence. Release 2 continues in draft PR #16 against main. Dated evidence is distinguished below; Cardiff preparation remains unpublished. A later explicit 21 September instruction authorised the narrow H01 published correction, now verified live; no application deployment was made.
 
@@ -13,7 +13,7 @@ Baseline checked 17 September 2026; reconciled late 18 September after Deb merge
 - Safe local configuration inspection found intake enabled, delivery and AskHaus disabled, and no usable local database, mail-provider, Power Automate, calendar or AI credentials. This does not prove those services are absent from company production. No hosted test environment was established.
 - The connected Vercel account returned no Haus project. It is not evidence about Deb's company hosting account. The Google Drive connector was also connected to a different account and returned 403 for the inventory sheet; the correct signed-in browser account successfully opened and read it.
 
-## H01–H21
+## H01–H22
 
 “Implemented” means code exists locally. “Draft” means saved in Sanity but not published. Test evidence states whether real external receipt was proved. Suggested owners identify the next action, not commitments made on their behalf.
 
@@ -40,6 +40,7 @@ Baseline checked 17 September 2026; reconciled late 18 September after Deb merge
 | **H19 — receipts/personalised follow-ups** | Separate consent/withdrawal storage foundations exist. **Customer enquiry receipt, interest store, inactivity scheduler and campaign sender remain unbuilt.** On-screen acknowledgement and staff notifications are different outcomes. | No real personalised send, cancellation, provider unsubscribe sync, suppression or delivery-monitoring proof. | Sonia approves scenarios, timing and weekly cap; company chooses sender/owner. Surya builds and tests with staff. Logging in alone does not subscribe; AskHaus contributes confirmed preferences only; GA4 remains separate. | `docs/email-scenarios-handoff-2026-09-16.md`; `lead-delivery/zeptomail.ts:31`; `lead-intake/newsletter.ts:107`. |
 | **H20 — hosted testing** | Deployment/worker code exists; an isolated hosted test backend is not established. Production R1 deployment is separate from R2 review/testing. | No hosted enquiry → saved record → info inbox → agreed sheet → customer receipt → reply proof. No R2 Vercel review environment verified. | Deb/company agrees provider, isolated database, worker, access, sender, budget and maintainer. Surya builds missing receipt/selected-sheet adapter and verifies one staff-only journey, then newsletter/follow-up opt-outs. Sonia decides destination/reply owner. | Hosted setup notes; fresh backend audit; successful R1 deployment does not satisfy this test finish line. |
 | **H21 — Cardiff commercial rentals** | Three exact City Road/Roath adverts matched: £1,250/285 sq ft, £1,500/240 sq ft and £2,000/325 sq ft. Three image-backed native Sanity drafts saved; opt-in Haus logo display implemented on property photos. Original image files preserved. | 21 Sep read-back: three drafts, zero published twins, seven unique assets/nine gallery associations. All 19 previously protected property/blog documents retain identical revisions. Headline/component area discrepancies and unfinished fit-out are recorded; an advert is not fresh availability confirmation. | Sonia/Haus letting contact confirms current condition, availability, exact premises, area and terms; authorised editor separately approves publication. Sonia supplies the exact warehouse advert/identity; no warehouse or full catalogue imported. Deb reviews/deploys the UI through PR16. | `docs/cardiff-commercial-preparation-2026-09-21.md`; matched Hafren adverts, create-only importer, Sanity receipt and schema validation. |
+| **H22 — Manchester sale** | Two-bedroom Sherrington Street terraced house prepared from Sonia's Rightmove source, at her £219,995 price. Eighteen original photos selected; incorrect source lead photo excluded. Terraced House added to shared taxonomy. | Saved native draft with eighteen resolving image assets at 12:41:44 UTC; zero published twins, all 48 existing property/post revisions unchanged. Payload/schema checks pass. No public listing or production deployment. Current source advert/brochure instead show offers over £195,000; source tax bands and room measurements also conflict. | Sonia/Haus listing owner resolves price, address/photo match, council tax, measurements, lease terms/EPC and current availability before separate publication approval. | `docs/manchester-property-preparation-2026-09-21.md`; Rightmove 93277344, source brochure and visual review of all source media. |
 
 ## Actual H18 sheet contents and CMS comparison
 
@@ -191,3 +192,19 @@ Release 2 continues on **suryak02/azizi-florence-content-scaffold**, **draft PR 
 - **Next priority, H04/H20:** one hosted enquiry saved → info inbox → agreed spreadsheet → customer receipt → staff reply. **Sonia:** Sheets-versus-Excel decision and reply owner. **Deb/company:** hosted DB/worker/sender access. **Surya:** missing integration/receipt code and staff-only verification. H19 personalised scheduling and actual newsletter sending remain unbuilt.
 
 Earlier code/build/schema/branding checks passed; the later H01 correction has its own fresh Sanity and public-content verification. The only public content change is the explicitly requested two-property H01 correction. No application deployment, other content publication or customer emails/campaigns were performed.
+
+## 21 September Manchester follow-up (H22)
+
+Sonia's supplied Manchester advert has been reviewed alongside its original
+photographs, plans and two-page brochure. Preparation uses the explicit £219,995
+price, while preserving the live advert's £195,000 offers-over discrepancy in
+internal notes. Source photo 1 shows neighbour number 20; the brochure identifies
+22 and a matching red-brick photo is selected instead. No visible digital agency
+watermarks were found, so property photos stay unedited. Tax band and room
+measurement conflicts are held for confirmation, including the floorplans.
+
+Cardiff's three existing native drafts were reread and matched to the newly
+supplied screenshot, without duplicate imports or changed revisions. The warehouse
+still needs Sonia's exact link/address. Florence remains paused. H22 native draft `drafts.pcT5cUTM5ohqBnZd4qKwld` is saved and read-back verified,
+with eighteen resolving assets and all 48 pre-existing property/post revisions
+unchanged. Development and publication remain separate.

@@ -1,0 +1,173 @@
+{
+  "version": 1,
+  "projectId": "jdxbkry4",
+  "dataset": "production",
+  "sourceUrl": "https://www.rightmove.co.uk/properties/93277344",
+  "document": {
+    "_type": "property",
+    "title": "Two-bedroom terraced house on Sherrington Street, Manchester",
+    "slug": {
+      "_type": "slug",
+      "current": "sherrington-street-manchester-two-bedroom-terraced-house"
+    },
+    "community": "Sherrington Street",
+    "city": "Manchester",
+    "country": "United Kingdom",
+    "category": "residential",
+    "availability": [
+      "ready"
+    ],
+    "listingType": [
+      "sale"
+    ],
+    "unitType": "Terraced House",
+    "bedrooms": 2,
+    "bathrooms": 1,
+    "priceAmount": 219995,
+    "priceCurrency": "GBP",
+    "priceDisplay": "£219,995",
+    "sizeDisplay": "Approximately 67 m² / 722 sq ft (advertised)",
+    "summary": "A two-bedroom terraced home on Sherrington Street, Manchester, with a reception room, fitted kitchen, upstairs bathroom, separate downstairs WC and enclosed rear yard.",
+    "description": [
+      {
+        "_key": "home",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "home-text",
+            "_type": "span",
+            "marks": [],
+            "text": "This two-bedroom terraced house is advertised at 22 Sherrington Street, Manchester, M12 5RW. The ground floor includes a reception room, fitted kitchen and separate WC, with two bedrooms and a bathroom upstairs."
+          }
+        ]
+      },
+      {
+        "_key": "outside",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "outside-text",
+            "_type": "span",
+            "marks": [],
+            "text": "An enclosed rear yard provides outdoor space. The property is advertised with on-street parking and access to shops, schools and transport connections towards central Manchester."
+          }
+        ]
+      },
+      {
+        "_key": "tenure",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "tenure-text",
+            "_type": "span",
+            "marks": [],
+            "text": "The advertised tenure is leasehold. The remaining lease term, ground rent, service charges and any other lease costs are to be confirmed. Contact Haus of Estate to discuss the property or arrange a viewing."
+          }
+        ]
+      }
+    ],
+    "keyFeatures": [
+      "Two bedrooms",
+      "Reception room",
+      "Fitted kitchen",
+      "First-floor bathroom and separate downstairs WC",
+      "Enclosed rear yard",
+      "On-street parking, as advertised",
+      "Leasehold; terms to be confirmed"
+    ],
+    "enquiryEmail": "info@hausofestate.com",
+    "showHausLogo": true,
+    "status": "draft",
+    "featured": false,
+    "verification": {
+      "status": "unverified",
+      "sourceUrl": "https://www.rightmove.co.uk/properties/93277344",
+      "notes": "H22, 21 September 2026. Prepared from Sonia's 19 September instruction and Rightmove listing 93277344 (Bricks Properties reference 34940972). Sonia explicitly supplied £219,995; current Rightmove advert and brochure both show Offers Over £195,000. Draft uses Sonia's price; do not infer that this conflict is resolved. Source brochure identifies 22 Sherrington Street M12 5RW, and its hero centres on the red-brick house numbered 22. Rightmove's first photo instead centres on neighbouring number 20: excluded from CMS gallery; original retained locally. Photo 17, centred on the red-brick house consistent with the brochure, is the selected hero. Source says Longsight in features and Levenshulme in prose: neighbourhood omitted pending confirmation. Headline area 722 sq ft / 67 sq m versus prose 721 sq ft; keep approximate source headline, no measured-area claim. Prose gives identical 4.43 x 1.98 m reception and kitchen; ground-floor plan instead gives reception 5.00 x 3.10 m and kitchen 5.20 x 1.98 m. Individual room dimensions and both plans are held outside the gallery until confirmed. Tax band A on advert and brochure page 1, B on brochure page 2: omitted pending confirmation. Source EPC graphic says D/65, potential B/88, but no full dated certificate was supplied: certificate/rating not imported as a verified record. Lease term/ground rent/service charges are not supplied. Existing house classified ready/sale per request; no assertion of vacant possession, recent safety certification, exact completion date or current availability verification. All 19 source photos, two plans and EPC graphic were visually inspected; no visible digital agent/Rightmove watermark in these image files. Eighteen original unedited photos imported with descriptive alt text. Agency brochure, logo, contact details, maps and promotional wording are not public listing content. showHausLogo uses existing separate website overlay. Sonia/Haus listing contact must resolve pricing, address/photo identity, measurements, council tax, lease terms, EPC/current availability and approve release before publication."
+    },
+    "editorialApproval": {
+      "contentApproved": false,
+      "seoApproved": false,
+      "notes": "Unpublished review draft. Resolve the source discrepancies recorded in verification notes and confirm listing facts before publication. Price follows Sonia (£219,995), pending confirmation against source (£195,000 offers over). Florence and Cardiff publication holds remain unchanged."
+    }
+  },
+  "photos": [
+    {
+      "sourceUrl": "https://media.rightmove.co.uk/property-photo/62b6e90d4/93277344/62b6e90d4ea5f4897118daf27cfefdf0.jpeg",
+      "alt": "Reception room looking towards the front door and street-facing window"
+    },
+    {
+      "sourceUrl": "https://media.rightmove.co.uk/property-photo/94f53dabb/93277344/94f53dabb42e238525a3f9c4b093cf20.jpeg",
+      "alt": "Fitted galley kitchen with dark cabinets and gas hob"
+    },
+    {
+      "sourceUrl": "https://media.rightmove.co.uk/property-photo/cad729baf/93277344/cad729baf077861efbef6fd2694c52db.jpeg",
+      "alt": "Reception room looking towards the staircase and kitchen doorway"
+    },
+    {
+      "sourceUrl": "https://media.rightmove.co.uk/property-photo/d82a1380f/93277344/d82a1380feb12a6a5b9d5b9afbd2788f.jpeg",
+      "alt": "Downstairs WC with compact hand basin"
+    },
+    {
+      "sourceUrl": "https://media.rightmove.co.uk/property-photo/6288814a6/93277344/6288814a650b87ea916e681e33e87e48.jpeg",
+      "alt": "Reception room viewed from the kitchen doorway"
+    },
+    {
+      "sourceUrl": "https://media.rightmove.co.uk/property-photo/607322645/93277344/607322645d0f18d12c4ce990800b62ad.jpeg",
+      "alt": "Kitchen worktop, cabinets and open shelving"
+    },
+    {
+      "sourceUrl": "https://media.rightmove.co.uk/property-photo/9dd358006/93277344/9dd3580063156beb7e20b7c439398f70.jpeg",
+      "alt": "Kitchen sink, hob and window overlooking the rear yard"
+    },
+    {
+      "sourceUrl": "https://media.rightmove.co.uk/property-photo/43fa6bec8/93277344/43fa6bec89665b98621f06ebec94d8f9.jpeg",
+      "alt": "Carpeted staircase from the reception room"
+    },
+    {
+      "sourceUrl": "https://media.rightmove.co.uk/property-photo/f5bb58f49/93277344/f5bb58f4976137049e4353a55a1f2624.jpeg",
+      "alt": "First-floor landing and staircase"
+    },
+    {
+      "sourceUrl": "https://media.rightmove.co.uk/property-photo/b9ebe76a7/93277344/b9ebe76a7a8c9907e1c19142522af2c5.jpeg",
+      "alt": "Bathroom with bath, wash basin and WC"
+    },
+    {
+      "sourceUrl": "https://media.rightmove.co.uk/property-photo/56ee77d23/93277344/56ee77d23834fc0b76192e0f1f651829.jpeg",
+      "alt": "Bathroom showing the bath and shower curtain"
+    },
+    {
+      "sourceUrl": "https://media.rightmove.co.uk/property-photo/ec65e2653/93277344/ec65e2653cf608f54a75aeb48475e7c1.jpeg",
+      "alt": "Front bedroom with window and alcove shelving"
+    },
+    {
+      "sourceUrl": "https://media.rightmove.co.uk/property-photo/cc5cd3f08/93277344/cc5cd3f08e98014f07574ffb5fc885cc.jpeg",
+      "alt": "Rear bedroom with window and shelving"
+    },
+    {
+      "sourceUrl": "https://media.rightmove.co.uk/property-photo/f0de0fdd2/93277344/f0de0fdd22077c7b9381db4a7cc68b1c.jpeg",
+      "alt": "Another view of the rear bedroom"
+    },
+    {
+      "sourceUrl": "https://media.rightmove.co.uk/property-photo/3c3e3de58/93277344/3c3e3de58c2466d6f444fdfcf74f0e9d.jpeg",
+      "alt": "Enclosed rear yard and gate"
+    },
+    {
+      "sourceUrl": "https://media.rightmove.co.uk/property-photo/43ef5dfbb/93277344/43ef5dfbb9ac6cfb0ef379f7ec336e80.jpeg",
+      "alt": "Red-brick terraced house shown in the source brochure for 22 Sherrington Street"
+    },
+    {
+      "sourceUrl": "https://media.rightmove.co.uk/property-photo/8c195c41a/93277344/8c195c41a4fed3b67115f476e5985d14.jpeg",
+      "alt": "Street view centred on the red-brick house, with adjoining homes"
+    },
+    {
+      "sourceUrl": "https://media.rightmove.co.uk/property-photo/17cd89ff6/93277344/17cd89ff6fbcc9ed66da6bd3dd659110.jpeg",
+      "alt": "Another view of the front bedroom and alcove shelving"
+    }
+  ]
+}
