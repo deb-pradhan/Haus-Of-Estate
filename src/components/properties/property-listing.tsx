@@ -7,6 +7,7 @@ import { sanityFetch } from '@/sanity/live'
 import { PROPERTIES_FILTERED_QUERY } from '@/sanity/queries'
 import { EmptyStateCTA } from '@/components/properties/empty-state-cta'
 import { Breadcrumbs } from '@/components/properties/breadcrumbs'
+import { PropertyPhotoBranding } from './property-photo-branding'
 import { SaveContentButton } from '@/components/saved-content'
 import { PropertyAssistantSearchEntry } from '@/components/property-assistant/property-assistant-search-entry'
 import { isPropertyAssistantEnabled } from '@/lib/features'
@@ -48,6 +49,7 @@ interface PropertyCard extends PropertyPricing {
   summary: string
   featured?: boolean
   featuredImage?: { alt?: string } & Record<string, unknown>
+  showHausLogo?: boolean
 }
 
 export interface PropertyListingSearchParams {
@@ -356,6 +358,7 @@ export async function PropertyListing({
                                   <Building2 className="h-10 w-10 text-white/30" />
                                 </div>
                               )}
+                              {p.featuredImage && <PropertyPhotoBranding enabled={p.showHausLogo} />}
                               <div className="absolute left-3 top-3 flex max-w-[calc(100%-4.25rem)] flex-wrap items-center gap-1.5">
                                 {p.completionStatus && (
                                   <span className="rounded-full bg-surface/95 px-3 py-1 text-[11px] font-semibold text-estate-700 shadow-sm">

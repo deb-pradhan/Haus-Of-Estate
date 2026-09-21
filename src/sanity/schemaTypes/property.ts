@@ -479,6 +479,13 @@ export const property = defineType({
       ],
     }),
     defineField({
+      name: 'showHausLogo',
+      title: 'Show Haus logo on property photos',
+      type: 'boolean',
+      initialValue: false,
+      description: 'Display the Haus of Estate logo on this property’s website photos. Original image files stay unchanged. Off unless enabled for this listing.',
+    }),
+    defineField({
       name: 'featuredImage',
       title: 'Featured Image',
       type: 'image',

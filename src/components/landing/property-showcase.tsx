@@ -11,6 +11,7 @@ import { SaveContentButton } from "@/components/saved-content";
 import { sanityDocumentIdSchema } from "@/lib/saved-content/contracts";
 import { PropertyPrice } from "@/components/currency/property-price";
 import { propertyPriceInput, type PropertyPricing } from "@/lib/currency";
+import { PropertyPhotoBranding } from "@/components/properties/property-photo-branding";
 
 interface FeaturedProperty extends PropertyPricing {
   _id: string;
@@ -28,6 +29,7 @@ interface FeaturedProperty extends PropertyPricing {
   completionStatus?: string;
   summary: string;
   featuredImage?: { alt?: string } & Record<string, unknown>;
+  showHausLogo?: boolean;
 }
 
 const COMPLETION_LABEL: Record<string, string> = {
@@ -88,6 +90,7 @@ function PropertyCard({
               <Building2 className="h-10 w-10 text-white/30" />
             </div>
           )}
+          {property.featuredImage && <PropertyPhotoBranding enabled={property.showHausLogo} />}
           <div className="absolute left-3 top-3 flex max-w-[calc(100%-4.25rem)] flex-wrap items-center gap-1.5">
             {property.completionStatus && (
               <span className="rounded-full bg-surface/95 px-3 py-1 text-[11px] font-semibold text-estate-700 shadow-sm">

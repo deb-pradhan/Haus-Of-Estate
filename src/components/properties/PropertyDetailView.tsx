@@ -14,6 +14,7 @@ import { sanityDocumentIdSchema } from '@/lib/saved-content/contracts'
 import { canonicalHausUrl } from '@/lib/share'
 import { PropertyPrice } from '@/components/currency/property-price'
 import { propertyPriceInput, type PropertyPricing } from '@/lib/currency'
+import { PropertyPhotoBranding } from './property-photo-branding'
 
 interface LocationBenefit {
   destination?: string
@@ -47,6 +48,7 @@ export interface PropertyDetail extends PropertyPricing {
   amenities?: string[]
   locationBenefits?: LocationBenefit[]
   featuredImage?: { alt?: string } & Record<string, unknown>
+  showHausLogo?: boolean
   gallery?: (Record<string, unknown> & { alt?: string })[]
   videoUrl?: string
   enquiryEmail?: string
@@ -201,6 +203,7 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
             <Building2 className="h-16 w-16 text-white/25" />
           </div>
         )}
+        {media.hero && <PropertyPhotoBranding enabled={property.showHausLogo} />}
       </div>
 
       <div className="mx-auto max-w-6xl px-4 py-12 md:px-6 md:py-16">
@@ -393,6 +396,7 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
                         unoptimized={Boolean(preview)}
                         className="object-cover"
                       />
+                      <PropertyPhotoBranding enabled={property.showHausLogo} />
                     </div>
                   ))}
                 </div>

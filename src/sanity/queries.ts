@@ -171,6 +171,7 @@ const PROPERTY_CARD_FIELDS = `
   summary,
   featured,
   publishedAt,
+  showHausLogo,
   featuredImage
 `
 

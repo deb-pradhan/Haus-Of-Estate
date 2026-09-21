@@ -66,6 +66,25 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs())
 
 describe('shared property details', () => {
+  it('keeps existing photos unbranded and preserves their sources when a listing opts into the logo', () => {
+    const original = renderToStaticMarkup(<PropertyDetailView property={property} media={media} />)
+    const branded = renderToStaticMarkup(
+      <PropertyDetailView property={{ ...property, showHausLogo: true }} media={media} />,
+    )
+    const disabled = renderToStaticMarkup(
+      <PropertyDetailView property={{ ...property, showHausLogo: false }} media={media} />,
+    )
+
+    expect(original).not.toContain('src="/logo.svg"')
+    expect(disabled).not.toContain('src="/logo.svg"')
+    expect(branded.match(/src="\/logo.svg"/g)).toHaveLength(2)
+    for (const image of [media.hero, ...media.gallery]) {
+      expect(branded).toContain(`src="${image.src}"`)
+      expect(branded).toContain(`alt="${image.alt}"`)
+    }
+    expect(branded).toContain('Enquire about this property')
+  })
+
   it('preserves published saves, canonical sharing, property enquiries and purchase guidance', () => {
     const html = renderToStaticMarkup(<PropertyDetailView property={property} media={media} />)
 
