@@ -28,6 +28,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from 
 import { useLeadModals } from "@/components/lead-modal";
 import { HeaderAuthControl } from "@/components/auth/header-auth-control";
 import { CurrencySelector } from "@/components/currency/currency-selector";
+import { CAREERS_PUBLIC_ENABLED } from "@/lib/careers-availability";
 import { cn } from "@/lib/utils";
 import {
   buildPropertiesMenu,
@@ -169,6 +170,7 @@ const SERVICES_ITEMS: ServiceEntry[] = [
 const ABOUT_ITEMS: NavItem[] = [
   { href: "/about", label: "About us", desc: "Our story and the standard we hold.", icon: Info },
   { href: "/team", label: "Our team", desc: "The advisors behind every introduction.", icon: UsersIcon },
+  ...(CAREERS_PUBLIC_ENABLED ? [{ href: "/careers", label: "Careers", desc: "Explore our current opportunities.", icon: UsersIcon }] : []),
   { href: "/faq", label: "FAQs", desc: "Common questions, plain-English answers.", icon: HelpCircle },
 ];
 

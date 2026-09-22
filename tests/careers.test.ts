@@ -1,17 +1,11 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { APPROVED_CAREER_ROLES, resolveCareerRole, resolveCareerRoles } from '@/lib/career-roles'
+import { APPROVED_CAREER_ROLES, resolveCareerRole, resolveCareerRoles, isApprovedCareersPath } from '@/lib/career-roles'
 import { APPLICATION_MAX_BYTES, CV_MAX_BYTES, normalizeApplicationUrl, validateCvFile } from '@/lib/careers'
 
 const { cmsFetch, send } = vi.hoisted(() => ({ cmsFetch: vi.fn(), send: vi.fn() }))
 vi.mock('@/sanity', () => ({ client: { fetch: cmsFetch } }))
 vi.mock('resend', () => ({ Resend: class { emails = { send } } }))
-// Preserve regression coverage for the retained intake implementation. The real
-// closed policy is tested separately in careers-closed.test.ts and HTTP checks.
-vi.mock('@/lib/careers-availability', async (importOriginal) => ({
-  ...await importOriginal<typeof import('@/lib/careers-availability')>(),
-  CAREERS_PUBLIC_ENABLED: true,
-}))
 
 import { getCareerRole, getCareerRoles } from '@/sanity/careers'
 import { POST } from '@/app/api/applications/route'
@@ -19,7 +13,7 @@ import { POST } from '@/app/api/applications/route'
 function application() {
   const form = new FormData()
   for (const [key, value] of Object.entries({
-    roleSlug: 'content-managers', roleTitle: 'A forged title', fullName: 'Test Applicant',
+    roleSlug: 'content-manager', roleTitle: 'A forged title', fullName: 'Test Applicant',
     email: 'applicant@example.test', phone: '+447700900000', yearsOfExperience: '1–3 years',
     consent: 'true', cvUrl: 'https://example.test/cv.pdf',
   })) form.set(key, value)
@@ -46,16 +40,52 @@ async function submit(form = application(), headers?: HeadersInit) {
 
 beforeEach(() => {
   vi.stubEnv('RESEND_API_KEY', 're_synthetic_test_only')
+  vi.stubEnv('CAREERS_INTAKE_ENABLED', 'true')
+  vi.stubEnv('CAREERS_EMAIL', '')
   cmsFetch.mockReset().mockResolvedValue(null)
   send.mockReset().mockResolvedValue({ data: { id: 'synthetic-email' }, error: null })
   vi.spyOn(console, 'error').mockImplementation(() => {})
 })
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllEnvs() })
 
-describe('preserved September role resolver (public careers remains closed)', () => {
-  it('retains the historical five-role fallback for regression coverage', () => {
-    expect(resolveCareerRoles([]).map(role => role.title)).toEqual(['Content Managers', 'Real Estate Agents', 'PR Interns', 'Videographers', 'Lead Generators'])
-    expect(resolveCareerRoles([]).every(role => !role.location && !role.employmentType && !role.summary)).toBe(true)
+describe('approved September reopening roles', () => {
+  it('lists exactly the approved roles and supplied terms, without invented briefs', () => {
+    const roles = resolveCareerRoles([])
+    expect(roles.map(role => role.title)).toEqual([
+      'Lettings Specialist - UK Nationwide - Self Employed',
+      'Sales Specialist - UK Nationwide - Self Employed',
+      'Real Estate Agent - UK Nationwide - Self Employed',
+      'Content Writer', 'Video Content Creator', 'Graphic Designer', 'Content Manager',
+      'Content Strategist', 'Social Media Account Manager (Intern)',
+    ])
+    expect(roles.every(role => !role.summary)).toBe(true)
+    expect(roles.slice(0, 3).every(role => role.location === 'UK Nationwide' && role.employmentType === 'Self Employed')).toBe(true)
+    expect(roles.slice(3, 8).every(role => !role.location && !role.employmentType)).toBe(true)
+    expect(roles[8].employmentType).toBe('Internship')
+    expect(roles[8].location).toBeUndefined()
+    expect([...new Set(roles.map(role => role.department))]).toEqual(['Lettings Agent', 'Sales Agent', 'Career Experience Openings'])
+  })
+
+  it('allows the index and reviewed role paths while rejecting every retired or unknown path', () => {
+    for (const { slug } of APPROVED_CAREER_ROLES) {
+      expect(isApprovedCareersPath(`/careers/${slug}`)).toBe(true)
+      expect(isApprovedCareersPath(`/careers/${slug}/`)).toBe(true)
+    }
+    expect(isApprovedCareersPath('/careers')).toBe(true)
+    expect(isApprovedCareersPath('/careers/')).toBe(true)
+    for (const path of ['/careers/content-managers', '/careers/real-estate-agents', '/careers/unknown', '/careers/content-manager/extra', '/Careers', '/careers-news', '/bad%escape']) {
+      expect(isApprovedCareersPath(path)).toBe(false)
+    }
+  })
+
+  it('rejects all previous five vacancies and speculative intake, even when delivery is enabled', async () => {
+    for (const slug of ['content-managers', 'real-estate-agents', 'pr-interns', 'videographers', 'lead-generators', 'general-speculative']) {
+      expect(resolveCareerRole(slug)).toBeNull()
+      const form = application(); form.set('roleSlug', slug)
+      expect((await submit(form)).status).toBe(400)
+    }
+    expect(cmsFetch).not.toHaveBeenCalled()
+    expect(send).not.toHaveBeenCalled()
   })
   it('hides every preserved legacy seed record and prevents API acceptance', async () => {
     const records = readFileSync('scripts/roles.ndjson', 'utf8').trim().split('\n').map(line => JSON.parse(line))
@@ -72,17 +102,17 @@ describe('preserved September role resolver (public careers remains closed)', ()
   })
   it('honours CMS closure and draft status over the fallback', async () => {
     for (const status of ['closed', 'draft']) {
-      cmsFetch.mockResolvedValue({ ...APPROVED_CAREER_ROLES[0], _id: 'role', status })
-      expect(await getCareerRole('content-managers')).toBeNull()
+      cmsFetch.mockResolvedValue({ ...APPROVED_CAREER_ROLES.find(({ slug }) => slug === 'content-manager'), _id: 'role', status })
+      expect(await getCareerRole('content-manager')).toBeNull()
       expect((await submit()).status).toBe(400)
     }
   })
   it('uses published CMS data and propagates outages instead of reopening roles', async () => {
     cmsFetch.mockResolvedValue([])
-    expect(await getCareerRoles()).toHaveLength(5)
+    expect(await getCareerRoles()).toHaveLength(9)
     expect(cmsFetch.mock.calls[0][2]).toEqual({ perspective: 'published' })
     cmsFetch.mockRejectedValue(new Error('synthetic CMS outage'))
-    await expect(getCareerRole('content-managers')).rejects.toThrow()
+    await expect(getCareerRole('content-manager')).rejects.toThrow()
     await expect(getCareerRoles()).rejects.toThrow()
     expect((await submit()).status).toBe(503)
     expect(send).not.toHaveBeenCalled()
@@ -97,7 +127,7 @@ describe('CV and portfolio handling', () => {
     expect(await response.json()).toEqual({ ok: true, confirmationSent: true })
     const message = send.mock.calls[0][0]
     expect(message.to).toBe('hr@hausofestate.com')
-    expect(message.subject).toContain('Content Managers')
+    expect(message.subject).toContain('Content Manager')
     expect(message.subject).not.toContain('forged')
     expect(message.html).toContain('https://example.test/cv.pdf')
     expect(message.html).toContain('https://example.test/portfolio.pdf?view=1&amp;download=0')
@@ -155,6 +185,17 @@ describe('CV and portfolio handling', () => {
 })
 
 describe('email acceptance', () => {
+  it('uses the configured recruitment inbox consistently for delivery and failure guidance', async () => {
+    vi.stubEnv('CAREERS_EMAIL', ' recruitment@example.test ')
+    const { getCareersInbox } = await import('@/lib/careers-settings')
+    expect(getCareersInbox()).toBe('recruitment@example.test')
+    expect((await submit()).status).toBe(200)
+    expect(send.mock.calls[0][0].to).toBe('recruitment@example.test')
+    expect(send.mock.calls[1][0].html).not.toContain('two working days')
+    send.mockResolvedValue({ data: null, error: { message: 'synthetic rejection' } })
+    expect((await (await submit()).json()).error).toContain('recruitment@example.test')
+  })
+
   it('does not report success or confirm when the provider rejects the HR email', async () => {
     send.mockResolvedValue({ data: null, error: { message: 'synthetic rejection' } })
     expect((await submit()).status).toBe(502)

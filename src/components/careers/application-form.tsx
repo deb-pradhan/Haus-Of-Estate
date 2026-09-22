@@ -194,7 +194,6 @@ export function ApplicationForm({
             <>
               Thank you. Your application for the{" "}
               <strong>{effectiveTitle}</strong> role is in front of our team.
-              We&apos;ll reply within two working days, either way.
             </>
           )}
         </p>

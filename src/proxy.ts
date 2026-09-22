@@ -4,6 +4,7 @@ import type { NextAuthRequest } from "next-auth";
 import { auth } from "@/auth";
 import { safeReturnTo } from "@/lib/auth/safe-return-to";
 import { isSavedContentEnabled } from "@/lib/features";
+import { isApprovedCareersPath } from "@/lib/career-roles";
 import {
   CAREERS_PUBLIC_ENABLED,
   careersUnavailableResponse,
@@ -53,7 +54,7 @@ export default function proxy(request: NextRequest, event: NextFetchEvent) {
   const { pathname } = request.nextUrl;
 
   // Respond before any page/RSC output or cached job metadata can be served.
-  if (!CAREERS_PUBLIC_ENABLED && isCareersPath(pathname)) {
+  if (isCareersPath(pathname) && (!CAREERS_PUBLIC_ENABLED || !isApprovedCareersPath(pathname))) {
     return careersUnavailableResponse();
   }
 

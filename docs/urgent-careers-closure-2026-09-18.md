@@ -1,5 +1,13 @@
 # Urgent careers closure — 18 September 2026
 
+**22 September update:** this document records the historical closure that is
+still deployed in Release 1. Surya has now explicitly approved preparing the nine
+replacement vacancies in Release 2, including Social Media Account Manager
+(Intern). Public page availability is separate from application readiness:
+intake remains disabled until hosted delivery and recruiter inbox receipt are
+verified. See [the current implementation report](website-update-2026-09-22.md).
+The historical hold instructions below do not override that newer approval.
+
 Sonia requested an immediate public careers takedown. Surya explicitly asked for
 this small change through the existing SEO branch / PR #15, independently of the
 overhaul. PR #15 is now merged and deployed; the closure and approved contacts

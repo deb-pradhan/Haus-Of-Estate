@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { CAREERS_CLOSED_HEADERS, CAREERS_PUBLIC_ENABLED } from "@/lib/careers-availability";
+import { CAREERS_CLOSED_HEADERS } from "@/lib/careers-availability";
+import { getCareersInbox, isCareersIntakeEnabled } from "@/lib/careers-settings";
 import {
   sendApplicationToTeam,
   sendApplicationConfirmationToApplicant,
@@ -20,9 +21,9 @@ import { getCareerRole } from "@/sanity/careers";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export async function POST(request: Request) {
   // Reject old/cached application forms before reading personal data or sending mail.
-  if (!CAREERS_PUBLIC_ENABLED) {
+  if (!isCareersIntakeEnabled()) {
     return NextResponse.json(
-      { error: "Applications are currently closed." },
+      { error: "Online applications are not open yet." },
       { status: 404, headers: CAREERS_CLOSED_HEADERS },
     );
   }
@@ -155,7 +156,7 @@ export async function POST(request: Request) {
   try {
     role = await getCareerRole(roleSlug);
   } catch {
-    return NextResponse.json({ error: "We couldn't check current opportunities. Please try again shortly or email hr@hausofestate.com directly." }, { status: 503 });
+    return NextResponse.json({ error: `We couldn't check current opportunities. Please try again shortly or email ${getCareersInbox()} directly.` }, { status: 503 });
   }
   if (!role) errors.roleSlug = "This role is no longer accepting applications. Choose a current opportunity on our careers page.";
 
@@ -190,7 +191,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error:
-          "We couldn't deliver your application. Please email hr@hausofestate.com directly.",
+          `We couldn't deliver your application. Please email ${getCareersInbox()} directly.`,
       },
       { status: 502 },
     );

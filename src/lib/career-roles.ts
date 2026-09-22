@@ -1,6 +1,6 @@
 import approvedRoles from '../../content/careers-roles.json'
 
-// Sonia's 12 September 2026 hiring list. Missing CMS records expose titles only.
+// Approved 22 September reopening list. Missing CMS records expose only supplied facts.
 export const APPROVED_CAREER_ROLES = approvedRoles
 
 export interface CareerRole {
@@ -26,7 +26,15 @@ export function resolveCareerRole(slug: string, record?: CareerRole | null): Car
   if (!approved) return null
   // An explicit CMS closure/draft must win over the title-only fallback.
   if (record && (record.status !== 'open' || record.title !== approved.title)) return null
-  return record ?? { ...approved, _id: `approved-${slug}`, status: 'open' }
+  // The reviewed title/group/terms take precedence over older CMS categorisation.
+  return record ? { ...record, ...approved } : { ...approved, _id: `approved-${slug}`, status: 'open' }
+}
+
+export function isApprovedCareersPath(pathname: string): boolean {
+  let path = pathname
+  try { path = decodeURIComponent(path) } catch { return false }
+  path = path.replace(/\/$/, '')
+  return path === '/careers' || approvedRoles.some(({ slug }) => path === `/careers/${slug}`)
 }
 
 export function resolveCareerRoles(records: CareerRole[] | null): CareerRole[] {

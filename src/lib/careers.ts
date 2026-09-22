@@ -26,12 +26,10 @@ export const EXPERIENCE_AREA_OPTIONS = [
 
 export type ExperienceArea = (typeof EXPERIENCE_AREA_OPTIONS)[number];
 
-// Opportunity types offered under the Careers tab.
+// Known arrangements only. No duration or working hours have been supplied.
 export const OPPORTUNITY_TYPE_OPTIONS = [
-  "Internship (3–6 months)",
-  "Part-Time Job",
-  "Full-Time Job",
-  "Open to any",
+  "Internship",
+  "Self Employed",
 ] as const;
 
 export type OpportunityType = (typeof OPPORTUNITY_TYPE_OPTIONS)[number];

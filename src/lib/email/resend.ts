@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { getCareersInbox } from "@/lib/careers-settings";
 
 let resend: Resend | null = null;
 
@@ -15,8 +16,6 @@ function getResend(): Resend | null {
 
 const FROM = "Haus of Estate <noreply@hausofestate.com>";
 const ADMIN = process.env.ADMIN_EMAIL ?? "admin@hausofestate.com";
-// Applications and CVs land in the HR mailbox.
-const CAREERS_INBOX = process.env.CAREERS_EMAIL ?? "hr@hausofestate.com";
 
 function escapeHtml(text: string): string {
   return text
@@ -109,7 +108,7 @@ export async function sendApplicationToTeam(app: ApplicationPayload) {
 
   const result = await client.emails.send({
     from: FROM,
-    to: CAREERS_INBOX,
+    to: getCareersInbox(),
     replyTo: app.email,
     subject: `New application — ${app.roleTitle} (${app.fullName})`,
     html: `<h2 style="font-family:Georgia,serif;color:#1f4f2f">New career application</h2>
@@ -131,7 +130,7 @@ export async function sendApplicationConfirmationToApplicant(app: ApplicationPay
     to: app.email,
     subject: `We've received your application — ${app.roleTitle}`,
     html: `<p style="font-family:system-ui,sans-serif">Hi ${escapeHtml(app.fullName.split(" ")[0])},</p>
-<p style="font-family:system-ui,sans-serif">Thank you for applying for the <strong>${escapeHtml(app.roleTitle)}</strong> role at Haus of Estate. Your application is in front of our team and we'll be in touch within two working days, either to invite you to a first conversation or to let you know it isn't a fit this time.</p>
+<p style="font-family:system-ui,sans-serif">Thank you for applying for the <strong>${escapeHtml(app.roleTitle)}</strong> role at Haus of Estate. Your application has been sent to our recruitment team for review.</p>
 <p style="font-family:system-ui,sans-serif">In the meantime, no follow-up needed — we read every application.</p>
 <p style="font-family:system-ui,sans-serif">— The Haus of Estate team</p>`,
   });

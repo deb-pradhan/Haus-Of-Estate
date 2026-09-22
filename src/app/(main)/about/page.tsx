@@ -34,6 +34,7 @@ import { useLeadModals } from "@/components/lead-modal/modal-context";
 import { useLeadEoi } from "@/components/lead-eoi/lead-eoi-controller";
 import { TeamPreview } from "@/components/team/team-preview";
 import { SocialProfileLinks } from "@/components/social/social-profile-links";
+import { CAREERS_PUBLIC_ENABLED } from "@/lib/careers-availability";
 
 // ── Contact details (kept in sync with the site footer) ──────────────────
 const COMPANY_PHONE_DISPLAY = "+44 7496 033321";
@@ -567,6 +568,18 @@ export default function AboutPage() {
 
       {/* ─── Meet our team ──────────────────────────────────────────── */}
       <TeamPreview />
+
+      {CAREERS_PUBLIC_ENABLED && <section className="bg-estate-700 text-white">
+        <div className="mx-auto flex max-w-6xl flex-col items-start gap-6 px-4 py-14 md:flex-row md:items-center md:justify-between md:px-6">
+          <div>
+            <h2 className="font-serif text-2xl font-medium md:text-3xl">Opportunities at Haus of Estate</h2>
+            <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/80">Explore our lettings, sales and career experience openings.</p>
+          </div>
+          <Button asChild className="bg-gold-500 text-white hover:bg-gold-400">
+            <Link href="/careers">View careers <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
+          </Button>
+        </div>
+      </section>}
 
       {/* ─── Client testimonials ────────────────────────────────────── */}
       <section className="bg-subtle">
