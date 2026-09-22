@@ -103,6 +103,7 @@ describe('shared property details', () => {
     }))
     expect(html).toContain('How protected payment works')
     expect(html).toContain('Dubai off-plan purchase')
+    expect(html).toContain('href="/mortgage-calculator"')
   })
 
   it('keeps Florence local previews editorial, including image media and unconfirmed details', () => {
@@ -118,6 +119,7 @@ describe('shared property details', () => {
     expect(html).toContain(media.gallery[0].src)
     expect(html).toContain('Enquiries disabled in preview')
     expect(html).not.toContain('How protected payment works')
+    expect(html).not.toContain('href="/mortgage-calculator"')
     expect(controls.save).not.toHaveBeenCalled()
     expect(controls.share).not.toHaveBeenCalled()
     expect(controls.project).not.toHaveBeenCalled()
@@ -153,6 +155,7 @@ describe('shared property details', () => {
       <PropertyDetailView property={{ ...property, listingType: ['rent'] }} media={media} />,
     )
     expect(html).not.toContain('How protected payment works')
+    expect(html).not.toContain('href="/mortgage-calculator"')
     expect(controls.lead).toHaveBeenCalledWith(expect.objectContaining({ interest: 'rent' }))
     expect(controls.save).toHaveBeenCalled()
   })

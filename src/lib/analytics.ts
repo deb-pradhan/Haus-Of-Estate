@@ -1,3 +1,5 @@
+import approvedCareerRoles from "../../content/careers-roles.json" with { type: "json" };
+
 // Only these public destinations and coarse interaction values may reach GTM.
 export const CONSENT_KEY = "haus.analytics-consent.v1";
 export const CONSENT_EVENT = "haus:analytics-consent";
@@ -10,16 +12,18 @@ export type AnalyticsEvent =
 
 const LEAD_EVENTS = new Set(["form_view", "form_start", "lead_submit_success", "newsletter_opt_in"]);
 const ASSISTANT_EVENTS = new Set(["property_assistant_opened", "property_assistant_results_shown", "property_assistant_adviser_handoff"]);
+const APPROVED_CAREER_PATHS = new Set(approvedCareerRoles.map(({ slug }) => `/careers/${slug}`));
 
 const PUBLIC_PAGES = new Set([
   "/", "/about", "/team", "/services", "/snagging", "/renovations", "/faq", "/contact",
   "/list-property", "/register-interest", "/enquire", "/blog", "/properties", "/properties/residential",
   "/properties/commercial", "/legal/privacy-policy", "/legal/cookie-policy", "/legal/terms-of-service",
+  "/mortgage-calculator", "/sitemap", "/careers",
 ]);
 
 export function publicPath(pathname: string): string | null {
   const path = pathname.replace(/\/$/, "") || "/";
-  return PUBLIC_PAGES.has(path) || /^\/(properties|blog)\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(path)
+  return PUBLIC_PAGES.has(path) || APPROVED_CAREER_PATHS.has(path) || /^\/(properties|blog)\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(path)
     ? path : null;
 }
 

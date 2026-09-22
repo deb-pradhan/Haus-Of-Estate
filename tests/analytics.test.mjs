@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import approvedCareerRoles from "../content/careers-roles.json" with { type: "json" };
 import {
   analyticsPage, analyticsHosts, CONSENT_KEY, consentFromStorage, getAnalyticsConsent,
   saveAnalyticsConsent, syncAnalytics, stopAnalytics, trackAnalytics,
@@ -32,6 +33,23 @@ test("only explicitly named demo hosts can opt in; wildcards and arbitrary previ
   assert.equal(analyticsPage("http://localhost:3131/auth/login", false, true, "localhost"), null);
   assert.equal(analyticsPage("http://localhost:3131/", true, true, "localhost"), null);
   assert.equal(analyticsPage("http://localhost:3131/", false, false, "localhost"), null);
+});
+
+test("new public tools and only reviewed careers paths are measurable without URL input data", () => {
+  assert.equal(approvedCareerRoles.length, 9);
+  const paths = ["/mortgage-calculator", "/sitemap", "/careers", ...approvedCareerRoles.map(({ slug }) => `/careers/${slug}`)];
+  for (const path of paths) {
+    assert.deepEqual(analyticsPage(`https://hausofestate.com${path}?loanAmount=987654.32&annualRate=12.345&termYears=27&email=applicant@example.com#cv-file.pdf`), {
+      page_path: path, page_location: `https://hausofestate.com${path}`, page_title: path.split("/")[1], page_referrer: "",
+    });
+    assert.equal(analyticsPage(`https://hausofestate.com${path}`, true), null);
+    assert.equal(analyticsPage(`https://hausofestate.com${path}?preview=true`), null);
+  }
+  for (const path of [
+    "/careers/interior-design-intern", "/careers/content-managers", "/careers/real-estate-agents",
+    "/careers/pr-interns", "/careers/videographers", "/careers/lead-generators", "/careers/unknown",
+    "/careers/applicant@example.com", "/careers/social-media-account-manager-intern/apply", "/api/applications",
+  ]) assert.equal(analyticsPage(`https://hausofestate.com${path}`), null, path);
 });
 
 test("consent is versioned, expiring and fail-closed", () => {
@@ -149,6 +167,32 @@ test("runtime gates scripts, drops backlog and PII, deduplicates pages, revokes 
     trackAnalytics("haus_contact_click", { contact_method: "email", email: "private@example.com" });
     assert.equal(events().at(-1).contact_method, "email");
     assert.doesNotMatch(JSON.stringify(window.dataLayer), /private@example|secret/);
+
+    // These pages add only sanitized page views; form inputs and applicant facts
+    // are not events or event parameters, even if accidentally supplied by a caller.
+    for (const path of ["/mortgage-calculator", "/sitemap", "/careers/social-media-account-manager-intern"]) {
+      location.href = `https://hausofestate.com${path}?loanAmount=987654.32&email=applicant@example.com#cv-file.pdf`;
+      syncAnalytics(config);
+      const pageView = events().at(-1);
+      assert.equal(pageView.event, "haus_page_view");
+      assert.equal(pageView.page_path, path);
+      assert.deepEqual(Object.keys(pageView).sort(), ["event", "page_path", "page_location", "page_title", "page_referrer"].sort());
+      const beforeInputEvents = window.dataLayer.length;
+      trackAnalytics("mortgage_calculation", { loanAmount: 987654.32, annualRate: 12.345, termYears: 27 });
+      trackAnalytics("application_submit", { applicant_name: "Applicant Private", email: "applicant@example.com", cv: "cv-file.pdf" });
+      assert.equal(window.dataLayer.length, beforeInputEvents);
+      trackAnalytics("haus_contact_click", {
+        contact_method: "email", loanAmount: 987654.32, annualRate: 12.345, termYears: 27,
+        applicant_name: "Applicant Private", email: "applicant@example.com", cv: "cv-file.pdf",
+      });
+      assert.doesNotMatch(JSON.stringify(window.dataLayer), /987654|12\.345|Applicant Private|applicant@example|cv-file|loanAmount|annualRate|termYears/);
+    }
+    location.href = "https://hausofestate.com/careers/unknown";
+    const beforeUnknown = window.dataLayer.length;
+    trackAnalytics("haus_page_view");
+    trackAnalytics("haus_contact_click", { contact_method: "email" });
+    assert.equal(window.dataLayer.length, beforeUnknown);
+    location.href = "https://hausofestate.com/blog?query=secret";
 
     saveAnalyticsConsent("denied");
     syncAnalytics(config);

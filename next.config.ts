@@ -17,6 +17,12 @@ const nextConfig: NextConfig = {
         destination: "/enquire",
         permanent: false,
       },
+      {
+        // Search Console still discovers the site's former cookie policy URL.
+        source: "/cookie-policy",
+        destination: "/legal/cookie-policy",
+        permanent: true,
+      },
     ];
   },
   images: {

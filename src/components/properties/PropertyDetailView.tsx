@@ -463,6 +463,11 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
                           {enquiryEmail}
                         </a>
                       </p>
+                      {property.listingType?.includes('sale') && (
+                        <Link href="/mortgage-calculator" className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-md border border-estate-700/25 px-4 py-3 text-center text-sm font-medium text-estate-700 transition-colors hover:bg-estate-700/5">
+                          Estimate mortgage repayments
+                        </Link>
+                      )}
                       <div className="mt-5 hidden border-t border-border pt-5 lg:block">
                         <p className="mb-2 text-xs font-medium text-muted-foreground">
                           Share this property
