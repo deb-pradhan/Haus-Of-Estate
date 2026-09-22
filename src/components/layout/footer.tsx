@@ -12,6 +12,8 @@ import { useLeadModals } from "@/components/lead-modal/modal-context";
 import { SocialProfileLinks } from "@/components/social/social-profile-links";
 import { CookieSettingsButton } from "@/components/analytics/consent-manager";
 import { useLeadEoi } from "@/components/lead-eoi/lead-eoi-controller";
+import { COMPANY_IDENTITY } from "@/lib/company-identity";
+import { CAREERS_PUBLIC_ENABLED } from "@/lib/careers-availability";
 
 const COMPANY_PHONE_DISPLAY = "+44 7496 033321";
 const COMPANY_PHONE_HREF = "tel:+447496033321";
@@ -61,7 +63,15 @@ export function Footer() {
           </div>
 
           <p className="mt-4 text-xs leading-relaxed text-white/60">
-            Rent Smart Wales Registered · Propertymark CMP Registered
+            {COMPANY_IDENTITY.legalName} —{' '}
+            <a
+              href={COMPANY_IDENTITY.companiesHouseUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-4 transition-colors hover:text-white"
+            >
+              Company number {COMPANY_IDENTITY.number}
+            </a>
           </p>
 
           {/* Quick actions */}
@@ -96,12 +106,14 @@ export function Footer() {
           <FooterLink href="/snagging">Snagging inspections</FooterLink>
           <FooterLink href="/renovations">Renovations</FooterLink>
           <FooterLink href="/list-property">List your property</FooterLink>
+          <FooterLink href="/mortgage-calculator">Mortgage calculator</FooterLink>
         </FooterCol>
 
         {/* Company */}
         <FooterCol title="Company">
           <FooterLink href="/about">About us</FooterLink>
           <FooterLink href="/team">Our team</FooterLink>
+          {CAREERS_PUBLIC_ENABLED ? <FooterLink href="/careers">Careers</FooterLink> : null}
           <FooterLink href="/blog">Blogs</FooterLink>
           <FooterLink href="/faq">FAQs</FooterLink>
           <FooterLink href="/contact">Contact us</FooterLink>
@@ -109,6 +121,7 @@ export function Footer() {
           <FooterLink href="/legal/privacy-policy">Privacy policy</FooterLink>
           <FooterLink href="/legal/terms-of-service">Terms of service</FooterLink>
           <FooterLink href="/legal/cookie-policy">Cookie policy</FooterLink>
+          <FooterLink href="/sitemap">Sitemap</FooterLink>
         </FooterCol>
 
         {/* Contact */}

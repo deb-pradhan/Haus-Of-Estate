@@ -9,7 +9,6 @@ import {
   LayoutGrid,
   ShieldCheck,
   Clock,
-  BadgeCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLeadModals } from "@/components/lead-modal/modal-context";
@@ -44,7 +43,6 @@ const SERVICES = [
 
 const ASSURANCES = [
   { icon: ShieldCheck, label: "Vetted & insured tradespeople" },
-  { icon: BadgeCheck, label: "Rent Smart Wales & Propertymark CMP Registered" },
   { icon: Clock, label: "Clear timelines, no hidden fees" },
 ];
 

@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
-import { urlFor } from '@/sanity'
+import { COMPANY_IDENTITY } from '@/lib/company-identity'
 import { FALLBACK_IMAGES, FALLBACK_ALTS } from '@/sanity/fallbackImages'
 import { SaveContentButton } from '@/components/saved-content'
 
@@ -117,19 +117,7 @@ export function BlogCard({ post, variant = 'default', index = 0 }: BlogCardProps
 
           <div className="mt-6 flex items-center justify-between border-t border-border/60 pt-4">
             <span className="flex items-center gap-2.5">
-              {post.author?.avatar && (
-                <span className="relative h-7 w-7 overflow-hidden rounded-full ring-1 ring-black/5">
-                  <Image
-                    src={urlFor(post.author.avatar).width(56).height(56).url()}
-                    alt={post.author.name}
-                    fill
-                    className="object-cover"
-                  />
-                </span>
-              )}
-              {post.author?.name && (
-                <span className="text-sm font-medium text-ink-900">{post.author.name}</span>
-              )}
+              <span className="text-sm font-medium text-ink-900">By {COMPANY_IDENTITY.name}</span>
             </span>
             <span className="flex h-8 w-8 items-center justify-center rounded-full text-estate-700 transition-all duration-300 group-hover:bg-estate-700 group-hover:text-white">
               <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />

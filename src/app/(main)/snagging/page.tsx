@@ -4,10 +4,11 @@ import { ArrowRight, Building2, CalendarDays, Mail, MessageCircle, Ruler } from 
 import { SnaggingBookingCalendar } from "@/components/snagging/booking-calendar";
 import { DEFAULT_OG_IMAGES } from "@/lib/seo";
 import { readSnaggingBookingConfig } from "@/lib/snagging-booking";
+import { COMPANY_IDENTITY } from "@/lib/company-identity";
 
 export const metadata: Metadata = {
   title: "Snagging Inspections & New-build Handover Checks",
-  description: "Understand snagging, new-build defects and pre-handover inspections. Read Fatima's guide, get answers to common questions and discuss your property with Haus of Estate.",
+  description: "Understand snagging, new-build defects and pre-handover inspections. Read our guide, get answers to common questions and discuss your property with Haus of Estate.",
   alternates: { canonical: "/snagging" },
   openGraph: {
     title: "Snagging Inspections & New-build Handover Checks — Haus of Estate",
@@ -127,12 +128,12 @@ export default function SnaggingPage() {
             <h3 id="snagging-guide" className="mt-4 font-serif text-2xl font-medium leading-snug text-estate-700">
               Snag It Before You Sign It — The UAE Buyer&apos;s Guide to Snagging
             </h3>
-            <p className="mt-3 text-sm text-muted-foreground">By Fatima Rangwala · 17 August 2026</p>
+            <p className="mt-3 text-sm text-muted-foreground">By {COMPANY_IDENTITY.name} · 17 August 2026</p>
             <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
-              Fatima walks through the handover process, common inspection areas and the importance of documenting what you find. Her guide focuses on buying in the UAE.
+              Our guide walks through the handover process, common inspection areas and the importance of documenting what you find when buying in the UAE.
             </p>
             <Link href={SNAGGING_GUIDE_HREF} className="mt-6 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-estate-700 underline underline-offset-4 hover:text-estate-600">
-              Read Fatima&apos;s snagging guide <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              Read our snagging guide <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
           </aside>
         </div>

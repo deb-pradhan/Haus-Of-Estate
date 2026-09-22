@@ -98,6 +98,13 @@ export const teamMember = defineType({
       name: 'linkedinUrl',
       title: 'LinkedIn URL',
       type: 'url',
+      validation: (rule) => rule.uri({ scheme: ['https'] }),
+    }),
+    defineField({
+      name: 'instagramUrl',
+      title: 'Instagram URL',
+      type: 'url',
+      validation: (rule) => rule.uri({ scheme: ['https'] }),
     }),
     defineField({
       name: 'markets',
@@ -123,7 +130,8 @@ export const teamMember = defineType({
         ],
         layout: 'radio',
       },
-      initialValue: 'published',
+      description: 'Only Sonia Baig (slug sonia-baig) is currently approved for the website. Other profiles remain held pending contracts and approval.',
+      initialValue: 'draft',
     }),
   ],
   preview: {

@@ -1,5 +1,7 @@
 import { APPROVED_CAREER_ROLES } from '@/lib/career-roles'
+import { COMPANY_IDENTITY } from '@/lib/company-identity'
 
+// Public attribution belongs to the company; source author records remain intact.
 export const POST_FIELDS = `
   _id,
   title,
@@ -9,7 +11,7 @@ export const POST_FIELDS = `
     ...,
     "url": asset->url
   },
-  "author": author->{name, "slug": slug.current, avatar, role},
+  "author": {"name": ${JSON.stringify(COMPANY_IDENTITY.name)}},
   "categories": categories[]->{_id, title, "slug": slug.current, color},
   publishedAt,
   featured,
@@ -235,18 +237,22 @@ export const PROPERTY_SLUGS_QUERY = `
 // ── Team / Testimonials / FAQs / Culture ──────────────────────────────
 
 export const TEAM_MEMBERS_QUERY = `
-  *[_type == "teamMember" && status == "published"]
+  *[_type == "teamMember" && status == "published" && slug.current == "sonia-baig" && !(_id in path("drafts.**")) && !(_id in path("versions.**"))]
     | order(order asc, name asc) {
       _id,
+      _originalId,
+      status,
       name,
       "slug": slug.current,
       role,
       department,
       photo,
       shortBio,
+      fullBio,
       email,
       phone,
       linkedinUrl,
+      instagramUrl,
       markets
     }
 `

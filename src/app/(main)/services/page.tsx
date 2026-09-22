@@ -222,7 +222,7 @@ function ServiceBlock({
 
             {section.showAssurance !== false && <p className="mt-5 flex items-center gap-2 text-xs text-muted-foreground">
               <ShieldCheck className="h-3.5 w-3.5 text-estate-700" />
-              Rent Smart Wales · Propertymark CMP Registered · No hidden fees
+              No hidden fees
             </p>}
           </div>
         </div>

@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
-import { urlFor } from '@/sanity'
+import { COMPANY_IDENTITY } from '@/lib/company-identity'
 import { FALLBACK_IMAGES, FALLBACK_ALTS } from '@/sanity/fallbackImages'
 import { SaveContentButton } from '@/components/saved-content'
 
@@ -91,17 +91,7 @@ export function FeaturedPost({ post }: FeaturedPostProps) {
             )}
 
             <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-white/75">
-              {post.author?.avatar && (
-                <span className="relative h-8 w-8 overflow-hidden rounded-full ring-2 ring-white/25">
-                  <Image
-                    src={urlFor(post.author.avatar).width(64).height(64).url()}
-                    alt={post.author.name}
-                    fill
-                    className="object-cover"
-                  />
-                </span>
-              )}
-              {post.author?.name && <span className="font-medium text-white">{post.author.name}</span>}
+              <span className="font-medium text-white">By {COMPANY_IDENTITY.name}</span>
               <span className="text-white/40">·</span>
               <span>{date}</span>
               <span className="text-white/40">·</span>

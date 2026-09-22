@@ -4,7 +4,6 @@ import {
   ArrowRight,
   BadgeCheck,
   Check,
-  Shield,
   TrendingUp,
   Users,
 } from "lucide-react";
@@ -21,14 +20,6 @@ import { WhatsAppFloat } from "@/components/landing/whatsapp-float";
 export const revalidate = 60;
 
 const TRUST_ITEMS = [
-  {
-    icon: <BadgeCheck className="h-5 w-5 text-trust-teal" />,
-    label: "Rent Smart Wales Registered",
-  },
-  {
-    icon: <Shield className="h-5 w-5 text-estate-700" />,
-    label: "Propertymark CMP Registered",
-  },
   {
     icon: <TrendingUp className="h-5 w-5 text-action-amber" />,
     label: "Transparent Transactions",
@@ -101,7 +92,6 @@ function WhoAreWe() {
                 "Vetted agents only — never a junior on commission",
                 "Transparent advice with no hidden fees",
                 "One pathway from first enquiry to completion",
-                "Rent Smart Wales & Propertymark CMP Registered",
               ].map((point) => (
                 <li
                   key={point}

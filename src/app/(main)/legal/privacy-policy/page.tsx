@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { COMPANY_IDENTITY } from "@/lib/company-identity";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
@@ -74,7 +75,7 @@ export default function PrivacyPolicyPage() {
               <br />
               Registered in England and Wales
               <br />
-              Company number: [To be confirmed]
+              Company number: {COMPANY_IDENTITY.number}
               <br />
               Registered address: [To be confirmed]
               <br />
