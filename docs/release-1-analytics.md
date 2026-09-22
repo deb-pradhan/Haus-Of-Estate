@@ -1,14 +1,27 @@
-# Release 1 — SEO and analytics — next to deploy
+# Release 1 — merged SEO and analytics runbook
 
-Branch: `suryak02/technical-seo-fixes`. Keep this release ahead of the cumulative Florence / website overhaul branch. Deployment and publication of the GTM container remain separate from preparing the PR.
+Release 1 / [PR #15](https://github.com/deb-pradhan/Haus-Of-Estate/pull/15) was
+merged into `main` at `20afdeeb` and deployed on 18 September 2026. Historical
+branch `suryak02/technical-seo-fixes` is retired; do not recreate it. Continue
+feature work in Release 2 / draft PR #16 on
+`suryak02/azizi-florence-content-scaffold`. The website's consent implementation
+is present, but GTM connection and real GA4 collection remain separate proof.
 
-Update, 18 September: Sonia acknowledged the access request at 23:26 UK on
-17 September and will arrange it in the morning. Await the company GTM ID/Edit,
-GA4 Measurement ID/Editor and Search Console Full invitations for
-`kommurisurya@gmail.com`; the reply did not grant access or supply IDs. Do not
-resend the request. PR #15 now also prepares the explicitly requested urgent
-careers closure and contact corrections; see
-[`urgent-careers-closure-2026-09-18.md`](urgent-careers-closure-2026-09-18.md).
+Update, 22 September: GA4 property **550966592**, stream **15476606535** and
+measurement ID **G-FEZF22MELJ** are accessible; Search Console access and the
+existing sitemap Success are confirmed. Do not repeat the old three-service
+invitation request. Surya still sees no GTM accounts/containers. The supplied
+Google tag **GT-55K83XLJ** is linked to the measurement ID, but neither identifier
+is a **GTM-…** container ID for `NEXT_PUBLIC_GTM_ID`.
+
+At approximately 20:40–20:50 UK the GA4 UI reported no data in 48 hours.
+Enhanced measurement and Signals were already off. Under the authorised consent
+setup, ads personalisation was saved and confirmed from 307/307 to **0/307
+allowed** at approximately 20:48 UK. No GTM version was published. Request only
+the existing container ID/access and deployment configuration from the company
+owner, then prove actual consented receipt. See the
+[`22 September report`](website-update-2026-09-22.md) for the public build check,
+saved setting, indexing snapshot and current owners.
 
 ## What the site implements
 
@@ -25,7 +38,7 @@ careers closure and contact corrections; see
 
 This application boundary depends on the container below. Do not publish arbitrary automatic tags into it.
 
-1. In the intended GA4 property, create or select the website data stream for `https://hausofestate.com` and copy its `G-…` measurement ID into a **Google tag** in the matching GTM container. Use **Initialization — All Pages** as the Google tag trigger. Require additional consent `analytics_storage` for this tag and every GA4 event tag.
+1. Use the existing GA4 property **550966592** and web stream **15476606535** above, with measurement ID **G-FEZF22MELJ**, in a **Google tag** in the intended company GTM container. Do not duplicate the property or stream. Use **Initialization — All Pages** as the Google tag trigger. Require additional consent `analytics_storage` for this tag and every GA4 event tag.
 2. Set Google tag configuration parameters `send_page_view` = boolean `false`, `allow_google_signals` = boolean `false`, and `allow_ad_personalization_signals` = boolean `false`. Disable Google Signals and advertising personalisation in the GA4 property. Do not add Ads, remarketing, user-provided-data, User-ID, or cross-domain linker tags.
 3. In GA4 Admin → Data streams → the web stream, turn **Enhanced measurement off**, including history-based page views, site search, outbound clicks, form interactions, scroll, video and downloads. Otherwise GA can collect automatic duplicates or unsanitized URLs/form activity outside this application event contract.
 4. Create GTM **Data Layer Variables, Version 1** for `page_location`, `page_path`, `page_referrer`, `page_title`, `content_path`, `contact_method`, `form_location`, `intent`, `category`, and `availability`. Use no fallback to GTM Page URL, Referrer, Click URL, Click Text, browser title, or DOM variables. Every application event includes the four `page_*` fields. Configure these same four variables as Google tag settings and on each event tag so automatic GA system events also use the sanitized page context.
@@ -55,7 +68,7 @@ With Deb's GTM edit/publish and GA4 property access, use the correct container's
 - With prior acceptance, navigate directly, through SPA links/programmatic navigation, and via back/forward to authentication, Studio, draft/preview and excluded routes. Confirm the private document has no loaded analytics and emits no events. Test a preview on a public path with draft mode enabled as well.
 - No GTM ID, invalid ID, unavailable storage and blocked GTM must leave browsing and consent controls usable. A blocked GTM request means delivery is unavailable; do not report it as successful measurement.
 
-Record the GTM published version, GA4 property/data stream, tested deployment, event screenshots, and verification date in the release PR. **Pending:** account/container access and real GA4 receipt are not established by this code change; no live analytics verification is claimed.
+Record the GTM published version, GA4 property/data stream, tested deployment, event screenshots, and verification date in the release PR. **Pending:** existing GTM container ID/access, deployment configuration and real GA4 receipt. GA4 and Search Console account access are already confirmed; no live event-receipt verification is claimed.
 
 Local verification on 13 September 2026: six unit/SEO checks and all six browser scenarios passed, along with TypeScript, changed-file ESLint and the production build. Desktop and mobile consent screenshots were inspected. The browser walkthrough included real public navigation/property/article/contact clicks, search, rejection/acceptance persistence, same-tab and cross-tab withdrawal, cookie removal, private SPA navigation, back/forward, Studio, draft mode and the unlisted `127.0.0.1` host. GTM was replaced with a harmless browser stub and Google analytics/ad endpoints were intercepted; this validates application behavior, not a live GTM container or GA4 collection.
 

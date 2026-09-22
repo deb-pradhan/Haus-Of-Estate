@@ -1,6 +1,54 @@
 # Haus releases
 
-## Current work — 21 September 2026
+## Current work — 22 September 2026
+
+Continue the same Release 2 branch and draft PR #16. The approved 22 September
+website work prepares removal of the remaining Rent Smart Wales/Propertymark
+claims, verified Companies House identity **17188168**, company blog bylines,
+Sonia's team profile, the mortgage/EMI calculator and a public HTML sitemap with
+published-only XML/HTML content. No production deployment or Sanity publication
+was performed. The detailed completed/pending report and owners are in
+[`website-update-2026-09-22.md`](website-update-2026-09-22.md).
+
+Final checks passed: 408 unit tests, seven SEO/analytics checks, six desktop/mobile
+consent tests and four careers policy/built-HTTP checks; production build,
+TypeScript, focused lint and schema validation. Local content/structured-data
+previews and calculator interactions were reviewed. These checks do not establish
+hosted email delivery or actual GA4 receipt. The old cookie-policy URL now has a
+verified 308 redirect to the current policy, prepared for the same release.
+
+Sonia's new instruction supersedes the earlier careers browsing closure for
+the **nine reviewed replacement roles**, including Social Media Account Manager
+(Intern). Careers index/approved routes and navigation are prepared in R2;
+retired/unknown job routes remain closed. Application intake is independently
+disabled by default until hosted delivery is verified. Do not restore the old
+role list or infer that browsing approval verifies an application pipeline.
+
+Google checks at approximately 20:40–20:50 UK confirmed GA4 property **550966592**,
+stream **15476606535**, **G-FEZF22MELJ**, still reporting no data in 48 hours.
+Enhanced measurement and Signals are off. Ads personalisation was explicitly
+saved from 307/307 to **0/307 allowed** under the authorised consent setup. GTM
+accounts remain empty for Surya; supplied Google tag **GT-55K83XLJ** is not the
+missing **GTM-…** container ID. Public HTML checked at 19:55 UK still supplied
+`gtmId: undefined`. Deb's reported push to main needs to be reconciled with the
+served deployment/environment; real receipt is not established.
+
+Search Console access and the existing sitemap Success remain confirmed:
+34 discovered pages, last read 18 September. Its dated Pages report shows
+49 indexed/22 not indexed, requiring URL-level triage rather than a blanket
+failure claim. Google Business Profile manager access now works; phone and
+website match. Profile/Companies House say **Unit 1**, while the previously
+approved website address is **Unit A**. Sonia/company owner must reconcile
+the discrepancy; no address was changed.
+
+The four May reports and reported 62/70 completion have not been independently
+reconciled. Preserve the existing six-tab audit evidence and H21/H22 content
+holds. The 22 September [Hafren hangar/garage source](https://www.hafrenproperties.co.uk/property/poa-large-commercial-hangar-garage-to-let-on-city-road-roath-cardiff-cf24-3bp/)
+is now recorded; its identity must be reconciled with the earlier unspecified
+warehouse before treating those requests as one. No customer campaigns, team
+email or meeting invitations were sent.
+
+## Historical work — 21 September 2026
 
 **H01 now corrected live:** Surya's explicit instruction to remove the misleading
 completed status was applied narrowly to published Al Furjan and Azizi Monaco
@@ -40,7 +88,7 @@ content, sitemap, tracking and multi-page checks remain. Full status/owners are
 in `docs/backlog-reconciliation-2026-09-17.md`; H16's new Angela/Filemail reference
 is investigated separately in `docs/filemail-investigation-2026-09-21.md`.
 
-## Current release position — 18 September 2026
+## Historical release position — 18 September 2026
 
 [PR #15](https://github.com/deb-pradhan/Haus-Of-Estate/pull/15) was merged into
 `main` at `20afdeeb2b7c1de7ea46c67e9da8e8afbf8128fa`. GitHub records Railway
@@ -53,10 +101,11 @@ the closed response. Desktop/mobile header, footer and About checks at 23:53 UK
 found no recruitment links. Unit A and the Dubai business WhatsApp are live.
 This verifies the urgent closure/contact release; it does not deploy Release 2.
 
-`/careers`, every job URL and application intake must remain closed until Sonia
-approves reopening. Preserve records and application history. Her replacement
-headings/titles are held in `docs/urgent-careers-closure-2026-09-18.md`; the older
-five-role list is superseded, and no replacement vacancy is approved to go live.
+At this checkpoint, `/careers`, job URLs and application intake were held closed
+pending Sonia's approval. The 22 September approval above now prepares browsing
+of the reviewed replacement list in R2; it does not retroactively change the
+18 September live closure evidence. Preserve records/application history and
+keep intake disabled until verified. The old role list remains superseded.
 
 Release 2 continues on its existing branch in
 [draft PR #16](https://github.com/deb-pradhan/Haus-Of-Estate/pull/16), targeting

@@ -1,5 +1,10 @@
 # Haus of Estate — H01–H22 reconciliation
 
+**Current 22 September update:** the dated note at the end supersedes earlier
+pending-access, team-material and careers-closure descriptions where stated.
+See [today's completed/pending report](website-update-2026-09-22.md) for the
+prepared implementation, saved Google setting, verification limits and owners.
+
 Baseline checked 17 September 2026; reconciled late 18 September after Deb merged and deployed Release 1, and updated 21 September for the weekend Cardiff and Filemail requests. H05/H17 remain completed with 18 September live evidence. Release 2 continues in draft PR #16 against main. Dated evidence is distinguished below; Cardiff preparation remains unpublished. A later explicit 21 September instruction authorised the narrow H01 published correction, now verified live; no application deployment was made.
 
 ## Current release and service position
@@ -208,3 +213,38 @@ supplied screenshot, without duplicate imports or changed revisions. The warehou
 still needs Sonia's exact link/address. Florence remains paused. H22 native draft `drafts.pcT5cUTM5ohqBnZd4qKwld` is saved and read-back verified,
 with eighteen resolving assets and all 48 pre-existing property/post revisions
 unchanged. Development and publication remain separate.
+
+## 22 September — approved website work and refreshed service evidence
+
+The same Release 2 branch/PR #16 holds the prepared changes; no website
+deployment or Sanity publication was performed by this task. Source email review
+worked in Surya's Gmail account. The following updates supersede the earlier
+rows only for their stated scope; held drafts and original dated receipts remain.
+
+| Item | Current position | Remaining owner action |
+| --- | --- | --- |
+| **H05 — careers** | Sonia's new request approves browsing the nine exact replacement roles, including Social Media Account Manager (Intern). R2 prepares the index, approved detail URLs and navigation; retired/unknown job routes remain closed. Intake is an independent server flag, disabled by default. | Surya completes final checks; Deb/release owner reviews deployment. HR/company infrastructure and sender owners must enable and prove hosted application delivery separately. The 18 September live closure is historical evidence, not evidence that these changes are now live. |
+| **H09 — team** | Sonia's portrait is now supplied and used from email `1a0c8cefc4b1cac5`, exact attachment **Sonia white SHIRT + beige suit.jpg** (5000 × 5000). `/team` now prepares her Founder profile, biography, confirmed LinkedIn/Instagram and Person schema. Other profiles remain held. | Surya/reviewer verifies the prepared presentation. No renewed request for a portrait or social URL is needed; no CMS publication occurred. Photo receipt is in today's report. |
+| **H12 — GA4/GTM** | GA4 property **550966592**, stream **15476606535**, measurement **G-FEZF22MELJ** accessible but no data in 48h at 20:40–20:50 UK. Enhanced measurement/Signals off. Ads personalisation was explicitly saved and confirmed **0/307 allowed** around 20:48 UK. Surya still sees no GTM accounts. User's **GT-55K83XLJ** Google tag is linked to GA4; it is not a **GTM-…** container ID. | Deb/company owner provides existing container ID/access and correct deployment settings; Surya proves actual consented receipt. The live 19:55 UK build serialized `gtmId: undefined`. Reconcile Deb's push report with what is served; do not duplicate tracking or repeat GA4/GSC access requests. |
+| **H12 — Search Console** | Existing `www` sitemap Success, 34 discovered pages, last read 18 Sep. Pages report last updated 18 Sep: 49 indexed / 22 excluded: 7 proper-canonical alternates, 3 not found, 3 redirects, 6 crawled not indexed, 3 discovered not indexed; duplicate category 0. New HTML sitemap and published-only XML/HTML source are prepared in R2. | Surya/Shoaib triage exact affected URLs and verify the intended deployment. No sitemap was submitted or indexing requested today. |
+| **Business Profile / legal identity** | Manager access confirmed; website and 07496 033321 correct. Verified active company **HAUS OF ESTATE LTD / 17188168** is included in prepared footer/legal identity. Profile/register say **Unit 1**; separately approved website says **Unit A**. | Sonia/company owner reconciles the address. No address was auto-edited and no new access invitation is needed. |
+| **Registration badges / bylines** | Remaining Rent Smart Wales/Propertymark claims removed consistently in source; RERA already absent. Public blogs now credit Haus of Estate, including author structured data; original CMS authors/history preserved. | Final release review/deployment. No membership or accreditation claim is inferred from Companies House registration. |
+| **H03 — PolicyBee / ICO** | PolicyBee white badge with black outline remains the selected version; provider verification/asset work remains. ICO **C2039727** is a paid application reference, not registration certificate evidence. | Surya retrieves/prepares the selected original; Sonia/provider supplies verification if available. Company data-protection owner supplies the issued ICO certificate/register evidence before a public registration claim. |
+| **H21 — new Hafren source** | Email **`1a0c8fc3adbfa1e2`**, 22 Sep, supplies the [large commercial hangar/garage advert on City Road, Roath](https://www.hafrenproperties.co.uk/property/poa-large-commercial-hangar-garage-to-let-on-city-road-roath-cardiff-cf24-3bp/). This source is now available, but has not been proved identical to the earlier unspecified warehouse. Existing three Cardiff drafts remain held. | Sonia/letting owner confirms exact identity, availability, measurements and terms; Surya reconciles the source without a duplicate or automatic publication. Do not ask again for the newly supplied link or silently merge the two warehouse/hangar requests. |
+| **H22 / H08 / H11** | Manchester, four blog-cover drafts and paused Florence retain their separate publication holds. Today's website changes do not approve any of them. | Relevant content owners settle the outstanding facts/review before any later explicitly authorised publication. |
+| **New — mortgage/EMI tool** | Blank-input repayment illustration prepared at `/mortgage-calculator`, with GBP/AED/USD denomination labels, zero-rate handling and monthly/total interest outputs; sale listings link to it. No financial/applicant inputs are added to analytics. | Final release review. Full property valuation remains parked. |
+
+Final local validation: Next.js 16.3.4/Turbopack production build passed with
+88 routes; 408 unit tests, seven SEO/analytics tests and four careers policy/HTTP
+tests passed. TypeScript, changed-file lint and schema validation pass. The
+fresh-build consent suite passed six desktop/mobile scenarios with Google
+traffic intercepted, not real receipt. Desktop/mobile content, structured data
+and calculator checks are recorded in the completed/pending report.
+
+The four May reports and meeting claim of 62/70 completion are not independently
+reconciled; do not substitute the existing six-tab audit for those four source
+reports. H04/H20 hosted enquiry → inbox → selected spreadsheet → customer
+receipt → staff reply remains outstanding, as do the relevant company
+ownership/configuration decisions. No customer/team email, campaign, meeting
+invitation or other Google edit was sent/performed. The sole saved external
+configuration change was the authorised GA4 ads-personalisation setting above.

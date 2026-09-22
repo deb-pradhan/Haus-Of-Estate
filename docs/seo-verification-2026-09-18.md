@@ -1,5 +1,10 @@
 # SEO audit comparison — 18 September 2026
 
+Latest dated update: see **22 September — implementation and account evidence**
+below and the [completed/pending report](website-update-2026-09-22.md). Earlier
+dated observations remain historical evidence, including the 21 September
+absence of an HTML sitemap before today's implementation.
+
 18 September scope: the **Technical SEO** tab of the [SEO audit](https://docs.google.com/document/d/1BmDdxoRd6S6FFVqgozcCso-ta7XTPxvUHoLaBnD0IIY/edit?tab=t.0), read through a signed-in Markdown export, Release 2 tree `3671f5a1`, merged Release 1 changes, Git history and live HTTP checks. That tab contains four numbered findings plus rendering/image concerns under item 3. Its screenshot references do not include image contents, so screenshot details were not independently interpreted. **On 21 September all six audit tabs were read; the expanded reconciliation below supersedes any suggestion that this four-item tab was the entire audit.**
 
 | Audit finding | Current conclusion | Evidence / remaining acceptance |
@@ -61,3 +66,68 @@ The appropriate next technical step is the missing GTM connection and real
 consented receipt, followed by a representative-page performance check. The
 broader editorial and marketing programme needs Tanu/Fatima/Sonia's priorities;
 it is not established complete by a Lighthouse SEO score of 100.
+
+## 22 September — implementation and account evidence
+
+The reviewed Release 2 changes now include the missing HTML sitemap at
+`/sitemap`, a shared published-only source for HTML/XML links, the illustrative
+mortgage/EMI calculator, Sonia's profile/Person schema, company blog bylines and
+verified Companies House identity **17188168**. Remaining Rent Smart Wales and
+Propertymark claims were removed from their current code placements; RERA was
+already absent. Careers reopening is limited to the nine reviewed replacement
+roles, with application intake separately disabled. These are prepared website
+changes, not a production deployment or CMS publication.
+
+### Current account observations
+
+- **GA4, 20:40–20:50 UK:** property **550966592**, stream **15476606535**,
+  measurement **G-FEZF22MELJ**, still no received data in 48 hours. Enhanced
+  measurement and Signals were already off. Under the authorised consent setup,
+  ads personalisation was changed, saved and confirmed from **307/307** to
+  **0/307 allowed** at approximately 20:48 UK. This was the sole Google settings
+  mutation; it does not establish event receipt.
+- **GTM:** Surya's account list remains empty and shows no Google tags. The
+  user's screenshot supplies Google tag **GT-55K83XLJ**, linked to
+  **G-FEZF22MELJ**. Neither is a GTM container ID. Deb/company owner must supply
+  the existing **GTM-…** identifier/access and reconcile production environment
+  settings. Do not add a duplicate direct tracker or repeat GA4/GSC invitations.
+- **Public build, 19:55 UK:** `/`, `/about` and `/contact` passed
+  `gtmId: undefined`; all 18 homepage client bundles were inspected. Only the
+  existing consent-managed GTM loader was found, without a configured container
+  or direct GA loader. This does not refute Deb's reported push to main; the
+  served build/configuration and actual receipt must be verified separately.
+- **Search Console:** existing `www` sitemap remains **Success**, last read
+  **18 September**, **34 discovered pages**. Pages report last updated that date
+  shows **49 indexed / 22 not indexed**: 7 proper-canonical alternates, 3 not
+  found, 3 redirects, 6 crawled not indexed, 3 discovered not indexed; duplicate
+  category **0**. Review actual URLs before classifying each exclusion as a
+  fault. No sitemap submission, indexing request or canonical change was made.
+- **Business Profile:** manager access is confirmed; website and phone
+  **07496 033321** match. Profile and Companies House say **Unit 1** while the
+  approved website address is **Unit A**. Sonia/company owner must resolve the
+  discrepancy. The profile and website address were not changed.
+
+### Validation and remaining audit scope
+
+The primary production build passed on Next.js 16.3.4/Turbopack with 88 routes.
+The post-hardening analytics browser suite passed 6/6 desktop/mobile scenarios
+with Google traffic intercepted, including consent, withdrawal, query privacy
+and excluded-route checks. This is not GA4 receipt. The source/runtime SEO suite
+passed 7/7 after adding the new public routes and exact approved-role allowlist;
+calculator values and applicant data remain excluded. Final validation also
+passed 408 unit tests, four careers policy/HTTP tests, TypeScript, changed-file
+lint and schema validation. See the completed/pending report for visual checks.
+
+The 404 examples are `/cookie-policy`, `/&`, and
+`/properties/al-furjan-2-bedroom-apartment`. The known cookie-policy replacement
+now has a verified local 308 redirect to `/legal/cookie-policy` (200), retaining
+queries. The malformed path remains 404, and the old property route awaits
+listing identity confirmation before any redirect. This fix is prepared in R2;
+Search Console validation was not requested for an undeployed change.
+
+The four May audit reports have not been individually located and reconciled;
+the meeting's **62/70 completed** remains an unverified report. The existing
+six-tab Google audit and 18 September homepage LCP **2.3 s** / TBT **20 ms** run
+remain valid within their recorded limits. No new sitewide performance result,
+field Core Web Vitals pass or completed SEO programme is claimed. Shoaib's new
+audit should follow the agreed deployed fixes and verification.
