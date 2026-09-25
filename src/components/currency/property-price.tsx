@@ -6,12 +6,14 @@ import { useCurrency } from "./currency-provider";
 function DirhamSymbol() {
   // The viewBox removes only transparent canvas around CBUAE's original PNG.
   // Its outline and proportions are unchanged; the source asset stays intact.
-  return <><span className="sr-only">AED </span><svg viewBox="191 190 368 322" aria-hidden="true" className="mx-[0.15em] inline-block h-[0.8em] min-h-3 w-auto align-baseline [.text-white_&]:invert"><image href="/currency/uae-dirham.png" width="700" height="700" /></svg></>;
+  // Give the artwork a small descent to align with the numerals. Both metrics
+  // scale with the text, including the smaller original-price conversion note.
+  return <><span className="sr-only">AED </span><svg viewBox="191 190 368 322" aria-hidden="true" className="mx-[0.15em] inline-block h-[0.8em] w-auto align-[-0.1em] [.text-white_&]:invert"><image href="/currency/uae-dirham.png" width="700" height="700" /></svg></>;
 }
 
 // Replace only the ISO label before a numeral; never infer an amount from copy.
 export function OriginalPriceText({ text }: { text: string }) {
-  return <>{text.split(/\bAED\s*(?=\d)/).map((part, index) => <span key={index}>{index > 0 && <DirhamSymbol />}{part}</span>)}</>;
+  return <>{text.split(/\bAED\s*(?=\d)/).map((part, index) => <span key={index} className="lining-nums">{index > 0 && <DirhamSymbol />}{part}</span>)}</>;
 }
 
 export function PropertyPrice({ amount, currency: sourceCurrency, displayText, period, fallback = "Price on application", prefix = "" }: {
@@ -31,7 +33,7 @@ export function PropertyPrice({ amount, currency: sourceCurrency, displayText, p
   const periodSuffix = ["week", "month", "year"].includes(quote?.period ?? "") ? ` / ${quote?.period}` : "";
 
   return (
-    <span className="inline-block max-w-full" data-price-currency={isConverted ? currency : quote?.currency ?? sourceCurrency}>
+    <span className="inline-block max-w-full lining-nums" data-price-currency={isConverted ? currency : quote?.currency ?? sourceCurrency}>
       {isConverted ? <>
         <span>{prefix || (quote?.from ? "From " : "Reference price ")}≈ {currency === "AED" ? <DirhamSymbol /> : currency === "GBP" ? "£" : "US$"}{formatPriceNumber(converted)}{periodSuffix}</span>
         <span className="mt-1 block font-sans text-[11px] font-normal leading-relaxed text-muted-foreground">
