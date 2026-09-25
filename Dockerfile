@@ -46,6 +46,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/prisma.config.ts ./prisma.config.
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/scripts/migration-approval.mjs ./scripts/migration-approval.mjs
 COPY --from=builder --chown=nextjs:nodejs /app/scripts/run-approved-migrations.mjs ./scripts/run-approved-migrations.mjs
+COPY --from=builder --chown=nextjs:nodejs /app/scripts/prepare-release-database.mjs ./scripts/prepare-release-database.mjs
 
 USER nextjs
 EXPOSE 3000

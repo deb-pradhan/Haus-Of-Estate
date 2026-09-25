@@ -17,6 +17,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:migrate:approved": "node scripts/run-approved-migrations.mjs",
+    "db:prepare-release": "node scripts/prepare-release-database.mjs",
     "lead-delivery:worker": "tsx scripts/process-lead-deliveries.ts",
     "studio:dev": "npm --prefix ../studio-haus-of-estate run dev",
     "studio:embedded:dev": "sanity dev",
