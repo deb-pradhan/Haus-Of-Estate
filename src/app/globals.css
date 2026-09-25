@@ -225,39 +225,45 @@
   }
 
   .partners-marquee-window {
+    overflow-x: auto;
+  }
+  .partners-marquee-window[data-enhanced="true"] {
     overflow: hidden;
+    cursor: grab;
+    touch-action: pan-y pinch-zoom;
+    user-select: none;
     mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent);
   }
+  .partners-marquee-window[data-dragging="true"] { cursor: grabbing; }
+  .partners-marquee-window:focus-visible { outline: 2px solid var(--color-estate-700); outline-offset: 4px; }
   .partners-marquee-track {
     display: flex;
     width: max-content;
-    animation: marquee 48s linear infinite;
   }
+  .partners-marquee-window[data-enhanced="true"] .partners-marquee-track { will-change: transform; }
   .partners-marquee-group {
     display: flex;
     flex-shrink: 0;
-    gap: 1rem;
-    /* Each copy owns its trailing gap, so -50% lands exactly on the next copy. */
-    padding-right: 1rem;
+    gap: 0.5rem;
+    /* Include the trailing gap in the measured loop width. */
+    padding-right: 0.5rem;
   }
-  @media (hover: hover) {
-    .partners-carousel:hover .partners-marquee-track {
-      animation-play-state: paused;
-    }
+  .partners-marquee-group[aria-hidden="true"] { display: none; }
+  .partners-marquee-window[data-enhanced="true"] .partners-marquee-group[aria-hidden="true"] {
+    display: flex;
   }
-  .partners-carousel:active .partners-marquee-track {
-    animation-play-state: paused;
-  }
+  .partners-marquee-window img { pointer-events: none; }
   @media (prefers-reduced-motion: reduce) {
-    .partners-marquee-window { mask-image: none; }
-    .partners-marquee-track { display: block; width: 100%; animation: none !important; transform: none; }
+    .partners-marquee-window[data-enhanced="true"] { mask-image: none; cursor: auto; user-select: auto; }
+    .partners-marquee-window .partners-marquee-track { display: block; width: 100%; transform: none !important; }
+    .partners-marquee-window[data-enhanced="true"] .partners-marquee-track { will-change: auto; }
     .partners-marquee-group {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
       padding-right: 0;
     }
     .partners-marquee-group > li { width: 100%; }
-    .partners-marquee-group[aria-hidden="true"] { display: none; }
+    .partners-marquee-window[data-enhanced="true"] .partners-marquee-group[aria-hidden="true"] { display: none; }
   }
 
   /* ─── Float / drift ─────────────────────────────────────────────── */
