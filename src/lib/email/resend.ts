@@ -1,20 +1,25 @@
 import { Resend } from "resend";
 import { getCareersInbox } from "@/lib/careers-settings";
+import { readResendSettings } from "@/lib/email/resend-settings";
 
 let resend: Resend | null = null;
+let resendKey: string | undefined;
 
 function getResend(): Resend | null {
-  if (!resend) {
-    const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey || apiKey === "re_xxx") {
-      return null;
-    }
+  let apiKey: string;
+  try {
+    ({ apiKey } = readResendSettings());
+  } catch {
+    return null;
+  }
+  if (!resend || resendKey !== apiKey) {
     resend = new Resend(apiKey);
+    resendKey = apiKey;
   }
   return resend;
 }
 
-const FROM = "Haus of Estate <noreply@hausofestate.com>";
+const sender = () => `Haus of Estate <${readResendSettings().fromEmail}>`;
 const ADMIN = process.env.ADMIN_EMAIL ?? "admin@hausofestate.com";
 
 function escapeHtml(text: string): string {
@@ -107,7 +112,7 @@ export async function sendApplicationToTeam(app: ApplicationPayload) {
     : "";
 
   const result = await client.emails.send({
-    from: FROM,
+    from: sender(),
     to: getCareersInbox(),
     replyTo: app.email,
     subject: `New application — ${app.roleTitle} (${app.fullName})`,
@@ -126,7 +131,7 @@ export async function sendApplicationConfirmationToApplicant(app: ApplicationPay
   const client = getResend();
   if (!client) throw new Error("Careers email delivery is not configured");
   const result = await client.emails.send({
-    from: FROM,
+    from: sender(),
     to: app.email,
     subject: `We've received your application — ${app.roleTitle}`,
     html: `<p style="font-family:system-ui,sans-serif">Hi ${escapeHtml(app.fullName.split(" ")[0])},</p>
@@ -153,7 +158,7 @@ export async function sendLeadNotificationToAdmin(lead: {
   const tier = lead.tier ?? "unknown";
   const email = escapeHtml(lead.email);
   return client.emails.send({
-    from: FROM,
+    from: sender(),
     to: ADMIN,
     subject: sanitizeSubject(
       `${tierEmoji} New ${tier.toUpperCase()} Lead: ${lead.firstName} (${lead.intent}) — Score: ${lead.score}`,

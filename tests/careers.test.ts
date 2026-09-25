@@ -4,6 +4,12 @@ import { APPROVED_CAREER_ROLES, resolveCareerRole, resolveCareerRoles, isApprove
 import { APPLICATION_MAX_BYTES, CV_MAX_BYTES, normalizeApplicationUrl, validateCvFile } from '@/lib/careers'
 
 const { cmsFetch, send } = vi.hoisted(() => ({ cmsFetch: vi.fn(), send: vi.fn() }))
+const guard = vi.hoisted(() => ({ ip: vi.fn(), email: vi.fn() }))
+vi.mock('@/lib/careers-security', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@/lib/careers-security')>(),
+  throttleCareersIp: guard.ip,
+  careersThrottle: guard.email,
+}))
 vi.mock('@/sanity', () => ({ client: { fetch: cmsFetch } }))
 vi.mock('resend', () => ({ Resend: class { emails = { send } } }))
 
@@ -35,13 +41,18 @@ function pdf(size = 1000) {
 }
 
 async function submit(form = application(), headers?: HeadersInit) {
-  return POST(new Request('http://localhost/api/applications', { method: 'POST', body: form, headers }))
+  const requestHeaders = new Headers(headers)
+  if (!requestHeaders.has('origin')) requestHeaders.set('origin', 'http://localhost')
+  return POST(new Request('http://localhost/api/applications', { method: 'POST', body: form, headers: requestHeaders }))
 }
 
 beforeEach(() => {
   vi.stubEnv('RESEND_API_KEY', 're_synthetic_test_only')
+  vi.stubEnv('RESEND_FROM_EMAIL', 'careers@hausofestate.com')
   vi.stubEnv('CAREERS_INTAKE_ENABLED', 'true')
   vi.stubEnv('CAREERS_EMAIL', '')
+  guard.ip.mockReset().mockReturnValue(0)
+  guard.email.mockReset().mockReturnValue(0)
   cmsFetch.mockReset().mockResolvedValue(null)
   send.mockReset().mockResolvedValue({ data: { id: 'synthetic-email' }, error: null })
   vi.spyOn(console, 'error').mockImplementation(() => {})
@@ -52,14 +63,15 @@ describe('approved September reopening roles', () => {
   it('lists exactly the approved roles and supplied terms, without invented briefs', () => {
     const roles = resolveCareerRoles([])
     expect(roles.map(role => role.title)).toEqual([
-      'Lettings Specialist - UK Nationwide - Self Employed',
-      'Sales Specialist - UK Nationwide - Self Employed',
-      'Real Estate Agent - UK Nationwide - Self Employed',
+      'Rentals Specialist - Self Employed',
+      'Real Estate Agent - Self Employed',
+      'Real Estate Agent - Self Employed',
       'Content Writer', 'Video Content Creator', 'Graphic Designer', 'Content Manager',
       'Content Strategist', 'Social Media Account Manager (Intern)',
     ])
     expect(roles.every(role => !role.summary)).toBe(true)
-    expect(roles.slice(0, 3).every(role => role.location === 'UK Nationwide' && role.employmentType === 'Self Employed')).toBe(true)
+    expect(roles.slice(0, 3).map(role => role.location)).toEqual(['UK Nationwide', 'UK Nationwide', 'International'])
+    expect(roles.slice(0, 3).every(role => role.employmentType === 'Self Employed')).toBe(true)
     expect(roles.slice(3, 8).every(role => !role.location && !role.employmentType)).toBe(true)
     expect(roles[8].employmentType).toBe('Internship')
     expect(roles[8].location).toBeUndefined()
@@ -73,19 +85,34 @@ describe('approved September reopening roles', () => {
     }
     expect(isApprovedCareersPath('/careers')).toBe(true)
     expect(isApprovedCareersPath('/careers/')).toBe(true)
-    for (const path of ['/careers/content-managers', '/careers/real-estate-agents', '/careers/unknown', '/careers/content-manager/extra', '/Careers', '/careers-news', '/bad%escape']) {
+    for (const path of ['/careers/content-managers', '/careers/real-estate-agents', '/careers/sales-specialist-uk-nationwide-self-employed', '/careers/unknown', '/careers/content-manager/extra', '/Careers', '/careers-news', '/bad%escape']) {
       expect(isApprovedCareersPath(path)).toBe(false)
     }
   })
 
-  it('rejects all previous five vacancies and speculative intake, even when delivery is enabled', async () => {
-    for (const slug of ['content-managers', 'real-estate-agents', 'pr-interns', 'videographers', 'lead-generators', 'general-speculative']) {
+  it('rejects retired vacancies and speculative intake, even when delivery is enabled', async () => {
+    for (const slug of ['content-managers', 'real-estate-agents', 'pr-interns', 'videographers', 'lead-generators', 'general-speculative', 'sales-specialist-uk-nationwide-self-employed']) {
       expect(resolveCareerRole(slug)).toBeNull()
       const form = application(); form.set('roleSlug', slug)
       expect((await submit(form)).status).toBe(400)
     }
     expect(cmsFetch).not.toHaveBeenCalled()
     expect(send).not.toHaveBeenCalled()
+  })
+  it.each([
+    ['lettings-specialist-uk-nationwide-self-employed', 'Lettings Specialist - UK Nationwide - Self Employed', 'Rentals Specialist - Self Employed'],
+    ['real-estate-agent-uk-nationwide-self-employed', 'Real Estate Agent - UK Nationwide - Self Employed', 'Real Estate Agent - Self Employed'],
+  ])('retains the reviewed title rename for %s without accepting other vacancy identities', (slug, previousTitle, currentTitle) => {
+    const record = { _id: 'renamed-role', slug, title: previousTitle, status: 'open', summary: 'Reviewed role detail' }
+    expect(resolveCareerRole(slug, record)).toMatchObject({ title: currentTitle, summary: record.summary })
+    for (const status of ['closed', 'draft', undefined]) {
+      expect(resolveCareerRole(slug, { ...record, status })).toBeNull()
+    }
+    expect(resolveCareerRole(slug, { ...record, title: 'Unapproved replacement title' })).toBeNull()
+    expect(resolveCareerRole(slug, { ...record, slug: 'different-role' })).toBeNull()
+    expect(resolveCareerRole('real-estate-agent-international-self-employed', {
+      ...record, slug: 'real-estate-agent-international-self-employed',
+    })).toBeNull()
   })
   it('hides every preserved legacy seed record and prevents API acceptance', async () => {
     const records = readFileSync('scripts/roles.ndjson', 'utf8').trim().split('\n').map(line => JSON.parse(line))
@@ -126,7 +153,8 @@ describe('CV and portfolio handling', () => {
     const response = await submit(form)
     expect(await response.json()).toEqual({ ok: true, confirmationSent: true })
     const message = send.mock.calls[0][0]
-    expect(message.to).toBe('hr@hausofestate.com')
+    expect(message.to).toBe('careers@hausofestate.com')
+    expect(message.from).toBe('Haus of Estate <careers@hausofestate.com>')
     expect(message.subject).toContain('Content Manager')
     expect(message.subject).not.toContain('forged')
     expect(message.html).toContain('https://example.test/cv.pdf')
@@ -185,6 +213,30 @@ describe('CV and portfolio handling', () => {
 })
 
 describe('email acceptance', () => {
+  it('rejects foreign origins before reading the body or accessing CMS and email', async () => {
+    const request = new Request('http://localhost/api/applications', { method: 'POST', headers: { origin: 'https://untrusted.example' }, body: 'invalid' })
+    expect((await POST(request)).status).toBe(403)
+    expect(request.bodyUsed).toBe(false)
+    expect(guard.ip).not.toHaveBeenCalled()
+    expect(cmsFetch).not.toHaveBeenCalled()
+    expect(send).not.toHaveBeenCalled()
+  })
+  it('rejects exhausted IP and email quotas without sending', async () => {
+    guard.ip.mockReturnValueOnce(120)
+    const response = await submit()
+    expect(response.status).toBe(429)
+    expect(response.headers.get('retry-after')).toBe('120')
+    expect(cmsFetch).not.toHaveBeenCalled()
+    guard.email.mockReturnValueOnce(1800)
+    expect((await submit()).status).toBe(429)
+    expect(send).not.toHaveBeenCalled()
+  })
+  it('fails closed if the trusted proxy IP cannot be established', async () => {
+    guard.ip.mockImplementationOnce(() => { throw new Error('missing trusted IP') })
+    expect((await submit()).status).toBe(503)
+    expect(cmsFetch).not.toHaveBeenCalled()
+    expect(send).not.toHaveBeenCalled()
+  })
   it('uses the configured recruitment inbox consistently for delivery and failure guidance', async () => {
     vi.stubEnv('CAREERS_EMAIL', ' recruitment@example.test ')
     const { getCareersInbox } = await import('@/lib/careers-settings')
@@ -213,7 +265,7 @@ describe('email acceptance', () => {
   it('fails explicitly without a configured email service', async () => {
     vi.resetModules(); vi.stubEnv('RESEND_API_KEY', '')
     const { POST: unconfiguredPost } = await import('@/app/api/applications/route')
-    expect((await unconfiguredPost(new Request('http://localhost/api/applications', { method: 'POST', body: application() }))).status).toBe(502)
+    expect((await unconfiguredPost(new Request('http://localhost/api/applications', { method: 'POST', body: application() }))).status).toBe(404)
     expect(send).not.toHaveBeenCalled()
   })
 })

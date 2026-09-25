@@ -5,6 +5,7 @@ import { client } from '@/sanity/client'
 import { ROLES_QUERY } from '@/sanity/queries'
 import { CAREERS_PUBLIC_ENABLED } from '@/lib/careers-availability'
 import { resolveCareerRoles, type CareerRole } from '@/lib/career-roles'
+import { isLeadIntakeReady } from '@/lib/lead-intake/security'
 
 export interface PublicPage {
   path: string
@@ -37,6 +38,7 @@ export function publicSitemapPages(): PublicPage[] {
     { path: '/services', title: 'Services', changeFrequency: 'monthly', priority: 0.7 },
     { path: '/snagging', title: 'Snagging inspections', changeFrequency: 'monthly', priority: 0.6 },
     { path: '/renovations', title: 'Renovations', changeFrequency: 'monthly', priority: 0.6 },
+    { path: '/maintenance', title: 'Maintenance', changeFrequency: 'monthly', priority: 0.6 },
     { path: '/team', title: 'Meet the team', changeFrequency: 'monthly', priority: 0.6 },
     { path: '/faq', title: 'Frequently asked questions', changeFrequency: 'monthly', priority: 0.6 },
     { path: '/blog', title: 'Articles', changeFrequency: 'weekly', priority: 0.7 },
@@ -45,7 +47,7 @@ export function publicSitemapPages(): PublicPage[] {
     { path: '/mortgage-calculator', title: 'Mortgage repayment calculator', changeFrequency: 'monthly', priority: 0.6 },
     { path: '/sitemap', title: 'Sitemap', changeFrequency: 'weekly', priority: 0.3 },
     ...(CAREERS_PUBLIC_ENABLED ? [{ path: '/careers', title: 'Careers', changeFrequency: 'weekly' as const, priority: 0.6 }] : []),
-    ...(process.env.LEAD_INTAKE_ENABLED === 'true' ? [
+    ...(isLeadIntakeReady() ? [
       { path: '/register-interest', title: 'Register your interest', changeFrequency: 'monthly' as const, priority: 0.8 },
       { path: '/enquire', title: 'Have a query?', changeFrequency: 'monthly' as const, priority: 0.6 },
     ] : []),

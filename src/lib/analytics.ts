@@ -15,7 +15,7 @@ const ASSISTANT_EVENTS = new Set(["property_assistant_opened", "property_assista
 const APPROVED_CAREER_PATHS = new Set(approvedCareerRoles.map(({ slug }) => `/careers/${slug}`));
 
 const PUBLIC_PAGES = new Set([
-  "/", "/about", "/team", "/services", "/snagging", "/renovations", "/faq", "/contact",
+  "/", "/about", "/team", "/services", "/snagging", "/renovations", "/maintenance", "/faq", "/contact",
   "/list-property", "/register-interest", "/enquire", "/blog", "/properties", "/properties/residential",
   "/properties/commercial", "/legal/privacy-policy", "/legal/cookie-policy", "/legal/terms-of-service",
   "/mortgage-calculator", "/sitemap", "/careers",

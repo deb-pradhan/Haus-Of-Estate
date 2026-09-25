@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextFetchEvent, NextMiddleware, NextRequest } from "next/server";
 import type { NextAuthRequest } from "next-auth";
-import { auth } from "@/auth";
 import { safeReturnTo } from "@/lib/auth/safe-return-to";
-import { isSavedContentEnabled } from "@/lib/features";
+import { authPageUnavailableResponse, isAuthPath } from "@/lib/auth/availability";
+import { isAuthEnabled, isSavedContentEnabled } from "@/lib/features";
 import { isApprovedCareersPath } from "@/lib/career-roles";
 import {
   CAREERS_PUBLIC_ENABLED,
@@ -48,10 +48,12 @@ const handleAuthenticatedRequest: (
 
   return NextResponse.next();
 };
-const authenticatedProxy = auth(handleAuthenticatedRequest);
-
-export default function proxy(request: NextRequest, event: NextFetchEvent) {
+export default async function proxy(request: NextRequest, event: NextFetchEvent) {
   const { pathname } = request.nextUrl;
+
+  if (!isAuthEnabled() && isAuthPath(pathname)) {
+    return authPageUnavailableResponse();
+  }
 
   // Respond before any page/RSC output or cached job metadata can be served.
   if (isCareersPath(pathname) && (!CAREERS_PUBLIC_ENABLED || !isApprovedCareersPath(pathname))) {
@@ -60,6 +62,8 @@ export default function proxy(request: NextRequest, event: NextFetchEvent) {
 
   // Keep session handling limited to the routes covered by Release 2's auth proxy.
   if (matches(pathname, ["/saved", ...ALWAYS_PROTECTED_PATHS, ...GUEST_ONLY_PATHS])) {
+    const { auth } = await import("@/auth");
+    const authenticatedProxy = auth(handleAuthenticatedRequest);
     return authenticatedProxy(request, event);
   }
 

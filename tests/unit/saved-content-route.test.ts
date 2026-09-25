@@ -60,6 +60,7 @@ function request(
 
 describe("/api/saved", () => {
   beforeEach(() => {
+    vi.stubEnv("AUTH_ENABLED", "true");
     process.env.SAVED_CONTENT_ENABLED = "true";
     mocks.auth.mockResolvedValue({ user: { id: "current-user" } });
     mocks.sameOrigin.mockReturnValue(true);
@@ -92,6 +93,20 @@ describe("/api/saved", () => {
 
     expect(response.status).toBe(401);
     expect(mocks.findMany).not.toHaveBeenCalled();
+  });
+
+  it("closes every method before sessions or body parsing when auth is deferred", async () => {
+    vi.stubEnv("AUTH_ENABLED", "false");
+    for (const [method, handler] of [["GET", GET], ["PUT", PUT], ["DELETE", DELETE]] as const) {
+      const input = request(method);
+      const parse = vi.spyOn(input, "json");
+      expect((await handler(input)).status).toBe(404);
+      expect(parse).not.toHaveBeenCalled();
+    }
+    expect(mocks.auth).not.toHaveBeenCalled();
+    expect(mocks.findMany).not.toHaveBeenCalled();
+    expect(mocks.upsert).not.toHaveBeenCalled();
+    expect(mocks.deleteMany).not.toHaveBeenCalled();
   });
 
   it("returns a generic service error when session lookup fails", async () => {

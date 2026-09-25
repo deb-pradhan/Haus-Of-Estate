@@ -46,7 +46,7 @@ async function processClaimedRecord(
   }
 
   try {
-    await transport.deliver(payload);
+    await transport.deliver(payload, record.destination, { attempts: record.attempts, createdAt: record.createdAt });
     const changed = await repository.markDelivered(
       record.id,
       options.workerId,

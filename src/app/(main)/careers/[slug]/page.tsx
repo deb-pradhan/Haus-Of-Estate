@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import { sanityFetch } from '@/sanity/live'
 import { ROLE_BY_SLUG_QUERY, ROLES_QUERY } from '@/sanity/queries'
-import { resolveCareerRole, resolveCareerRoles, type CareerRole } from '@/lib/career-roles'
+import { careerRoleLabel, resolveCareerRole, resolveCareerRoles, type CareerRole } from '@/lib/career-roles'
 import { getCareersInbox, isCareersIntakeEnabled } from '@/lib/careers-settings'
 import { DEFAULT_OG_IMAGES } from '@/lib/seo'
 import { PortableTextRenderer } from '@/components/blog'
@@ -44,13 +44,14 @@ export async function generateMetadata({ params }: RolePageProps): Promise<Metad
   const { slug } = await params
   const data = await getVisibleCareerRole(slug)
   if (!data) notFound()
+  const label = careerRoleLabel(data)
   return {
-    title: `${data.title} — Careers`,
-    description: data.summary || `Explore the ${data.title} opportunity at Haus of Estate.`,
+    title: `${label} — Careers`,
+    description: data.summary || `Explore the ${label} opportunity at Haus of Estate.`,
     alternates: { canonical: `/careers/${slug}` },
     openGraph: {
-      title: `${data.title} — Careers at Haus of Estate`,
-      description: data.summary || `Explore the ${data.title} opportunity at Haus of Estate.`,
+      title: `${label} — Careers at Haus of Estate`,
+      description: data.summary || `Explore the ${label} opportunity at Haus of Estate.`,
       url: `/careers/${slug}`,
       type: 'article',
       images: DEFAULT_OG_IMAGES,

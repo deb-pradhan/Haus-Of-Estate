@@ -1,5 +1,7 @@
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
+import { authUnavailableResponse } from "@/lib/auth/availability";
+import { isAuthEnabled } from "@/lib/features";
 import { registerSchema } from "@/lib/auth/contracts";
 import { authDb } from "@/lib/auth/auth-db";
 import { createUnverifiedUserWithToken } from "@/lib/auth/action-tokens";
@@ -55,6 +57,7 @@ async function deliverVerification(input: {
 }
 
 export async function POST(request: Request) {
+  if (!isAuthEnabled()) return authUnavailableResponse();
   if (!isSameOriginRequest(request)) return originRejectedResponse();
 
   const parsed = registerSchema.safeParse(await readJson(request));

@@ -17,6 +17,7 @@ import {
   YEARS_OF_EXPERIENCE_OPTIONS,
 } from "@/lib/careers";
 import { getCareerRole } from "@/sanity/careers";
+import { careersThrottle, isAllowedCareersOrigin, throttleCareersIp } from "@/lib/careers-security";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export async function POST(request: Request) {
@@ -26,6 +27,20 @@ export async function POST(request: Request) {
       { error: "Online applications are not open yet." },
       { status: 404, headers: CAREERS_CLOSED_HEADERS },
     );
+  }
+
+  if (!isAllowedCareersOrigin(request)) {
+    return NextResponse.json({ error: "Please submit your application from our website." }, { status: 403, headers: CAREERS_CLOSED_HEADERS });
+  }
+  const throttled = (seconds: number) => NextResponse.json(
+    { error: "Too many application attempts. Please try again later." },
+    { status: 429, headers: { ...CAREERS_CLOSED_HEADERS, "Retry-After": String(seconds) } },
+  );
+  try {
+    const retryAfter = throttleCareersIp(request);
+    if (retryAfter) return throttled(retryAfter);
+  } catch {
+    return NextResponse.json({ error: "Applications are temporarily unavailable. Please email our recruitment team directly." }, { status: 503, headers: CAREERS_CLOSED_HEADERS });
   }
 
   const tooLarge = () => NextResponse.json({ error: CV_SIZE_ERROR }, { status: 413 });
@@ -167,6 +182,9 @@ export async function POST(request: Request) {
     );
   }
 
+  const emailRetryAfter = careersThrottle("email", email);
+  if (emailRetryAfter) return throttled(emailRetryAfter);
+
   const payload: ApplicationPayload = {
     roleSlug,
     roleTitle: role!.title,
@@ -186,8 +204,8 @@ export async function POST(request: Request) {
 
   try {
     await sendApplicationToTeam(payload);
-  } catch (e) {
-    console.error("[applications] sendApplicationToTeam failed:", e);
+  } catch {
+    console.error("[applications] team delivery failed");
     return NextResponse.json(
       {
         error:
@@ -201,8 +219,8 @@ export async function POST(request: Request) {
   try {
     await sendApplicationConfirmationToApplicant(payload);
     confirmationSent = true;
-  } catch (e) {
-    console.error("[applications] confirmation email failed:", e);
+  } catch {
+    console.error("[applications] confirmation delivery failed");
   }
 
   return NextResponse.json({ ok: true, confirmationSent });

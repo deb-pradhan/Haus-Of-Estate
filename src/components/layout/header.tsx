@@ -10,7 +10,6 @@ import {
   Mail,
   Phone,
   ChevronDown,
-  ChevronRight,
   ArrowRight,
   ClipboardList,
   Sparkles,
@@ -19,9 +18,7 @@ import {
   Users as UsersIcon,
   HelpCircle,
   Info,
-  Home,
-  Building2,
-  LayoutGrid,
+  Wrench,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
@@ -30,11 +27,7 @@ import { HeaderAuthControl } from "@/components/auth/header-auth-control";
 import { CurrencySelector } from "@/components/currency/currency-selector";
 import { CAREERS_PUBLIC_ENABLED } from "@/lib/careers-availability";
 import { cn } from "@/lib/utils";
-import {
-  buildPropertiesMenu,
-  type Category,
-  type MenuColumn,
-} from "@/lib/property-taxonomy";
+import { PropertiesCountryMenu, MobilePropertyMarkets, NavbarPropertySearch } from "./property-navigation";
 
 const WHATSAPP_URL_HEADER =
   "https://wa.me/971585607033?utm_source=site&utm_medium=header&utm_campaign=whatsapp";
@@ -126,23 +119,6 @@ function useHoverDisclosure() {
   };
 }
 
-// Grid-rows collapse: animates height smoothly without measuring, and degrades
-// gracefully under prefers-reduced-motion via the global transition override.
-function Collapse({ open, children }: { open: boolean; children: React.ReactNode }) {
-  return (
-    <div
-      className={cn(
-        "grid transition-[grid-template-rows] duration-200 ease-out",
-        open ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
-      )}
-    >
-      <div className="overflow-hidden">{children}</div>
-    </div>
-  );
-}
-
-// ─── Information architecture ─────────────────────────────────────────
-
 interface NavItem {
   href: string;
   label: string;
@@ -164,7 +140,8 @@ const SERVICES_ITEMS: ServiceEntry[] = [
   { href: "/services#property-management", label: "Property Management", desc: "Tenancy, maintenance and compliance, handled.", icon: ClipboardList },
   { href: "/services#staging", label: "Staging", desc: "Present a home for viewings, photography and marketing.", icon: Sparkles },
   { href: "/services#furnishing", label: "Furnishing", desc: "Move-in ready interiors for new builds and rentals.", icon: Sofa },
-  { href: "/renovations", label: "Renovations", desc: "Painting, plumbing, decorating, electrical, flooring.", icon: PaintRoller },
+  { href: "/renovations", label: "Renovations", desc: "Painting, decorating and flooring.", icon: PaintRoller },
+  { href: "/maintenance", label: "Maintenance", desc: "Plumbing and electrical services.", icon: Wrench },
 ];
 
 const ABOUT_ITEMS: NavItem[] = [
@@ -176,14 +153,15 @@ const ABOUT_ITEMS: NavItem[] = [
 
 // ─── Main component ────────────────────────────────────────────────────
 
-export function Header() {
+export function Header({ authEnabled = false }: { authEnabled?: boolean }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const careersPage = pathname === "/careers" || pathname.startsWith("/careers/");
 
   return (
     <div className="sticky top-0 z-50">
-      <TopUtilityBar />
-      <header className="border-b border-[#DDE1E6] bg-surface/95 backdrop-blur-md">
+      <TopUtilityBar hidePhone={careersPage} />
+      <header className="relative border-b border-[#DDE1E6] bg-surface/95 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
           {/* Logo */}
           <Link href="/" className="flex shrink-0 items-center gap-3" aria-label="Haus of Estate — home">
@@ -199,7 +177,7 @@ export function Header() {
 
           {/* Desktop nav */}
           <nav aria-label="Primary" className="hidden items-center gap-1 lg:flex">
-            <PropertiesMegaMenu pathname={pathname} />
+            <PropertiesCountryMenu key={pathname} pathname={pathname} />
             <NavDropdown
               label="Services"
               href="/services"
@@ -216,8 +194,9 @@ export function Header() {
 
           {/* Right-side actions */}
           <div className="flex items-center gap-2">
+            <NavbarPropertySearch className="hidden w-56 xl:flex" />
             <CurrencySelector />
-            <Suspense
+            {authEnabled && <Suspense
               fallback={
                 <span
                   aria-label="Checking sign-in status"
@@ -226,7 +205,7 @@ export function Header() {
               }
             >
               <HeaderAuthControl />
-            </Suspense>
+            </Suspense>}
             {/* Mobile / tablet trigger */}
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
@@ -239,7 +218,7 @@ export function Header() {
                   {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-80 overflow-y-auto p-0">
+              <SheetContent side="right" className="w-80 overflow-y-auto bg-white p-0">
                 <SheetTitle className="sr-only">Site navigation</SheetTitle>
                 <SheetDescription className="sr-only">Browse properties, services and information about Haus of Estate.</SheetDescription>
                 <MobileNav
@@ -250,6 +229,9 @@ export function Header() {
             </Sheet>
           </div>
         </div>
+        <div className="border-t border-estate-700/10 bg-white px-4 py-2 xl:hidden">
+          <NavbarPropertySearch className="mx-auto max-w-2xl" />
+        </div>
       </header>
     </div>
   );
@@ -257,7 +239,7 @@ export function Header() {
 
 // ─── Top utility bar ───────────────────────────────────────────────────
 
-function TopUtilityBar() {
+function TopUtilityBar({ hidePhone }: { hidePhone: boolean }) {
   const { openAccount } = useLeadModals();
   return (
     <div className="hidden bg-estate-700 text-white/85 md:block">
@@ -265,7 +247,7 @@ function TopUtilityBar() {
         <p className="font-serif text-[11px] uppercase tracking-[0.22em] text-gold-400">
           UK · UAE · International
         </p>
-        <div className="flex items-center gap-1">
+        {!hidePhone && <div className="flex items-center gap-1">
           {COMPANY_PHONES.map((p, i) => (
             <span key={p.region} className="flex items-center gap-1">
               {i === 0 && <Phone className="ml-1 h-3.5 w-3.5 shrink-0 text-gold-400" />}
@@ -312,7 +294,7 @@ function TopUtilityBar() {
           >
             Speak to an advisor
           </button>
-        </div>
+        </div>}
       </div>
     </div>
   );
@@ -514,459 +496,7 @@ function NavDropdown({
   );
 }
 
-// ─── Properties mega-menu (desktop) ────────────────────────────────────
-
-const PROPERTIES_MENU = buildPropertiesMenu();
-
-const CATEGORY_ICONS: Record<Category, React.ComponentType<{ className?: string }>> = {
-  residential: Home,
-  commercial: Building2,
-};
-
-// Featured visual for the desktop panel — a real render that reflects the
-// active category. Commercial has no live inventory, so it gets a refined,
-// muted "coming soon" treatment rather than a broken/empty slot.
-const CATEGORY_FEATURE: Record<
-  Category,
-  { src: string; project: string; place: string }
-> = {
-  residential: {
-    src: "/properties/monaco-mansions/monaco-mansions-exterior-front.jpg",
-    project: "Azizi Monaco Mansions",
-    place: "Dubai · UAE",
-  },
-  commercial: {
-    src: "/properties/al-furjan-retail-01.jpg",
-    project: "Al Furjan Retail",
-    place: "Dubai · UAE",
-  },
-};
-
-// Reserved height so switching categories never shifts the panel. Sized to the
-// tallest column (residential) — commercial simply pads to match.
-const MEGA_PANEL_MIN_H = "min-h-[15rem]";
-
-function ComingSoonTag({ className }: { className?: string }) {
-  return (
-    <span
-      className={cn(
-        "shrink-0 rounded-full border border-border bg-subtle px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.1em] text-muted-foreground",
-        className,
-      )}
-    >
-      Coming soon
-    </span>
-  );
-}
-
-// Left-rail entry point — icon and label, activates the detail panel.
-function MegaMenuRailItem({
-  column,
-  active,
-  onActivate,
-}: {
-  column: MenuColumn;
-  active: boolean;
-  onActivate: () => void;
-}) {
-  const Icon = CATEGORY_ICONS[column.category];
-  return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={active}
-      tabIndex={active ? 0 : -1}
-      onMouseEnter={onActivate}
-      onFocus={onActivate}
-      onClick={onActivate}
-      className={cn(
-        "group/rail relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
-        active ? "bg-estate-700/[0.06]" : "hover:bg-estate-700/[0.04]",
-      )}
-    >
-      {/* Left accent for the active entry */}
-      <span
-        aria-hidden
-        className={cn(
-          "absolute inset-y-2 left-0 w-0.5 rounded-full bg-gold-500 transition-opacity duration-200",
-          active ? "opacity-100" : "opacity-0",
-        )}
-      />
-      <span
-        className={cn(
-          "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-estate-700/8 text-estate-700 transition-colors",
-          column.muted && "opacity-60",
-          active && "bg-estate-700/12",
-        )}
-      >
-        <Icon className="h-4 w-4" />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span
-          className={cn(
-            "block truncate text-sm font-medium",
-            column.muted ? "text-muted-foreground" : "text-estate-700",
-          )}
-        >
-          {column.label}
-        </span>
-        {column.muted && <ComingSoonTag className="mt-1.5 inline-flex" />}
-      </span>
-      <ChevronRight
-        className={cn(
-          "h-4 w-4 shrink-0 text-muted-foreground transition-all duration-200",
-          active
-            ? "translate-x-0 opacity-70"
-            : "-translate-x-1 opacity-0 group-hover/rail:translate-x-0 group-hover/rail:opacity-50",
-        )}
-      />
-    </button>
-  );
-}
-
-// Featured render for the active category. Entire figure is a single link to
-// the category landing page (no nested anchors).
-function MegaMenuFeature({
-  column,
-  onNavigate,
-}: {
-  column: MenuColumn;
-  onNavigate: () => void;
-}) {
-  const feature = CATEGORY_FEATURE[column.category];
-  const muted = column.muted;
-  return (
-    <Link
-      href={column.viewAllHref}
-      onClick={onNavigate}
-      aria-label={
-        muted
-          ? `${column.label} — register interest`
-          : `${column.viewAllLabel}`
-      }
-      className="group/feat relative hidden h-full min-h-[15rem] w-56 shrink-0 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-gold-400 lg:block xl:w-64"
-    >
-      <Image
-        src={feature.src}
-        alt={feature.project}
-        fill
-        sizes="256px"
-        className={cn(
-          "object-cover transition-transform duration-500 ease-out group-hover/feat:scale-[1.06] motion-reduce:transition-none motion-reduce:group-hover/feat:scale-100",
-          muted && "saturate-[0.35]",
-        )}
-      />
-      {/* Readability wash */}
-      <div
-        aria-hidden
-        className="absolute inset-0 bg-gradient-to-t from-estate-700/90 via-estate-700/25 to-estate-700/5"
-      />
-      {muted && (
-        <div aria-hidden className="absolute inset-0 bg-estate-700/35" />
-      )}
-      <div className="absolute inset-x-0 bottom-0 flex flex-col gap-1 p-4">
-        {muted && (
-          <span className="mb-1 inline-flex w-fit rounded-full border border-gold-400/50 bg-black/20 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-gold-400 backdrop-blur-sm">
-            Coming soon
-          </span>
-        )}
-        <p className="font-serif text-lg leading-tight text-white">
-          {feature.project}
-        </p>
-        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/70">
-          {feature.place}
-        </p>
-        <span className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-gold-400">
-          {muted ? "Register interest" : `Explore ${column.label.toLowerCase()}`}
-          <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover/feat:translate-x-0.5 motion-reduce:transition-none motion-reduce:group-hover/feat:translate-x-0" />
-        </span>
-      </div>
-    </Link>
-  );
-}
-
-// Right detail panel — shows ONLY the active category's options.
-function MegaMenuDetail({
-  column,
-  onNavigate,
-}: {
-  column: MenuColumn;
-  onNavigate: () => void;
-}) {
-  return (
-    <div className="flex h-full flex-col p-5">
-      {/* Availability sub-sections: Ready (To buy / To rent) + Off-Plan (To buy) */}
-      <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-        {column.groups.map((group) => (
-          <div key={group.heading}>
-            <p className="px-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-              {group.heading}
-            </p>
-            <ul className="mt-1.5 space-y-0.5">
-              {group.links.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    onClick={onNavigate}
-                    className={cn(
-                      "group/link flex items-center justify-between gap-3 rounded-lg px-2 py-2 text-sm transition-colors hover:bg-estate-700/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
-                      link.muted ? "text-muted-foreground/80" : "text-estate-700",
-                    )}
-                  >
-                    <span className="whitespace-nowrap">{link.label}</span>
-                    {link.muted && !column.muted ? (
-                      <ComingSoonTag />
-                    ) : (
-                      <ArrowRight className="h-3.5 w-3.5 shrink-0 -translate-x-1 opacity-0 transition-all duration-200 group-hover/link:translate-x-0 group-hover/link:opacity-60" />
-                    )}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-
-      {/* View all {category} */}
-      <Link
-        href={column.viewAllHref}
-        onClick={onNavigate}
-        className="group/all mt-auto inline-flex w-fit items-center gap-1 px-2 pt-5 text-xs font-semibold text-gold-600 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
-      >
-        {column.viewAllLabel}
-        <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover/all:translate-x-0.5" />
-      </Link>
-    </div>
-  );
-}
-
-function PropertiesMegaMenu({ pathname }: { pathname: string }) {
-  const [activeCategory, setActiveCategory] = useState<Category>("residential");
-  const [panelOffset, setPanelOffset] = useState(0);
-  const rootRef = useRef<HTMLDivElement | null>(null);
-  const railRef = useRef<HTMLDivElement | null>(null);
-  const panelRef = useRef<HTMLDivElement | null>(null);
-  const { openAccount } = useLeadModals();
-  const { open, present, visible, openMenu, closeMenu, toggleMenu, scheduleClose } =
-    useHoverDisclosure();
-  const isActive = pathname.startsWith("/properties");
-
-  // Viewport-safe positioning: the trigger sits on the right of the nav, so a
-  // wide panel anchored to it would clip off-screen. Shift it left just enough
-  // to stay fully within the viewport with a comfortable margin.
-  const reposition = useCallback(() => {
-    const root = rootRef.current;
-    const panel = panelRef.current;
-    if (!root || !panel) return;
-    const margin = 16;
-    const rootLeft = root.getBoundingClientRect().left;
-    const panelWidth = panel.offsetWidth;
-    const vw = document.documentElement.clientWidth;
-    const maxLeft = vw - margin - panelWidth;
-    const desired = Math.max(margin, Math.min(rootLeft, maxLeft));
-    setPanelOffset(desired - rootLeft);
-  }, []);
-
-  useEffect(() => {
-    if (!present) return;
-    const id = requestAnimationFrame(reposition);
-    window.addEventListener("resize", reposition);
-    return () => {
-      cancelAnimationFrame(id);
-      window.removeEventListener("resize", reposition);
-    };
-  }, [present, reposition]);
-
-  const activeColumn =
-    PROPERTIES_MENU.find((column) => column.category === activeCategory) ??
-    PROPERTIES_MENU[0];
-
-  // Always enter from the default category.
-  const handleOpen = useCallback(() => {
-    setActiveCategory("residential");
-    openMenu();
-  }, [openMenu]);
-
-  useEffect(() => {
-    if (!present) return;
-    function onDoc(e: MouseEvent) {
-      if (!rootRef.current?.contains(e.target as Node)) closeMenu();
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") closeMenu();
-    }
-    document.addEventListener("mousedown", onDoc);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDoc);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [present, closeMenu]);
-
-  // Roving arrow-key navigation across the vertical category tablist.
-  function onRailKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
-    if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
-    const tabs = Array.from(
-      railRef.current?.querySelectorAll<HTMLButtonElement>('[role="tab"]') ?? [],
-    );
-    const idx = tabs.indexOf(document.activeElement as HTMLButtonElement);
-    if (idx === -1) return;
-    e.preventDefault();
-    const next =
-      e.key === "ArrowDown"
-        ? (idx + 1) % tabs.length
-        : (idx - 1 + tabs.length) % tabs.length;
-    tabs[next]?.focus();
-  }
-
-  return (
-    <div
-      ref={rootRef}
-      className="relative"
-      onMouseEnter={handleOpen}
-      onMouseLeave={() => scheduleClose()}
-    >
-      <div className={cn(navLinkClasses(isActive), "gap-0 pr-1")}>
-        <Link
-          href="/properties"
-          onClick={closeMenu}
-          className="-mx-1 rounded-md px-1 py-0.5"
-        >
-          Properties
-        </Link>
-        <button
-          type="button"
-          aria-expanded={open}
-          aria-haspopup="menu"
-          aria-label="Properties menu"
-          onClick={() => {
-            if (!open) setActiveCategory("residential");
-            toggleMenu();
-          }}
-          className="ml-1 rounded-md p-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
-        >
-          <ChevronDown
-            className={cn(
-              "h-3.5 w-3.5 transition-transform duration-200",
-              open && "rotate-180",
-            )}
-          />
-        </button>
-      </div>
-      {present && (
-        <div
-          className="absolute top-full z-50 pt-2.5"
-          style={{ left: panelOffset }}
-        >
-          {/* Invisible bridge removes the dead-zone between trigger and panel. */}
-          <span aria-hidden className="absolute inset-x-0 -top-1 h-3" />
-          <div
-            ref={panelRef}
-            role="menu"
-            aria-label="Properties"
-            className={cn(
-              "w-[min(48rem,calc(100vw-2.5rem))] origin-top overflow-hidden rounded-2xl border border-border bg-surface shadow-xl shadow-black/5 transition-[opacity,transform] duration-200 ease-out xl:w-[min(52rem,calc(100vw-2.5rem))]",
-              visible
-                ? "translate-y-0 scale-100 opacity-100"
-                : "pointer-events-none -translate-y-1 scale-[0.985] opacity-0",
-            )}
-          >
-            <div className={cn("flex", MEGA_PANEL_MIN_H)}>
-              {/* Left rail — category entry points */}
-              <div
-                ref={railRef}
-                role="tablist"
-                aria-label="Property categories"
-                aria-orientation="vertical"
-                onKeyDown={onRailKeyDown}
-                className="flex w-52 shrink-0 flex-col border-r border-border bg-subtle/40 p-3"
-              >
-                <div className="space-y-1">
-                  {PROPERTIES_MENU.map((column) => (
-                    <MegaMenuRailItem
-                      key={column.category}
-                      column={column}
-                      active={column.category === activeCategory}
-                      onActivate={() => setActiveCategory(column.category)}
-                    />
-                  ))}
-                </div>
-
-                <div className="my-2 h-px bg-border" aria-hidden />
-
-                <Link
-                  href="/properties"
-                  onClick={closeMenu}
-                  className="group/all-link flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-estate-700/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
-                >
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-estate-700/8 text-estate-700">
-                    <LayoutGrid className="h-4 w-4" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-medium text-estate-700">
-                      All properties
-                    </span>
-                    <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">
-                      Browse the full portfolio.
-                    </span>
-                  </span>
-                  <ArrowRight className="mt-1 h-4 w-4 shrink-0 self-start -translate-x-1 text-muted-foreground opacity-0 transition-all duration-200 group-hover/all-link:translate-x-0 group-hover/all-link:opacity-50" />
-                </Link>
-              </div>
-
-              {/* Right detail — only the active category. Keyed for crossfade. */}
-              <div
-                role="tabpanel"
-                aria-label={activeColumn.label}
-                className="min-w-0 flex-1"
-              >
-                <div
-                  key={activeCategory}
-                  className="h-full animate-in fade-in-0 slide-in-from-left-2 duration-200 ease-out"
-                >
-                  <MegaMenuDetail column={activeColumn} onNavigate={closeMenu} />
-                </div>
-              </div>
-
-              {/* Featured render — crossfades with the active category. */}
-              <div
-                key={`feat-${activeCategory}`}
-                className="hidden shrink-0 animate-in fade-in-0 duration-300 ease-out lg:block"
-              >
-                <MegaMenuFeature column={activeColumn} onNavigate={closeMenu} />
-              </div>
-            </div>
-
-            {/* Footer strip — full-width browse-all + advisor CTA */}
-            <div className="flex items-center justify-between gap-3 border-t border-border bg-subtle/60 px-5 py-3">
-              <Link
-                href="/properties"
-                onClick={closeMenu}
-                className="group/footer inline-flex items-center gap-2 text-sm font-semibold text-estate-700 transition-colors hover:text-estate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
-              >
-                <Building2 className="h-4 w-4" />
-                View all properties
-                <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover/footer:translate-x-0.5" />
-              </Link>
-              <button
-                type="button"
-                onClick={() => {
-                  closeMenu();
-                  openAccount();
-                }}
-                className="rounded-lg px-3 py-1.5 text-xs font-semibold text-gold-600 transition-colors hover:bg-estate-700/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
-              >
-                Speak to an advisor
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── Mobile nav ────────────────────────────────────────────────────────
+// ─── Mobile navigation ────────────────────────────────────────────────
 
 function MobileNav({
   pathname,
@@ -975,11 +505,13 @@ function MobileNav({
   pathname: string;
   onClose: () => void;
 }) {
+  const hidePhone = pathname === "/careers" || pathname.startsWith("/careers/");
   return (
     <div className="flex h-full flex-col">
       <div className="flex-1 px-4 pb-4 pt-12">
+        <NavbarPropertySearch onNavigate={onClose} className="mb-5" />
         <ul className="space-y-1">
-          <MobilePropertiesGroup pathname={pathname} onClose={onClose} />
+          <MobilePropertyMarkets onNavigate={onClose} />
           <MobileGroup label="Services" defaultOpen items={SERVICES_ITEMS} onClose={onClose} />
           <MobileLink href="/blog" label="Blogs" pathname={pathname} onClose={onClose} />
           <MobileGroup label="About" items={ABOUT_ITEMS} onClose={onClose} />
@@ -989,7 +521,7 @@ function MobileNav({
         {/* Contact strip */}
         <div className="my-5 h-px bg-[#DDE1E6]" />
         <ul className="space-y-1">
-          {COMPANY_PHONES.map((p) => (
+          {!hidePhone && COMPANY_PHONES.map((p) => (
             <li key={p.region}>
               <a
                 href={p.href}
@@ -1003,7 +535,7 @@ function MobileNav({
               </a>
             </li>
           ))}
-          <li>
+          {!hidePhone && <li>
             <a
               href={WHATSAPP_URL_HEADER}
               target="_blank"
@@ -1013,7 +545,7 @@ function MobileNav({
               <WhatsAppIcon className="h-4 w-4 text-[#1FAE54]" />
               WhatsApp us
             </a>
-          </li>
+          </li>}
           <li>
             <a
               href={`mailto:${COMPANY_EMAIL}`}
@@ -1026,148 +558,6 @@ function MobileNav({
         </ul>
       </div>
 
-    </div>
-  );
-}
-
-function MobilePropertiesGroup({
-  pathname,
-  onClose,
-}: {
-  pathname: string;
-  onClose: () => void;
-}) {
-  const [open, setOpen] = useState(pathname.startsWith("/properties"));
-
-  return (
-    <li>
-      <button
-        type="button"
-        aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
-        className="flex min-h-[44px] w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-[#1E1F21] transition-colors hover:bg-[#F7F5F1]"
-      >
-        Properties
-        <ChevronDown
-          className={cn(
-            "h-4 w-4 text-muted-foreground transition-transform duration-200",
-            open && "rotate-180",
-          )}
-        />
-      </button>
-      <Collapse open={open}>
-        <div className="mt-1 space-y-1.5 pl-1">
-          {PROPERTIES_MENU.map((column) => (
-            <MobilePropertyCategory
-              key={column.category}
-              column={column}
-              onClose={onClose}
-            />
-          ))}
-          <Link
-            href="/properties"
-            onClick={onClose}
-            className="flex min-h-[44px] items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-estate-700 transition-colors hover:bg-estate-700/[0.05]"
-          >
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-estate-700/8 text-estate-700">
-              <LayoutGrid className="h-4 w-4" />
-            </span>
-            All properties
-            <ArrowRight className="ml-auto h-4 w-4 opacity-50" />
-          </Link>
-        </div>
-      </Collapse>
-    </li>
-  );
-}
-
-function MobilePropertyCategory({
-  column,
-  onClose,
-}: {
-  column: MenuColumn;
-  onClose: () => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const Icon = CATEGORY_ICONS[column.category];
-
-  return (
-    <div className="overflow-hidden rounded-xl border border-border/70 bg-subtle/30">
-      <button
-        type="button"
-        aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
-        className="flex min-h-[52px] w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-estate-700/[0.04]"
-      >
-        <span
-          className={cn(
-            "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-estate-700/8 text-estate-700",
-            column.muted && "opacity-60",
-          )}
-        >
-          <Icon className="h-4 w-4" />
-        </span>
-        <span className="flex min-w-0 flex-1 flex-col">
-          <span className="flex items-center gap-2">
-            <span
-              className={cn(
-                "text-sm font-semibold",
-                column.muted ? "text-muted-foreground" : "text-estate-700",
-              )}
-            >
-              {column.label}
-            </span>
-            {column.muted && <ComingSoonTag />}
-          </span>
-        </span>
-        <ChevronDown
-          className={cn(
-            "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200",
-            open && "rotate-180",
-          )}
-        />
-      </button>
-      <Collapse open={open}>
-        <div className="space-y-4 px-3 pb-4 pt-1">
-          <div className="space-y-3">
-            {column.groups.map((group) => (
-              <div key={group.heading}>
-                <p className="px-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                  {group.heading}
-                </p>
-                <ul className="mt-1">
-                  {group.links.map((link) => (
-                    <li key={link.href}>
-                      <Link
-                        href={link.href}
-                        onClick={onClose}
-                        className={cn(
-                          "flex min-h-[44px] items-center justify-between gap-2 rounded-lg px-2 text-sm transition-colors hover:bg-estate-700/[0.05]",
-                          link.muted
-                            ? "text-muted-foreground/80"
-                            : "text-estate-700",
-                        )}
-                      >
-                        <span className="whitespace-nowrap">{link.label}</span>
-                        {link.muted && !column.muted && <ComingSoonTag />}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-
-          <Link
-            href={column.viewAllHref}
-            onClick={onClose}
-            className="inline-flex min-h-[44px] items-center gap-1.5 px-1 text-xs font-semibold text-gold-600 underline-offset-4 hover:underline"
-          >
-            {column.viewAllLabel}
-            <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-      </Collapse>
     </div>
   );
 }

@@ -52,11 +52,12 @@ const ZEPTOMAIL_ENDPOINTS = new Set([
 
 export function readLeadDeliveryProvider(
   environment: LeadDeliveryEnvironment = process.env,
-): "powerautomate" | "zeptomail" {
+): "powerautomate" | "zeptomail" | "resend" {
   const provider = environment.LEAD_DELIVERY_PROVIDER?.trim().toLowerCase();
   if (!provider || provider === "powerautomate") return "powerautomate";
   if (provider === "zeptomail") return "zeptomail";
-  throw new Error("LEAD_DELIVERY_PROVIDER must be powerautomate or zeptomail");
+  if (provider === "resend") return "resend";
+  throw new Error("LEAD_DELIVERY_PROVIDER must be powerautomate, zeptomail or resend");
 }
 
 function hausMailbox(value: string | undefined, name: string): string {

@@ -40,6 +40,7 @@ export default defineConfig({
       LEAD_INTAKE_ENABLED: "true",
       LEAD_DELIVERY_ENABLED: "false",
       PURCHASE_READINESS_ENABLED: "true",
+      AUTH_ENABLED: "true",
       AUTH_SECRET: "playwright-only-auth-secret-with-at-least-32-bytes",
       AUTH_URL: baseURL,
       AUTH_THROTTLE_SECRET:

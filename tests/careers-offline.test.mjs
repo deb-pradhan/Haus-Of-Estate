@@ -40,7 +40,7 @@ const baseUrl = process.env.HAUS_CAREERS_TEST_URL;
 test("built app exposes reviewed vacancies while closing old URLs and application intake", { skip: !baseUrl }, async () => {
   const origin = new URL(baseUrl);
   assert.ok(["localhost", "127.0.0.1", "[::1]"].includes(origin.hostname), "Use a local preview, not a public server");
-  for (const path of ["/careers/interior-design-intern", "/careers/content-managers", "/careers/real-estate-agents", "/careers/pr-interns", "/careers/videographers", "/careers/lead-generators", "/careers/unknown", "/careers/unknown?_rsc=closure-check"]) {
+  for (const path of ["/careers/interior-design-intern", "/careers/content-managers", "/careers/real-estate-agents", "/careers/pr-interns", "/careers/videographers", "/careers/lead-generators", "/careers/sales-specialist-uk-nationwide-self-employed", "/careers/unknown", "/careers/unknown?_rsc=closure-check"]) {
     for (const method of ["GET", "HEAD"]) {
       const response = await fetch(new URL(path, origin), { method });
       assert.equal(response.status, 404, `${method} ${path}`);
@@ -74,7 +74,7 @@ test("built app exposes reviewed vacancies while closing old URLs and applicatio
   assert.equal(sitemap.status, 200);
   const xml = await sitemap.text();
   assert.match(xml, /\/careers<\/loc>/);
-  assert.doesNotMatch(xml, /\/careers\/(?:content-managers|real-estate-agents|pr-interns|videographers|lead-generators)<\/loc>/);
+  assert.doesNotMatch(xml, /\/careers\/(?:content-managers|real-estate-agents|pr-interns|videographers|lead-generators|sales-specialist-uk-nationwide-self-employed)<\/loc>/);
   for (const path of ["/", "/about", "/contact"]) {
     const page = await fetch(new URL(path, origin));
     assert.equal(page.status, 200, path);

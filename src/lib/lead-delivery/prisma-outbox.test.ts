@@ -21,6 +21,7 @@ describe("Prisma lead delivery outbox repository", () => {
       where: {
         id: "event-1",
         status: "PENDING",
+        destination: { in: ["notification"] },
         availableAt: { lte: claimedAt },
       },
       data: {
@@ -49,7 +50,7 @@ describe("Prisma lead delivery outbox repository", () => {
       repository.recoverStaleLocks(staleBefore, recoveredAt),
     ).resolves.toBe(3);
     expect(delegate.updateMany).toHaveBeenCalledWith({
-      where: { status: "PROCESSING", lockedAt: { lte: staleBefore } },
+      where: { status: "PROCESSING", destination: { in: ["notification"] }, lockedAt: { lte: staleBefore } },
       data: {
         status: "PENDING",
         availableAt: recoveredAt,

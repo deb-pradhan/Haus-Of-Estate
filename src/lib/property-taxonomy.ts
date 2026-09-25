@@ -152,6 +152,10 @@ export interface PropertyQuery {
   city?: string
   location?: string
   beds?: string | number
+  q?: string
+  minPrice?: string | number
+  maxPrice?: string | number
+  currency?: string
 }
 
 /**
@@ -178,6 +182,10 @@ export function buildPropertiesHref(query: PropertyQuery = {}): string {
   if (query.beds !== undefined && query.beds !== null && query.beds !== '') {
     params.set('beds', String(query.beds))
   }
+  if (query.q?.trim()) params.set('q', query.q.trim().slice(0, 120))
+  if (query.minPrice !== undefined && query.minPrice !== '') params.set('minPrice', String(query.minPrice))
+  if (query.maxPrice !== undefined && query.maxPrice !== '') params.set('maxPrice', String(query.maxPrice))
+  if (query.currency) params.set('currency', query.currency)
 
   const qs = params.toString()
   return qs ? `/properties?${qs}` : '/properties'

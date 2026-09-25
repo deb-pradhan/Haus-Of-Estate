@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { UIMessage } from "ai";
 import {
   assistantRouteScope,
@@ -16,6 +16,8 @@ import {
   buyerBriefFromRecognizedFilters,
 } from "@/components/property-assistant/handoff";
 import { isPropertyAssistantEnabled } from "@/lib/features";
+
+afterEach(() => vi.unstubAllEnvs());
 
 function property(index: number) {
   return {
@@ -44,6 +46,7 @@ describe("property assistant UI boundaries", () => {
   });
 
   it("keeps the server feature flag strict and disabled by default", () => {
+    vi.stubEnv("AUTH_ENABLED", "true");
     const previous = process.env.PROPERTY_ASSISTANT_ENABLED;
     delete process.env.PROPERTY_ASSISTANT_ENABLED;
     expect(isPropertyAssistantEnabled()).toBe(false);

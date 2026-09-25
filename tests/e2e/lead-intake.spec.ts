@@ -56,8 +56,8 @@ test("opens after three seconds, only once per session, and restores focus", asy
     });
   });
   await page.goto("/");
-  const category = page.getByRole("group", { name: "Category", exact: true });
-  const commercial = category.getByRole("button", { name: "Commercial", exact: true });
+  const category = page.getByRole("group", { name: "Property search type", exact: true });
+  const commercial = category.getByRole("button", { name: "Commercial sales", exact: true });
   await commercial.click();
   await expect(commercial).toHaveAttribute("aria-pressed", "true");
   const timerStart = await page.evaluate(() => Date.now());
@@ -127,7 +127,7 @@ test("preserves attribution, separates consent, retries, and records no analytic
       body: JSON.stringify(
         attempts === 1
           ? { error: "Lead intake is temporarily unavailable" }
-          : { success: true, status: "created", leadId: "lead-test" },
+          : { success: true, status: "created", submissionId: route.request().postDataJSON().submissionId, leadId: "lead-test" },
       ),
     });
   });
@@ -224,7 +224,7 @@ test("submits without a phone or marketing consent", async ({ page }) => {
     await route.fulfill({
       status: 201,
       contentType: "application/json",
-      body: JSON.stringify({ success: true, leadId: "lead-no-phone" }),
+      body: JSON.stringify({ success: true, status: "created", submissionId: route.request().postDataJSON().submissionId, leadId: "lead-no-phone" }),
     });
   });
 
@@ -291,7 +291,7 @@ test("freezes consent during a slow submission and announces success", async ({
     await route.fulfill({
       status: 201,
       contentType: "application/json",
-      body: JSON.stringify({ success: true, leadId: "lead-slow" }),
+      body: JSON.stringify({ success: true, status: "created", submissionId: route.request().postDataJSON().submissionId, leadId: "lead-slow" }),
     });
   });
 
@@ -346,7 +346,7 @@ test("@mobile renders and completes the compact three-step flow", async ({
     route.fulfill({
       status: 201,
       contentType: "application/json",
-      body: JSON.stringify({ success: true, leadId: "lead-mobile" }),
+      body: JSON.stringify({ success: true, status: "created", submissionId: route.request().postDataJSON().submissionId, leadId: "lead-mobile" }),
     }),
   );
   await page.goto("/");
@@ -407,7 +407,7 @@ test("valid project links preselect published property context", async ({
     await route.fulfill({
       status: 201,
       contentType: "application/json",
-      body: JSON.stringify({ success: true, leadId: "lead-project" }),
+      body: JSON.stringify({ success: true, status: "created", submissionId: route.request().postDataJSON().submissionId, leadId: "lead-project" }),
     });
   });
 

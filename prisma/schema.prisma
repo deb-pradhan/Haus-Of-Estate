@@ -457,7 +457,7 @@ model Lead {
   notifiedAt           DateTime?
   consentEvents        NewsletterConsentEvent[]
   propertyMatchEvents  PropertyMatchConsentEvent[]
-  deliveryOutbox       LeadDeliveryOutbox?
+  deliveryOutbox       LeadDeliveryOutbox[]
   createdAt            DateTime                    @default(now())
   updatedAt            DateTime                    @updatedAt
 
@@ -562,7 +562,8 @@ model NewsletterConsentEvent {
 
 model LeadDeliveryOutbox {
   id          String    @id @default(cuid())
-  leadId      String    @unique
+  leadId      String
+  destination String    @default("notification")
   lead        Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
   payload     Json
   status      String    @default("PENDING")
@@ -577,6 +578,7 @@ model LeadDeliveryOutbox {
 
   @@index([status, availableAt])
   @@index([status, lockedAt])
+  @@unique([leadId, destination])
 }
 
 model LeadSubmissionThrottle {

@@ -208,6 +208,7 @@ describe("Prisma lead intake transaction", () => {
       created: true,
       leadId: "lead-id",
       outboxId: "outbox-id",
+      outboxIds: ["outbox-id", "outbox-id-sheets"],
     });
     expect(transaction.lead.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -239,6 +240,7 @@ describe("Prisma lead intake transaction", () => {
       data: expect.objectContaining({
         id: "outbox-id",
         leadId: "lead-id",
+        destination: "notification",
         payload: expect.objectContaining({
           eventId: "outbox-id",
           leadId: "lead-id",
@@ -252,6 +254,17 @@ describe("Prisma lead intake transaction", () => {
         }),
       }),
     });
+    expect(transaction.leadDeliveryOutbox.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ id: "outbox-id-sheets", leadId: "lead-id", destination: "google_sheets", payload: expect.objectContaining({ eventId: "outbox-id-sheets" }) }),
+    });
+  });
+
+  it("rejects the transaction if the second destination cannot be queued", async () => {
+    const { client, transaction } = database();
+    transaction.leadDeliveryOutbox.create.mockResolvedValueOnce({ id: "outbox-id" }).mockRejectedValueOnce(new Error("sheet outbox write failed"));
+    const store = createPrismaLeadIntakeStore(client as never);
+    await expect(store.persistSubmission(submission())).rejects.toThrow("sheet outbox write failed");
+    expect(client.$transaction).toHaveBeenCalledWith(expect.any(Function), { isolationLevel: "Serializable" });
   });
 
   it("does not create newsletter state when the optional checkbox is clear", async () => {
@@ -265,7 +278,7 @@ describe("Prisma lead intake transaction", () => {
     expect(transaction.propertyMatchSubscription.create).not.toHaveBeenCalled();
     expect(transaction.propertyMatchSubscription.update).not.toHaveBeenCalled();
     expect(transaction.propertyMatchConsentEvent.create).not.toHaveBeenCalled();
-    expect(transaction.leadDeliveryOutbox.create).toHaveBeenCalledOnce();
+    expect(transaction.leadDeliveryOutbox.create).toHaveBeenCalledTimes(2);
   });
 
   it("persists cash-buyer context without creating consent state", async () => {
@@ -348,7 +361,7 @@ describe("Prisma lead intake transaction", () => {
       payloadHash: first.payloadHash,
       score: 30,
       tier: "nurture",
-      deliveryOutbox: { id: "existing-outbox" },
+      deliveryOutbox: [{ id: "existing-outbox" }],
     } as never);
     const store = createPrismaLeadIntakeStore(client as never);
 

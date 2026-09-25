@@ -1,5 +1,9 @@
 # Website update — 22 September 2026
 
+Later revisions and current release dependencies are recorded in
+[`website-revision-2026-09-25.md`](website-revision-2026-09-25.md). The observations
+below remain evidence from 22 September rather than a claim about today's state.
+
 This report separates prepared website changes, verified account settings and
 remaining delivery work. Website changes are on the existing Release 2 branch,
 `suryak02/azizi-florence-content-scaffold`, for review in

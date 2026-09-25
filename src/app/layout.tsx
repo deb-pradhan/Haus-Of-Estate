@@ -6,8 +6,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { SavedContentProvider } from "@/components/saved-content";
 import { SessionProvider } from "@/lib/auth/client";
 import { CurrencyProvider } from "@/components/currency/currency-provider";
-import { isSavedContentEnabled } from "@/lib/features";
+import { isAuthEnabled, isSavedContentEnabled } from "@/lib/features";
 import { draftMode } from "next/headers";
+import { connection } from "next/server";
 import { SOCIAL_PROFILE_URLS } from "@/config/social";
 import { HAUS_SITE_ORIGIN } from "@/lib/share";
 import "./globals.css";
@@ -156,8 +157,16 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Feature readiness uses runtime-only secrets; do not freeze it into the build.
+  await connection();
   const { isEnabled: isDraftModeEnabled } = await draftMode();
+  const authEnabled = isAuthEnabled();
   const savedContentEnabled = isSavedContentEnabled();
+  const content = (
+    <CurrencyProvider>
+      <TooltipProvider delayDuration={300}>{children}</TooltipProvider>
+    </CurrencyProvider>
+  );
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -182,21 +191,23 @@ export default async function RootLayout({
         >
           Skip to main content
         </a>
-        <SessionProvider>
-          <SavedContentProvider enabled={savedContentEnabled}>
-            <CurrencyProvider>
-              <TooltipProvider delayDuration={300}>{children}</TooltipProvider>
-            </CurrencyProvider>
-          </SavedContentProvider>
-          {isDraftModeEnabled && (
-            <a
-              href="/api/draft-mode/disable"
-              className="fixed bottom-4 right-4 z-50 inline-flex min-h-11 items-center rounded-full bg-estate-700 px-4 py-2 text-sm font-medium text-white shadow-lg"
-            >
-              Exit preview
-            </a>
-          )}
-        </SessionProvider>
+        {authEnabled ? (
+          <SessionProvider>
+            <SavedContentProvider enabled={savedContentEnabled}>
+              {content}
+            </SavedContentProvider>
+          </SessionProvider>
+        ) : (
+          content
+        )}
+        {isDraftModeEnabled && (
+          <a
+            href="/api/draft-mode/disable"
+            className="fixed bottom-4 right-4 z-50 inline-flex min-h-11 items-center rounded-full bg-estate-700 px-4 py-2 text-sm font-medium text-white shadow-lg"
+          >
+            Exit preview
+          </a>
+        )}
       </body>
     </html>
   );

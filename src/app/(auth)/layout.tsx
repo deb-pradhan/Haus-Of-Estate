@@ -1,9 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { isAuthEnabled } from "@/lib/features";
 
 export const metadata: Metadata = {
   referrer: "no-referrer",
+  robots: { index: false, follow: false },
 };
 
 export default function AuthLayout({
@@ -11,6 +14,8 @@ export default function AuthLayout({
 }: {
   children: React.ReactNode;
 }) {
+  if (!isAuthEnabled()) notFound();
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-canvas px-4 py-8 sm:py-12">
       <header className="mb-8 text-center">

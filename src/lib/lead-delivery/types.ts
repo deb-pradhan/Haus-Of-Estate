@@ -11,6 +11,8 @@ export const LEAD_DELIVERY_STATUSES = {
 export type LeadDeliveryStatus =
   (typeof LEAD_DELIVERY_STATUSES)[keyof typeof LEAD_DELIVERY_STATUSES];
 
+export type LeadDeliveryDestination = "notification" | "google_sheets";
+
 export interface LeadExcelRow {
   submissionTime: string;
   leadId: string;
@@ -72,6 +74,7 @@ export interface LeadDeliveryPayloadInput {
 export interface LeadDeliveryOutboxRecord {
   id: string;
   leadId: string;
+  destination: LeadDeliveryDestination;
   payload: unknown;
   status: LeadDeliveryStatus;
   attempts: number;
@@ -110,8 +113,13 @@ export interface LeadDeliveryOutboxRepository {
   ): Promise<boolean>;
 }
 
+export interface LeadDeliveryContext {
+  attempts: number;
+  createdAt: Date;
+}
+
 export interface LeadDeliveryTransport {
-  deliver(payload: LeadDeliveryPayload): Promise<void>;
+  deliver(payload: LeadDeliveryPayload, destination?: LeadDeliveryDestination, context?: LeadDeliveryContext): Promise<void>;
 }
 
 export interface LeadDeliveryLogger {

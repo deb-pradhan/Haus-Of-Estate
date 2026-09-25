@@ -20,6 +20,8 @@ beforeEach(() => {
   mocks.draft = false
   vi.stubEnv('CAREERS_INTAKE_ENABLED', 'false')
   vi.stubEnv('CAREERS_EMAIL', 'recruitment@example.test')
+  vi.stubEnv('RESEND_API_KEY', 're_synthetic_test_only')
+  vi.stubEnv('RESEND_FROM_EMAIL', 'noreply@hausofestate.com')
 })
 afterEach(() => vi.unstubAllEnvs())
 
@@ -33,7 +35,7 @@ describe('public careers pages', () => {
     for (const heading of ['Lettings Agent', 'Sales Agent', 'Career Experience Openings']) expect(html).toContain(heading)
     expect(html).toContain('Online applications are not open yet')
     expect(html).toContain('mailto:recruitment@example.test')
-    expect(html).not.toMatch(/Life at HoE|7721|Advisory|Full.time|Part.time|two working days|data-application-form/)
+    expect(html).not.toMatch(/Life at HoE|7721|Advisory|Full.time|Part.time|two working days|data-application-form|Sales Specialist|Lettings Specialist -/)
   })
 
   it('shows unavailability on CMS failure instead of reviving title fallbacks', async () => {
@@ -66,10 +68,39 @@ describe('public careers pages', () => {
     expect(renderToStaticMarkup(await RolePage(props))).not.toContain('data-application-form')
   })
 
+  it('distinguishes the UK and International agent pages without repeating the location in the heading', async () => {
+    mocks.fetch.mockResolvedValue({ data: { role: null } })
+    for (const [slug, location] of [
+      ['real-estate-agent-uk-nationwide-self-employed', 'UK Nationwide'],
+      ['real-estate-agent-international-self-employed', 'International'],
+    ]) {
+      const props = { params: Promise.resolve({ slug }) }
+      const html = renderToStaticMarkup(await RolePage(props))
+      expect(html).toMatch(/<h1[^>]*>Real Estate Agent - Self Employed<\/h1>/)
+      expect(html).toContain(location)
+      const metadata = await generateMetadata(props)
+      expect(metadata.title).toBe(`Real Estate Agent - Self Employed — ${location} — Careers`)
+      expect(metadata.alternates?.canonical).toBe(`/careers/${slug}`)
+    }
+  })
+
+  it('renders the current Rentals title from the known previous CMS title', async () => {
+    const role = {
+      ...APPROVED_CAREER_ROLES[0], _id: 'renamed-role', status: 'open',
+      title: 'Lettings Specialist - UK Nationwide - Self Employed',
+    }
+    mocks.fetch.mockResolvedValue({ data: { role } })
+    const html = renderToStaticMarkup(await RolePage({ params: Promise.resolve({ slug: role.slug }) }))
+    expect(html).toMatch(/<h1[^>]*>Rentals Specialist - Self Employed<\/h1>/)
+    expect(html).not.toContain(role.title)
+  })
+
   it('rejects retired and closed roles in pages and metadata and omits closures from generated paths', async () => {
-    const retired = { params: Promise.resolve({ slug: 'content-managers' }) }
-    await expect(RolePage(retired)).rejects.toThrow('NEXT_NOT_FOUND')
-    await expect(generateMetadata(retired)).rejects.toThrow('NEXT_NOT_FOUND')
+    for (const slug of ['content-managers', 'sales-specialist-uk-nationwide-self-employed']) {
+      const retired = { params: Promise.resolve({ slug }) }
+      await expect(RolePage(retired)).rejects.toThrow('NEXT_NOT_FOUND')
+      await expect(generateMetadata(retired)).rejects.toThrow('NEXT_NOT_FOUND')
+    }
     expect(mocks.fetch).not.toHaveBeenCalled()
     const closed = { ...APPROVED_CAREER_ROLES[3], _id: 'role', status: 'closed' }
     mocks.fetch.mockResolvedValue({ data: { role: closed } })

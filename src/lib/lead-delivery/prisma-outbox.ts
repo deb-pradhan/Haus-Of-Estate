@@ -3,6 +3,7 @@ import { LEAD_DELIVERY_STATUSES } from "./types";
 import type {
   LeadDeliveryOutboxRecord,
   LeadDeliveryOutboxRepository,
+  LeadDeliveryDestination,
 } from "./types";
 
 interface OutboxDelegate {
@@ -17,6 +18,7 @@ interface PrismaWithLeadDeliveryOutbox {
 
 export function createPrismaLeadDeliveryOutboxRepository(
   client: unknown = db,
+  destinations: LeadDeliveryDestination[] = ["notification"],
 ): LeadDeliveryOutboxRepository {
   const outbox = (client as PrismaWithLeadDeliveryOutbox).leadDeliveryOutbox;
 
@@ -25,6 +27,7 @@ export function createPrismaLeadDeliveryOutboxRepository(
       const result = await outbox.updateMany({
         where: {
           status: LEAD_DELIVERY_STATUSES.processing,
+          destination: { in: destinations },
           lockedAt: { lte: staleBefore },
         },
         data: {
@@ -42,6 +45,7 @@ export function createPrismaLeadDeliveryOutboxRepository(
       const records = await outbox.findMany({
         where: {
           status: LEAD_DELIVERY_STATUSES.pending,
+          destination: { in: destinations },
           availableAt: { lte: readyAt },
         },
         orderBy: [{ availableAt: "asc" }, { createdAt: "asc" }],
@@ -56,6 +60,7 @@ export function createPrismaLeadDeliveryOutboxRepository(
         where: {
           id,
           status: LEAD_DELIVERY_STATUSES.pending,
+          destination: { in: destinations },
           availableAt: { lte: claimedAt },
         },
         data: {

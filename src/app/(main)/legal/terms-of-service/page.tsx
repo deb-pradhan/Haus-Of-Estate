@@ -32,7 +32,7 @@ export default function TermsOfServicePage() {
         <div className="mb-8">
           <p className="font-serif text-sm font-medium uppercase tracking-widest text-gold-500 mb-2">Legal</p>
           <h1 className="font-serif text-4xl font-medium text-estate-700">Terms of Service</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Last updated: February 2026</p>
+          <p className="mt-2 text-sm text-muted-foreground">Last updated: 25 September 2026</p>
         </div>
 
         <div className="space-y-8 text-sm leading-relaxed text-foreground">
@@ -53,8 +53,10 @@ export default function TermsOfServicePage() {
               Haus of Estate Ltd is an international property advisory firm providing property matching, investment advisory, and transaction facilitation services across the United Kingdom, United Arab Emirates, and Indonesia.
             </p>
             <p className="mt-2">
-              <strong>Registered in:</strong> England and Wales<br />
+              <strong>Legal name:</strong> {COMPANY_IDENTITY.legalName}<br />
+              <strong>Registered in:</strong> {COMPANY_IDENTITY.registeredJurisdiction}<br />
               <strong>Company number:</strong> {COMPANY_IDENTITY.number}<br />
+              <strong>Registered office:</strong> {COMPANY_IDENTITY.registeredOffice}<br />
               <strong>Contact:</strong>{" "}
               <a href="mailto:info@hausofestate.com" className="text-trust-teal hover:underline">
                 info@hausofestate.com
@@ -211,7 +213,7 @@ export default function TermsOfServicePage() {
                 info@hausofestate.com
               </a>
               <br />
-              <strong>Post:</strong> Haus of Estate Ltd, [Registered Address], England
+              <strong>Post:</strong> {COMPANY_IDENTITY.legalName}, {COMPANY_IDENTITY.registeredOffice}
             </p>
           </section>
 

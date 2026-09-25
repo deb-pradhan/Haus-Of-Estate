@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 
-const mocks = vi.hoisted(() => ({ fetch: vi.fn(), careersEnabled: true }))
+const mocks = vi.hoisted(() => ({ fetch: vi.fn(), connection: vi.fn(), careersEnabled: true }))
+vi.mock('next/server', () => ({ connection: mocks.connection }))
 vi.mock('@/sanity/client', () => ({ client: { fetch: mocks.fetch } }))
 vi.mock('@/lib/careers-availability', () => ({ get CAREERS_PUBLIC_ENABLED() { return mocks.careersEnabled } }))
 
@@ -10,9 +11,11 @@ const content = (slug: string, _updatedAt?: string | null) => ({ _id: slug, titl
 beforeEach(() => {
   vi.resetModules()
   mocks.fetch.mockReset()
+  mocks.connection.mockReset().mockResolvedValue(undefined)
   mocks.fetch.mockResolvedValue([])
   mocks.careersEnabled = true
   vi.stubEnv('LEAD_INTAKE_ENABLED', 'false')
+  vi.stubEnv('DATABASE_URL', 'postgresql://test:unused@localhost/test')
 })
 
 afterEach(() => {
@@ -21,6 +24,17 @@ afterEach(() => {
 })
 
 describe('public XML sitemap', () => {
+  it('waits for the request before deciding whether enquiry URLs are available', async () => {
+    let requestArrived!: () => void
+    mocks.connection.mockReturnValue(new Promise<void>((resolve) => { requestArrived = resolve }))
+    const { default: sitemap } = await import('./sitemap')
+    const pending = sitemap()
+    await Promise.resolve()
+    expect(mocks.fetch).not.toHaveBeenCalled()
+    vi.stubEnv('LEAD_INTAKE_ENABLED', 'true')
+    requestArrived()
+    expect((await pending).some(({ url }) => url.endsWith('/enquire'))).toBe(true)
+  })
   it('uses saved content dates without inventing static-page or job revision dates', async () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2030-01-01T00:00:00.000Z'))
@@ -34,6 +48,8 @@ describe('public XML sitemap', () => {
     expect(entries.filter((entry) => entry.lastModified)).toHaveLength(2)
     expect(entries.some(({ url }) => url.endsWith('/mortgage-calculator'))).toBe(true)
     expect(entries.some(({ url }) => url.endsWith('/sitemap'))).toBe(true)
+    expect(entries.some(({ url }) => url.endsWith('/maintenance'))).toBe(true)
+    expect(entries.some(({ url }) => url.endsWith('/careers/sales-specialist-uk-nationwide-self-employed'))).toBe(false)
     expect(entries.every(({ url }) => url.startsWith('https://hausofestate.com/'))).toBe(true)
   })
 
@@ -104,6 +120,10 @@ describe('public XML sitemap', () => {
     expect(html).toContain('A published home')
     expect(html).not.toContain('Held editorial draft')
     expect(html).not.toContain('/blog/held-guide')
+    expect(html).toContain('href="/maintenance"')
+    expect(html).toContain('Real Estate Agent - Self Employed — UK Nationwide')
+    expect(html).toContain('Real Estate Agent - Self Employed — International')
+    expect(html).not.toContain('/careers/sales-specialist-uk-nationwide-self-employed')
   })
 
   it.each(['true', 'false'])('preserves lead-page availability when intake is %s and CMS is unavailable', async (enabled) => {

@@ -37,7 +37,7 @@ test("only explicitly named demo hosts can opt in; wildcards and arbitrary previ
 
 test("new public tools and only reviewed careers paths are measurable without URL input data", () => {
   assert.equal(approvedCareerRoles.length, 9);
-  const paths = ["/mortgage-calculator", "/sitemap", "/careers", ...approvedCareerRoles.map(({ slug }) => `/careers/${slug}`)];
+  const paths = ["/mortgage-calculator", "/sitemap", "/maintenance", "/careers", ...approvedCareerRoles.map(({ slug }) => `/careers/${slug}`)];
   for (const path of paths) {
     assert.deepEqual(analyticsPage(`https://hausofestate.com${path}?loanAmount=987654.32&annualRate=12.345&termYears=27&email=applicant@example.com#cv-file.pdf`), {
       page_path: path, page_location: `https://hausofestate.com${path}`, page_title: path.split("/")[1], page_referrer: "",
@@ -48,6 +48,7 @@ test("new public tools and only reviewed careers paths are measurable without UR
   for (const path of [
     "/careers/interior-design-intern", "/careers/content-managers", "/careers/real-estate-agents",
     "/careers/pr-interns", "/careers/videographers", "/careers/lead-generators", "/careers/unknown",
+    "/careers/sales-specialist-uk-nationwide-self-employed",
     "/careers/applicant@example.com", "/careers/social-media-account-manager-intern/apply", "/api/applications",
   ]) assert.equal(analyticsPage(`https://hausofestate.com${path}`), null, path);
 });

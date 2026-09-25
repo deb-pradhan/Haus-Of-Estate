@@ -9,6 +9,7 @@ const controls = vi.hoisted(() => ({
 }))
 
 vi.mock('next/headers', () => ({ draftMode: controls.draftMode }))
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }))
 vi.mock('@/sanity/live', () => ({ sanityFetch: controls.fetch }))
 vi.mock('@/components/saved-content', () => ({
   SaveContentButton: (props: unknown) => { controls.save(props); return null },
@@ -45,5 +46,32 @@ describe('property catalogue draft isolation', () => {
     expect(html).toContain('Florence villas')
     expect(html).toContain('Sanity draft preview')
     expect(controls.save).not.toHaveBeenCalled()
+  })
+
+  it('treats Studio as exactly zero bedrooms while retaining minimum-bedroom searches', async () => {
+    const base = { community: 'Test community', city: 'Dubai', unitType: 'Apartment', summary: 'Test listing' }
+    controls.fetch.mockResolvedValue({ data: [
+      { ...base, _id: 'studio', slug: 'studio', title: 'Canal Studio', bedrooms: 0 },
+      { ...base, _id: 'family', slug: 'family', title: 'Family Apartment', bedrooms: 3 },
+    ] })
+    const studio = renderToStaticMarkup(await PropertyListing({ params: { beds: '0' } }))
+    expect(studio).toContain('Canal Studio')
+    expect(studio).not.toContain('Family Apartment')
+    const family = renderToStaticMarkup(await PropertyListing({ params: { beds: '2' } }))
+    expect(family).toContain('Family Apartment')
+    expect(family).not.toContain('Canal Studio')
+  })
+
+  it('removes monthly budgets with the rental intent chip', async () => {
+    const html = renderToStaticMarkup(await PropertyListing({ params: {
+      intent: 'rent', minPrice: '500', maxPrice: '1000', currency: 'GBP', country: 'United Kingdom',
+    } }))
+    const href = html.match(/<a[^>]*href="([^"]*)"[^>]*>To rent</)?.[1]
+    expect(href).toBeDefined()
+    const url = new URL(href!.replaceAll('&amp;', '&'), 'https://hausofestate.com')
+    expect(url.searchParams.get('country')).toBe('United Kingdom')
+    for (const key of ['intent', 'minPrice', 'maxPrice', 'currency']) {
+      expect(url.searchParams.has(key)).toBe(false)
+    }
   })
 })

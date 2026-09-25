@@ -1,5 +1,7 @@
 "use client";
 
+import { isLeadSubmissionReceipt } from "@/lib/lead-intake/client";
+
 import Link from "next/link";
 import { ArrowRight, Check, Loader2 } from "lucide-react";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
@@ -172,15 +174,11 @@ export function EnquiryForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(30_000),
       });
-      const result = (await response.json().catch(() => null)) as {
-        success?: boolean;
-        status?: string;
-      } | null;
+      const result: unknown = await response.json().catch(() => null);
       if (
-        !response.ok ||
-        result?.success !== true ||
-        !["created", "duplicate"].includes(result.status ?? "")
+        !response.ok || !isLeadSubmissionReceipt(result, payload.submissionId)
       ) {
         throw new Error(
           response.status === 429

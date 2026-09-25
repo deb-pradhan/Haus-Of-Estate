@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
 import { COMPANY_IDENTITY } from '@/lib/company-identity'
+import { blogThumbnailPosition } from '@/lib/blog-thumbnail'
 import { FALLBACK_IMAGES, FALLBACK_ALTS } from '@/sanity/fallbackImages'
 import { SaveContentButton } from '@/components/saved-content'
 
@@ -63,7 +64,7 @@ export function FeaturedPost({ post }: FeaturedPostProps) {
         href={`/blog/${post.slug}`}
         className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-inset"
       >
-        <div className="relative aspect-video w-full bg-stone-100">
+        <div className="relative aspect-video w-full overflow-hidden bg-stone-100">
           {imageUrl && (
             <Image
               src={imageUrl}
@@ -71,7 +72,8 @@ export function FeaturedPost({ post }: FeaturedPostProps) {
               fill
               priority
               sizes="(max-width: 1024px) 100vw, 1216px"
-              className="object-contain"
+              className="object-cover"
+              style={{ objectPosition: blogThumbnailPosition(imageUrl) }}
             />
           )}
         </div>

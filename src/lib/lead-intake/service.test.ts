@@ -52,7 +52,7 @@ describe("submitLeadIntake", () => {
         payloadHash: hashNormalizedLead(value),
         score: 30,
         tier: "nurture",
-        deliveryOutbox: { id: "outbox-existing" },
+        deliveryOutbox: [{ id: "outbox-existing" }],
       })),
       persistSubmission: vi.fn(),
     };

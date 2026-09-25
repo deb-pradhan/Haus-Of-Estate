@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { isLeadIntakeReady } from "@/lib/lead-intake/security";
+import { EnquiryUnavailable } from "@/components/lead-eoi/enquiry-unavailable";
 import { ArrowUpRight, Mail, MessageSquareText } from "lucide-react";
 import { EnquiryForm } from "@/components/lead-eoi/enquiry-form";
 import { DEFAULT_OG_IMAGES } from "@/lib/seo";
@@ -28,7 +29,7 @@ export const metadata: Metadata = {
 };
 
 export default function EnquirePage() {
-  if (process.env.LEAD_INTAKE_ENABLED !== "true") notFound();
+  if (!isLeadIntakeReady()) return <EnquiryUnavailable />;
 
   return (
     <div className="bg-subtle">

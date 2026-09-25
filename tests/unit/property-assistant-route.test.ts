@@ -53,6 +53,7 @@ function request(body: unknown = { messages: validMessages }) {
 
 describe("POST /api/property-assistant", () => {
   beforeEach(() => {
+    vi.stubEnv("AUTH_ENABLED", "true");
     vi.stubEnv("PROPERTY_ASSISTANT_ENABLED", "true");
     vi.stubEnv("AI_GATEWAY_API_KEY", "unit-test-gateway-key");
     vi.stubEnv("PROPERTY_ASSISTANT_USAGE_SECRET", "unit-test-usage-secret");
@@ -90,6 +91,17 @@ describe("POST /api/property-assistant", () => {
 
     expect(response.status).toBe(401);
     expect(mocks.sanitizeMessages).not.toHaveBeenCalled();
+    expect(mocks.reserveUsage).not.toHaveBeenCalled();
+    expect(mocks.createStreamResponse).not.toHaveBeenCalled();
+  });
+
+  it("closes before sessions, body parsing, usage or model work when auth is deferred", async () => {
+    vi.stubEnv("AUTH_ENABLED", "false");
+    const input = request();
+    const parse = vi.spyOn(input, "json");
+    expect((await POST(input)).status).toBe(404);
+    expect(parse).not.toHaveBeenCalled();
+    expect(mocks.auth).not.toHaveBeenCalled();
     expect(mocks.reserveUsage).not.toHaveBeenCalled();
     expect(mocks.createStreamResponse).not.toHaveBeenCalled();
   });

@@ -13,6 +13,8 @@ import { PropertyAssistantSearchEntry } from '@/components/property-assistant/pr
 import { isPropertyAssistantEnabled } from '@/lib/features'
 import { PropertyPrice } from '@/components/currency/property-price'
 import { propertyPriceInput, type PropertyPricing } from '@/lib/currency'
+import { matchesPropertySearch, searchAmount } from '@/lib/property-search'
+import { PropertySearchForm } from './property-search-form'
 import {
   type Category,
   type Availability,
@@ -61,6 +63,10 @@ export interface PropertyListingSearchParams {
   city?: string
   location?: string
   beds?: string
+  q?: string
+  minPrice?: string
+  maxPrice?: string
+  currency?: string
 }
 
 const COMPLETION_LABEL: Record<string, string> = {
@@ -88,6 +94,9 @@ type FilterKey =
   | 'city'
   | 'location'
   | 'beds'
+  | 'q'
+  | 'minPrice'
+  | 'maxPrice'
 
 export async function PropertyListing({
   params,
@@ -118,11 +127,15 @@ export async function PropertyListing({
   const country = params.country?.trim() || ''
   const city = params.city?.trim() || ''
   const location = params.location?.trim() || ''
+  const q = params.q?.trim().slice(0, 120) || ''
+  const minPrice = searchAmount(params.minPrice) === null ? '' : params.minPrice!
+  const maxPrice = searchAmount(params.maxPrice) === null ? '' : params.maxPrice!
+  const currency = ['GBP', 'AED', 'USD'].includes(params.currency ?? '') ? params.currency! : 'GBP'
   const bedsRaw = params.beds ? parseInt(params.beds, 10) : NaN
 
   const hideBeds =
     category === 'commercial' || (type !== '' && LAND_TYPES.includes(type))
-  const minBeds = !hideBeds && Number.isFinite(bedsRaw) ? bedsRaw : null
+  const minBeds = !hideBeds && Number.isInteger(bedsRaw) && bedsRaw >= 0 ? bedsRaw : null
 
   // ── Fetch (server-side GROQ filtering) ────────────────────────────────
   const { data: properties } = await sanityFetch<PropertyCard[]>({
@@ -141,6 +154,7 @@ export async function PropertyListing({
   const cityLC = city.toLocaleLowerCase('en-GB')
   const locLC = location.toLowerCase()
   const list = fetched.filter((p) => {
+    if (!matchesPropertySearch(p, { q, minPrice, maxPrice, currency, intent })) return false
     if (
       countryLC &&
       p.country?.trim().toLocaleLowerCase('en-GB') !== countryLC
@@ -159,6 +173,7 @@ export async function PropertyListing({
     }
     if (minBeds !== null) {
       if (typeof p.bedrooms !== 'number') return false
+      if (minBeds === 0 && p.bedrooms !== 0) return false
       if (p.bedrooms < minBeds) return false
     }
     return true
@@ -180,6 +195,9 @@ export async function PropertyListing({
   if (country) activeFilters.push({ label: country, key: 'country' })
   if (city) activeFilters.push({ label: city, key: 'city' })
   if (location) activeFilters.push({ label: location, key: 'location' })
+  if (q) activeFilters.push({ label: `Search: ${q}`, key: 'q' })
+  if (minPrice) activeFilters.push({ label: `From ${currency} ${Number(minPrice).toLocaleString('en-GB')}${intent === 'rent' ? ' / month' : ''}`, key: 'minPrice' })
+  if (maxPrice) activeFilters.push({ label: `Up to ${currency} ${Number(maxPrice).toLocaleString('en-GB')}${intent === 'rent' ? ' / month' : ''}`, key: 'maxPrice' })
   if (minBeds !== null)
     activeFilters.push({
       label: minBeds === 0 ? 'Studio' : `${minBeds}+ bedrooms`,
@@ -201,6 +219,11 @@ export async function PropertyListing({
         remove === 'country' || remove === 'city' ? undefined : city || undefined,
       location: remove === 'location' ? undefined : location || undefined,
       beds: remove === 'beds' || minBeds === null ? undefined : minBeds,
+      q: remove === 'q' ? undefined : q,
+      // A rental budget is monthly; do not carry it into an unscoped sale search.
+      minPrice: remove === 'intent' || remove === 'minPrice' ? undefined : minPrice,
+      maxPrice: remove === 'intent' || remove === 'maxPrice' ? undefined : maxPrice,
+      currency: remove !== 'intent' && (minPrice || maxPrice) ? currency : undefined,
     })
   }
 
@@ -229,24 +252,20 @@ export async function PropertyListing({
         </div>
       )}
       {/* Hero */}
-      <section className="bg-estate-700 px-4 py-20 md:px-6 md:py-24">
+      <section className="bg-estate-700 px-4 py-12 md:px-6 md:py-16">
         <div className="mx-auto max-w-4xl text-center">
           <p className="font-serif text-xs font-medium uppercase tracking-[0.3em] text-gold-400">
             {eyebrow}
           </p>
           <h1 className="mt-4 font-serif text-4xl font-medium leading-[1.05] text-white md:text-5xl">
-            {heading ?? (
-              <>
-                Homes in communities{' '}
-                <span className="text-gold-400">worth living in.</span>
-              </>
-            )}
+            {heading ?? `${category === 'commercial' ? 'Commercial properties' : category === 'residential' ? 'Homes' : 'Properties'}${intent === 'rent' ? ' to rent' : intent === 'sale' ? ' for sale' : ''}${country ? ` in ${country}` : ''}`}
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/80 md:text-lg">
             {intro ??
-              "A considered selection across our partner communities. Tell us what you're after and we'll connect you with a vetted agent — no hard sell, no obligation."}
+              'Explore our published collection by location, property type and budget.'}
           </p>
         </div>
+        <div className="mt-8"><PropertySearchForm key={JSON.stringify(params)} initial={{ category: category || undefined, intent: intent || undefined, availability: availability || undefined, country, city, type, beds: minBeds ?? '', q: q || location, minPrice, maxPrice, currency }} /></div>
       </section>
 
       {/* Listings */}

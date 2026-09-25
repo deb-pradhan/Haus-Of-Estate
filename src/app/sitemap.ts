@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next'
+import { connection } from 'next/server'
 import { getPublicSitemap } from '@/lib/public-sitemap'
 import { HAUS_SITE_ORIGIN } from '@/lib/share'
 
@@ -11,6 +12,8 @@ function modificationMetadata(updatedAt: string | null | undefined) {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // Metadata routes do not inherit the root layout's runtime boundary.
+  await connection()
   const { pages, posts, properties, careers } = await getPublicSitemap()
   return [
     ...pages.map(({ path, changeFrequency, priority }) => ({ url: `${HAUS_SITE_ORIGIN}${path}`, changeFrequency, priority })),

@@ -1,6 +1,27 @@
 # Haus releases
 
-## Current work — 22 September 2026
+## Current work — 25 September 2026
+
+Continue Release 2 on `suryak02/azizi-florence-content-scaffold` and draft PR #16.
+Accounts, saved content and AskHaus are deferred with `AUTH_ENABLED=false` by
+default. The next release focuses on property search/navigation, the original-logo
+developer carousel, blog thumbnail framing, the revised nine-role careers list,
+Maintenance and verified company/ICO details. The current evidence, owners and
+remaining dependencies are in
+[`website-revision-2026-09-25.md`](website-revision-2026-09-25.md).
+
+Recruitment contact is `careers@hausofestate.com`; careers pages suppress shared
+phone/WhatsApp links. Application availability remains separate from browsing
+approval. Public enquiry intake also requires backend readiness and must not fall
+back to legacy forms or claim a submission was delivered after a failure.
+Company-inbox and Google Sheet receipt, recruiter receipt and actual GA4 receipt
+remain release dependencies. Preparing code and local tests does not verify them.
+
+Preserve the existing content holds and Release 1 implementation. No production
+deployment, GTM publication, Sanity publication or outbound messages form part of
+this preparation.
+
+## Historical work — 22 September 2026
 
 Continue the same Release 2 branch and draft PR #16. The approved 22 September
 website work prepares removal of the remaining Rent Smart Wales/Propertymark

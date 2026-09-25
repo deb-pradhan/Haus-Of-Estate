@@ -8,6 +8,7 @@ const PRODUCTION_ORIGINS = [
 
 export interface LeadIntakeEnvironment {
   LEAD_INTAKE_ENABLED?: string;
+  DATABASE_URL?: string;
   LEAD_ALLOWED_ORIGINS?: string;
   LEAD_RATE_LIMIT_SECRET?: string;
   NEXT_PUBLIC_SITE_URL?: string;
@@ -28,6 +29,14 @@ export function isLeadIntakeEnabled(
   environment: LeadIntakeEnvironment = process.env,
 ): boolean {
   return environment.LEAD_INTAKE_ENABLED?.toLowerCase() === "true";
+}
+
+/** Configuration readiness only; a successful database transaction is still required for receipt. */
+export function isLeadIntakeReady(
+  environment: LeadIntakeEnvironment = process.env,
+): boolean {
+  return isLeadIntakeEnabled(environment) && Boolean(environment.DATABASE_URL?.trim()) &&
+    (environment.NODE_ENV !== "production" || Boolean(environment.LEAD_RATE_LIMIT_SECRET?.trim()));
 }
 
 export function allowedLeadOrigins(

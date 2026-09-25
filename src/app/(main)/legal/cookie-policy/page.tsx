@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { COMPANY_IDENTITY } from "@/lib/company-identity";
 
 export const metadata: Metadata = {
   title: "Cookie Policy",
@@ -32,7 +33,7 @@ export default function CookiePolicyPage() {
         <div className="mb-8">
           <p className="font-serif text-sm font-medium uppercase tracking-widest text-gold-500 mb-2">Legal</p>
           <h1 className="font-serif text-4xl font-medium text-estate-700">Cookie Policy</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Last updated: February 2026</p>
+          <p className="mt-2 text-sm text-muted-foreground">Last updated: 25 September 2026</p>
         </div>
 
         <div className="space-y-8 text-sm leading-relaxed text-foreground">
@@ -43,7 +44,7 @@ export default function CookiePolicyPage() {
               Cookies are small text files that are stored on your device (computer, tablet, or mobile) when you visit a website. They are widely used to make websites work more efficiently, improve user experience, and provide information to website owners.
             </p>
             <p className="mt-2">
-              This Cookie Policy explains how Haus of Estate ("we", "our", "us") uses cookies and similar technologies in compliance with the UK Privacy and Electronic Communications Regulations (PECR) 2003 and the UK General Data Protection Regulation (UK GDPR).
+              This Cookie Policy explains how Haus of Estate (&quot;we&quot;, &quot;our&quot;, &quot;us&quot;) uses cookies and similar technologies in compliance with the UK Privacy and Electronic Communications Regulations (PECR) 2003 and the UK General Data Protection Regulation (UK GDPR).
             </p>
           </section>
 
@@ -86,7 +87,7 @@ export default function CookiePolicyPage() {
               <div className="rounded-xl border border-border bg-surface p-5">
                 <h3 className="font-medium text-estate-700 mb-2">Functionality Cookies</h3>
                 <p className="text-sm text-muted-foreground">
-                  These cookies remember your preferences and settings — such as your language, region, or currency — so you don't have to re-enter them on each visit. They may also remember choices you've made (such as your name or email address) to provide a more personalised experience.
+                  These cookies remember your preferences and settings — such as your language, region, or currency — so you don&apos;t have to re-enter them on each visit. They may also remember choices you&apos;ve made (such as your name or email address) to provide a more personalised experience.
                 </p>
                 <p className="mt-2 text-xs text-muted-foreground">
                   <strong>Legal basis:</strong> Consent required.
@@ -129,7 +130,7 @@ export default function CookiePolicyPage() {
               </li>
             </ul>
             <p className="mt-3">
-              Third-party cookies are governed by the respective third party's privacy and cookie policies.
+              Third-party cookies are governed by the respective third party&apos;s privacy and cookie policies.
             </p>
           </section>
 
@@ -193,7 +194,7 @@ export default function CookiePolicyPage() {
               When analytics is available, the cookie banner lets you accept or reject it before it loads. You can change your analytics choice at any time by:
             </p>
             <ul className="mt-2 space-y-1 list-disc pl-5">
-              <li>Clicking the "Cookie Settings" link in the footer of our website</li>
+              <li>Clicking the &quot;Cookie Settings&quot; link in the footer of our website</li>
               <li>Contacting us at{" "}
                 <a href="mailto:privacy@hausofestate.com" className="text-trust-teal hover:underline">
                   privacy@hausofestate.com
@@ -249,7 +250,7 @@ export default function CookiePolicyPage() {
                 privacy@hausofestate.com
               </a>
               <br />
-              <strong>Post:</strong> Haus of Estate Ltd, [Registered Address], England
+              <strong>Post:</strong> {COMPANY_IDENTITY.legalName}, {COMPANY_IDENTITY.registeredOffice}
             </p>
           </section>
 

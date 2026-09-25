@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { getPublicSitemap } from '@/lib/public-sitemap'
 import { DEFAULT_OG_IMAGES } from '@/lib/seo'
+import { careerRoleLabel } from '@/lib/career-roles'
 
 export const metadata: Metadata = {
   title: 'Sitemap',
@@ -24,7 +25,7 @@ export default async function SitemapPage() {
     { title: 'Explore Haus of Estate', links: pages.filter(({ path }) => path !== '/sitemap') },
     { title: 'Properties', links: properties.map(({ title, slug }) => ({ title, path: `/properties/${slug}` })) },
     { title: 'Articles', links: posts.map(({ title, slug }) => ({ title, path: `/blog/${slug}` })) },
-    { title: 'Career opportunities', links: careers.map(({ title, slug }) => ({ title, path: `/careers/${slug}` })) },
+    { title: 'Career opportunities', links: careers.map((role) => ({ title: careerRoleLabel(role), path: `/careers/${role.slug}` })) },
   ]
 
   return (

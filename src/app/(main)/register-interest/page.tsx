@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { isLeadIntakeReady } from "@/lib/lead-intake/security";
+import { EnquiryUnavailable } from "@/components/lead-eoi/enquiry-unavailable";
 import { Check, Clock3, LockKeyhole } from "lucide-react";
 import { LeadEoiForm } from "@/components/lead-eoi/lead-eoi-form";
 import type {
@@ -81,7 +82,7 @@ export default async function RegisterInterestPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  if (process.env.LEAD_INTAKE_ENABLED !== "true") notFound();
+  if (!isLeadIntakeReady()) return <EnquiryUnavailable />;
 
   const query = await searchParams;
   const project = await getProjectContext(firstSearchParam(query.project));

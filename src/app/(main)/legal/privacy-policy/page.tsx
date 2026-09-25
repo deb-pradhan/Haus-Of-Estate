@@ -47,7 +47,7 @@ export default function PrivacyPolicyPage() {
             Privacy Policy
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Last updated: 1 September 2026
+            Last updated: 25 September 2026
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
             Lead enquiry notice version: 2026-09-01.v2
@@ -71,13 +71,23 @@ export default function PrivacyPolicyPage() {
             <p className="mt-2">
               <strong>Company details:</strong>
               <br />
-              Haus of Estate Ltd
+              {COMPANY_IDENTITY.legalName}
               <br />
-              Registered in England and Wales
+              Registered in {COMPANY_IDENTITY.registeredJurisdiction}
               <br />
               Company number: {COMPANY_IDENTITY.number}
               <br />
-              Registered address: [To be confirmed]
+              Registered office: {COMPANY_IDENTITY.registeredOffice}
+              <br />
+              ICO registration:{" "}
+              <a
+                href={COMPANY_IDENTITY.icoRegisterUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-trust-teal hover:underline"
+              >
+                {COMPANY_IDENTITY.icoRegistrationNumber}
+              </a>
               <br />
               Email:{" "}
               <a
@@ -444,8 +454,7 @@ export default function PrivacyPolicyPage() {
                 privacy@hausofestate.com
               </a>
               <br />
-              <strong>Post:</strong> Haus of Estate Ltd, [Registered Address],
-              England
+              <strong>Post:</strong> {COMPANY_IDENTITY.legalName}, {COMPANY_IDENTITY.registeredOffice}
             </p>
           </section>
         </div>

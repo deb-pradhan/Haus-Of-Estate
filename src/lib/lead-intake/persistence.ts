@@ -19,7 +19,7 @@ export interface ExistingLeadSubmission {
   payloadHash: string | null;
   score: number;
   tier: string | null;
-  deliveryOutbox?: { id: string } | null;
+  deliveryOutbox?: Array<{ id: string }>;
 }
 
 export interface LeadScore {
@@ -46,6 +46,7 @@ export interface StoredLeadSubmission {
   score: number;
   tier: string;
   outboxId?: string;
+  outboxIds?: string[];
 }
 
 export interface LeadIntakeStore {
@@ -69,7 +70,8 @@ function replayOrConflict(
     submissionId,
     score: existing.score,
     tier: existing.tier ?? "nurture",
-    outboxId: existing.deliveryOutbox?.id,
+    outboxId: existing.deliveryOutbox?.[0]?.id,
+    outboxIds: existing.deliveryOutbox?.map((record) => record.id),
   };
 }
 
@@ -353,7 +355,21 @@ export function createPrismaLeadIntakeStore(
             data: {
               id: submission.outboxId,
               leadId: lead.id,
+              destination: "notification",
               payload: deliveryPayload as unknown as Prisma.InputJsonValue,
+              availableAt: submission.submittedAt,
+            },
+          });
+
+          // Queue both destinations in the same transaction as the enquiry.
+          // Disabled/unconfigured delivery stays pending, rather than silently dropping a channel.
+          const sheetsOutboxId = `${submission.outboxId}-sheets`;
+          await transaction.leadDeliveryOutbox.create({
+            data: {
+              id: sheetsOutboxId,
+              leadId: lead.id,
+              destination: "google_sheets",
+              payload: { ...deliveryPayload, eventId: sheetsOutboxId } as unknown as Prisma.InputJsonValue,
               availableAt: submission.submittedAt,
             },
           });
@@ -365,6 +381,7 @@ export function createPrismaLeadIntakeStore(
             score: scoring.score,
             tier: scoring.tier,
             outboxId: submission.outboxId,
+            outboxIds: [submission.outboxId, sheetsOutboxId],
           };
         },
         { isolationLevel: "Serializable" },

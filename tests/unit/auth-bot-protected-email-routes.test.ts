@@ -59,6 +59,7 @@ function request(path: string) {
 
 describe("bot-protected auth email actions", () => {
   beforeEach(() => {
+    vi.stubEnv("AUTH_ENABLED", "true");
     mocks.sameOrigin.mockReturnValue(true);
     mocks.ipThrottle.mockResolvedValue({
       allowed: true,

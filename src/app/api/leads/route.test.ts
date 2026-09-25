@@ -27,6 +27,7 @@ vi.mock("@/lib/lead-intake/service", () => ({
 }));
 
 import { POST } from "./route";
+import { POST as funnelPOST } from "@/app/api/funnel/route";
 
 function v2(overrides: Record<string, unknown> = {}) {
   return {
@@ -57,6 +58,8 @@ function request(body: unknown) {
 
 beforeEach(() => {
   vi.stubEnv("NODE_ENV", "test");
+  vi.stubEnv("DATABASE_URL", "postgresql://test:test@localhost/test");
+  vi.stubEnv("LEAD_RATE_LIMIT_SECRET", "test-rate-secret");
   vi.stubEnv("LEAD_INTAKE_ENABLED", "true");
   mocks.attemptImmediateLeadDelivery.mockResolvedValue("disabled");
   mocks.notifyLegacyLead.mockResolvedValue(undefined);
@@ -76,6 +79,21 @@ afterEach(() => {
 });
 
 describe("POST /api/leads", () => {
+  it("requires durable intake through the former funnel endpoint too", async () => {
+    const saved = await funnelPOST(request(v2()));
+    expect(saved.status).toBe(201);
+    expect(mocks.submitLeadIntake).toHaveBeenCalledOnce();
+    mocks.submitLeadIntake.mockClear();
+    const oldUnconsented = await funnelPOST(request({ firstName: "Alex", phone: "+447700900123", intent: "buy" }));
+    expect(oldUnconsented.status).toBe(400);
+    expect(mocks.submitLeadIntake).not.toHaveBeenCalled();
+  });
+
+  it("returns unavailable before attempting persistence when the database is unconfigured", async () => {
+    vi.stubEnv("DATABASE_URL", "");
+    expect((await POST(request(v2()))).status).toBe(503);
+    expect(mocks.submitLeadIntake).not.toHaveBeenCalled();
+  });
   it("accepts a social query through the existing persisted delivery flow", async () => {
     const response = await POST(request(v2({
       interest: "general_enquiry",
@@ -168,7 +186,7 @@ describe("POST /api/leads", () => {
     );
   });
 
-  it("keeps legacy submissions working while v2 is disabled", async () => {
+  it("rejects all payloads while intake is disabled", async () => {
     vi.stubEnv("LEAD_INTAKE_ENABLED", "false");
     const legacyResponse = await POST(
       request({
@@ -179,13 +197,12 @@ describe("POST /api/leads", () => {
         consentGiven: true,
       }),
     );
-    expect(legacyResponse.status).toBe(201);
-    expect(mocks.submitLeadIntake).toHaveBeenCalledOnce();
-    expect(mocks.notifyLegacyLead).toHaveBeenCalledOnce();
-
+    expect(legacyResponse.status).toBe(503);
+    expect(mocks.submitLeadIntake).not.toHaveBeenCalled();
+    expect(mocks.notifyLegacyLead).not.toHaveBeenCalled();
     const v2Response = await POST(request(v2()));
     expect(v2Response.status).toBe(503);
-    expect(mocks.submitLeadIntake).toHaveBeenCalledOnce();
+    expect(mocks.submitLeadIntake).not.toHaveBeenCalled();
   });
 
   it("applies production origin checks to the legacy compatibility path", async () => {

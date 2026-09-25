@@ -23,6 +23,7 @@ function makeRecord(
   return {
     id: "event-1",
     leadId: "lead-1",
+    destination: "notification",
     payload: buildLeadDeliveryPayload({
       eventId: "event-1",
       leadId: "lead-1",
@@ -196,6 +197,8 @@ describe("lead delivery worker", () => {
           propertyMatchOptIn: false,
         }),
       }),
+      "notification",
+      { attempts: 1, createdAt: now },
     );
   });
 
@@ -217,5 +220,38 @@ describe("lead delivery worker", () => {
     expect(calculateLeadDeliveryRetryDelay(20, 300_000, 21_600_000)).toBe(
       21_600_000,
     );
+  });
+
+  it("retries the failed Sheets destination without resending the delivered notification", async () => {
+    const records = [
+      makeRecord({ id: "email-event", status: "PENDING", attempts: 0 }),
+      makeRecord({ id: "sheet-event", destination: "google_sheets", status: "PENDING", attempts: 0 }),
+    ];
+    const setup = dependencies(null);
+    vi.mocked(setup.repository.listReadyIds).mockImplementation(async () => records.filter((record) => record.status === "PENDING").map((record) => record.id));
+    vi.mocked(setup.repository.claim).mockImplementation(async (id) => {
+      const record = records.find((item) => item.id === id && item.status === "PENDING");
+      if (!record) return null;
+      record.status = "PROCESSING";
+      record.attempts += 1;
+      return record;
+    });
+    vi.mocked(setup.repository.markDelivered).mockImplementation(async (id) => {
+      records.find((record) => record.id === id)!.status = "DELIVERED";
+      return true;
+    });
+    vi.mocked(setup.repository.releaseForRetry).mockImplementation(async (id) => {
+      records.find((record) => record.id === id)!.status = "PENDING";
+      return true;
+    });
+    let failSheet = true;
+    vi.mocked(setup.transport.deliver).mockImplementation(async (_payload, destination) => {
+      if (destination === "google_sheets" && failSheet) throw new LeadDeliveryError("SHEETS_HTTP_503", true);
+    });
+    expect(await runLeadDeliveryWorker(setup.value)).toMatchObject({ delivered: 1, retried: 1 });
+    failSheet = false;
+    expect(await runLeadDeliveryWorker(setup.value)).toMatchObject({ delivered: 1, retried: 0 });
+    expect(vi.mocked(setup.transport.deliver).mock.calls.map((call) => call[1])).toEqual(["notification", "google_sheets", "google_sheets"]);
+    expect(records.map((record) => record.attempts)).toEqual([1, 2]);
   });
 });

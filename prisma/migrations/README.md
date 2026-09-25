@@ -59,3 +59,27 @@ Removing that default belongs in a later contract migration.
 Before rollout, count those unverified historical accounts and agree whether
 they are disposable test users or need an owner-verification campaign. The new
 login correctly refuses them; the old site never gave them a verification flow.
+
+## Independent lead destinations — 25 September 2026
+
+`20260925120000_lead_delivery_destinations` adds a destination to the existing
+outbox and replaces its one-row-per-lead uniqueness with one row per lead and
+destination. Existing rows become `notification` without resetting their status,
+attempts, leases or delivery timestamps. New code queues a separate
+`google_sheets` row in the same transaction as the enquiry. Existing enquiries
+are not automatically backfilled into Google Sheets.
+
+Review this SQL together with the app/worker change. Use `npm run db:migrate:approved`
+only as part of an authorised rollout after backup and schema/history checks.
+Its blocked output gives the exact `HAUS_DATABASE_MIGRATIONS_APPROVED` value for
+the complete pending set and reviewed checksums; do not reuse an older migration's
+approval or bypass the existing checker. Remove the approval after the rollout.
+Local `npx prisma generate` only regenerates the client and does not apply SQL.
+
+Stop the previous delivery worker before deploying these changes. Deploy the app
+and worker together before resuming delivery. An old worker has no destination
+filter and must not process the new Sheets rows. Rolling back to that worker is
+unsafe while the new rows exist; disable delivery and reconcile the queue before
+recovery. See `docs/lead-delivery-2026-09-25.md` for configuration, verification and
+manual retry limits. This migration was prepared and the client generated locally;
+the migration has **not** been executed against any database by this task.

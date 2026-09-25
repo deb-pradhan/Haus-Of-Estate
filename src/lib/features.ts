@@ -1,7 +1,11 @@
+export function isAuthEnabled(): boolean {
+  return process.env.AUTH_ENABLED === "true";
+}
+
 export function isSavedContentEnabled(): boolean {
-  return process.env.SAVED_CONTENT_ENABLED === "true";
+  return isAuthEnabled() && process.env.SAVED_CONTENT_ENABLED === "true";
 }
 
 export function isPropertyAssistantEnabled(): boolean {
-  return process.env.PROPERTY_ASSISTANT_ENABLED === "true";
+  return isAuthEnabled() && process.env.PROPERTY_ASSISTANT_ENABLED === "true";
 }

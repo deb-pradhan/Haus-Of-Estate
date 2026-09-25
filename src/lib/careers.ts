@@ -1,6 +1,6 @@
 // Shared option sets for careers / application forms.
 
-export const HR_INBOX = "hr@hausofestate.com";
+export const HR_INBOX = "careers@hausofestate.com";
 
 export const YEARS_OF_EXPERIENCE_OPTIONS = [
   "Less than 1 year",

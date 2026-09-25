@@ -8,15 +8,13 @@ import {
   LeadRateLimitError,
   LeadValidationError,
 } from "@/lib/lead-intake/errors";
-import { notifyLegacyLead } from "@/lib/lead-intake/legacy";
 import { normalizeLeadRequest } from "@/lib/lead-intake/normalize";
 import {
   assertAllowedLeadOrigin,
   extractClientAddress,
   hashClientAddress,
   isHoneypotFilled,
-  isLeadIntakeEnabled,
-  isV2LeadPayload,
+  isLeadIntakeReady,
 } from "@/lib/lead-intake/security";
 import { submitLeadIntake } from "@/lib/lead-intake/service";
 
@@ -73,37 +71,31 @@ async function parseBody(request: Request): Promise<unknown> {
 export async function POST(request: Request) {
   try {
     const body = await parseBody(request);
-    const v2Payload = isV2LeadPayload(body);
 
     assertAllowedLeadOrigin(request);
     if (isHoneypotFilled(body)) {
       throw new LeadValidationError("Invalid submission");
     }
 
-    if (!isLeadIntakeEnabled()) {
-      if (v2Payload) {
-        return errorResponse("Lead intake is temporarily unavailable", 503);
-      }
+    if (!isLeadIntakeReady()) {
+      return errorResponse("Lead intake is temporarily unavailable", 503);
     }
 
     const input = normalizeLeadRequest(body);
     const ipHash = hashClientAddress(extractClientAddress(request));
     const result = await submitLeadIntake(input, ipHash);
 
-    let deliveryOutcome: Awaited<ReturnType<typeof attemptImmediateLeadDelivery>> =
-      "disabled";
     if (result.created && result.outboxId) {
       try {
-        deliveryOutcome = await attemptImmediateLeadDelivery(result.outboxId);
+        const outcomes = await Promise.allSettled(
+          (result.outboxIds ?? [result.outboxId]).map((id) => attemptImmediateLeadDelivery(id)),
+        );
+        if (outcomes.some((outcome) => outcome.status === "rejected")) {
+          console.error("Immediate lead delivery failed; saved outbox remains available for retry");
+        }
       } catch {
         console.error("Immediate lead delivery failed");
       }
-    }
-
-    if (!v2Payload && result.created && deliveryOutcome === "disabled") {
-      void notifyLegacyLead(input, result).catch(() => {
-        console.error("Legacy lead notification failed");
-      });
     }
 
     return NextResponse.json(

@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { COMPANY_IDENTITY } from '@/lib/company-identity'
+import { blogThumbnailPosition } from '@/lib/blog-thumbnail'
 import { FALLBACK_IMAGES, FALLBACK_ALTS } from '@/sanity/fallbackImages'
 import { SaveContentButton } from '@/components/saved-content'
 
@@ -56,7 +57,7 @@ export function BlogCard({ post, variant = 'default', index = 0 }: BlogCardProps
       <Link href={`/blog/${post.slug}`} className="group flex items-start gap-3">
         {imageUrl && (
           <div className="relative aspect-video w-24 flex-shrink-0 overflow-hidden rounded-lg bg-stone-100">
-            <Image src={imageUrl} alt={alt} fill sizes="96px" className="object-contain" />
+            <Image src={imageUrl} alt={alt} fill sizes="96px" className="object-cover" style={{ objectPosition: blogThumbnailPosition(imageUrl) }} />
           </div>
         )}
         <div className="min-w-0">
@@ -95,7 +96,8 @@ export function BlogCard({ post, variant = 'default', index = 0 }: BlogCardProps
               alt={alt}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 380px"
-              className="object-contain"
+              className="object-cover"
+              style={{ objectPosition: blogThumbnailPosition(imageUrl) }}
             />
           )}
         </div>

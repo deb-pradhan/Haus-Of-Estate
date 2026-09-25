@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { isSavedContentEnabled } from "@/lib/features";
 import {
   sanityDocumentIdSchema,
@@ -9,6 +9,7 @@ import { hydrateSavedContent } from "@/lib/saved-content/sanity";
 const previousFeatureFlag = process.env.SAVED_CONTENT_ENABLED;
 
 afterEach(() => {
+  vi.unstubAllEnvs();
   if (previousFeatureFlag === undefined) {
     delete process.env.SAVED_CONTENT_ENABLED;
   } else {
@@ -18,6 +19,7 @@ afterEach(() => {
 
 describe("saved-content contracts", () => {
   it("keeps the server feature disabled unless explicitly true", () => {
+    vi.stubEnv("AUTH_ENABLED", "true");
     delete process.env.SAVED_CONTENT_ENABLED;
     expect(isSavedContentEnabled()).toBe(false);
 

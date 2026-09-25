@@ -1,5 +1,7 @@
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
+import { authUnavailableResponse } from "@/lib/auth/availability";
+import { isAuthEnabled } from "@/lib/features";
 import { cookies } from "next/headers";
 import { resetPasswordWithToken } from "@/lib/auth/action-tokens";
 import {
@@ -21,6 +23,7 @@ import { enforceAuthThrottle } from "@/lib/auth/throttle";
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
+  if (!isAuthEnabled()) return authUnavailableResponse();
   if (!isSameOriginRequest(request)) return originRejectedResponse();
 
   const body = await readJson(request);

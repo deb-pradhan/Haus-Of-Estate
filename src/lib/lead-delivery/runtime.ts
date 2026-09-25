@@ -10,11 +10,17 @@ import {
 } from "./config";
 import { PowerAutomateLeadDeliveryTransport } from "./power-automate";
 import { ZeptoMailLeadDeliveryTransport } from "./zeptomail";
+import { ResendLeadDeliveryTransport } from "./resend";
+import { readResendLeadConfig } from "./resend-config";
+import { GoogleSheetsLeadDeliveryTransport } from "./google-sheets";
+import { isGoogleSheetsDeliveryEnabled, readGoogleSheetsLeadConfig } from "./google-sheets-config";
+import { LeadDeliveryError } from "./errors";
 import { createPrismaLeadDeliveryOutboxRepository } from "./prisma-outbox";
 import type {
   LeadDeliveryLogger,
   LeadDeliveryWorkerResult,
   LeadDeliveryTransport,
+  LeadDeliveryDestination,
 } from "./types";
 import {
   processLeadDeliveryOutboxId,
@@ -33,9 +39,29 @@ export const leadDeliveryLogger: LeadDeliveryLogger = {
 export function createConfiguredLeadDeliveryTransport(
   environment: LeadDeliveryEnvironment = process.env,
 ): LeadDeliveryTransport {
-  return readLeadDeliveryProvider(environment) === "zeptomail"
-    ? new ZeptoMailLeadDeliveryTransport(readZeptoMailConfig(environment))
+  const provider = readLeadDeliveryProvider(environment);
+  if (provider === "resend") return new ResendLeadDeliveryTransport(readResendLeadConfig(environment));
+  return provider === "zeptomail" ? new ZeptoMailLeadDeliveryTransport(readZeptoMailConfig(environment))
     : new PowerAutomateLeadDeliveryTransport(readPowerAutomateConfig(environment));
+}
+
+/** Resolve credentials only for the claimed destination, keeping failures independent. */
+export function createDestinationLeadDeliveryTransport(
+  environment: LeadDeliveryEnvironment = process.env,
+): LeadDeliveryTransport {
+  return {
+    async deliver(payload, destination = "notification", context) {
+      let transport: LeadDeliveryTransport;
+      try {
+        transport = destination === "google_sheets"
+          ? new GoogleSheetsLeadDeliveryTransport(readGoogleSheetsLeadConfig(environment))
+          : createConfiguredLeadDeliveryTransport(environment);
+      } catch {
+        throw new LeadDeliveryError(destination === "google_sheets" ? "SHEETS_CONFIG_INVALID" : "NOTIFICATION_CONFIG_INVALID", true);
+      }
+      await transport.deliver(payload, destination, context);
+    },
+  };
 }
 
 function configuredDependencies(
@@ -43,9 +69,11 @@ function configuredDependencies(
   workerPrefix: string,
 ) {
   const workerId = `${workerPrefix}-${randomUUID()}`;
+  const destinations: LeadDeliveryDestination[] = ["notification"];
+  if (isGoogleSheetsDeliveryEnabled(environment)) destinations.push("google_sheets");
   return {
-    repository: createPrismaLeadDeliveryOutboxRepository(),
-    transport: createConfiguredLeadDeliveryTransport(environment),
+    repository: createPrismaLeadDeliveryOutboxRepository(undefined, destinations),
+    transport: createDestinationLeadDeliveryTransport(environment),
     logger: leadDeliveryLogger,
     options: readLeadDeliveryWorkerOptions(workerId, environment),
   };

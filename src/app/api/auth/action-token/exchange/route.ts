@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { authUnavailableResponse } from "@/lib/auth/availability";
+import { isAuthEnabled } from "@/lib/features";
 import { verifyEmailSchema } from "@/lib/auth/contracts";
 import {
   type ActionTokenPurpose,
@@ -25,6 +27,7 @@ function redirectResponse(location: string) {
 }
 
 export function GET(request: Request) {
+  if (!isAuthEnabled()) return authUnavailableResponse();
   const requestUrl = new URL(request.url);
   const purpose = requestUrl.searchParams.get("purpose") as ActionTokenPurpose;
   const destination = DESTINATIONS[purpose];

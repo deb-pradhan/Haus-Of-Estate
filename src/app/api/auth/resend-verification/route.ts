@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { authUnavailableResponse } from "@/lib/auth/availability";
+import { isAuthEnabled } from "@/lib/features";
 import { authDb } from "@/lib/auth/auth-db";
 import {
   activateIssuedActionToken,
@@ -29,6 +31,7 @@ const genericResponse = () =>
   NextResponse.json({ ok: true, message: GENERIC_VERIFICATION_MESSAGE });
 
 export async function POST(request: Request) {
+  if (!isAuthEnabled()) return authUnavailableResponse();
   if (!isSameOriginRequest(request)) return originRejectedResponse();
 
   const parsed = emailActionSchema.safeParse(await readJson(request));

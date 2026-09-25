@@ -8,6 +8,7 @@ import {
   Sparkles,
   Sofa,
   PaintRoller,
+  Wrench,
   ShieldCheck,
   Check,
 } from "lucide-react";
@@ -94,16 +95,30 @@ const SECTIONS: ServiceSection[] = [
     eyebrow: "Renovations",
     title: "Renovations",
     icon: PaintRoller,
-    lead: "Vetted trades for painting, plumbing, decorating, electrical and flooring.",
+    lead: "Vetted trades for painting, decorating and flooring.",
     body:
       "Whether you’re preparing a home to let or sell, or settling into a new one, we connect you to trusted trades and manage scope, scheduling and snagging. Single trades or a coordinated package — your choice.",
     bullets: [
       "Painting and decorating",
-      "Plumbing and bathroom upgrades",
-      "Electrical, lighting and EICR-compliant installs",
       "Carpet, laminate, LVT and hardwood flooring",
     ],
     cta: { label: "See our Renovations page", href: "/renovations" },
+  },
+  {
+    id: "maintenance",
+    eyebrow: "Maintenance",
+    title: "Maintenance",
+    icon: Wrench,
+    lead: "Plumbing and electrical services for your property.",
+    body:
+      "From plumbing repairs and bathroom upgrades to electrical wiring and installation, tell us what your property needs so we can discuss the work.",
+    bullets: [
+      "Plumbing repairs, bathroom upgrades and re-pipes",
+      "Full or partial rewires and consumer units",
+      "Lighting and electrical installation",
+    ],
+    showAssurance: false,
+    cta: { label: "Explore Maintenance", href: "/maintenance" },
   },
 ];
 
@@ -123,7 +138,7 @@ export default function ServicesPage() {
             <span className="text-gold-400">the services that make a home work.</span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/80 md:text-lg">
-            Snagging, management, staging, furnishing and renovations — the specialist
+            Snagging, management, staging, furnishing, renovations and maintenance — the specialist
             services we offer alongside our buy, rent and sell advisory, with
             vetted partners in every market we serve.
           </p>

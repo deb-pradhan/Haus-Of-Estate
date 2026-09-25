@@ -1,5 +1,7 @@
 "use client";
 
+import { isLeadSubmissionReceipt } from "@/lib/lead-intake/client";
+
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -436,19 +438,17 @@ export function LeadEoiForm({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(30_000),
       });
 
-      if (!response.ok) {
-        const responseBody = (await response.json().catch(() => null)) as {
-          error?: string;
-        } | null;
+      const responseBody: unknown = await response.json().catch(() => null);
+      if (!response.ok || !isLeadSubmissionReceipt(responseBody, payload.submissionId)) {
         const friendlyMessage =
           response.status === 429
             ? "We have received several requests from this connection. Please wait a few minutes and try again."
             : response.status >= 500
               ? "We could not save your enquiry just now. Please try again."
-              : responseBody?.error ||
-                "Please check your details and try again.";
+              : "We couldn’t confirm your enquiry was saved. Please check your details and try again.";
         throw new Error(friendlyMessage);
       }
 

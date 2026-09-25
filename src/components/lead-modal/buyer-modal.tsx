@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +21,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { submitLeadEnquiry, type LeadSubmissionAttempt } from "@/lib/lead-intake/client";
 
 export interface BuyerInitialBrief {
   intent?: "buy" | "rent";
@@ -110,8 +111,11 @@ export function BuyerModal({
   const [consent, setConsent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const submissionAttempt = useRef<LeadSubmissionAttempt | null>(null);
+  const sending = useRef(false);
 
   const reset = () => {
+    submissionAttempt.current = null;
     setStep(1);
     setIntent(null);
     setUseType(null);
@@ -127,6 +131,7 @@ export function BuyerModal({
   };
 
   const handleOpenChange = (open: boolean) => {
+    if (sending.current) return;
     if (!open) reset();
     onOpenChange(open);
   };
@@ -144,18 +149,17 @@ export function BuyerModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (sending.current) return;
     const errs = validateLead();
     if (Object.keys(errs).length) {
       setErrors(errs);
       return;
     }
     setErrors({});
+    sending.current = true;
     setIsSubmitting(true);
     try {
-      const response = await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      await submitLeadEnquiry({
           intent: "buyer",
           buyOrRent: intent,
           useType,
@@ -166,18 +170,16 @@ export function BuyerModal({
           email,
           mobile,
           consentGiven: consent,
-        }),
-      });
-      if (!response.ok) throw new Error("Lead request was not accepted");
-    } catch {
+      }, submissionAttempt);
+      setStep(6);
+    } catch (error) {
       setErrors({
-        form: "We could not send your enquiry. Please check your connection and try again.",
+        form: error instanceof Error ? error.message : "Please try again.",
       });
+    } finally {
+      sending.current = false;
       setIsSubmitting(false);
-      return;
     }
-    setIsSubmitting(false);
-    setStep(6);
   };
 
   const totalSteps = 5;

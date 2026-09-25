@@ -53,6 +53,7 @@ function registrationRequest(body: unknown) {
 
 describe("POST /api/auth/register", () => {
   beforeEach(() => {
+    vi.stubEnv("AUTH_ENABLED", "true");
     mocks.sameOrigin.mockReturnValue(true);
     mocks.ipThrottle.mockResolvedValue({
       allowed: true,

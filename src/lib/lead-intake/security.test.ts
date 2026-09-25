@@ -6,10 +6,19 @@ import {
   hashClientAddress,
   isHoneypotFilled,
   isLeadIntakeEnabled,
+  isLeadIntakeReady,
   isV2LeadPayload,
 } from "./security";
 
 describe("lead intake security", () => {
+  it("requires a database and the production rate-limit secret before showing intake", () => {
+    const enabled = { LEAD_INTAKE_ENABLED: "true", DATABASE_URL: "postgresql://test/test" };
+    expect(isLeadIntakeReady({ LEAD_INTAKE_ENABLED: "true" })).toBe(false);
+    expect(isLeadIntakeReady(enabled)).toBe(true);
+    expect(isLeadIntakeReady({ ...enabled, NODE_ENV: "production" })).toBe(false);
+    expect(isLeadIntakeReady({ ...enabled, NODE_ENV: "production", LEAD_RATE_LIMIT_SECRET: "  " })).toBe(false);
+    expect(isLeadIntakeReady({ ...enabled, NODE_ENV: "production", LEAD_RATE_LIMIT_SECRET: "configured" })).toBe(true);
+  });
   it("keeps lead intake disabled unless explicitly enabled", () => {
     expect(isLeadIntakeEnabled({})).toBe(false);
     expect(isLeadIntakeEnabled({ LEAD_INTAKE_ENABLED: "true" })).toBe(true);

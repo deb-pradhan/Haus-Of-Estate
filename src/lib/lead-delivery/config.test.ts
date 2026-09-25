@@ -10,6 +10,7 @@ import {
 import { attemptImmediateLeadDelivery, createConfiguredLeadDeliveryTransport } from "./runtime";
 import { ZeptoMailLeadDeliveryTransport } from "./zeptomail";
 import { PowerAutomateLeadDeliveryTransport } from "./power-automate";
+import { ResendLeadDeliveryTransport } from "./resend";
 
 const zeptoEnvironment = {
   LEAD_DELIVERY_PROVIDER: "zeptomail",
@@ -23,6 +24,7 @@ describe("lead delivery configuration", () => {
   it("keeps Power Automate as the default and rejects an unknown provider", () => {
     expect(readLeadDeliveryProvider({})).toBe("powerautomate");
     expect(readLeadDeliveryProvider({ LEAD_DELIVERY_PROVIDER: " ZEPTOMAIL " })).toBe("zeptomail");
+    expect(readLeadDeliveryProvider({ LEAD_DELIVERY_PROVIDER: " RESEND " })).toBe("resend");
     expect(() => readLeadDeliveryProvider({ LEAD_DELIVERY_PROVIDER: "other" })).toThrow("LEAD_DELIVERY_PROVIDER");
     expect(createConfiguredLeadDeliveryTransport(zeptoEnvironment)).toBeInstanceOf(ZeptoMailLeadDeliveryTransport);
     expect(createConfiguredLeadDeliveryTransport({
@@ -31,6 +33,15 @@ describe("lead delivery configuration", () => {
       POWER_AUTOMATE_CLIENT_ID: "client",
       POWER_AUTOMATE_CLIENT_SECRET: "secret",
     })).toBeInstanceOf(PowerAutomateLeadDeliveryTransport);
+  });
+
+  it("can use the existing Resend account for staff notifications", () => {
+    expect(createConfiguredLeadDeliveryTransport({
+      LEAD_DELIVERY_PROVIDER: "resend",
+      RESEND_API_KEY: "re_test_only",
+      RESEND_FROM_EMAIL: "noreply@hausofestate.com",
+      LEAD_NOTIFICATION_TO: "info@hausofestate.com",
+    })).toBeInstanceOf(ResendLeadDeliveryTransport);
   });
 
   it("requires explicit ZeptoMail credentials, sender and recipient without fallback", () => {

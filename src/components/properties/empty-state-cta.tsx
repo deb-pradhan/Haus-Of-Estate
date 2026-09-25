@@ -16,22 +16,12 @@ export function EmptyStateCTA({
 
   const verb = isRent ? "rental" : "match";
 
-  // Tailored heading + body per branch.
-  let heading: string;
-  let body: string;
-  if (isCommercial) {
-    heading = "We don't have commercial listings published yet.";
-    body =
-      "Our commercial pipeline is sourced to brief. Tell an advisor what you're after — office, retail, a plot or a whole building — and we'll come back within two working hours with options that fit.";
-  } else if (isRent) {
-    heading = "No rentals on our live list — yet.";
-    body =
-      "Our published rentals are a small slice of what we have access to. Tell an advisor your brief and we'll come back within two working hours with options that fit.";
-  } else {
-    heading = "No exact match on our live list — yet.";
-    body =
-      "Our published listings are a small slice of what we have access to. Tell an advisor what you're after and we'll come back within two working hours with off-market options that fit your brief.";
-  }
+  const heading = isCommercial
+    ? "No published commercial properties match these filters."
+    : isRent
+      ? "No published rentals match these filters."
+      : "No published properties match these filters.";
+  const body = "Try changing your filters or share your requirements with our team.";
 
   const ctaLabel = isCommercial
     ? "Tell us your commercial brief"

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   ArrowRight,
   Mail,
@@ -13,7 +14,7 @@ import { SocialProfileLinks } from "@/components/social/social-profile-links";
 import { CookieSettingsButton } from "@/components/analytics/consent-manager";
 import { useLeadEoi } from "@/components/lead-eoi/lead-eoi-controller";
 import { COMPANY_IDENTITY } from "@/lib/company-identity";
-import { CAREERS_PUBLIC_ENABLED } from "@/lib/careers-availability";
+import { CAREERS_PUBLIC_ENABLED, isCareersPath } from "@/lib/careers-availability";
 
 const COMPANY_PHONE_DISPLAY = "+44 7496 033321";
 const COMPANY_PHONE_HREF = "tel:+447496033321";
@@ -29,9 +30,11 @@ function WhatsAppGlyph() {
   );
 }
 
-export function Footer() {
+export function Footer({ careersEmail }: { careersEmail: string }) {
   const { openBuyer, openSeller } = useLeadModals();
   const { enabled: leadIntakeEnabled } = useLeadEoi();
+  const pathname = usePathname();
+  const isCareersPage = isCareersPath(pathname);
   const year = new Date().getFullYear();
 
   return (
@@ -62,17 +65,31 @@ export function Footer() {
             <span className="text-xs text-white/60">Rated 4.8 · Excellent</span>
           </div>
 
-          <p className="mt-4 text-xs leading-relaxed text-white/60">
-            {COMPANY_IDENTITY.legalName} —{' '}
-            <a
-              href={COMPANY_IDENTITY.companiesHouseUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline underline-offset-4 transition-colors hover:text-white"
-            >
-              Company number {COMPANY_IDENTITY.number}
-            </a>
-          </p>
+          <div className="mt-4 max-w-sm space-y-2 text-xs leading-relaxed text-white/60">
+            <p className="font-semibold text-white/80">{COMPANY_IDENTITY.legalName}</p>
+            <p>
+              Registered in {COMPANY_IDENTITY.registeredJurisdiction}.{" "}
+              <a
+                href={COMPANY_IDENTITY.companiesHouseUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline underline-offset-4 transition-colors hover:text-white"
+              >
+                Company number {COMPANY_IDENTITY.number}
+              </a>
+            </p>
+            <p>Registered office: {COMPANY_IDENTITY.registeredOffice}</p>
+            <p>
+              <a
+                href={COMPANY_IDENTITY.icoRegisterUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline underline-offset-4 transition-colors hover:text-white"
+              >
+                ICO registration {COMPANY_IDENTITY.icoRegistrationNumber}
+              </a>
+            </p>
+          </div>
 
           {/* Quick actions */}
           <div className="mt-5 flex flex-wrap gap-2">
@@ -105,6 +122,7 @@ export function Footer() {
           <FooterButton onClick={openSeller}>Sell or let</FooterButton>
           <FooterLink href="/snagging">Snagging inspections</FooterLink>
           <FooterLink href="/renovations">Renovations</FooterLink>
+          <FooterLink href="/maintenance">Maintenance</FooterLink>
           <FooterLink href="/list-property">List your property</FooterLink>
           <FooterLink href="/mortgage-calculator">Mortgage calculator</FooterLink>
         </FooterCol>
@@ -126,27 +144,31 @@ export function Footer() {
 
         {/* Contact */}
         <FooterCol title="Get in touch">
-          <li>
-            <a
-              href={COMPANY_PHONE_HREF}
-              className="flex items-center gap-2.5 text-sm font-semibold text-white transition-colors hover:text-gold-400"
-            >
-              <Phone className="h-4 w-4 shrink-0 text-gold-400" />
-              {COMPANY_PHONE_DISPLAY}
-            </a>
-          </li>
-          <li>
-            <a
-              href={WHATSAPP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="WhatsApp us"
-              className="flex items-center gap-2.5 text-sm text-white/60 transition-colors hover:text-white"
-            >
-              <WhatsAppGlyph />
-              WhatsApp us
-            </a>
-          </li>
+          {!isCareersPage ? (
+            <>
+              <li>
+                <a
+                  href={COMPANY_PHONE_HREF}
+                  className="flex items-center gap-2.5 text-sm font-semibold text-white transition-colors hover:text-gold-400"
+                >
+                  <Phone className="h-4 w-4 shrink-0 text-gold-400" />
+                  {COMPANY_PHONE_DISPLAY}
+                </a>
+              </li>
+              <li>
+                <a
+                  href={WHATSAPP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="WhatsApp us"
+                  className="flex items-center gap-2.5 text-sm text-white/60 transition-colors hover:text-white"
+                >
+                  <WhatsAppGlyph />
+                  WhatsApp us
+                </a>
+              </li>
+            </>
+          ) : null}
           <li>
             <a
               href={`mailto:${COMPANY_EMAIL}`}
@@ -158,16 +180,19 @@ export function Footer() {
           </li>
           <li>
             <a
-              href="mailto:hr@hausofestate.com"
+              href={`mailto:${careersEmail}`}
               className="flex items-center gap-2.5 text-sm text-white/60 transition-colors hover:text-white"
             >
               <Mail className="h-4 w-4 shrink-0 text-gold-400" />
-              hr@hausofestate.com
+              {careersEmail}
             </a>
           </li>
           <li className="flex items-start gap-2.5 text-sm text-white/60">
             <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-gold-400" />
-            <address className="not-italic">115 City Road, Unit A, Cardiff, Wales, United Kingdom, CF24 3BP</address>
+            <address className="not-italic">
+              <span className="block font-medium text-white/80">Trading address</span>
+              115 City Road, Unit A, Cardiff, Wales, United Kingdom, CF24 3BP
+            </address>
           </li>
         </FooterCol>
       </div>
@@ -175,7 +200,7 @@ export function Footer() {
       {/* Legal bar */}
       <div className="border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-white/60 md:flex-row md:px-6">
-          <span>&copy; {year} Haus of Estate. All rights reserved.</span>
+          <span>&copy; {year} {COMPANY_IDENTITY.legalName}. All rights reserved.</span>
           <CookieSettingsButton />
           <span>UK English · Prices indicative · Subject to availability</span>
         </div>

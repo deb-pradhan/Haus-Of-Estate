@@ -12,6 +12,7 @@ import {
   useLeadEoi,
 } from "@/components/lead-eoi/lead-eoi-controller";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 import { trackAnalytics } from "@/lib/analytics";
 import type { BuyerInitialBrief } from "./buyer-modal";
 
@@ -77,7 +78,7 @@ export function useLeadModals() {
   return useContext(ModalContext);
 }
 
-function LegacyLeadModalProvider({ children }: { children: ReactNode }) {
+export function LegacyLeadModalProvider({ children }: { children: ReactNode }) {
   const [accountOpen, setAccountOpen] = useState(false);
   const [buyerOpen, setBuyerOpen] = useState(false);
   const [buyerBrief, setBuyerBrief] = useState<BuyerInitialBrief>();
@@ -186,7 +187,7 @@ export function LeadModalProvider({
   leadIntakeEnabled?: boolean;
 }) {
   if (!leadIntakeEnabled) {
-    return <LegacyLeadModalProvider>{children}</LegacyLeadModalProvider>;
+    return <UnavailableLeadModalProvider>{children}</UnavailableLeadModalProvider>;
   }
 
   return (
@@ -194,4 +195,11 @@ export function LeadModalProvider({
       <LeadEoiCompatibilityProvider>{children}</LeadEoiCompatibilityProvider>
     </LeadEoiProvider>
   );
+}
+
+// A disabled intake must not revive older forms that bypass the release gate.
+function UnavailableLeadModalProvider({ children }: { children: ReactNode }) {
+  const router = useRouter();
+  const contact = () => router.push("/enquire");
+  return <ModalContext.Provider value={{ openAccount: contact, openBuyer: contact, openBuyerWithBrief: contact, openSeller: contact, openNewsletter: contact }}>{children}</ModalContext.Provider>;
 }
