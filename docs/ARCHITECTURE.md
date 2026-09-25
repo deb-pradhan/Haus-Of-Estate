@@ -304,18 +304,15 @@ All API routes live under `src/app/api/` and use the Next.js Route Handler patte
 ### `POST /api/auth/register`
 
 1. Validates input (email, name, password)
-2. Checks for existing user
-3. Hashes password with `bcryptjs`
-4. Creates `User` in DB (role: BUYER by default)
-5. Creates associated `Lead` record
-6. Sends welcome email via Resend
-7. Returns `{ success, userId }`
+2. Applies origin checks and database-backed throttling
+3. Hashes the password with `bcryptjs`
+4. Creates an unverified `User` and hashed verification token atomically
+5. Sends a verification email without creating a Lead or marketing consent
+6. Returns an enumeration-safe response
 
-### `POST /api/auth/login`
-
-1. Validates credentials
-2. Sends login alert email (Resend)
-3. Returns session token
+Credentials login is handled by Auth.js at `POST /api/auth/callback/credentials`.
+The retired prototype `/api/auth/login` endpoint and its client-supplied-device
+login alert are no longer used.
 
 ### `GET|POST /api/auth/[...nextauth]`
 
@@ -416,8 +413,8 @@ Data fetching happens in **Server Components** directly via Prisma. No SWR/React
 
 | Function | Trigger | Recipient |
 |---|---|---|
-| `sendWelcomeEmail()` | User registers | New user |
-| `sendLoginAlertEmail()` | User logs in | Logged-in user |
+| `sendVerificationEmail()` | User registers or requests a new link | Account email |
+| `sendPasswordResetEmail()` | User requests password recovery | Account email |
 | `sendLeadNotificationToAdmin()` | Lead captured | `ADMIN_EMAIL` env var |
 
 Templates are currently inline HTML strings — a templating system (React Email) is a logical next step.

@@ -2,9 +2,10 @@
 
 import Link from 'next/link'
 import { Mail } from 'lucide-react'
+import { useState } from 'react'
 import { useLeadModals } from '@/components/lead-modal'
+import { useLeadEoi } from '@/components/lead-eoi/lead-eoi-controller'
 import { BlogCard } from './BlogCard'
-import { ShareLinks } from './ShareLinks'
 import type { PostSummary } from '@/sanity/types'
 
 interface Tag {
@@ -13,25 +14,17 @@ interface Tag {
 }
 
 interface BlogSidebarProps {
-  title: string
-  slug: string
   tags: Tag[]
   related: PostSummary[]
 }
 
-export function BlogSidebar({ title, slug, tags, related }: BlogSidebarProps) {
-  const { openAccount } = useLeadModals()
+export function BlogSidebar({ tags, related }: BlogSidebarProps) {
+  const { openNewsletter } = useLeadModals()
+  const { enabled: leadIntakeEnabled } = useLeadEoi()
+  const [newsletterEmail, setNewsletterEmail] = useState('')
 
   return (
     <aside className="space-y-8 lg:sticky lg:top-24">
-      {/* Share */}
-      <div className="rounded-2xl border border-border bg-surface p-6">
-        <h3 className="font-serif text-sm font-semibold uppercase tracking-[0.12em] text-slate-700">
-          Share this article
-        </h3>
-        <ShareLinks title={title} slug={slug} className="mt-4" />
-      </div>
-
       {/* Tags */}
       {tags.length > 0 && (
         <div className="rounded-2xl border border-border bg-surface p-6">
@@ -71,20 +64,24 @@ export function BlogSidebar({ title, slug, tags, related }: BlogSidebarProps) {
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-estate-700/10 text-estate-700">
           <Mail className="h-5 w-5" />
         </div>
-        <h3 className="mt-4 font-serif text-xl font-medium text-ink-900">Join our newsletter</h3>
+        <h3 className="mt-4 font-serif text-xl font-medium text-ink-900">Our newsletter is coming soon</h3>
         <p className="mt-1.5 text-sm leading-relaxed text-slate-700">
-          Market insights, investment guides and new opportunities — straight to your inbox.
+          {leadIntakeEnabled
+            ? 'Register your interest in future property news and insights. Email updates have not started yet.'
+            : 'Read our latest property news and guides on the blog while we prepare our email updates.'}
         </p>
-        <form
+        {leadIntakeEnabled ? <form
           onSubmit={(e) => {
             e.preventDefault()
-            openAccount()
+            openNewsletter(newsletterEmail)
           }}
           className="mt-4 space-y-2.5"
         >
           <input
             type="email"
             required
+            value={newsletterEmail}
+            onChange={(event) => setNewsletterEmail(event.target.value)}
             placeholder="you@example.com"
             aria-label="Your email address"
             className="w-full rounded-lg border border-border bg-surface px-3.5 py-2.5 text-sm text-ink-900 outline-none transition-colors placeholder:text-slate-400 focus:border-estate-700 focus:ring-2 focus:ring-estate-700/10"
@@ -93,9 +90,9 @@ export function BlogSidebar({ title, slug, tags, related }: BlogSidebarProps) {
             type="submit"
             className="w-full rounded-lg bg-estate-700 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-estate-700/90"
           >
-            Subscribe
+            Register interest
           </button>
-        </form>
+        </form> : <Link href="/blog" className="mt-4 inline-block text-sm font-semibold text-estate-700 underline underline-offset-4">Read our articles</Link>}
       </div>
     </aside>
   )

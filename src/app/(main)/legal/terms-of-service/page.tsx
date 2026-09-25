@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { COMPANY_IDENTITY } from "@/lib/company-identity";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
@@ -32,7 +32,7 @@ export default function TermsOfServicePage() {
         <div className="mb-8">
           <p className="font-serif text-sm font-medium uppercase tracking-widest text-gold-500 mb-2">Legal</p>
           <h1 className="font-serif text-4xl font-medium text-estate-700">Terms of Service</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Last updated: February 2026</p>
+          <p className="mt-2 text-sm text-muted-foreground">Last updated: 25 September 2026</p>
         </div>
 
         <div className="space-y-8 text-sm leading-relaxed text-foreground">
@@ -40,7 +40,7 @@ export default function TermsOfServicePage() {
           <section>
             <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">1. About These Terms</h2>
             <p>
-              These Terms of Service ("Terms") govern your use of the Haus of Estate website, services, and any related communications or property advisory services provided by Haus of Estate Ltd ("we", "our", "us"). By accessing our website or using our services, you agree to be bound by these Terms.
+              These Terms of Service (&quot;Terms&quot;) govern your use of the Haus of Estate website, services, and any related communications or property advisory services provided by Haus of Estate Ltd (&quot;we&quot;, &quot;our&quot;, &quot;us&quot;). By accessing our website or using our services, you agree to be bound by these Terms.
             </p>
             <p className="mt-2">
               If you do not agree to these Terms, please do not use our services. These Terms are written in accordance with English law and the UK Consumer Rights Act 2015.
@@ -53,8 +53,10 @@ export default function TermsOfServicePage() {
               Haus of Estate Ltd is an international property advisory firm providing property matching, investment advisory, and transaction facilitation services across the United Kingdom, United Arab Emirates, and Indonesia.
             </p>
             <p className="mt-2">
-              <strong>Registered in:</strong> England and Wales<br />
-              <strong>Company number:</strong> [To be confirmed]<br />
+              <strong>Legal name:</strong> {COMPANY_IDENTITY.legalName}<br />
+              <strong>Registered in:</strong> {COMPANY_IDENTITY.registeredJurisdiction}<br />
+              <strong>Company number:</strong> {COMPANY_IDENTITY.number}<br />
+              <strong>Registered office:</strong> {COMPANY_IDENTITY.registeredOffice}<br />
               <strong>Contact:</strong>{" "}
               <a href="mailto:info@hausofestate.com" className="text-trust-teal hover:underline">
                 info@hausofestate.com
@@ -112,7 +114,7 @@ export default function TermsOfServicePage() {
               You can withdraw this consent at any time by:
             </p>
             <ul className="mt-2 space-y-1 list-disc pl-5">
-              <li>Replying "STOP" to any WhatsApp or SMS message</li>
+              <li>Replying &quot;STOP&quot; to any WhatsApp or SMS message</li>
               <li>Clicking the unsubscribe link in any marketing email</li>
               <li>Contacting us at{" "}
                 <a href="mailto:unsubscribe@hausofestate.com" className="text-trust-teal hover:underline">
@@ -211,7 +213,7 @@ export default function TermsOfServicePage() {
                 info@hausofestate.com
               </a>
               <br />
-              <strong>Post:</strong> Haus of Estate Ltd, [Registered Address], England
+              <strong>Post:</strong> {COMPANY_IDENTITY.legalName}, {COMPANY_IDENTITY.registeredOffice}
             </p>
           </section>
 

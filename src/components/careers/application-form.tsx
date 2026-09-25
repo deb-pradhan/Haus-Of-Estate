@@ -5,7 +5,10 @@ import { ArrowRight, BadgeCheck, Loader2, AlertCircle, Upload } from "lucide-rea
 import { PhoneInput } from "@/components/ui/phone-input";
 import {
   CV_ACCEPT,
-  CV_MAX_BYTES,
+  APPLICATION_MAX_BYTES,
+  CV_SIZE_ERROR,
+  normalizeApplicationUrl,
+  validateCvFile,
   EXPERIENCE_AREA_OPTIONS,
   HR_INBOX,
   OPPORTUNITY_TYPE_OPTIONS,
@@ -30,6 +33,7 @@ interface FormState {
   opportunityType: string;
   linkedinUrl: string;
   portfolioUrl: string;
+  cvUrl: string;
   coverNote: string;
   consent: boolean;
   website: string; // honeypot
@@ -45,6 +49,7 @@ const INITIAL: FormState = {
   opportunityType: "",
   linkedinUrl: "",
   portfolioUrl: "",
+  cvUrl: "",
   coverNote: "",
   consent: false,
   website: "",
@@ -68,6 +73,7 @@ export function ApplicationForm({
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [serverError, setServerError] = useState<string | null>(null);
   const cvRef = useRef<HTMLInputElement>(null);
+  const [confirmationSent, setConfirmationSent] = useState(false);
 
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
@@ -94,12 +100,12 @@ export function ApplicationForm({
     if (isGeneral && !form.opportunityType)
       next.opportunityType = "Please choose the type of opportunity.";
     const file = cvRef.current?.files?.[0];
-    if (!file) next.cv = "Please attach your CV (PDF, DOC or DOCX).";
-    else if (file.size > CV_MAX_BYTES) next.cv = "Your CV must be 5MB or smaller.";
-    if (form.linkedinUrl && !/^https?:\/\/[^\s]+$/i.test(form.linkedinUrl))
-      next.linkedinUrl = "LinkedIn URL should start with https://";
-    if (form.portfolioUrl && !/^https?:\/\/[^\s]+$/i.test(form.portfolioUrl))
-      next.portfolioUrl = "Portfolio URL should start with https://";
+    const cvError = file ? validateCvFile(file) : (!form.cvUrl.trim() ? validateCvFile() : undefined);
+    if (cvError) next.cv = cvError;
+    for (const key of ["linkedinUrl", "portfolioUrl", "cvUrl"] as const) {
+      if (normalizeApplicationUrl(form[key]) === null)
+        next[key] = "Paste a complete sharing link starting with https://";
+    }
     if (form.coverNote.trim().length > 4000)
       next.coverNote = "Please keep your note to 4,000 characters or fewer.";
     if (!form.consent)
@@ -125,7 +131,8 @@ export function ApplicationForm({
       fd.set("location", form.location);
       fd.set("yearsOfExperience", form.yearsOfExperience);
       fd.set("linkedinUrl", form.linkedinUrl);
-      fd.set("portfolioUrl", form.portfolioUrl);
+      fd.set("portfolioUrl", form.portfolioUrl.trim());
+      fd.set("cvUrl", form.cvUrl.trim());
       fd.set("coverNote", form.coverNote);
       fd.set("consent", String(form.consent));
       fd.set("website", form.website);
@@ -136,17 +143,26 @@ export function ApplicationForm({
       const file = cvRef.current?.files?.[0];
       if (file) fd.set("cv", file);
 
+      // Includes all fields and multipart overhead, not just the CV file.
+      const bodySize = (await new Response(fd).blob()).size;
+      if (bodySize > APPLICATION_MAX_BYTES) {
+        setServerError(CV_SIZE_ERROR);
+        setStatus("error");
+        return;
+      }
       const res = await fetch("/api/applications", { method: "POST", body: fd });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         if (data.errors) setErrors(data.errors);
         setServerError(
-          data.error ||
+          res.status === 413 ? CV_SIZE_ERROR : data.errors?.roleSlug || data.error ||
             "Something went wrong. Please try again or email us directly.",
         );
         setStatus("error");
         return;
       }
+      const data = await res.json();
+      setConfirmationSent(data.confirmationSent === true);
       setStatus("success");
       setForm(INITIAL);
       setCvName("");
@@ -178,12 +194,13 @@ export function ApplicationForm({
             <>
               Thank you. Your application for the{" "}
               <strong>{effectiveTitle}</strong> role is in front of our team.
-              We&apos;ll reply within two working days, either way.
             </>
           )}
         </p>
         <p className="mt-3 text-xs text-muted-foreground">
-          A confirmation has been sent to your email.
+          {confirmationSent
+            ? "A confirmation has been sent to your email."
+            : "Your application was submitted, but we couldn't send a confirmation email. You do not need to submit it again."}
         </p>
       </div>
     );
@@ -342,10 +359,9 @@ export function ApplicationForm({
       {/* CV upload */}
       <Field
         label="Upload your CV"
-        required
         error={errors.cv}
         htmlFor="af-cv"
-        hint="PDF, DOC or DOCX — max 5MB."
+        hint="PDF, DOC or DOCX — max 4MB. Upload a CV or paste a CV sharing link below."
       >
         <label
           htmlFor="af-cv"
@@ -374,13 +390,22 @@ export function ApplicationForm({
           className="sr-only"
           onChange={(e) => {
             setCvName(e.target.files?.[0]?.name ?? "");
-            setErrors((prev) => {
-              const { cv, ...rest } = prev;
-              void cv;
-              return rest;
-            });
+            const file = e.target.files?.[0];
+            setErrors((prev) => ({ ...prev, cv: file ? validateCvFile(file) ?? "" : "" }));
           }}
         />
+        {cvName && <button type="button" className="text-xs text-estate-700 underline" onClick={() => {
+          if (cvRef.current) cvRef.current.value = "";
+          setCvName("");
+          setErrors((prev) => ({ ...prev, cv: "" }));
+        }}>Remove file to use a CV link</button>}
+      </Field>
+
+      <Field label="CV sharing link" error={errors.cvUrl} htmlFor="af-cv-url"
+        hint="Use this for a large CV. Paste a Google Drive, Dropbox or other document link that our team can open without requesting access.">
+        <input id="af-cv-url" type="url" inputMode="url" placeholder="https://…"
+          value={form.cvUrl} onChange={(e) => set("cvUrl", e.target.value)}
+          className={inputCls(!!errors.cvUrl)} />
       </Field>
 
       <Field
@@ -401,10 +426,10 @@ export function ApplicationForm({
       </Field>
 
       <Field
-        label="Portfolio / showreel URL"
+        label="Portfolio / showreel sharing link"
         error={errors.portfolioUrl}
         htmlFor="af-portfolio"
-        hint="Optional — a link to work you're proud of."
+        hint="Optional. For a PDF portfolio (including files over 4MB), upload it to Google Drive, Dropbox or another service and paste its sharing link here. Check that our team can open it without requesting access. This field accepts a link, not a file."
       >
         <input
           id="af-portfolio"

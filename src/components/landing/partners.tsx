@@ -1,44 +1,55 @@
 "use client";
 
-const PARTNERS = [
-  "EMAAR",
-  "DAMAC",
-  "NAKHEEL",
-  "SOBHA",
-  "MERAAS",
-  "DUBAI PROPERTIES",
-];
+import Image from "next/image";
+import { DEVELOPER_PARTNERS } from "@/lib/developer-partners";
+import { usePartnerMotion } from "./use-partner-motion";
 
 export function Partners() {
+  const { sectionRef, windowRef, trackRef } = usePartnerMotion();
   return (
-    <section className="border-y border-border bg-subtle px-4 py-14 md:px-6 md:py-16">
+    <section ref={sectionRef} aria-labelledby="developer-partners-title" className="partners-carousel overflow-hidden border-y border-border bg-subtle px-4 py-14 md:px-6 md:py-20">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-8 text-center">
-          <p className="font-serif text-xs font-medium uppercase tracking-[0.3em] text-gold-500">
+        <div className="mb-8 max-w-2xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-estate-700/75">
             Our developer partners
           </p>
-          <h2 className="mt-2 font-serif text-2xl font-medium text-estate-700 md:text-3xl">
-            Working with the names that define the skyline.
+          <h2 id="developer-partners-title" className="mt-3 font-serif text-3xl font-medium leading-tight text-estate-700 md:text-4xl">
+            Exceptional places.<br className="sm:hidden" /> Established names.
           </h2>
+          <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
+            Explore the developers and destinations in our international network.
+          </p>
         </div>
 
-        <ul className="grid grid-cols-2 items-center gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-3 lg:grid-cols-6">
-          {PARTNERS.map((name) => (
-            <li
-              key={name}
-              className="flex h-24 items-center justify-center bg-surface px-4 transition-colors hover:bg-estate-700/[0.03]"
-            >
-              <span className="font-serif text-base font-semibold uppercase tracking-[0.18em] text-estate-700/70 transition-colors hover:text-estate-700 md:text-lg">
-                {name}
-              </span>
-            </li>
-          ))}
-        </ul>
-
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          Partnerships shown reflect developers our agent network transacts with. Logos are
-          the property of their respective owners.
-        </p>
+        <div ref={windowRef} className="partners-marquee-window" tabIndex={0} role="group" aria-label="Developer logos. Focus to pause; use arrow keys to explore.">
+          <div ref={trackRef} className="partners-marquee-track">
+            {[false, true].map((duplicate) => (
+              <ul
+                key={String(duplicate)}
+                aria-label={duplicate ? undefined : "Developer and destination partners"}
+                aria-hidden={duplicate || undefined}
+                className="partners-marquee-group"
+              >
+                {DEVELOPER_PARTNERS.map((partner) => (
+                  <li key={partner.name} className="w-36 shrink-0 overflow-hidden rounded-xl border border-estate-700/10 bg-white sm:w-44">
+                    <div className={`flex h-24 items-center justify-center px-4 sm:h-28 sm:px-5 ${"dark" in partner && partner.dark ? "bg-estate-700" : "bg-white"}`}>
+                      <Image
+                        src={partner.logo}
+                        alt={duplicate ? "" : partner.name}
+                        width={200}
+                        height={100}
+                        sizes="(max-width: 640px) 112px, 136px"
+                        draggable={false}
+                        loading="eager"
+                        className={`w-full object-contain ${"stacked" in partner && partner.stacked ? "h-20" : "h-14"}`}
+                      />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );

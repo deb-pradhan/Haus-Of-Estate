@@ -1,15 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import {
   ArrowRight,
   PaintRoller,
-  Wrench,
   Sofa,
-  Zap,
   LayoutGrid,
   ShieldCheck,
   Clock,
-  BadgeCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLeadModals } from "@/components/lead-modal/modal-context";
@@ -21,19 +19,9 @@ const SERVICES = [
     body: "Interior and exterior painting with a clean, professional finish. Prep, primer and protection included as standard.",
   },
   {
-    icon: Wrench,
-    title: "Plumbing",
-    body: "From leaks and bathroom upgrades to full re-pipes — Gas Safe partners and certified plumbers across our network.",
-  },
-  {
     icon: Sofa,
     title: "Decorating",
     body: "Plastering, wallpapering, coving and finishing touches that get a property tenant- or sale-ready.",
-  },
-  {
-    icon: Zap,
-    title: "Electrical Wiring & Installation",
-    body: "Full or partial rewires, consumer units, lighting and EICR-compliant installations by certified electricians.",
   },
   {
     icon: LayoutGrid,
@@ -44,7 +32,6 @@ const SERVICES = [
 
 const ASSURANCES = [
   { icon: ShieldCheck, label: "Vetted & insured tradespeople" },
-  { icon: BadgeCheck, label: "Rent Smart Wales & Propertymark CMP Registered" },
   { icon: Clock, label: "Clear timelines, no hidden fees" },
 ];
 
@@ -64,7 +51,7 @@ export default function RenovationsPage() {
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
             Preparing a property to let, sell or simply enjoy? We connect you with vetted
-            trades across painting, plumbing, decorating, electrical and flooring — managed
+            trades across painting, decorating and flooring — managed
             to the same standard as the rest of our service.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -87,7 +74,7 @@ export default function RenovationsPage() {
               What we cover
             </p>
             <h2 className="mt-3 font-serif text-3xl font-medium text-estate-700 md:text-4xl">
-              Five core trades. One point of contact.
+              Painting, decorating and flooring.
             </h2>
           </div>
 
@@ -109,22 +96,11 @@ export default function RenovationsPage() {
               </div>
             ))}
 
-            {/* CTA card */}
-            <div className="flex flex-col items-start justify-center rounded-2xl border-2 border-dashed border-estate-700/30 bg-estate-700/5 p-6">
-              <h3 className="font-serif text-xl font-medium text-estate-700">
-                Something else?
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                Tell us about your project and we&apos;ll match you with the right trade.
-              </p>
-              <Button
-                onClick={openAccount}
-                className="mt-4 bg-estate-700 text-white hover:bg-estate-600"
-              >
-                Speak to us <ArrowRight className="ml-1.5 h-4 w-4" />
-              </Button>
-            </div>
           </div>
+          <p className="mt-10 text-center text-sm leading-relaxed text-muted-foreground">
+            For plumbing and electrical services, visit our{' '}
+            <Link href="/maintenance" className="text-estate-700 underline underline-offset-4">Maintenance page</Link>.
+          </p>
         </div>
       </section>
 

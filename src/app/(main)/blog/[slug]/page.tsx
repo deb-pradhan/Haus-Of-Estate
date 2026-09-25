@@ -3,20 +3,23 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Suspense } from 'react'
 import { ChevronRight, Clock, CalendarDays } from 'lucide-react'
-import { sanityFetch, urlFor } from '@/sanity'
+import { COMPANY_IDENTITY } from '@/lib/company-identity'
+import { sanityFetch } from '@/sanity/live'
 import { POST_BY_SLUG_QUERY, RELATED_POSTS_QUERY, SEO_QUERY } from '@/sanity/queries'
 import {
   PortableTextRenderer,
   AuthorCard,
   BlogSidebar,
   ReadingProgress,
-  ShareLinks,
 } from '@/components/blog'
+import { ContentShare } from '@/components/share/content-share'
 import { FALLBACK_IMAGES, FALLBACK_ALTS } from '@/sanity/fallbackImages'
 import { readingTimeFromBlocks } from '@/lib/reading-time'
 import type { Post, PostSummary } from '@/sanity/types'
 import type { Metadata } from 'next'
 import { DEFAULT_OG_IMAGE } from '@/lib/seo'
+import { HAUS_SITE_ORIGIN, canonicalHausUrl } from '@/lib/share'
+import { SaveContentButton } from '@/components/saved-content'
 
 // Revalidate every 60s so edits in Sanity (e.g. a replaced cover image)
 // propagate to the statically-generated post pages without a full rebuild.
@@ -95,9 +98,10 @@ async function PostContent({ slug }: { slug: string }) {
 
   const { url: imageUrl, alt } = getPostImageUrl(post)
   const readMins = readingTimeFromBlocks(post.body)
-  const authorName = post.author?.name || 'Haus of Estate'
   const primaryCategory = post.categories?.[0]
   const tags = (post.categories || []).map((c) => ({ title: c.title, slug: c.slug }))
+  const canonicalUrl = canonicalHausUrl(`/blog/${post.slug}`)
+  const shareText = post.subtitle || `Read ${post.title} on Haus of Estate`
 
   const blogPostingJsonLd = {
     '@context': 'https://schema.org',
@@ -108,15 +112,19 @@ async function PostContent({ slug }: { slug: string }) {
     ...(post.publishedAt
       ? { datePublished: post.publishedAt, dateModified: post.publishedAt }
       : {}),
-    author: { '@type': 'Person', name: authorName },
+    author: {
+      '@type': 'Organization',
+      name: COMPANY_IDENTITY.name,
+      url: HAUS_SITE_ORIGIN,
+    },
     publisher: {
       '@type': 'Organization',
-      name: 'Haus of Estate',
-      url: 'https://hausofestate.com',
+      name: COMPANY_IDENTITY.name,
+      url: HAUS_SITE_ORIGIN,
     },
     mainEntityOfPage: {
       '@type': 'WebPage',
-      '@id': `https://hausofestate.com/blog/${post.slug}`,
+      '@id': `${HAUS_SITE_ORIGIN}/blog/${post.slug}`,
     },
   }
 
@@ -125,7 +133,7 @@ async function PostContent({ slug }: { slug: string }) {
       <ReadingProgress />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostingJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostingJsonLd).replace(/</g, '\\u003c') }}
       />
 
       <div className="mx-auto max-w-6xl px-5 sm:px-6">
@@ -149,26 +157,25 @@ async function PostContent({ slug }: { slug: string }) {
 
         {/* Title + meta */}
         <header className="mt-6 max-w-3xl">
-          <h1 className="font-serif text-[2.25rem] font-medium leading-[1.1] text-ink-900 md:text-[3rem] md:leading-[1.05]">
-            {post.title}
-          </h1>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <h1 className="min-w-0 flex-1 font-serif text-[2.25rem] font-medium leading-[1.1] text-ink-900 md:text-[3rem] md:leading-[1.05]">
+              {post.title}
+            </h1>
+            <SaveContentButton
+              contentType="ARTICLE"
+              sanityDocumentId={post._id}
+              title={post.title}
+              showLabel
+              className="shrink-0"
+            />
+          </div>
           {post.subtitle && (
             <p className="mt-4 text-lg leading-relaxed text-slate-700 md:text-xl">{post.subtitle}</p>
           )}
 
           <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3 text-sm text-slate-700">
             <span className="flex items-center gap-2">
-              {post.author?.avatar && (
-                <span className="relative h-8 w-8 overflow-hidden rounded-full ring-1 ring-black/5">
-                  <Image
-                    src={urlFor(post.author.avatar).width(64).height(64).url()}
-                    alt={authorName}
-                    fill
-                    className="object-cover"
-                  />
-                </span>
-              )}
-              <span className="font-medium text-ink-900">{authorName}</span>
+              <span className="font-medium text-ink-900">By {COMPANY_IDENTITY.name}</span>
             </span>
             {primaryCategory && (
               <Link
@@ -188,41 +195,55 @@ async function PostContent({ slug }: { slug: string }) {
             </span>
           </div>
 
-          {/* Mobile share (sidebar carries it on desktop) */}
-          <div className="mt-6 flex items-center gap-3 border-t border-border/70 pt-5 lg:hidden">
-            <span className="text-sm font-medium text-slate-700">Share</span>
-            <ShareLinks title={post.title} slug={post.slug} />
+          {/* Compact share action below desktop-rail breakpoint. */}
+          <div className="mt-6 border-t border-border/70 pt-5 xl:hidden">
+            <ContentShare
+              url={canonicalUrl}
+              title={post.title}
+              text={shareText}
+              contentLabel="this article"
+            />
           </div>
         </header>
 
         {/* Hero image */}
         {imageUrl && (
-          <div className="relative mt-8 aspect-[16/10] overflow-hidden rounded-2xl bg-stone-100 sm:aspect-[16/9] md:rounded-3xl">
+          <div className="relative mt-8 aspect-video overflow-hidden rounded-2xl bg-stone-100 md:rounded-3xl">
             <Image
               src={imageUrl}
               alt={alt}
               fill
               priority
               sizes="(max-width: 1152px) 100vw, 1152px"
-              className="object-cover"
+              className="object-contain"
             />
           </div>
         )}
 
         {/* Body + sidebar */}
-        <div className="mt-12 grid gap-12 lg:grid-cols-12 lg:gap-16">
-          <div className="min-w-0 lg:col-span-8">
-            {post.body && <PortableTextRenderer content={post.body} />}
-            {post.author && (
-              <div className="mt-14 border-t border-border pt-10">
-                <AuthorCard author={post.author} variant="full" />
-              </div>
-            )}
+        <div className="mt-12 grid gap-12 lg:grid-cols-12 lg:gap-16 xl:grid-cols-[3rem_minmax(0,1fr)_20rem] xl:gap-8">
+          <div className="hidden xl:block">
+            <div className="sticky top-32">
+              <p className="mb-2 text-center text-[10px] font-semibold uppercase text-muted-foreground">
+                Share
+              </p>
+              <ContentShare
+                url={canonicalUrl}
+                title={post.title}
+                text={shareText}
+                contentLabel="this article"
+                variant="rail"
+              />
+            </div>
           </div>
-          <div className="lg:col-span-4">
+          <div className="min-w-0 lg:col-span-8 xl:col-auto">
+            {post.body && <PortableTextRenderer content={post.body} />}
+            <div className="mt-14 border-t border-border pt-10">
+              <AuthorCard variant="full" />
+            </div>
+          </div>
+          <div className="lg:col-span-4 xl:col-auto">
             <BlogSidebar
-              title={post.title}
-              slug={post.slug}
               tags={tags}
               related={relatedPosts || []}
             />

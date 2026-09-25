@@ -1,8 +1,16 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Cormorant_Garamond } from "next/font/google";
 import { Suspense } from "react";
-import { draftMode } from "next/headers";
 import { ConsentManager } from "@/components/analytics/consent-manager";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { SavedContentProvider } from "@/components/saved-content";
+import { SessionProvider } from "@/lib/auth/client";
+import { CurrencyProvider } from "@/components/currency/currency-provider";
+import { isAuthEnabled, isSavedContentEnabled } from "@/lib/features";
+import { draftMode } from "next/headers";
+import { connection } from "next/server";
+import { SOCIAL_PROFILE_URLS } from "@/config/social";
+import { HAUS_SITE_ORIGIN } from "@/lib/share";
 import "./globals.css";
 
 const inter = Inter({
@@ -18,7 +26,7 @@ const cormorant = Cormorant_Garamond({
   display: "swap",
 });
 
-const SITE_URL = "https://hausofestate.com";
+const SITE_URL = HAUS_SITE_ORIGIN;
 const SITE_NAME = "Haus of Estate";
 const DEFAULT_TITLE = "Haus of Estate — international property, with proof.";
 const DEFAULT_DESCRIPTION =
@@ -109,14 +117,7 @@ const jsonLd = {
       url: SITE_URL,
       logo: `${SITE_URL}/Vector-1.svg`,
       address: officeAddress,
-      sameAs: [
-        "https://www.instagram.com/haus_of_estate/",
-        "https://www.linkedin.com/company/115804984/",
-        "https://www.facebook.com/profile.php?id=61560983191278",
-        "https://in.pinterest.com/hausofestate/",
-        "https://www.youtube.com/@Hausofestate",
-        "https://x.com/hausofestate",
-      ],
+      sameAs: SOCIAL_PROFILE_URLS,
       contactPoint: {
         "@type": "ContactPoint",
         contactType: "customer service",
@@ -146,8 +147,8 @@ const jsonLd = {
   ],
 };
 
-// Optional until the GA4/GTM account is connected. The client loads GTM only
-// after analytics consent, on a public production page outside draft mode.
+// Google Tag Manager: no-op until the founder sets NEXT_PUBLIC_GTM_ID once the
+// GTM container exists. Without the env var, no analytics markup is rendered.
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID;
 const ANALYTICS_ALLOWED_HOSTS = process.env.NEXT_PUBLIC_ANALYTICS_ALLOWED_HOSTS;
 
@@ -156,7 +157,16 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Feature readiness uses runtime-only secrets; do not freeze it into the build.
+  await connection();
   const { isEnabled: isDraftModeEnabled } = await draftMode();
+  const authEnabled = isAuthEnabled();
+  const savedContentEnabled = isSavedContentEnabled();
+  const content = (
+    <CurrencyProvider>
+      <TooltipProvider delayDuration={300}>{children}</TooltipProvider>
+    </CurrencyProvider>
+  );
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -181,11 +191,22 @@ export default async function RootLayout({
         >
           Skip to main content
         </a>
-        {children}
+        {authEnabled ? (
+          <SessionProvider>
+            <SavedContentProvider enabled={savedContentEnabled}>
+              {content}
+            </SavedContentProvider>
+          </SessionProvider>
+        ) : (
+          content
+        )}
         {isDraftModeEnabled && (
-          <div className="fixed bottom-4 right-4 z-50 rounded-full bg-estate-700 px-4 py-2 text-sm text-white shadow-lg">
-            Preview Mode
-          </div>
+          <a
+            href="/api/draft-mode/disable"
+            className="fixed bottom-4 right-4 z-50 inline-flex min-h-11 items-center rounded-full bg-estate-700 px-4 py-2 text-sm font-medium text-white shadow-lg"
+          >
+            Exit preview
+          </a>
         )}
       </body>
     </html>

@@ -8,6 +8,7 @@ import {
   Sparkles,
   Sofa,
   PaintRoller,
+  Wrench,
   ShieldCheck,
   Check,
 } from "lucide-react";
@@ -22,10 +23,27 @@ interface ServiceSection {
   lead: string;
   body: string;
   bullets: string[];
+  showAssurance?: boolean;
   cta: { label: string; action?: "buyer" | "seller" | "account"; href?: string };
 }
 
 const SECTIONS: ServiceSection[] = [
+  {
+    id: "snagging",
+    eyebrow: "Pre-handover inspections",
+    title: "Snagging",
+    icon: ClipboardList,
+    lead: "Arrange a property inspection before handover.",
+    body:
+      "Buying a new home? Speak to Haus about a pre-handover snagging inspection. Share the property type, bedrooms, size and handover timing so we can discuss the right inspection and quote for your property.",
+    bullets: [
+      "Enquiries for apartments, villas, duplexes, triplexes and quadplexes",
+      "Quotes based on your property's type and size",
+      "Inspection scope and arrangements agreed before booking",
+    ],
+    showAssurance: false,
+    cta: { label: "Explore snagging and request a quote", href: "/snagging" },
+  },
   {
     id: "property-management",
     eyebrow: "Property Management",
@@ -77,16 +95,30 @@ const SECTIONS: ServiceSection[] = [
     eyebrow: "Renovations",
     title: "Renovations",
     icon: PaintRoller,
-    lead: "Vetted trades for painting, plumbing, decorating, electrical and flooring.",
+    lead: "Vetted trades for painting, decorating and flooring.",
     body:
       "Whether you’re preparing a home to let or sell, or settling into a new one, we connect you to trusted trades and manage scope, scheduling and snagging. Single trades or a coordinated package — your choice.",
     bullets: [
       "Painting and decorating",
-      "Plumbing and bathroom upgrades",
-      "Electrical, lighting and EICR-compliant installs",
       "Carpet, laminate, LVT and hardwood flooring",
     ],
     cta: { label: "See our Renovations page", href: "/renovations" },
+  },
+  {
+    id: "maintenance",
+    eyebrow: "Maintenance",
+    title: "Maintenance",
+    icon: Wrench,
+    lead: "Plumbing and electrical services for your property.",
+    body:
+      "From plumbing repairs and bathroom upgrades to electrical wiring and installation, tell us what your property needs so we can discuss the work.",
+    bullets: [
+      "Plumbing repairs, bathroom upgrades and re-pipes",
+      "Full or partial rewires and consumer units",
+      "Lighting and electrical installation",
+    ],
+    showAssurance: false,
+    cta: { label: "Explore Maintenance", href: "/maintenance" },
   },
 ];
 
@@ -106,7 +138,7 @@ export default function ServicesPage() {
             <span className="text-gold-400">the services that make a home work.</span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/80 md:text-lg">
-            Management, staging, furnishing and renovations — the specialist
+            Snagging, management, staging, furnishing, renovations and maintenance — the specialist
             services we offer alongside our buy, rent and sell advisory, with
             vetted partners in every market we serve.
           </p>
@@ -203,10 +235,10 @@ function ServiceBlock({
               <SectionCTA cta={section.cta} />
             </div>
 
-            <p className="mt-5 flex items-center gap-2 text-xs text-muted-foreground">
+            {section.showAssurance !== false && <p className="mt-5 flex items-center gap-2 text-xs text-muted-foreground">
               <ShieldCheck className="h-3.5 w-3.5 text-estate-700" />
-              Rent Smart Wales · Propertymark CMP Registered · No hidden fees
-            </p>
+              No hidden fees
+            </p>}
           </div>
         </div>
       </div>
