@@ -224,6 +224,42 @@
     animation-play-state: paused;
   }
 
+  .partners-marquee-window {
+    overflow: hidden;
+    mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent);
+  }
+  .partners-marquee-track {
+    display: flex;
+    width: max-content;
+    animation: marquee 48s linear infinite;
+  }
+  .partners-marquee-group {
+    display: flex;
+    flex-shrink: 0;
+    gap: 1rem;
+    /* Each copy owns its trailing gap, so -50% lands exactly on the next copy. */
+    padding-right: 1rem;
+  }
+  @media (hover: hover) {
+    .partners-carousel:hover .partners-marquee-track {
+      animation-play-state: paused;
+    }
+  }
+  .partners-carousel:active .partners-marquee-track {
+    animation-play-state: paused;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .partners-marquee-window { mask-image: none; }
+    .partners-marquee-track { display: block; width: 100%; animation: none !important; transform: none; }
+    .partners-marquee-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+      padding-right: 0;
+    }
+    .partners-marquee-group > li { width: 100%; }
+    .partners-marquee-group[aria-hidden="true"] { display: none; }
+  }
+
   /* ─── Float / drift ─────────────────────────────────────────────── */
   @keyframes float {
     0%, 100% { transform: translateY(0px) rotate(0deg); }

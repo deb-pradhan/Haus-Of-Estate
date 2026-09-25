@@ -1,6 +1,6 @@
 # Developer partner carousel — 25 September 2026
 
-The homepage's six text-only names are now an accessible, manually controlled
+The homepage's six text-only names are now a continuously scrolling
 carousel containing their original logos, plus Azizi, Imtiaz and Ellington from
 Sonia's [Website Property Inventory](https://docs.google.com/spreadsheets/d/1xJn-sMduVD04VVa2sCEfIhc95_5_oOq5Vah00fGlK6Y/edit).
 The sheet evidence is recorded in `backlog-reconciliation-2026-09-17.md` (A6:A8).
@@ -32,14 +32,18 @@ White Nakheel and Dubai Properties originals sit on dark green panels for contra
 
 ## Interaction and checks
 
-- Native horizontal scrolling and scroll snapping; two cards on narrow screens,
-  three at intermediate sizes, five on desktop.
-- Labelled previous/next buttons, disabled at the ends; focusable list supports
-  Left/Right and Home/End. Every logo has its partner name as alternative text.
-- No autoplay or duplicate slides. Reduced-motion users get immediate scrolling.
+- Surya's follow-up replaces the manual carousel with a seamless 48-second loop.
+  Two equal-width groups include their own trailing gap so the loop does not jump.
+- Hovering anywhere in the section pauses it; leaving resumes from the same
+  position. Pressing the section also pauses it while held on touch screens.
+- Arrows, scrollbar and keyboard instructions are removed. The duplicate group
+  is hidden from assistive technology; the original ten logos retain named alt text.
+- Reduced-motion preferences disable the animation and show all ten originals
+  in a wrapping grid, with the duplicate group hidden.
 - Original colours and proportions are preserved with `object-contain`.
-- Parent task browser checks confirmed desktop and mobile arrow navigation,
-  keyboard End, all ten logos, and disabled Next at the end.
+- Browser checks confirmed movement, stable transform while hovering the heading,
+  resumed movement outside the section, all images loaded, equal copy widths on
+  desktop/mobile, no carousel buttons and no mobile horizontal page overflow.
 - Asset inspection confirmed valid decodable images; source SVGs contain no
   scripts, event handlers or external embedded references.
 
