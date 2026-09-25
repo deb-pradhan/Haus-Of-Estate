@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   ArrowRight,
@@ -90,6 +91,15 @@ export function Footer({ careersEmail }: { careersEmail: string }) {
               </a>
             </p>
           </div>
+
+          <Image
+            src="/badges/policybee-insured.png"
+            alt="Insured through PolicyBee"
+            width={128}
+            height={128}
+            sizes="128px"
+            className="mt-5 h-32 w-32 object-contain"
+          />
 
           {/* Quick actions */}
           <div className="mt-5 flex flex-wrap gap-2">

@@ -1,8 +1,12 @@
 # Haus of Estate — H01–H22 reconciliation
 
-**Current 22 September update:** the dated note at the end supersedes earlier
+**Current 25 September update:** see the [website revision report](website-revision-2026-09-25.md)
+for the latest prepared changes and dependencies. PolicyBee artwork has now been
+supplied and added to the Release 2 footer; earlier missing-artwork notes below are historical.
+
+**22 September update:** the dated note at the end supersedes earlier
 pending-access, team-material and careers-closure descriptions where stated.
-See [today's completed/pending report](website-update-2026-09-22.md) for the
+See the [22 September completed/pending report](website-update-2026-09-22.md) for the
 prepared implementation, saved Google setting, verification limits and owners.
 
 Baseline checked 17 September 2026; reconciled late 18 September after Deb merged and deployed Release 1, and updated 21 September for the weekend Cardiff and Filemail requests. H05/H17 remain completed with 18 September live evidence. Release 2 continues in draft PR #16 against main. Dated evidence is distinguished below; Cardiff preparation remains unpublished. A later explicit 21 September instruction authorised the narrow H01 published correction, now verified live; no application deployment was made.
