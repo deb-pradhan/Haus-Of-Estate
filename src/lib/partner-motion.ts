@@ -1,4 +1,5 @@
-export const PARTNER_DRIFT_SPEED = -32; // CSS pixels per second, right to left.
+// Match the client reviews: a 2064px loop over 30 seconds, moving right to left.
+export const PARTNER_DRIFT_SPEED = -68.8; // CSS pixels per second.
 export const MAX_PARTNER_RELEASE_SPEED = 900;
 const DECAY_RATE = 2.8;
 

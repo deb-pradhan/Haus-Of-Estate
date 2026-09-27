@@ -4,21 +4,19 @@ import { useEffect, useRef } from "react";
 import { advancePartnerMotion, clampPartnerVelocity, PARTNER_DRIFT_SPEED, wrapPartnerOffset } from "@/lib/partner-motion";
 
 export function usePartnerMotion() {
-  const sectionRef = useRef<HTMLElement>(null);
   const windowRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const section = sectionRef.current;
     const viewport = windowRef.current;
     const track = trackRef.current;
     const group = track?.querySelector<HTMLElement>(".partners-marquee-group");
-    if (!section || !viewport || !track || !group) return;
+    if (!viewport || !track || !group) return;
 
     const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
     let width = group.getBoundingClientRect().width;
     let offset = 0;
-    let hovering = section.matches(":hover") && matchMedia("(hover: hover)").matches;
+    let hovering = viewport.matches(":hover") && matchMedia("(hover: hover)").matches;
     let focused = viewport.matches(":focus-visible");
     let velocity = hovering || focused ? 0 : PARTNER_DRIFT_SPEED;
     let visible = false;
@@ -141,8 +139,8 @@ export function usePartnerMotion() {
     viewport.dataset.enhanced = "true";
     resize.observe(group);
     intersection.observe(viewport);
-    section.addEventListener("pointerenter", enter);
-    section.addEventListener("pointerleave", leave);
+    viewport.addEventListener("pointerenter", enter);
+    viewport.addEventListener("pointerleave", leave);
     viewport.addEventListener("pointerdown", down);
     viewport.addEventListener("pointermove", move);
     viewport.addEventListener("pointerup", up);
@@ -158,8 +156,8 @@ export function usePartnerMotion() {
       stop();
       resize.disconnect();
       intersection.disconnect();
-      section.removeEventListener("pointerenter", enter);
-      section.removeEventListener("pointerleave", leave);
+      viewport.removeEventListener("pointerenter", enter);
+      viewport.removeEventListener("pointerleave", leave);
       viewport.removeEventListener("pointerdown", down);
       viewport.removeEventListener("pointermove", move);
       viewport.removeEventListener("pointerup", up);
@@ -176,5 +174,5 @@ export function usePartnerMotion() {
     };
   }, []);
 
-  return { sectionRef, windowRef, trackRef };
+  return { windowRef, trackRef };
 }
