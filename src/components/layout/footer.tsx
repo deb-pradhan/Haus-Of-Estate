@@ -131,7 +131,7 @@ export function Footer({ careersEmail }: { careersEmail: string }) {
           <FooterButton onClick={openBuyer}>Rent a property</FooterButton>
           <FooterButton onClick={openSeller}>Sell or let</FooterButton>
           <FooterLink href="/snagging">Snagging inspections</FooterLink>
-          <FooterLink href="/renovations">Renovations</FooterLink>
+          <FooterLink href="/renovations">Interiors &amp; Renovations</FooterLink>
           <FooterLink href="/maintenance">Maintenance</FooterLink>
           <FooterLink href="/list-property">List your property</FooterLink>
           <FooterLink href="/mortgage-calculator">Mortgage calculator</FooterLink>

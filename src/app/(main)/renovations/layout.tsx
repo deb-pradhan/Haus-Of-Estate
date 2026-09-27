@@ -2,14 +2,14 @@ import type { Metadata } from 'next'
 import { DEFAULT_OG_IMAGES } from '@/lib/seo'
 
 export const metadata: Metadata = {
-  title: 'Property Renovation Services UAE & UK',
+  title: 'Interiors & Renovations',
   description:
-    'Get your property let-, sale- or move-in ready with Haus of Estate. Painting, decorating and flooring services in the UK and UAE.',
+    'Explore interior design, room refreshes, renovations, furnishing, styling and lighting ideas with Haus of Estate. Tell us about your property and project goals.',
   alternates: { canonical: '/renovations' },
   openGraph: {
-    title: 'Property Renovation Services UAE & UK — Haus of Estate',
+    title: 'Interiors & Renovations — Haus of Estate',
     description:
-      'Painting, decorating and flooring services for your property in the UK and UAE.',
+      'Explore design, renovation, furnishing and styling options, and discuss a brief for your property.',
     url: '/renovations',
     type: 'website',
     images: DEFAULT_OG_IMAGES,

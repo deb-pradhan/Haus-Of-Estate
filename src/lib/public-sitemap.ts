@@ -37,7 +37,7 @@ export function publicSitemapPages(): PublicPage[] {
     { path: '/about', title: 'About us', changeFrequency: 'monthly', priority: 0.7 },
     { path: '/services', title: 'Services', changeFrequency: 'monthly', priority: 0.7 },
     { path: '/snagging', title: 'Snagging inspections', changeFrequency: 'monthly', priority: 0.6 },
-    { path: '/renovations', title: 'Renovations', changeFrequency: 'monthly', priority: 0.6 },
+    { path: '/renovations', title: 'Interiors & Renovations', changeFrequency: 'monthly', priority: 0.6 },
     { path: '/maintenance', title: 'Maintenance', changeFrequency: 'monthly', priority: 0.6 },
     { path: '/team', title: 'Meet the team', changeFrequency: 'monthly', priority: 0.6 },
     { path: '/faq', title: 'Frequently asked questions', changeFrequency: 'monthly', priority: 0.6 },

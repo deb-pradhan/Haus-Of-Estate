@@ -1,5 +1,7 @@
 # Interiors email review - 25 September 2026
 
+**27 September follow-up:** Surya requested implementation. The source-based interiors page, room/goal choices, lighting preview and canonical enquiry brief are now prepared in Release 2. See the [implementation record](interiors-implementation-2026-09-27.md). The observations below describe the earlier review; provisional prices and case-study assets remain separate content decisions.
+
 The interiors team has supplied substantial proposals. The existing H10 backlog references Afifa's 16/17 September PDFs, but the current service pages do not implement their proposed packages or the newer 24/25 September material. The [website revision report](website-revision-2026-09-25.md) statement that additional packages “await supplied scope” is incomplete: proposals are supplied; final scope, delivery capability, package terminology, prices and suitable public imagery still need decisions.
 
 This review checked focused Gmail results through 25 September, read the relevant threads, extracted all pages of the three original PDFs and visually checked their package, pricing and material-board pages. It compares the local Release 2 source, not a new production deployment. No email was drafted or sent and no remote content was changed.
@@ -18,7 +20,7 @@ Times below are UK summer time. The proposal author is **Shikder Afifa Islam**, 
 | [Georgia, 25 Sep 13:53 - Interiors website ideas](https://mail.google.com/mail/u/?authuser=kommurisurya%40gmail.com#all/1a0d8a12fee98b5e) | Design/Renovate/Furnish/Finish service groups; Consultation/Refresh/Transformation/Turnkey package examples; Discover → Define → Design → Renovate → Furnish → Finish; goal-led choices, before/after slider, optional add-ons, budget/property-type/room-count enquiry and future project case studies. | Detailed text supplied, no visual attachment. “Projects from £X” is a placeholder idea, not a price. Case studies are explicitly for when completed projects exist. |
 | [Nondita, 25 Sep 15:38 - Renovations Tab - Interior Services & Page Suggestions](https://mail.google.com/mail/u/?authuser=kommurisurya%40gmail.com#all/1a0d9017991fb217) | Full refurbishments, space planning, furniture/styling, material sourcing, décor and a distinct Lighting Design service. Suggests layered lighting, lighting moodboards or an interactive lighting feature, before/after visuals, readable typography and Basic/Standard/Premium examples. | Initial suggestions, no attachment. Offers to develop moodboards and visual representations further. |
 
-## What the website currently contains
+## Website snapshot at the 25 September review
 
 | Local source | Implemented | Gap against supplied proposals |
 | --- | --- | --- |

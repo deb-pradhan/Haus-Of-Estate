@@ -67,42 +67,46 @@ const SECTIONS: ServiceSection[] = [
     icon: Sparkles,
     lead: "Present a home at its best for viewings, photography and marketing.",
     body:
-      "Staging is where styling meets logistics. We prepare a property so prospective buyers and tenants can picture themselves living there — quickly, on schedule, and ready for the marketing campaign. Suitable for vacant homes and lived-in ones being prepared for sale.",
+      "Discuss furniture, soft furnishings and finishing touches that help buyers and tenants understand a space. Start with your property and marketing plans so we can agree the styling brief and practical arrangements.",
     bullets: [
-      "Concept, source, install and de-rig",
+      "Styling ideas for vacant or lived-in properties",
       "Furniture, soft furnishings and accessories",
-      "Photography and viewing-day attendance",
+      "A brief shaped around viewings and photography",
     ],
-    cta: { label: "Enquire about staging", action: "account" },
+    showAssurance: false,
+    cta: { label: "Explore styling and finishing", href: "/renovations#finish" },
   },
   {
     id: "furnishing",
     eyebrow: "Furnishing & Interiors",
     title: "Furnishing",
     icon: Sofa,
-    lead: "Move-in ready interiors for new builds and let properties.",
+    lead: "Furniture and interior choices shaped around your property.",
     body:
-      "From a one-bedroom apartment fit-out to a full villa furnishing package, we plan to a brief and a budget. We specify the right pieces, manage delivery and installation, and hand back a finished home ready for occupation, marketing or photography.",
+      "Explore furniture layouts, materials and sourcing for a new home, rental or property being prepared for sale. Tell us what is already in place and what you need; procurement and installation arrangements can then be discussed as part of your brief.",
     bullets: [
-      "Tailored to brief: lettings spec, owner-occupied or showhome",
-      "Procurement and supplier management",
-      "Delivery, install and snagging",
+      "Furniture selection and room layouts",
+      "Materials, lighting and soft furnishings",
+      "Sourcing and installation needs discussed for your project",
     ],
-    cta: { label: "Enquire about furnishing", action: "account" },
+    showAssurance: false,
+    cta: { label: "Explore furnishing", href: "/renovations#furnish" },
   },
   {
     id: "renovations",
-    eyebrow: "Renovations",
-    title: "Renovations",
+    eyebrow: "Interiors & Renovations",
+    title: "Interiors & Renovations",
     icon: PaintRoller,
-    lead: "Vetted trades for painting, decorating and flooring.",
+    lead: "From a room refresh to a wider property plan.",
     body:
-      "Whether you’re preparing a home to let or sell, or settling into a new one, we connect you to trusted trades and manage scope, scheduling and snagging. Single trades or a coordinated package — your choice.",
+      "Start with what you want your property to do better. Explore design, renovation, furnishing and styling ideas, then discuss the scope, budget and level of support suited to your project.",
     bullets: [
-      "Painting and decorating",
-      "Carpet, laminate, LVT and hardwood flooring",
+      "Space planning, materials and lighting design",
+      "Painting, decorating and flooring",
+      "Furniture, styling and finishing touches",
     ],
-    cta: { label: "See our Renovations page", href: "/renovations" },
+    showAssurance: false,
+    cta: { label: "Explore Interiors & Renovations", href: "/renovations" },
   },
   {
     id: "maintenance",
@@ -138,7 +142,7 @@ export default function ServicesPage() {
             <span className="text-gold-400">the services that make a home work.</span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/80 md:text-lg">
-            Snagging, management, staging, furnishing, renovations and maintenance — the specialist
+            Snagging, management, interiors, renovations and maintenance — the specialist
             services we offer alongside our buy, rent and sell advisory, with
             vetted partners in every market we serve.
           </p>
@@ -177,8 +181,8 @@ export default function ServicesPage() {
             Not sure which one?
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-white/80">
-            Send a short enquiry and an advisor will reply within two working
-            hours with the right next step for your situation.
+            Tell us about your property and what you have in mind so our team
+            can discuss the right next step with you.
           </p>
           <SpeakToAdvisor />
         </div>

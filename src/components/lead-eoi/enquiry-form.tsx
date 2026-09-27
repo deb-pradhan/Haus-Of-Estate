@@ -11,6 +11,18 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PhoneInput, isValidMobile } from "@/components/ui/phone-input";
 import {
+  INTERIOR_GOALS,
+  INTERIOR_ROOMS,
+  INTERIOR_PROPERTY_TYPES,
+  INTERIOR_MESSAGE_MAX_LENGTH,
+  INTERIOR_BUDGET_MAX_LENGTH,
+  composeInteriorEnquiryMessage,
+  type InteriorEnquiryContext,
+  type InteriorGoal,
+  type InteriorRoom,
+  type InteriorPropertyType,
+} from "@/lib/interiors-enquiry";
+import {
   LEAD_FORM_VERSION,
   PRIVACY_NOTICE_VERSION,
   MARKETING_CONSENT_WORDING,
@@ -38,6 +50,10 @@ const INITIAL_VALUES = {
   phone: "",
   market: "",
   location: "",
+  interiorGoal: "not-sure" as InteriorGoal,
+  interiorRoom: "not-sure" as InteriorRoom,
+  interiorPropertyType: "" as InteriorPropertyType | "",
+  interiorBudget: "",
   privacyAcknowledged: false,
   newsletterOptIn: false,
   propertyMatchOptIn: false,
@@ -45,9 +61,14 @@ const INITIAL_VALUES = {
 };
 type FieldErrors = Record<string, string | undefined>;
 
-export function EnquiryForm() {
+export function EnquiryForm({ interiors }: { interiors?: InteriorEnquiryContext }) {
   const id = useId();
-  const [values, setValues] = useState(INITIAL_VALUES);
+  const initialValues = () => ({
+    ...INITIAL_VALUES,
+    interiorGoal: interiors?.goal ?? "not-sure",
+    interiorRoom: interiors?.room ?? "not-sure",
+  });
+  const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [state, setState] = useState<
     "idle" | "submitting" | "error" | "success"
@@ -59,6 +80,7 @@ export function EnquiryForm() {
   const responseRef = useRef<HTMLDivElement>(null);
   const supportsMatches = ["buy", "rent", "invest"].includes(values.interest);
   const isPropertyQuestion = values.interest !== "general_enquiry";
+  const isInteriorEnquiry = Boolean(interiors) && !isPropertyQuestion;
 
   useEffect(() => {
     if (viewed.current) return;
@@ -119,7 +141,15 @@ export function EnquiryForm() {
         firstName: values.firstName.trim(),
         email: values.email.trim(),
         phone: values.phone || undefined,
-        message: values.message.trim(),
+        message: isInteriorEnquiry
+          ? composeInteriorEnquiryMessage({
+              goal: values.interiorGoal,
+              room: values.interiorRoom,
+              propertyType: values.interiorPropertyType,
+              budget: values.interiorBudget,
+              message: values.message,
+            })
+          : values.message.trim(),
       },
       preferences: isPropertyQuestion
         ? {
@@ -261,7 +291,7 @@ export function EnquiryForm() {
             variant="outline"
             type="button"
             onClick={() => {
-              setValues(INITIAL_VALUES);
+              setValues(initialValues());
               setErrors({});
               setState("idle");
               submissionId.current = null;
@@ -296,22 +326,77 @@ export function EnquiryForm() {
           >
             {TOPICS.map((topic) => (
               <option key={topic.value} value={topic.value}>
-                {topic.label}
+                {interiors && topic.value === "general_enquiry" ? "Interiors & Renovations" : topic.label}
               </option>
             ))}
           </select>
         </div>
+        {isInteriorEnquiry ? (
+          <fieldset className="grid min-w-0 gap-4 rounded-lg border border-border bg-subtle p-4 sm:grid-cols-2">
+            <legend className="px-1 text-sm font-semibold text-estate-700">Your project brief</legend>
+            <div className="space-y-2">
+              <Label htmlFor={`${id}-interiorGoal`}>What would you like to achieve?</Label>
+              <select
+                id={`${id}-interiorGoal`}
+                value={values.interiorGoal}
+                onChange={(event) => update("interiorGoal", event.target.value as InteriorGoal)}
+                className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50"
+              >
+                {INTERIOR_GOALS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor={`${id}-interiorRoom`}>Room or space</Label>
+              <select
+                id={`${id}-interiorRoom`}
+                value={values.interiorRoom}
+                onChange={(event) => update("interiorRoom", event.target.value as InteriorRoom)}
+                className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50"
+              >
+                {INTERIOR_ROOMS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor={`${id}-interiorPropertyType`}>Property type (optional)</Label>
+              <select
+                id={`${id}-interiorPropertyType`}
+                value={values.interiorPropertyType}
+                onChange={(event) => update("interiorPropertyType", event.target.value as InteriorPropertyType | "")}
+                className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50"
+              >
+                <option value="">Select if known</option>
+                {INTERIOR_PROPERTY_TYPES.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor={`${id}-interiorBudget`}>Approximate budget (optional)</Label>
+              <Input
+                id={`${id}-interiorBudget`}
+                value={values.interiorBudget}
+                onChange={(event) => update("interiorBudget", event.target.value)}
+                maxLength={INTERIOR_BUDGET_MAX_LENGTH}
+                placeholder="Amount or range, with currency"
+                aria-describedby={`${id}-interiorBudget-help`}
+              />
+              <p id={`${id}-interiorBudget-help`} className="text-xs leading-5 text-muted-foreground">
+                Your own budget guide, not a quote. Leave blank if undecided.
+              </p>
+            </div>
+          </fieldset>
+        ) : null}
         <div className="space-y-2">
-          <Label htmlFor={`${id}-message`}>What would you like to know?</Label>
+          <Label htmlFor={`${id}-message`}>{isInteriorEnquiry ? "Tell us a little about your project" : "What would you like to know?"}</Label>
           <Textarea
             id={`${id}-message`}
             value={values.message}
             onChange={(event) => update("message", event.target.value)}
-            maxLength={2000}
+            maxLength={isInteriorEnquiry ? INTERIOR_MESSAGE_MAX_LENGTH : 2000}
             required
             aria-invalid={Boolean(errors.message)}
             aria-describedby={describedBy("message")}
-            placeholder="For example: I’m thinking about buying my first property in Dubai. Where should I start?"
+            placeholder={isInteriorEnquiry
+              ? "What would you like to change? Include your property's location and any timing you have in mind."
+              : "For example: I’m thinking about buying my first property in Dubai. Where should I start?"}
             className="min-h-36 resize-y text-base"
           />
           {fieldError("message")}

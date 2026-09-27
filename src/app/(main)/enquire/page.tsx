@@ -5,6 +5,7 @@ import { EnquiryUnavailable } from "@/components/lead-eoi/enquiry-unavailable";
 import { ArrowUpRight, Mail, MessageSquareText } from "lucide-react";
 import { EnquiryForm } from "@/components/lead-eoi/enquiry-form";
 import { DEFAULT_OG_IMAGES } from "@/lib/seo";
+import { readInteriorEnquiryContext, type EnquirySearchParams } from "@/lib/interiors-enquiry";
 
 export const metadata: Metadata = {
   title: "Have a query?",
@@ -28,22 +29,28 @@ export const metadata: Metadata = {
   },
 };
 
-export default function EnquirePage() {
+export default async function EnquirePage({
+  searchParams,
+}: {
+  searchParams: Promise<EnquirySearchParams>;
+}) {
   if (!isLeadIntakeReady()) return <EnquiryUnavailable />;
+  const interiors = readInteriorEnquiryContext(await searchParams);
 
   return (
     <div className="bg-subtle">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 md:px-6 md:py-16 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
         <section className="self-start lg:sticky lg:top-28">
           <p className="text-xs font-semibold uppercase tracking-widest text-estate-700">
-            Let’s talk property
+            {interiors ? "Interiors & Renovations" : "Let’s talk property"}
           </p>
           <h1 className="mt-4 font-serif text-4xl font-medium leading-tight text-estate-700 sm:text-5xl lg:text-6xl">
-            Have a query?
+            {interiors ? "Tell us about your project." : "Have a query?"}
           </h1>
           <p className="mt-5 max-w-md text-base leading-7 text-muted-foreground">
-            A property in mind, a plan taking shape, or just a question? Tell us
-            what you’re thinking. You don’t need to have it all figured out.
+            {interiors
+              ? "A room to refresh, a property to furnish, or a wider plan? Share what you would like to achieve. Your budget can be a rough guide, and you can leave it blank."
+              : "A property in mind, a plan taking shape, or just a question? Tell us what you’re thinking. You don’t need to have it all figured out."}
           </p>
           <div className="mt-7 flex items-start gap-3 border-l-2 border-gold-400 pl-4">
             <MessageSquareText
@@ -79,7 +86,7 @@ export default function EnquirePage() {
           aria-label="Send a question to Haus of Estate"
           className="min-w-0 rounded-2xl border border-border bg-surface p-5 shadow-sm sm:p-8"
         >
-          <EnquiryForm />
+          <EnquiryForm key={interiors ? `${interiors.goal}:${interiors.room}` : "general"} interiors={interiors} />
         </section>
       </div>
     </div>

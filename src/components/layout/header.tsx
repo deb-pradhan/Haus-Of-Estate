@@ -138,9 +138,9 @@ type ServiceEntry = NavItem | NavAction;
 const SERVICES_ITEMS: ServiceEntry[] = [
   { href: "/snagging", label: "Snagging", desc: "Pre-handover property inspections. Request a quote.", icon: ClipboardList },
   { href: "/services#property-management", label: "Property Management", desc: "Tenancy, maintenance and compliance, handled.", icon: ClipboardList },
-  { href: "/services#staging", label: "Staging", desc: "Present a home for viewings, photography and marketing.", icon: Sparkles },
-  { href: "/services#furnishing", label: "Furnishing", desc: "Move-in ready interiors for new builds and rentals.", icon: Sofa },
-  { href: "/renovations", label: "Renovations", desc: "Painting, decorating and flooring.", icon: PaintRoller },
+  { href: "/renovations#finish", label: "Staging", desc: "Explore styling for viewings and property marketing.", icon: Sparkles },
+  { href: "/renovations#furnish", label: "Furnishing", desc: "Discuss furniture, sourcing and your property's brief.", icon: Sofa },
+  { href: "/renovations", label: "Interiors & Renovations", desc: "Explore design, renovation, furnishing and styling.", icon: PaintRoller },
   { href: "/maintenance", label: "Maintenance", desc: "Plumbing and electrical services.", icon: Wrench },
 ];
 

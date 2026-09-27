@@ -1,12 +1,16 @@
 # Haus releases
 
-## Current work — 25 September 2026
+## Current work — 27 September 2026
 
 Continue Release 2 on `suryak02/azizi-florence-content-scaffold` and draft PR #16.
 Accounts, saved content and AskHaus are deferred with `AUTH_ENABLED=false` by
 default. The next release focuses on property search/navigation, the original-logo
 developer carousel, blog thumbnail framing, the revised nine-role careers list,
-Maintenance and verified company/ICO details. The current evidence, owners and
+Maintenance, Interiors & Renovations and verified company/ICO details. The compact
+carousel now pauses within the logo strip only and matches the reviews' travel
+speed. The [interiors implementation](interiors-implementation-2026-09-27.md)
+incorporates the supplied team proposals into the existing service and enquiry
+routes. The current evidence, owners and
 remaining dependencies are in
 [`website-revision-2026-09-25.md`](website-revision-2026-09-25.md).
 
