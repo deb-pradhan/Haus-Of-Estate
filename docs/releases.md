@@ -1,5 +1,24 @@
 # Haus releases
 
+## Lead operations audit and priorities — 28 September 2026
+
+The [operations plan](lead-operations-plan-2026-09-28.md) maps fourteen visitor and
+lifecycle scenarios through capture, staff ownership, reply and later marketing.
+It includes a copy-ready Deb handoff, concrete inbox/tracker operation and a
+prioritized implementation backlog. Source audits distinguish working code from
+hosting dependencies and missing CRM/customer-email connections.
+
+The audit found a homepage Buy/Rent/Sell/Let widget that displayed success without
+saving anything. This revision removes that local-only intake and uses the
+existing gated durable enquiry entry point. TypeScript, scoped lint and 31 focused
+tests passed. Other rental/service/context/retry gaps remain in the plan; hosted
+activation is still unverified. Accounts and AskHaus remain off.
+
+The live interim Google Form now captures separate optional matching-property and
+newsletter choices. Published unchecked controls and the two new Sheet headers
+were verified; the earlier test row has neither choice. No new opted-in submission,
+subscriber import or campaign was performed. See the updated activation handoff.
+
 ## Lead collection update — 28 September 2026
 
 The [standalone Google enquiry form](https://forms.gle/7fwMEN83ySQoMhps8) is
