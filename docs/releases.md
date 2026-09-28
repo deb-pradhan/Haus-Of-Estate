@@ -15,6 +15,14 @@ activation handoff](deb-release-2-handoff-2026-09-28.md) compares the cumulative
 changes against merged PR #15 and separates the content deployment from later
 backend activation.
 
+Later on 28 September, native new-response alerts were enabled for Surya's Google
+account and optional Google Form response copies were enabled when requested.
+Those saved settings were checked; inbox delivery was not tested. Company editor
+alerts and company ownership still need the steps in the activation handoff.
+Deb's [email-automation checklist](email-automation-handoff-2026-09-28.md) separates
+company sender/DNS/hosting setup from the unbuilt branded acknowledgement and
+consented campaign workflow.
+
 ## Current work — 27 September 2026
 
 Continue Release 2 on `suryak02/azizi-florence-content-scaffold` and draft PR #16.

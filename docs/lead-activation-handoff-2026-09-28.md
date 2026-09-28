@@ -9,7 +9,7 @@ Deb can activate the existing website integration without giving Surya Railway a
 - Public responder link for Sonia to share: [Haus enquiry form](https://forms.gle/7fwMEN83ySQoMhps8). The short link was opened and verified against the published form.
 - [Form editor](https://docs.google.com/forms/d/1WdLU-4qdset6PUR6oWt-03Lk3gxstfrBXS2ExBrrEEo/edit) and [response tab](https://docs.google.com/spreadsheets/d/1VTc6AFWWBvm5RZP1t6WIEkdy1WsTFG9hI04s53j2EiE/edit?gid=1390037075#gid=1390037075).
 - Created through the existing Sheet's **Tools → Create form**. Responses use its new **Form responses 1** tab, `gid=1390037075`. This tab is separate from the 23-column website delivery tab described below.
-- The form collects email through **Responder input**, with required name, enquiry category, brief and privacy acknowledgement. Phone and market are optional. It has no marketing subscription fields, response emails or outreach automation.
+- The form collects email through **Responder input**, with required name, enquiry category, brief and privacy acknowledgement. Phone and market are optional. It has no marketing subscription fields or outreach automation. In the later 28 September setup, native response copies were enabled **When requested** and new-response notifications were enabled for Surya's account; see below.
 - Published responder access is **Anyone with the link**; editor access remains **Restricted**. The one-response restriction is off. A signed-out browser check has not yet been completed.
 - Controlled receipt verified on 28 September: `Form responses 1!A2:H2` contains marker `HAUS-FORM-CHECK-20260928`, test address `haus-form-check-20260928@example.invalid` and displayed timestamp `28/09/2026 10:55:43`. `A3:H3` was blank. Invalid email rejection was checked first. Retain the clearly marked test row as verification evidence; it is not a customer lead.
 - Surya is the creator/owner; `info@hausofestate.com` was retained as an editor. This is not yet company ownership. Sonia/company administration should agree the long-term owner and review both Form and Sheet access separately.
@@ -17,6 +17,16 @@ Deb can activate the existing website integration without giving Surya Railway a
 - A current Google Cloud project search for `haus` returned no resources in Surya's signed-in account. No company service account, API key, Cloud project, sender or hosting service was created. This search does not prove that the company has no project under another name.
 
 The standalone link can be used without changing Railway or the website. Replacing a website button or popup with it still requires a website change and deployment. Native Forms responses do not enter the website database or its delivery queue automatically. Google documents [linking responses to a Sheet](https://support.google.com/docs/answer/2917686?hl=en) and [publishing a responder link](https://support.google.com/docs/answer/2839588?hl=en).
+
+### Native email settings and company ownership — 28 September follow-up
+
+- **Configured and checked:** Responses → More options → **Get email notifications for new responses** is enabled for `kommurisurya@gmail.com`. The checked state and Google's confirmation were observed. This does not subscribe the company editor to alerts.
+- **Configured and checked after reload:** Settings → Responses → **Send responders a copy of their response: When requested**. Visitors can choose a Google-generated copy; this is not a branded Haus acknowledgement or a marketing subscription. Manual email entry and no one-response/sign-in restriction remain unchanged. No new submission or test email was sent in this follow-up, so inbox arrival is not yet verified.
+- **Sonia/company editor:** sign in as `info@hausofestate.com`, open the Form editor above, choose **Responses → More options → Get email notifications for new responses**. Each intended monitoring account should enable its own alert. Then make one clearly marked staff-controlled submission, request the copy, and check the Sheet, the submitting person's inbox and the monitoring inbox. Do not use an actual customer's address for the test.
+- **Ownership:** sharing was rechecked: Surya remains Owner and `info@hausofestate.com` remains Editor. The company's Google account type was not established. Google [does not support direct personal-to-work/school ownership transfers](https://support.google.com/drive/answer/2494892?hl=en). If the company uses Workspace, a company editor can make a copy under that company account, recheck its questions/settings/access, link it to the existing approved Sheet using a new response tab, publish and test it. Copying does not transfer the old response history or preserve the responder URL; retain the original Form and response tab until a tested link cutover is agreed. If it is an eligible personal Google account, a separate ownership invitation and acceptance may be possible. Do not infer ownership from an editor invitation.
+- No add-on, Apps Script trigger, automatic forwarding, new editor, ownership transfer or customer campaign was installed/enabled. Native settings follow [Google's response management instructions](https://support.google.com/docs/answer/139706?hl=en-GB).
+
+For the company's sender/DNS setup and the remaining acknowledgement/marketing implementation, use [Deb's email-automation handoff](email-automation-handoff-2026-09-28.md).
 
 ## One setup list for Deb: normal website form
 
@@ -87,7 +97,7 @@ The current website readiness gate requires the intake flag, database URL and pr
 | --- | --- | --- |
 | On-screen enquiry receipt | Implemented after durable database save | Deb activates verified hosted intake; Surya checks UI/API receipt |
 | Staff notification and Sheet capture | Implemented as independent outbox destinations | Deb/company Google and mail admins configure; Sonia confirms actual receipt and monitoring |
-| Automatic acknowledgement to the enquirer | Not implemented by the staff notification transport; Form response emails are off | Sonia approves acknowledgement copy/purpose; Surya adds a distinct customer receipt action and deduplication; Deb verifies sender and actual test receipt |
+| Automatic acknowledgement to the enquirer | Not implemented by the staff notification transport; Google Form now offers a native response copy when requested | Sonia approves branded acknowledgement copy/purpose; Surya adds a distinct customer receipt action and deduplication; Deb verifies sender and actual test receipt |
 | Newsletter and matching-property consent | Website records separate optional choices and consent evidence | Hosted database activation; keep historical consent scope intact; interim Form does not subscribe anyone |
 | Personalised marketing follow-up | Planned Release 2 milestone, not an operational campaign system | Sonia/Surya agree eligibility, interests, content selection, timing, frequency, review policy and retention; implement a separate customer queue, delivery and suppression lifecycle |
 
@@ -95,7 +105,7 @@ Accepting analytics cookies neither supplies an email address nor selects newsle
 
 The smallest marketing pilot can use explicitly opted-in subscribers without enabling accounts or AskHaus. It still needs a verified recipient/subscriber flow, approved templates and eligible published content, a company-owned sender/provider, deduplication and scheduled delivery, unsubscribe links and suppression checked at send time, bounce/complaint handling, and actual test-recipient receipt. Existing consent withdrawal helpers are groundwork, not a complete public unsubscribe/campaign journey. Cookie-driven personalisation additionally needs an explicitly designed first-party interest/identity flow and an agreed permission boundary; it is not supplied by GA4 or merely accepting the cookie banner.
 
-The [agreed follow-up milestone](releases.md#personalised-follow-ups--next-release-2-milestone) keeps customer campaigns separate from operational staff outboxes. No outreach campaign, customer acknowledgement or subscriber enrolment was activated by the standalone Form test.
+The [agreed follow-up milestone](releases.md#personalised-follow-ups--next-release-2-milestone) keeps customer campaigns separate from operational staff outboxes. No outreach campaign, branded customer acknowledgement or subscriber enrolment was activated. The native notification/optional-copy settings were configured separately after the original standalone Form test.
 
 ## Code pointers and audit boundary
 
