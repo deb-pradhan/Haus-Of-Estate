@@ -8,6 +8,7 @@ import {
   Sparkles,
   Sofa,
   PaintRoller,
+  Wrench,
   ShieldCheck,
   Check,
 } from "lucide-react";
@@ -22,10 +23,27 @@ interface ServiceSection {
   lead: string;
   body: string;
   bullets: string[];
+  showAssurance?: boolean;
   cta: { label: string; action?: "buyer" | "seller" | "account"; href?: string };
 }
 
 const SECTIONS: ServiceSection[] = [
+  {
+    id: "snagging",
+    eyebrow: "Pre-handover inspections",
+    title: "Snagging",
+    icon: ClipboardList,
+    lead: "Arrange a property inspection before handover.",
+    body:
+      "Buying a new home? Speak to Haus about a pre-handover snagging inspection. Share the property type, bedrooms, size and handover timing so we can discuss the right inspection and quote for your property.",
+    bullets: [
+      "Enquiries for apartments, villas, duplexes, triplexes and quadplexes",
+      "Quotes based on your property's type and size",
+      "Inspection scope and arrangements agreed before booking",
+    ],
+    showAssurance: false,
+    cta: { label: "Explore snagging and request a quote", href: "/snagging" },
+  },
   {
     id: "property-management",
     eyebrow: "Property Management",
@@ -49,44 +67,62 @@ const SECTIONS: ServiceSection[] = [
     icon: Sparkles,
     lead: "Present a home at its best for viewings, photography and marketing.",
     body:
-      "Staging is where styling meets logistics. We prepare a property so prospective buyers and tenants can picture themselves living there — quickly, on schedule, and ready for the marketing campaign. Suitable for vacant homes and lived-in ones being prepared for sale.",
+      "Discuss furniture, soft furnishings and finishing touches that help buyers and tenants understand a space. Start with your property and marketing plans so we can agree the styling brief and practical arrangements.",
     bullets: [
-      "Concept, source, install and de-rig",
+      "Styling ideas for vacant or lived-in properties",
       "Furniture, soft furnishings and accessories",
-      "Photography and viewing-day attendance",
+      "A brief shaped around viewings and photography",
     ],
-    cta: { label: "Enquire about staging", action: "account" },
+    showAssurance: false,
+    cta: { label: "Explore styling and finishing", href: "/renovations#finish" },
   },
   {
     id: "furnishing",
     eyebrow: "Furnishing & Interiors",
     title: "Furnishing",
     icon: Sofa,
-    lead: "Move-in ready interiors for new builds and let properties.",
+    lead: "Furniture and interior choices shaped around your property.",
     body:
-      "From a one-bedroom apartment fit-out to a full villa furnishing package, we plan to a brief and a budget. We specify the right pieces, manage delivery and installation, and hand back a finished home ready for occupation, marketing or photography.",
+      "Explore furniture layouts, materials and sourcing for a new home, rental or property being prepared for sale. Tell us what is already in place and what you need; procurement and installation arrangements can then be discussed as part of your brief.",
     bullets: [
-      "Tailored to brief: lettings spec, owner-occupied or showhome",
-      "Procurement and supplier management",
-      "Delivery, install and snagging",
+      "Furniture selection and room layouts",
+      "Materials, lighting and soft furnishings",
+      "Sourcing and installation needs discussed for your project",
     ],
-    cta: { label: "Enquire about furnishing", action: "account" },
+    showAssurance: false,
+    cta: { label: "Explore furnishing", href: "/renovations#furnish" },
   },
   {
     id: "renovations",
-    eyebrow: "Renovations",
-    title: "Renovations",
+    eyebrow: "Interiors & Renovations",
+    title: "Interiors & Renovations",
     icon: PaintRoller,
-    lead: "Vetted trades for painting, plumbing, decorating, electrical and flooring.",
+    lead: "From a room refresh to a wider property plan.",
     body:
-      "Whether you’re preparing a home to let or sell, or settling into a new one, we connect you to trusted trades and manage scope, scheduling and snagging. Single trades or a coordinated package — your choice.",
+      "Start with what you want your property to do better. Explore design, renovation, furnishing and styling ideas, then discuss the scope, budget and level of support suited to your project.",
     bullets: [
-      "Painting and decorating",
-      "Plumbing and bathroom upgrades",
-      "Electrical, lighting and EICR-compliant installs",
-      "Carpet, laminate, LVT and hardwood flooring",
+      "Space planning, materials and lighting design",
+      "Painting, decorating and flooring",
+      "Furniture, styling and finishing touches",
     ],
-    cta: { label: "See our Renovations page", href: "/renovations" },
+    showAssurance: false,
+    cta: { label: "Explore Interiors & Renovations", href: "/renovations" },
+  },
+  {
+    id: "maintenance",
+    eyebrow: "Maintenance",
+    title: "Maintenance",
+    icon: Wrench,
+    lead: "Plumbing and electrical services for your property.",
+    body:
+      "From plumbing repairs and bathroom upgrades to electrical wiring and installation, tell us what your property needs so we can discuss the work.",
+    bullets: [
+      "Plumbing repairs, bathroom upgrades and re-pipes",
+      "Full or partial rewires and consumer units",
+      "Lighting and electrical installation",
+    ],
+    showAssurance: false,
+    cta: { label: "Explore Maintenance", href: "/maintenance" },
   },
 ];
 
@@ -106,7 +142,7 @@ export default function ServicesPage() {
             <span className="text-gold-400">the services that make a home work.</span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/80 md:text-lg">
-            Management, staging, furnishing and renovations — the specialist
+            Snagging, management, interiors, renovations and maintenance — the specialist
             services we offer alongside our buy, rent and sell advisory, with
             vetted partners in every market we serve.
           </p>
@@ -145,8 +181,8 @@ export default function ServicesPage() {
             Not sure which one?
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-white/80">
-            Send a short enquiry and an advisor will reply within two working
-            hours with the right next step for your situation.
+            Tell us about your property and what you have in mind so our team
+            can discuss the right next step with you.
           </p>
           <SpeakToAdvisor />
         </div>
@@ -203,10 +239,10 @@ function ServiceBlock({
               <SectionCTA cta={section.cta} />
             </div>
 
-            <p className="mt-5 flex items-center gap-2 text-xs text-muted-foreground">
+            {section.showAssurance !== false && <p className="mt-5 flex items-center gap-2 text-xs text-muted-foreground">
               <ShieldCheck className="h-3.5 w-3.5 text-estate-700" />
-              Rent Smart Wales · Propertymark CMP Registered · No hidden fees
-            </p>
+              No hidden fees
+            </p>}
           </div>
         </div>
       </div>

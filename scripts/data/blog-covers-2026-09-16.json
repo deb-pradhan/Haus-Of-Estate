@@ -1,0 +1,38 @@
+[
+  {
+    "filename": "Snagging.jpg",
+    "designer": "Desire",
+    "slug": "snag-it-before-you-sign-it-the-uae-buyer-s-guide-to-snagging",
+    "id": "e47414d1-9e76-47ea-bd1f-f5f779fbbe7d",
+    "oldAsset": "image-7cf7531b6a975874b693afb282bbcb386c285596-1920x1280-jpg",
+    "alt": "Property snagging — magnifying glass over a Dubai skyline.",
+    "sha256": "60e0486df89b786efd6d4834df1e8a895fdcdfa911520f0c1a8fbb288adbd1ac"
+  },
+  {
+    "filename": "Etihad Rail Corridor.jpg",
+    "designer": "Desire",
+    "slug": "the-etihad-rail-corridor-the-ultimate-planning-and-execution-guide-auh-dxb-shj-fuj",
+    "id": "bb71f0a5-7940-4743-8566-3e9dfa092164",
+    "oldAsset": "image-c958378aebb948112aab5fdfb3e5d5c530a3b0d2-1920x1280-jpg",
+    "alt": "The Etihad Rail Corridor — freight train and containers against the UAE city skyline.",
+    "sha256": "2f61a24b5a221ce7785dbf08fa0cc81ee861c1871cb3a40cc6b276b46a0dbaec"
+  },
+  {
+    "filename": "air port.jpg",
+    "designer": "Likith",
+    "slug": "with-the-al-maktoum-airport-why-dubai-south-and-emaar-south-real-estate-jumped-15",
+    "id": "5410e3be-c9e0-42f1-8d45-84c69c68e836",
+    "oldAsset": "image-5d9201b2809f34f136c09549cef6a00598c81790-2240x1260-jpg",
+    "alt": "Architectural illustration of Al Maktoum airport terminal at dusk.",
+    "sha256": "8a499e1e82d0be4477d789c8d830f504391194eaadec2198d2fcc1577ed7ea57"
+  },
+  {
+    "filename": "yas island.jpg",
+    "designer": "Likith",
+    "slug": "disney-in-the-middle-east-inside-the-new-yas-island-theme-park",
+    "id": "df3a7fe3-e81c-416f-807d-b994dd543306",
+    "oldAsset": "image-7e9756fcf7cac69cc2974d7517b93da0a808cdf3-2240x1260-jpg",
+    "alt": "Disney's first Middle East park coming to Yas Island — illustrative castle and fireworks artwork.",
+    "sha256": "28a234bed3adceee6035820b3c28426c9be2fdd655ae0d343547b84889db1e26"
+  }
+]

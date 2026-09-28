@@ -1,0 +1,11 @@
+[
+  { "slug": "lettings-specialist-uk-nationwide-self-employed", "title": "Rentals Specialist - Self Employed", "department": "Lettings Agent", "location": "UK Nationwide", "employmentType": "Self Employed" },
+  { "slug": "real-estate-agent-uk-nationwide-self-employed", "title": "Real Estate Agent - Self Employed", "department": "Sales Agent", "location": "UK Nationwide", "employmentType": "Self Employed" },
+  { "slug": "real-estate-agent-international-self-employed", "title": "Real Estate Agent - Self Employed", "department": "Sales Agent", "location": "International", "employmentType": "Self Employed" },
+  { "slug": "content-writer", "title": "Content Writer", "department": "Career Experience Openings" },
+  { "slug": "video-content-creator", "title": "Video Content Creator", "department": "Career Experience Openings" },
+  { "slug": "graphic-designer", "title": "Graphic Designer", "department": "Career Experience Openings" },
+  { "slug": "content-manager", "title": "Content Manager", "department": "Career Experience Openings" },
+  { "slug": "content-strategist", "title": "Content Strategist", "department": "Career Experience Openings" },
+  { "slug": "social-media-account-manager-intern", "title": "Social Media Account Manager (Intern)", "department": "Career Experience Openings", "employmentType": "Internship" }
+]

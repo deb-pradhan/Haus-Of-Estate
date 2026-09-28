@@ -1,4 +1,4 @@
-import { sanityFetch } from "@/sanity";
+import { sanityFetch } from "@/sanity/live";
 import { FEATURED_TESTIMONIALS_QUERY } from "@/sanity/queries";
 import {
   ReviewsCarousel,

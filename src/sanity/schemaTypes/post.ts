@@ -1,5 +1,9 @@
 import { defineType, defineField, defineArrayMember } from 'sanity'
 import DocumentTextIcon from '@sanity/icons/DocumentText'
+import {
+  EDITORIAL_STATUS_OPTIONS,
+  getEditorialApprovalIssues,
+} from '../editorial-workflow'
 
 export const post = defineType({
   name: 'post',
@@ -114,18 +118,146 @@ export const post = defineType({
       initialValue: () => new Date().toISOString(),
     }),
     defineField({
-      name: 'status',
-      title: 'Status',
+      name: 'editorialApproval',
+      title: 'Editorial approval',
+      type: 'object',
+      description:
+        'Required before the website publication state can be released with Sanity Publish.',
+      fields: [
+        defineField({
+          name: 'contentApproved',
+          title: 'Content, facts and asset rights approved',
+          type: 'boolean',
+          initialValue: false,
+        }),
+        defineField({
+          name: 'seoApproved',
+          title: 'SEO, links and tracking approved',
+          type: 'boolean',
+          initialValue: false,
+        }),
+        defineField({
+          name: 'approvedBy',
+          title: 'Approved by',
+          type: 'string',
+          validation: (rule) => rule.max(160),
+        }),
+        defineField({
+          name: 'approvedAt',
+          title: 'Approved at',
+          type: 'datetime',
+        }),
+        defineField({
+          name: 'notes',
+          title: 'Review notes',
+          type: 'text',
+          rows: 3,
+        }),
+      ],
+    }),
+    defineField({
+      name: 'assistantApproved',
+      title: 'Approved for Haus Property Assistant',
+      type: 'boolean',
+      description:
+        'Only enable after the summary, evidence source, review date, and expiry have been checked.',
+      initialValue: false,
+    }),
+    defineField({
+      name: 'assistantSummary',
+      title: 'Assistant-approved summary',
+      type: 'text',
+      rows: 5,
+      description:
+        'Bounded factual guidance for the assistant. Do not include instructions, personalised advice, or unsupported claims.',
+      validation: (rule) =>
+        rule.max(1200).custom((value, context) => {
+          const document = context.document as { assistantApproved?: boolean }
+          return document?.assistantApproved && !value?.trim()
+            ? 'An approved assistant summary is required.'
+            : true
+        }),
+    }),
+    defineField({
+      name: 'assistantAsOf',
+      title: 'Assistant guidance reviewed at',
+      type: 'datetime',
+      validation: (rule) =>
+        rule.custom((value, context) => {
+          const document = context.document as { assistantApproved?: boolean }
+          return document?.assistantApproved && !value
+            ? 'A review date is required for assistant use.'
+            : true
+        }),
+    }),
+    defineField({
+      name: 'assistantExpiresAt',
+      title: 'Assistant guidance expires at',
+      type: 'datetime',
+      description: 'Expired guidance is excluded automatically.',
+      validation: (rule) =>
+        rule.custom((value, context) => {
+          const document = context.document as {
+            assistantApproved?: boolean
+            assistantAsOf?: string
+          }
+          if (document?.assistantApproved && !value) {
+            return 'An expiry date is required for assistant use.'
+          }
+          if (
+            value &&
+            document?.assistantAsOf &&
+            Date.parse(value) <= Date.parse(document.assistantAsOf)
+          ) {
+            return 'The expiry must be later than the review date.'
+          }
+          return true
+        }),
+    }),
+    defineField({
+      name: 'assistantSourceLabel',
+      title: 'Assistant evidence source label',
       type: 'string',
+      validation: (rule) =>
+        rule.max(120).custom((value, context) => {
+          const document = context.document as { assistantApproved?: boolean }
+          return document?.assistantApproved && !value?.trim()
+            ? 'A source label is required for assistant use.'
+            : true
+        }),
+    }),
+    defineField({
+      name: 'assistantSourceUrl',
+      title: 'Assistant evidence source URL',
+      type: 'url',
+      description: 'Use the authoritative HTTPS page supporting this guidance.',
+      validation: (rule) =>
+        rule.uri({ scheme: ['https'] }).custom((value, context) => {
+          const document = context.document as { assistantApproved?: boolean }
+          return document?.assistantApproved && !value
+            ? 'An HTTPS evidence URL is required for assistant use.'
+            : true
+        }),
+    }),
+    defineField({
+      name: 'status',
+      title: 'Website publication state',
+      type: 'string',
+      description:
+        'The public website only reads Published records. Complete review and approval before selecting Published, then use Sanity Publish to release the saved revision.',
       options: {
-        list: [
-          { title: 'Draft', value: 'draft' },
-          { title: 'Published', value: 'published' },
-          { title: 'Archived', value: 'archived' },
-        ],
+        list: [...EDITORIAL_STATUS_OPTIONS],
         layout: 'radio',
       },
       initialValue: 'draft',
+      validation: (rule) =>
+        rule.required().custom((status, context) => {
+          const issues = getEditorialApprovalIssues({
+            ...context.document,
+            status,
+          })
+          return issues.length === 0 ? true : issues.join(' ')
+        }),
     }),
     defineField({
       name: 'featured',

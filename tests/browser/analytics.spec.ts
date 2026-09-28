@@ -69,7 +69,8 @@ test("consent, navigation, clicks, search and withdrawal work without sending re
 
   await page.locator('a[href="/"]').first().click();
   await expect(page).toHaveURL("http://localhost:3131/");
-  await page.getByRole("button", { name: "Find my match", exact: true }).click();
+  await page.getByRole("form", { name: "Find a property", exact: true })
+    .getByRole("button", { name: "Search properties", exact: true }).click();
   await expect(page).toHaveURL(/\/properties/);
   await expect.poll(async () => (await events(page)).filter((event) => event.event === "haus_property_search").length).toBe(1);
   expect((await events(page)).some((event) => event.event === "lead_form_submit")).toBe(false);
@@ -116,10 +117,10 @@ test("accepted consent never loads analytics on private, preview, draft, or unli
   await expect(page.locator("#haus-gtm")).toHaveCount(0);
   expect(requests).toHaveLength(2);
 
-  const manifest = JSON.parse(readFileSync(".next/prerender-manifest.json", "utf8"));
+  const manifest = JSON.parse(readFileSync(".next-analytics/prerender-manifest.json", "utf8"));
   await context.addCookies([{ name: "__prerender_bypass", value: manifest.preview.previewModeId, domain: "localhost", path: "/", httpOnly: true, sameSite: "Lax" }]);
   await page.goto("/");
-  await expect(page.getByText("Preview Mode", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Exit preview", exact: true })).toBeVisible();
   await expect(page.locator("#haus-gtm")).toHaveCount(0);
   expect(requests).toHaveLength(2);
 });

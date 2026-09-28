@@ -1,19 +1,29 @@
+import approvedCareerRoles from "../../content/careers-roles.json" with { type: "json" };
+
 // Only these public destinations and coarse interaction values may reach GTM.
 export const CONSENT_KEY = "haus.analytics-consent.v1";
 export const CONSENT_EVENT = "haus:analytics-consent";
 export const SETTINGS_EVENT = "haus:cookie-settings";
 export type AnalyticsConsent = "granted" | "denied" | "unknown";
-export type AnalyticsEvent = "haus_page_view" | "haus_property_click" | "haus_article_click" | "haus_contact_click" | "haus_property_search";
+export type AnalyticsEvent =
+  | "haus_page_view" | "haus_property_click" | "haus_article_click" | "haus_contact_click" | "haus_property_search"
+  | "form_view" | "form_start" | "lead_submit_success" | "newsletter_opt_in"
+  | "property_assistant_opened" | "property_assistant_results_shown" | "property_assistant_adviser_handoff";
+
+const LEAD_EVENTS = new Set(["form_view", "form_start", "lead_submit_success", "newsletter_opt_in"]);
+const ASSISTANT_EVENTS = new Set(["property_assistant_opened", "property_assistant_results_shown", "property_assistant_adviser_handoff"]);
+const APPROVED_CAREER_PATHS = new Set(approvedCareerRoles.map(({ slug }) => `/careers/${slug}`));
 
 const PUBLIC_PAGES = new Set([
-  "/", "/about", "/team", "/services", "/renovations", "/faq", "/contact",
-  "/list-property", "/blog", "/properties", "/properties/residential",
+  "/", "/about", "/team", "/services", "/snagging", "/renovations", "/maintenance", "/faq", "/contact",
+  "/list-property", "/register-interest", "/enquire", "/blog", "/properties", "/properties/residential",
   "/properties/commercial", "/legal/privacy-policy", "/legal/cookie-policy", "/legal/terms-of-service",
+  "/mortgage-calculator", "/sitemap", "/careers",
 ]);
 
 export function publicPath(pathname: string): string | null {
   const path = pathname.replace(/\/$/, "") || "/";
-  return PUBLIC_PAGES.has(path) || /^\/(properties|blog)\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(path)
+  return PUBLIC_PAGES.has(path) || APPROVED_CAREER_PATHS.has(path) || /^\/(properties|blog)\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(path)
     ? path : null;
 }
 
@@ -118,6 +128,26 @@ export function trackAnalytics(event: AnalyticsEvent, values: Record<string, unk
     if (["sale", "rent"].includes(String(values.intent))) payload.intent = values.intent;
     if (["residential", "commercial"].includes(String(values.category))) payload.category = values.category;
     if (["ready", "off-plan"].includes(String(values.availability))) payload.availability = values.availability;
+  } else if (LEAD_EVENTS.has(event)) {
+    if (typeof values.surface !== "string" || !["modal", "manual_cta", "newsletter", "register_interest", "query_page"].includes(values.surface)) return;
+    if (typeof values.form_version !== "string" || !/^\d{4}-\d{2}-\d{2}\.v[1-9]\d{0,2}$/.test(values.form_version)) return;
+    payload.form_name = "lead_eoi";
+    payload.form_version = values.form_version;
+    payload.surface = values.surface;
+    // Null explicitly clears previous event values from GTM's persistent layer.
+    payload.interest = typeof values.interest === "string" && ["buy", "rent", "invest", "sell_let", "newsletter_only", "general_enquiry"].includes(values.interest) ? values.interest : null;
+    payload.step = typeof values.step === "number" && Number.isInteger(values.step) && values.step >= 1 && values.step <= 3 ? values.step : null;
+    payload.has_project = typeof values.has_project === "boolean" ? values.has_project : null;
+  } else if (ASSISTANT_EVENTS.has(event)) {
+    const routeScope = page.page_path === "/" ? "home"
+      : ["/properties", "/properties/residential", "/properties/commercial"].includes(page.page_path) ? "properties"
+      : page.page_path.startsWith("/properties/") ? "property_detail" : null;
+    if (!routeScope || values.route_scope !== routeScope) return;
+    payload.route_scope = routeScope;
+    if (event === "property_assistant_results_shown") {
+      if (typeof values.result_count !== "number" || !Number.isFinite(values.result_count)) return;
+      payload.result_count = Math.max(0, Math.min(3, Math.trunc(values.result_count)));
+    }
   } else return;
   window.dataLayer?.push(payload);
 }
