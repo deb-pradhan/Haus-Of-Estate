@@ -1,5 +1,16 @@
 # Tracked social lead links
 
+## Working Google-hosted enquiry link — 28 September 2026
+
+While the website release awaits hosting configuration, Sonia can share
+**https://forms.gle/7fwMEN83ySQoMhps8**. This published Google Form saves into
+the **Form responses 1** tab in the existing Haus organic leads Sheet. One
+clearly marked synthetic submission was verified in that tab on 28 September.
+It does not write into the website database, enrol marketing subscribers, send
+customer emails, or verify the website popup. See the
+[activation handoff](lead-activation-handoff-2026-09-28.md) for access, evidence,
+the response-tab link and Deb's remaining website configuration.
+
 ## “Have a query?” — Sonia's general enquiry link
 
 Built on Release 2 on 17 September 2026; short bio link added on 21 September
@@ -29,9 +40,10 @@ optional marketing choices. It uses the existing durable lead intake/outbox.
 The success screen confirms saved receipt, not email delivery. No campaign or
 customer acknowledgement email was added. Company hosting, database, recipient,
 delivery worker/provider and the agreed spreadsheet integration still need live
-verification. Sonia's Google Sheet has already been supplied and read, but a
-Google Sheets adapter and customer receipt remain unbuilt. Confirm whether it
-replaces Excel and agree columns/automation access before connecting it. No
+verification. The Google Sheets adapter was implemented on 25 September;
+hosted credentials, its dedicated website tab and actual website delivery remain
+unverified. Automatic customer receipt emails remain unbuilt. The separate
+Google-hosted link above has verified Sheet receipt. No
 Google Analytics or GTM access is required for enquiry submission itself.
 
 21 September short-link checks: Next's installed config-routing utility returned

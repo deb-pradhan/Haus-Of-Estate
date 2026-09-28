@@ -1,5 +1,17 @@
 # Haus releases
 
+## Lead collection update — 28 September 2026
+
+The [standalone Google enquiry form](https://forms.gle/7fwMEN83ySQoMhps8) is
+published and a labelled test response was verified in Sonia's existing Sheet.
+This is independent of the website. The Release 2 website adapter is implemented,
+but hosted intake, Sheet delivery and staff inbox receipt remain unverified.
+See the [activation handoff](lead-activation-handoff-2026-09-28.md) for the actual
+Form evidence and one configuration list Deb can apply without giving Surya
+Railway access. Customer acknowledgement emails and consented marketing automation
+remain separate, unactivated work. Older references below to an unbuilt Sheets
+or Resend adapter describe their historical status.
+
 ## Current work — 27 September 2026
 
 Continue Release 2 on `suryak02/azizi-florence-content-scaffold` and draft PR #16.
