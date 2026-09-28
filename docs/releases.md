@@ -10,7 +10,10 @@ See the [activation handoff](lead-activation-handoff-2026-09-28.md) for the actu
 Form evidence and one configuration list Deb can apply without giving Surya
 Railway access. Customer acknowledgement emails and consented marketing automation
 remain separate, unactivated work. Older references below to an unbuilt Sheets
-or Resend adapter describe their historical status.
+or Resend adapter describe their historical status. Deb's [Release 2 build and
+activation handoff](deb-release-2-handoff-2026-09-28.md) compares the cumulative
+changes against merged PR #15 and separates the content deployment from later
+backend activation.
 
 ## Current work — 27 September 2026
 
@@ -31,7 +34,9 @@ phone/WhatsApp links. Application availability remains separate from browsing
 approval. Public enquiry intake also requires backend readiness and must not fall
 back to legacy forms or claim a submission was delivered after a failure.
 Company-inbox and Google Sheet receipt, recruiter receipt and actual GA4 receipt
-remain release dependencies. Preparing code and local tests does not verify them.
+remain activation dependencies for their respective integrations. They do not
+block a content release with backend intake/delivery disabled. Preparing code and
+local tests does not verify those integrations.
 
 Preserve the existing content holds and Release 1 implementation. No production
 deployment, GTM publication, Sanity publication or outbound messages form part of
