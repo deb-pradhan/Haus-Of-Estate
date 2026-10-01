@@ -8,7 +8,7 @@ import {
   type AnalyticsOptions,
 } from "@/lib/analytics";
 
-export function ConsentManager({ gtmId, draft, production, allowedHosts }: AnalyticsOptions) {
+export function ConsentManager({ gtmId, ga4Id, draft, production, allowedHosts }: AnalyticsOptions) {
   const pathname = usePathname();
   const search = useSearchParams();
   const consent = useSyncExternalStore(subscribeConsent, getAnalyticsConsent, () => "unknown" as const);
@@ -17,7 +17,7 @@ export function ConsentManager({ gtmId, draft, production, allowedHosts }: Analy
 
   useEffect(() => {
     const showSettings = () => setSettingsOpen(true);
-    const resume = () => syncAnalytics({ gtmId, draft, production, allowedHosts });
+    const resume = () => syncAnalytics({ gtmId, ga4Id, draft, production, allowedHosts });
     const visibility = () => { if (document.visibilityState === "visible") resume(); };
     // Render after hydration so server and browser agree on local consent.
     const timer = window.setTimeout(() => setMounted(true), 0);
@@ -34,20 +34,20 @@ export function ConsentManager({ gtmId, draft, production, allowedHosts }: Analy
       document.removeEventListener("click", trackPublicClick, true);
       removeGuard();
     };
-  }, [gtmId, draft, production, allowedHosts]);
+  }, [gtmId, ga4Id, draft, production, allowedHosts]);
 
   useEffect(() => {
-    syncAnalytics({ gtmId, draft, production, allowedHosts });
-  }, [consent, pathname, search, gtmId, draft, production, allowedHosts]);
+    syncAnalytics({ gtmId, ga4Id, draft, production, allowedHosts });
+  }, [consent, pathname, search, gtmId, ga4Id, draft, production, allowedHosts]);
 
   // Suppress the prompt along with analytics on private/draft/preview routes.
   const publicScreen = mounted && !draft && publicPath(pathname);
   const eligible = mounted && analyticsPage(window.location.href, draft, production, allowedHosts);
-  if (!publicScreen || (!settingsOpen && (!eligible || consent !== "unknown" || !gtmId))) return null;
+  if (!publicScreen || (!settingsOpen && (!eligible || consent !== "unknown" || !(gtmId || ga4Id)))) return null;
 
   function choose(value: "granted" | "denied") {
     saveAnalyticsConsent(value);
-    syncAnalytics({ gtmId, draft, production, allowedHosts });
+    syncAnalytics({ gtmId, ga4Id, draft, production, allowedHosts });
     setSettingsOpen(false);
   }
 

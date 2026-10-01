@@ -3,7 +3,7 @@ import test from "node:test";
 import {
   analyticsPage, analyticsHosts, CONSENT_KEY, consentFromStorage, getAnalyticsConsent,
   saveAnalyticsConsent, syncAnalytics, stopAnalytics, trackAnalytics,
-  installAnalyticsNavigationGuard, subscribeConsent,
+  installAnalyticsNavigationGuard, subscribeConsent, analyticsMode, ga4EventName,
 } from "../src/lib/analytics.ts";
 
 test("public-page allowlist excludes private, preview, draft, local and non-production pages", () => {
@@ -145,5 +145,81 @@ test("runtime gates scripts, drops backlog and PII, deduplicates pages, revokes 
     delete globalThis.window;
     delete globalThis.document;
     delete globalThis.history;
+  }
+});
+
+test("tag mode: valid GTM takes precedence, GA4 measurement IDs are validated, events map to GA4 names", () => {
+  assert.deepEqual(analyticsMode("GTM-ABC123", "G-FEZF22MELJ"), { mode: "gtm", id: "GTM-ABC123" });
+  assert.deepEqual(analyticsMode(undefined, "G-FEZF22MELJ"), { mode: "ga4", id: "G-FEZF22MELJ" });
+  assert.deepEqual(analyticsMode("invalid", "G-FEZF22MELJ"), { mode: "ga4", id: "G-FEZF22MELJ" });
+  for (const id of ["", "GTM-ABC123", "UA-123-1", "g-abc", "G-ABC 1", "G-ABC&x=1", "G-"]) assert.equal(analyticsMode(undefined, id), null, id);
+  assert.equal(analyticsMode(), null);
+  assert.deepEqual(
+    ["haus_page_view", "haus_property_click", "haus_article_click", "haus_contact_click", "haus_property_search"].map(ga4EventName),
+    ["page_view", "property_click", "article_click", "contact_click", "property_search"],
+  );
+});
+
+test("GA4-direct mode loads gtag.js after consent and emits sanitized gtag events", () => {
+  const storage = new Map();
+  const scripts = [];
+  const calls = { reload: 0 };
+  const listeners = new EventTarget();
+  const location = { href: "https://hausofestate.com/?email=private@example.com", hostname: "hausofestate.com", reload: () => calls.reload++ };
+  globalThis.window = {
+    location, localStorage: { getItem: (key) => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value) },
+    addEventListener: listeners.addEventListener.bind(listeners), removeEventListener: listeners.removeEventListener.bind(listeners), dispatchEvent: listeners.dispatchEvent.bind(listeners),
+  };
+  const removed = [];
+  globalThis.document = { cookie: "_ga=abc", head: { appendChild: (script) => scripts.push(script) }, createElement: () => ({}), getElementById: (id) => ({ remove() { removed.push(id); } }) };
+  const config = { ga4Id: "G-TEST123", draft: false, production: true };
+  const commands = () => window.dataLayer?.filter((entry) => entry[0]) || [];
+  const events = () => commands().filter((entry) => entry[0] === "event");
+  try {
+    syncAnalytics(config);
+    assert.equal(scripts.length, 0);
+    assert.equal(window.dataLayer, undefined);
+
+    saveAnalyticsConsent("granted");
+    syncAnalytics(config);
+    syncAnalytics(config);
+    assert.equal(scripts.length, 1);
+    assert.equal(scripts[0].id, "haus-gtag");
+    assert.equal(scripts[0].src, "https://www.googletagmanager.com/gtag/js?id=G-TEST123");
+    assert.equal(scripts[0].referrerPolicy, "no-referrer");
+    assert.equal(scripts[0].async, true);
+    const [first, , update, js, configCmd] = commands();
+    assert.deepEqual([first[0], first[1], first[2].analytics_storage], ["consent", "default", "denied"]);
+    assert.deepEqual([update[1], update[2].analytics_storage, update[2].ad_storage], ["update", "granted", "denied"]);
+    assert.equal(js[0], "js");
+    assert.deepEqual([configCmd[0], configCmd[1]], ["config", "G-TEST123"]);
+    assert.equal(configCmd[2].send_page_view, false);
+    assert.equal(configCmd[2].allow_google_signals, false);
+    assert.equal(configCmd[2].page_location, "https://hausofestate.com/");
+    assert.equal(window.dataLayer.some((entry) => entry.event), false, "no plain dataLayer events in GA4 mode");
+
+    assert.equal(events().length, 1);
+    assert.equal(events()[0][1], "page_view");
+    trackAnalytics("haus_property_search", { intent: "rent", email: "private@example.com", search_term: "secret" });
+    trackAnalytics("haus_contact_click", { contact_method: "whatsapp" });
+    trackAnalytics("haus_contact_click", { contact_method: "private@example.com" });
+    assert.deepEqual(events().map((entry) => entry[1]), ["page_view", "property_search", "contact_click"]);
+    assert.deepEqual(Object.keys(events()[1][2]).sort(), ["form_location", "intent", "page_location", "page_path", "page_referrer", "page_title"]);
+    assert.equal("event" in events()[1][2], false);
+    assert.doesNotMatch(JSON.stringify([...window.dataLayer].map((entry) => [...entry])), /private@example|secret/);
+
+    // Switching to a GTM container mid-document unloads via reload rather than mixing tags.
+    syncAnalytics({ ...config, gtmId: "GTM-TEST123" });
+    assert.equal(calls.reload, 1);
+    assert.equal(window["ga-disable-G-TEST123"], true);
+    assert.ok(removed.includes("haus-gtag"));
+
+    saveAnalyticsConsent("denied");
+    syncAnalytics(config);
+    assert.equal(scripts.length, 1);
+  } finally {
+    stopAnalytics(false);
+    delete globalThis.window;
+    delete globalThis.document;
   }
 });

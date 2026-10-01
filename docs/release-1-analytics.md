@@ -42,6 +42,17 @@ This application boundary depends on the container below. Do not publish arbitra
 6. Do **not** mark property search, property/article clicks or contact clicks as lead submissions/key events. They measure intent, not a successfully received enquiry. Release 2 must gate any actual successful lead event through the same consent helper and explicitly allowlist its fields. GA4 may additionally emit its own session/first-visit/engagement system events after consent; these must inherit the sanitized page settings.
 7. Register custom dimensions for the additional parameters only if reports need them. Do not add free text dimensions. Publish the reviewed GTM version only after testing. Set `NEXT_PUBLIC_GTM_ID` in the production build environment and rebuild; the variable is embedded at build time.
 
+## GA4 direct mode (no GTM)
+
+Branch `feat/ga4-direct` adds a fallback for when no GTM container is available. Owner checklist: [`ga4-setup.md`](ga4-setup.md).
+
+- **Mode selection (build time):** `NEXT_PUBLIC_GTM_ID` set → GTM mode as above (GTM always wins if both IDs are set). GTM unset and `NEXT_PUBLIC_GA4_ID` set (e.g. `G-FEZF22MELJ`) → GA4 direct mode. Neither set → no analytics. All host, route, consent and withdrawal rules above apply unchanged in both modes.
+- **Loading:** `gtag.js?id=G-…` loads only after the visitor accepts analytics, on an allowed host and public page. Nothing is requested before consent or after rejection.
+- **Config:** `gtag('config', …)` with `send_page_view: false`, `allow_google_signals: false`, `allow_ad_personalization_signals: false`; `ad_storage`, `ad_user_data` and `ad_personalization` stay denied.
+- **Events:** sent directly with `gtag('event', …)` using the GA4 names from the table above — `page_view`, `property_click`, `article_click`, `contact_click`, `property_search` — and the same allowlisted parameters (`page_location`, `page_path`, `page_title`, `page_referrer`, plus `content_path` / `contact_method` / `form_location`, `intent`, `category`, `availability`). No GTM data-layer mapping is involved.
+- **GA4 Admin still required:** Enhanced measurement off, Google signals and ads personalisation off (steps 2–3 and 6–7 above apply to the property directly).
+- **Build:** `NEXT_PUBLIC_*` values are embedded by `next build`. The `Dockerfile` must declare `ARG NEXT_PUBLIC_GA4_ID` (and `NEXT_PUBLIC_GTM_ID`, `NEXT_PUBLIC_ANALYTICS_ALLOWED_HOSTS`) before the build step so Railway service variables reach the build. Changing any of them requires a redeploy.
+
 ## Verification before calling analytics live
 
 Automated code checks use `npm run test:seo`; they do not demonstrate actual GA4 receipt. Run `npm run test:analytics:browser` for a production build and six Chromium browser scenarios across desktop and Pixel 7 viewports. Install the pinned browser with `npx playwright install chromium` once if needed. This suite explicitly allows only `localhost`, uses placeholder `GTM-TEST123`, intercepts GTM with a local stub, and aborts Google analytics/ad endpoints before any request leaves the browser. It checks consent/rejection persistence, sanitized SPA navigation and clicks, search classification, withdrawal/cookie removal, private-route document navigation, draft mode, an unlisted loopback host, and cross-tab withdrawal. Screenshots and failure traces go to ignored `test-results/`. `ANALYTICS_SKIP_BUILD=1` can reuse an unchanged build made by this exact test configuration during test-only iteration; leave it unset for release verification.
