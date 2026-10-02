@@ -93,12 +93,12 @@ export function Footer({ careersEmail }: { careersEmail: string }) {
           </div>
 
           <Image
-            src="/badges/policybee-insured.png"
+            src="/badges/policybee-insured-white.png"
             alt="Insured through PolicyBee"
-            width={128}
-            height={128}
-            sizes="128px"
-            className="mt-5 h-32 w-32 object-contain"
+            width={96}
+            height={96}
+            sizes="96px"
+            className="mt-5 h-24 w-24 object-contain"
           />
 
           {/* Quick actions */}
