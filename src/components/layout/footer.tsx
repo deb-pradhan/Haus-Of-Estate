@@ -95,10 +95,10 @@ export function Footer({ careersEmail }: { careersEmail: string }) {
           <Image
             src="/badges/policybee-insured-white.png"
             alt="Insured through PolicyBee"
-            width={96}
-            height={96}
-            sizes="96px"
-            className="mt-5 h-24 w-24 object-contain"
+            width={80}
+            height={80}
+            sizes="80px"
+            className="mt-5 h-20 w-20 object-contain"
           />
 
           {/* Quick actions */}

@@ -1,6 +1,6 @@
 # Branding and property brochures — 2 October 2026
 
-Surya relayed Sonia's request for a smaller, white PolicyBee badge. The footer now uses the supplied white PNG unchanged at 96 × 96 CSS pixels, reduced from 128 × 128. Source SHA-256: `c5e949acec0c41f053e47df0932e06d75e2aacf941e08b0bb46b782bcf8ec43a`. Browser review confirmed the new image loads at the intended size. The earlier dark asset is preserved; it is no longer used by the footer.
+Surya relayed Sonia's request for a smaller, white PolicyBee badge. The footer now uses the supplied white PNG unchanged at 80 × 80 CSS pixels, reduced from 128 × 128 via an initial 96 × 96 version. Surya requested the further reduction after reviewing that version. Source SHA-256: `c5e949acec0c41f053e47df0932e06d75e2aacf941e08b0bb46b782bcf8ec43a`. Browser review confirmed the new image loads at the intended size. The earlier dark asset is preserved; it is no longer used by the footer.
 
 Surya identified Appollo and Poppins as the intended brand fonts and mentioned a new Haus logo, but confirmed that the logo and Appollo files are not available and their heading/body assignments are not yet known. Keep the current typography and Haus logo until the approved assets and usage details arrive. Do not substitute a similarly named font or assume existing logo variants are the new approval.
 
