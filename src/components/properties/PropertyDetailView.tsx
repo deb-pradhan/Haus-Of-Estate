@@ -14,7 +14,9 @@ import { sanityDocumentIdSchema } from '@/lib/saved-content/contracts'
 import { canonicalHausUrl } from '@/lib/share'
 import { PropertyPrice } from '@/components/currency/property-price'
 import { propertyPriceInput, type PropertyPricing } from '@/lib/currency'
+import type { PropertyDesign, PropertyInteriorScheme } from '@/lib/property-designs'
 import { PropertyPhotoBranding } from './property-photo-branding'
+import { PropertyDesignExplorer } from './PropertyDesignExplorer'
 
 interface LocationBenefit {
   destination?: string
@@ -50,6 +52,8 @@ export interface PropertyDetail extends PropertyPricing {
   featuredImage?: { alt?: string } & Record<string, unknown>
   showHausLogo?: boolean
   gallery?: (Record<string, unknown> & { alt?: string })[]
+  designVariants?: PropertyDesign[]
+  interiorSchemes?: PropertyInteriorScheme[]
   videoUrl?: string
   enquiryEmail?: string
 }
@@ -79,6 +83,9 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
   // The page also passes Draft Mode so those records cannot trigger public actions.
   const publicActionsEnabled = !preview && !draftPreview && sanityDocumentIdSchema.safeParse(property._id).success
   const canonicalUrl = canonicalHausUrl(`/properties/${property.slug}`)
+  const hasDesigns = Boolean(property.designVariants?.length)
+  const firstDesign = property.designVariants?.[0]
+  const hero = firstDesign?.images[0] ?? media.hero
   const enquiryInterest =
     property.listingType?.length === 1 && property.listingType[0] === 'rent'
       ? 'rent'
@@ -122,7 +129,7 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
   facts.push({
     icon: Maximize2,
     label: 'Size',
-    value: property.sizeDisplay || (preview ? 'Awaiting confirmation' : 'On application'),
+    value: hasDesigns ? 'Varies by design' : property.sizeDisplay || (preview ? 'Awaiting confirmation' : 'On application'),
   })
   facts.push({
     icon: Building2,
@@ -136,7 +143,7 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
       value: property.view,
     })
   }
-  if (property.plotSizeDisplay) {
+  if (property.plotSizeDisplay && !hasDesigns) {
     facts.push({
       icon: Maximize2,
       label: 'Plot',
@@ -188,10 +195,10 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
 
       {/* Hero image */}
       <div className="relative aspect-[16/9] max-h-[460px] w-full overflow-hidden bg-estate-700">
-        {media.hero ? (
+        {hero ? (
           <Image
-            src={media.hero.src}
-            alt={media.hero.alt}
+            src={hero.src}
+            alt={hero.alt}
             fill
             sizes="100vw"
             className="object-cover"
@@ -203,8 +210,11 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
             <Building2 className="h-16 w-16 text-white/25" />
           </div>
         )}
-        {media.hero && <PropertyPhotoBranding enabled={property.showHausLogo} />}
+        {hero && <PropertyPhotoBranding enabled={property.showHausLogo} />}
       </div>
+      {firstDesign?.images[0] && (
+        <p className="mx-auto max-w-6xl px-4 pt-3 text-xs leading-relaxed text-muted-foreground md:px-6">{firstDesign.label} · {firstDesign.images[0].label || firstDesign.images[0].alt}</p>
+      )}
 
       <div className="mx-auto max-w-6xl px-4 py-12 md:px-6 md:py-16">
         <div className="grid gap-12 lg:grid-cols-[1fr_340px]">
@@ -275,6 +285,17 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
                 </div>
               ))}
             </div>
+
+            {hasDesigns && (
+              <PropertyDesignExplorer
+                designs={property.designVariants!}
+                interiorSchemes={property.interiorSchemes}
+                project={projectContext}
+                interactionsEnabled={publicActionsEnabled}
+                preview={Boolean(preview)}
+                showHausLogo={property.showHausLogo}
+              />
+            )}
 
             {/* Description */}
             {property.description ? (
@@ -377,7 +398,7 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
               )
             })()}
 
-            {media.gallery.length > 0 && (
+            {!hasDesigns && media.gallery.length > 0 && (
               <div className="mt-10">
                 <h2 className="font-serif text-xl font-medium text-estate-700">
                   Gallery
@@ -411,10 +432,11 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
                 <>
                   <p className="font-serif text-xs font-medium uppercase tracking-[0.22em] text-gold-500">Listing details</p>
                   <p className="mt-2 font-serif text-2xl font-semibold text-estate-700"><PropertyPrice {...propertyPriceInput(property)} fallback="Awaiting confirmation" /></p>
+                  {hasDesigns && <p className="mt-2 text-xs leading-relaxed text-muted-foreground">Collection pricing. Individual design and plot pricing is confirmed on enquiry.</p>}
                   <dl className="mt-5 space-y-4 text-sm">
                     {[
                       ...(!property.priceDisplay ? [['Pricing', undefined]] : []),
-                      ['Sizes', property.sizeDisplay],
+                      ['Sizes', hasDesigns ? 'See plot and sellable areas by design' : property.sizeDisplay],
                       ['Payment plan', property.paymentPlan],
                       ['Handover', property.completionStatus],
                       ['Availability', undefined],
@@ -436,6 +458,7 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
                   <p className="mt-2 font-serif text-2xl font-semibold text-estate-700">
                     <PropertyPrice {...propertyPriceInput(property)} />
                   </p>
+                  {hasDesigns && <p className="mt-2 text-xs leading-relaxed text-muted-foreground">Collection pricing. Individual design and plot pricing is confirmed on enquiry.</p>}
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                     Pricing, exact sizes and current availability are confirmed on
                     enquiry. We&apos;ll connect you with a vetted agent for this

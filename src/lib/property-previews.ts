@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 import { lstat, readFile, realpath } from 'node:fs/promises'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
+import type { PropertyDesign, PropertyDesignImage, PropertyInteriorScheme } from './property-designs'
 
 export type PropertyPreviewEnvironment = {
   NODE_ENV?: string
@@ -31,6 +32,9 @@ export type PropertyPreviewDocument = Record<string, unknown> & {
   description?: unknown[]
   keyFeatures?: string[]
   amenities?: string[]
+  designVariants?: PropertyDesign[]
+  interiorSchemes?: PropertyInteriorScheme[]
+  brochureKey?: string
 }
 
 export type PropertyPreview = {
@@ -193,7 +197,114 @@ function displayDocument(document: Record<string, unknown>): PropertyPreviewDocu
   return display
 }
 
-async function readBundle(options: PropertyPreviewOptions): Promise<PreviewBundle | null> {
+// Variant evidence is optional for older bundles. It is read only from the same
+// explicitly configured directory and never exposes its source paths or PDFs.
+async function attachVariantEvidence(root: string, previews: PropertyPreview[], images: Map<string, PreparedImage>) {
+  try {
+    await lstat(path.join(root, 'variants.json'))
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return
+    throw error
+  }
+  const bundle = object(JSON.parse(await metadata(root, 'variants.json')))
+  requireValue(bundle.schemaVersion === 1 && Array.isArray(bundle.images) && bundle.images.length <= 256 &&
+    Array.isArray(bundle.documents) && bundle.documents.length <= previews.length)
+  const byId = new Map<string, PreparedImage>()
+  const usedIds = new Set<string>()
+  for (const entry of bundle.images) {
+    const asset = object(entry)
+    const output = object(asset.output)
+    requireValue(typeof asset.id === 'string' && /^[a-zA-Z0-9_-]{1,96}$/.test(asset.id) && !byId.has(asset.id))
+    requireValue(typeof output.relativePath === 'string' && output.relativePath.startsWith('images/'))
+    const filename = output.relativePath.slice(7)
+    requireValue(filenameIsSafe(filename) && !images.has(filename) &&
+      output.format === 'jpeg' && Number.isSafeInteger(output.bytes) &&
+      (output.bytes as number) > 0 && (output.bytes as number) <= MAX_IMAGE_BYTES &&
+      typeof output.sha256 === 'string' && /^[a-f0-9]{64}$/.test(output.sha256))
+    requireValue([output.width, output.height].every((n) => Number.isSafeInteger(n) && (n as number) > 0 && (n as number) <= 2560))
+    const absolutePath = await regularFile(root, output.relativePath, MAX_IMAGE_BYTES)
+    requireValue(typeof output.path === 'string' && samePath(absolutePath, output.path) &&
+      (await lstat(absolutePath)).size === output.bytes)
+    const prepared = { id: asset.id, filename, absolutePath, bytes: output.bytes as number, sha256: output.sha256 }
+    byId.set(asset.id, prepared)
+    // Reserve filenames even for unassigned images, preventing alias collisions.
+    images.set(filename, prepared)
+  }
+  const label = (value: unknown, max = 240): string => {
+    requireValue(nonempty(value) && value.length <= max)
+    return value
+  }
+  const key = (value: unknown): string => {
+    requireValue(typeof value === 'string' && /^[a-z0-9][a-z0-9-]{0,95}$/.test(value))
+    return value
+  }
+  const media = (value: unknown): PropertyDesignImage[] => {
+    requireValue(Array.isArray(value) && value.length > 0 && value.length <= 12)
+    return value.map((entry) => {
+      const reference = object(entry)
+      requireValue(typeof reference.imageId === 'string')
+      const image = byId.get(reference.imageId)
+      requireValue(image)
+      usedIds.add(image.id)
+      return {
+        src: MEDIA_PATH + encodeURIComponent(image.filename), alt: label(reference.alt, 400),
+        ...(reference.label === undefined ? {} : { label: label(reference.label) }),
+      }
+    })
+  }
+  const area = (value: unknown): number => {
+    requireValue(typeof value === 'number' && Number.isFinite(value) && value > 0 && value <= 10000000)
+    return value
+  }
+  const seenSlugs = new Set<string>()
+  for (const entry of bundle.documents) {
+    const definition = object(entry)
+    const slug = key(definition.slug)
+    requireValue(!seenSlugs.has(slug))
+    seenSlugs.add(slug)
+    const preview = previews.find((item) => item.document.slug.current === slug)
+    requireValue(preview?.kind === 'home-type' && Array.isArray(definition.designVariants) &&
+      definition.designVariants.length > 0 && definition.designVariants.length <= 64)
+    const seenKeys = new Set<string>()
+    preview.document.designVariants = definition.designVariants.map((entry): PropertyDesign => {
+      const design = object(entry)
+      const id = key(design._key)
+      requireValue(!seenKeys.has(id))
+      seenKeys.add(id)
+      requireValue(design.plotAreaStatus === 'brochure' || design.plotAreaStatus === 'conflict')
+      requireValue(['standalone', 'corner', 'middle'].includes(design.position as string))
+      requireValue(preview.document.unitType === 'Villa' ? design.position === 'standalone' : design.position !== 'standalone')
+      if (design.rowHomes !== undefined) requireValue([4, 6, 8].includes(design.rowHomes as number))
+      return {
+        _key: id, label: label(design.label),
+        position: design.position as PropertyDesign['position'],
+        ...(design.family === undefined ? {} : { family: label(design.family) }),
+        ...(design.rowHomes === undefined ? {} : { rowHomes: design.rowHomes as number }),
+        // Conflicting source figures remain in private evidence, not client props.
+        ...(design.plotAreaStatus === 'conflict' ? {} : { plotAreaSqFt: area(design.plotAreaSqFt) }),
+        sellableAreaSqFt: area(design.sellableAreaSqFt), plotAreaStatus: design.plotAreaStatus,
+        ...(design.plotAreaStatus === 'conflict' || design.areaNote === undefined ? {} : { areaNote: label(design.areaNote, 600) }),
+        ...(design.summary === undefined ? {} : { summary: label(design.summary, 1000) }),
+        images: media(design.images), floorPlans: media(design.floorPlans),
+      }
+    })
+    if (definition.brochureKey !== undefined) preview.document.brochureKey = key(definition.brochureKey)
+    if (definition.interiorSchemes !== undefined) {
+      requireValue(Array.isArray(definition.interiorSchemes) && definition.interiorSchemes.length <= 8)
+      const schemeKeys = new Set<string>()
+      preview.document.interiorSchemes = definition.interiorSchemes.map((entry): PropertyInteriorScheme => {
+        const scheme = object(entry)
+        const id = key(scheme._key)
+        requireValue(!schemeKeys.has(id))
+        schemeKeys.add(id)
+        return { _key: id, label: label(scheme.label), images: media(scheme.images) }
+      })
+    }
+  }
+  for (const image of byId.values()) if (!usedIds.has(image.id)) images.delete(image.filename)
+}
+
+async function readBundleUncached(options: PropertyPreviewOptions): Promise<PreviewBundle | null> {
   const env = options.env ?? process.env
   if (env.NODE_ENV !== 'development') return null
   const configuredRoot = env.HAUS_PROPERTY_PREVIEW_DIR?.trim()
@@ -330,10 +441,44 @@ async function readBundle(options: PropertyPreviewOptions): Promise<PreviewBundl
     for (const [filename, image] of images) {
       if (!usedImageIds.has(image.id)) images.delete(filename)
     }
+    await attachVariantEvidence(root, previews, images)
     return { root, previews, images }
   } catch {
     // Local preview is optional. Missing, malformed or incomplete output never
     // falls back to another folder, Sanity or the public property catalogue.
+    return null
+  }
+}
+
+let bundleCache: { fingerprint: string; result: Promise<PreviewBundle | null> } | undefined
+
+async function readBundle(options: PropertyPreviewOptions): Promise<PreviewBundle | null> {
+  // Explicit environments are used for isolated validation. Runtime media
+  // requests share validation so every thumbnail does not rescan every image.
+  // Metadata is re-read on each request; served image paths/bytes are still
+  // independently checked below, including after a cache hit.
+  if (options.env) return readBundleUncached(options)
+  if (process.env.NODE_ENV !== 'development' || !process.env.HAUS_PROPERTY_PREVIEW_DIR) return null
+  try {
+    const configuredRoot = process.env.HAUS_PROPERTY_PREVIEW_DIR.trim()
+    requireValue(path.isAbsolute(configuredRoot) && !/^[\\/]{2}/.test(configuredRoot) &&
+      !/^[a-z][a-z0-9+.-]*:\/\//i.test(configuredRoot))
+    const root = path.resolve(configuredRoot)
+    const entries = await Promise.all(['preparation-report.json', 'properties.staging-draft.ndjson', 'variants.json'].map(async (filename) => {
+      try { return await metadata(root, filename) } catch (error) {
+        if (filename === 'variants.json' && (error as NodeJS.ErrnoException).code === 'ENOENT') return ''
+        throw error
+      }
+    }))
+    const fingerprint = root + ':' + createHash('sha256').update(JSON.stringify(entries)).digest('hex')
+    if (bundleCache?.fingerprint !== fingerprint) {
+      bundleCache = { fingerprint, result: readBundleUncached(options) }
+    }
+    const result = await bundleCache.result
+    if (!result) bundleCache = undefined
+    return result
+  } catch {
+    bundleCache = undefined
     return null
   }
 }

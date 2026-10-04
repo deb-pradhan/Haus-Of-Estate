@@ -13,6 +13,15 @@ const currencyOptions = [
   { title: 'USD - US dollar', value: 'USD' },
 ]
 
+const designImage = defineArrayMember({
+  type: 'image',
+  options: { hotspot: false },
+  fields: [
+    defineField({ name: 'alt', title: 'Alt text', type: 'string', validation: (rule) => rule.required() }),
+    defineField({ name: 'label', title: 'Caption', type: 'string' }),
+  ],
+})
+
 export const property = defineType({
   name: 'property',
   title: 'Property',
@@ -518,6 +527,57 @@ export const property = defineType({
           ],
         }),
       ],
+    }),
+    defineField({
+      name: 'designVariants',
+      title: 'Home designs',
+      type: 'array',
+      description: 'Optional brochure designs within this collection. Preserve source labels; these are not individual available units or selectable combinations.',
+      of: [defineArrayMember({
+        name: 'propertyDesign',
+        title: 'Home design',
+        type: 'object',
+        fields: [
+          defineField({ name: 'label', title: 'Source design label', type: 'string', validation: (rule) => rule.required() }),
+          defineField({ name: 'family', title: 'Named family', type: 'string', description: 'Use only a family explicitly identified by the supplied source.' }),
+          defineField({ name: 'rowHomes', title: 'Homes in the row', type: 'number', description: 'Connected homes in the row, not bedrooms.', validation: (rule) => rule.integer().min(2) }),
+          defineField({
+            name: 'position', title: 'Position', type: 'string',
+            options: { list: [{ title: 'Corner', value: 'corner' }, { title: 'Middle', value: 'middle' }, { title: 'Standalone', value: 'standalone' }] },
+          }),
+          defineField({
+            name: 'plotAreaStatus', title: 'Plot area evidence', type: 'string', initialValue: 'brochure',
+            options: { list: [{ title: 'Brochure figure', value: 'brochure' }, { title: 'Conflicting source figures — hide plot area', value: 'conflict' }] },
+            description: 'Conflicting plot figures are omitted from the public page until confirmed.',
+          }),
+          defineField({ name: 'plotAreaSqFt', title: 'Plot area (sq ft)', type: 'number', validation: (rule) => rule.positive() }),
+          defineField({ name: 'sellableAreaSqFt', title: 'Sellable area (sq ft)', type: 'number', description: 'Preserve the brochure measurement term; do not substitute built-up or internal area.', validation: (rule) => rule.required().positive() }),
+          defineField({ name: 'areaNote', title: 'Public area note', type: 'text', rows: 2, description: 'For conflicting sources, say the plot is awaiting confirmation. Do not repeat disputed numeric figures.' }),
+          defineField({ name: 'summary', title: 'Design summary', type: 'text', rows: 3 }),
+          defineField({ name: 'brochureKey', title: 'Collection brochure key', type: 'string', description: 'Internal collection identity for future approved fulfilment. This is not a public download URL.' }),
+          defineField({ name: 'images', title: 'Matched design images', type: 'array', of: [designImage] }),
+          defineField({ name: 'floorPlans', title: 'Matched floor plans', type: 'array', description: 'Upload uncropped plan images. Plans are shown publicly and can be opened to zoom.', of: [designImage] }),
+          defineField({ name: 'brochureRevision', title: 'Brochure revision', type: 'string', description: 'Internal source reference; not shown on the website.' }),
+          defineField({ name: 'sourceEvidence', title: 'Source evidence', type: 'text', rows: 3, description: 'Internal source filename/page references and unresolved mappings; not shown on the website.' }),
+        ],
+        preview: { select: { title: 'label', subtitle: 'family', media: 'images.0' } },
+      })],
+    }),
+    defineField({
+      name: 'interiorSchemes',
+      title: 'Interior schemes shown in the brochure',
+      type: 'array',
+      description: 'Separate reference imagery. This does not establish selectable finishes, applicable homes, upgrades or included furniture.',
+      of: [defineArrayMember({
+        name: 'propertyInteriorScheme',
+        title: 'Interior scheme',
+        type: 'object',
+        fields: [
+          defineField({ name: 'label', title: 'Source scheme label', type: 'string', validation: (rule) => rule.required() }),
+          defineField({ name: 'images', title: 'Scheme images', type: 'array', of: [designImage] }),
+        ],
+        preview: { select: { title: 'label', media: 'images.0' } },
+      })],
     }),
     defineField({
       name: 'videoUrl',

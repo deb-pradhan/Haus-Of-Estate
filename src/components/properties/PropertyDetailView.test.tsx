@@ -10,6 +10,7 @@ const controls = vi.hoisted(() => ({
   share: vi.fn(),
   project: vi.fn(),
   lead: vi.fn(),
+  openLead: vi.fn(),
   draftMode: vi.fn(),
   fetch: vi.fn(),
 }))
@@ -39,6 +40,9 @@ vi.mock('@/components/lead-eoi/lead-eoi-trigger', () => ({
     return createElement('button', null, children)
   },
 }))
+vi.mock('@/components/lead-eoi/lead-eoi-controller', () => ({
+  useLeadEoi: () => ({ enabled: true, openLead: controls.openLead }),
+}))
 
 const property: PropertyDetail = {
   _id: 'property-florence',
@@ -66,6 +70,88 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs())
 
 describe('shared property details', () => {
+  it('preserves a Monaco-style property without designs, including its original media, sizes and public actions', () => {
+    const monaco: PropertyDetail = {
+      ...property,
+      _id: 'property-monaco',
+      title: 'Azizi Monaco Mansions',
+      slug: 'azizi-monaco-mansions',
+      unitType: 'Villa',
+      sizeDisplay: 'Size supplied by listing',
+      plotSizeDisplay: 'Plot supplied by listing',
+    }
+    const monacoMedia = {
+      hero: { src: '/monaco-exterior.jpg', alt: 'Monaco exterior' },
+      gallery: [{ src: '/monaco-interior.jpg', alt: 'Monaco interior' }],
+    }
+    const html = renderToStaticMarkup(<PropertyDetailView property={monaco} media={monacoMedia} />)
+
+    expect(html).toContain('src="/monaco-exterior.jpg"')
+    expect(html).toContain('src="/monaco-interior.jpg"')
+    expect(html).toContain('Size supplied by listing')
+    expect(html).toContain('Plot supplied by listing')
+    expect(html).not.toContain('Home designs')
+    expect(html).not.toContain('Varies by design')
+    expect(html).not.toContain('Request full brochure')
+    expect(controls.save).toHaveBeenCalledWith(expect.objectContaining({ sanityDocumentId: monaco._id }))
+    expect(controls.share).toHaveBeenCalledWith(expect.objectContaining({ url: 'https://hausofestate.com/properties/azizi-monaco-mansions' }))
+    expect(controls.lead).toHaveBeenCalledWith(expect.objectContaining({ project: expect.objectContaining({ slug: monaco.slug }) }))
+  })
+
+  it.each(['local', 'sanity'] as const)('shows matched collection designs and hides disputed plot figures while disabling brochure requests in %s preview', (previewKind) => {
+    const collection: PropertyDetail = {
+      ...property,
+      sizeDisplay: 'Old collection size',
+      plotSizeDisplay: 'Old collection plot',
+      designVariants: [{
+        _key: 'type-a',
+        label: 'Brochure Type A',
+        plotAreaStatus: 'conflict',
+        plotAreaSqFt: 2260,
+        sellableAreaSqFt: 2660,
+        images: [{ src: '/type-a-exterior.jpg', alt: 'Type A exterior' }],
+        floorPlans: [{ src: '/type-a-plan.jpg', alt: 'Type A floor plan', label: 'Ground and first floor' }],
+      }, {
+        _key: 'type-b',
+        label: 'Brochure Type B',
+        plotAreaSqFt: 3363,
+        sellableAreaSqFt: 3714,
+        images: [{ src: '/type-b-exterior.jpg', alt: 'Type B exterior' }],
+        floorPlans: [],
+      }],
+    }
+    const html = renderToStaticMarkup(
+      <PropertyDetailView
+        property={collection}
+        media={media}
+        preview={previewKind === 'local' ? { kind: 'home-type' } : undefined}
+        draftPreview={previewKind === 'sanity'}
+      />,
+    )
+
+    expect(html.match(/<img[^>]+src="([^"]+)"/)?.[1]).toBe('/type-a-exterior.jpg')
+    expect(html).not.toContain(media.hero.src)
+    expect(html).not.toContain(media.gallery[0].src)
+    expect(html).toContain('Home designs')
+    expect(html).toContain('Varies by design')
+    expect(html).not.toContain('Old collection size')
+    expect(html).not.toContain('Old collection plot')
+    expect(html).toContain('Brochure Type A')
+    expect(html).toContain('Brochure Type B')
+    expect(html).toContain('Plot area')
+    expect(html).toContain('Sellable area')
+    expect(html).toContain('2,660 sq ft')
+    expect(html).toContain('Awaiting confirmation')
+    expect(html).not.toContain('2,260')
+    expect(html).not.toContain('2260')
+    expect(html).toContain('href="/type-a-plan.jpg" target="_blank"')
+    expect(html).toMatch(/<button\b[^>]*disabled=""[^>]*>Request full brochure<\/button>/)
+    expect(controls.openLead).not.toHaveBeenCalled()
+    expect(controls.lead).not.toHaveBeenCalled()
+    expect(controls.save).not.toHaveBeenCalled()
+    expect(controls.share).not.toHaveBeenCalled()
+  })
+
   it('keeps existing photos unbranded and preserves their sources when a listing opts into the logo', () => {
     const original = renderToStaticMarkup(<PropertyDetailView property={property} media={media} />)
     const branded = renderToStaticMarkup(

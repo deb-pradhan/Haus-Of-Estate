@@ -27,7 +27,7 @@ export default async function PropertyPreviewsPage() {
           <span aria-current="page">Azizi Florence</span>
         </nav>
         <div className="mt-4 rounded-xl border border-gold-500/30 bg-gold-500/10 px-4 py-3 text-xs leading-relaxed text-estate-700">
-          <strong>Draft preview · not published.</strong> Prices apply to Clusters 1 & 2. Sizes, payment plans, handover and availability await confirmation. Enquiries are disabled.
+          <strong>Draft preview · not published.</strong> Prices apply to Clusters 1 & 2. Design areas are brochure figures; flagged plot areas await clarification. Current payment terms, handover and availability require confirmation. Enquiries are disabled.
         </div>
 
         {previews.length === 0 ? (
@@ -78,11 +78,12 @@ export default async function PropertyPreviewsPage() {
                     {homes.map(({ document, media }) => (
                       <Link key={document._id} href={`/dev/property-previews/${document.slug.current}`} className="group overflow-hidden rounded-2xl border border-border bg-surface transition-shadow hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-estate-700">
                         <div className="relative aspect-[3/2] overflow-hidden bg-estate-700">
-                          <Image src={media.hero.src} alt={media.hero.alt} fill unoptimized sizes="(min-width: 1024px) 560px, (min-width: 768px) 50vw, 100vw" className="object-cover transition-transform duration-300 group-hover:scale-[1.03] motion-reduce:transform-none" />
+                          <Image src={document.designVariants?.[0]?.images[0]?.src ?? media.hero.src} alt={document.designVariants?.[0]?.images[0]?.alt ?? media.hero.alt} fill unoptimized sizes="(min-width: 1024px) 560px, (min-width: 768px) 50vw, 100vw" className="object-cover transition-transform duration-300 group-hover:scale-[1.03] motion-reduce:transform-none" />
                         </div>
                         <div className="p-5 md:p-6">
                           <h4 className="font-serif text-2xl font-medium text-estate-700">{document.bedrooms}-bedroom {title.toLowerCase()}</h4>
                           {document.priceAmount !== undefined && document.priceCurrency === 'AED' && <p className="mt-2 text-sm text-estate-700"><PropertyPrice amount={document.priceAmount} currency={document.priceCurrency} prefix="From " /></p>}
+                          {document.designVariants?.length ? <p className="mt-2 text-xs text-muted-foreground">{document.designVariants.length} brochure designs · View plans and areas</p> : null}
                           <span className="mt-5 flex items-center justify-between border-t border-border pt-4 text-sm text-estate-700">Explore the designs <ArrowRight aria-hidden className="h-4 w-4" /></span>
                         </div>
                       </Link>

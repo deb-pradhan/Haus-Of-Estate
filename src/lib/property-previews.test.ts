@@ -230,6 +230,22 @@ describe('local property preview bundles', () => {
 })
 
 describe('local preview media', () => {
+  it('invalidates runtime metadata cache and still checks image bytes after a cache hit', async () => {
+    vi.stubEnv('NODE_ENV', 'development')
+    vi.stubEnv('HAUS_PROPERTY_PREVIEW_DIR', outputRoot)
+    expect((await loadPropertyPreviews()).length).toBe(2)
+    expect(await loadPropertyPreviewMedia('aerial.jpg')).toEqual(new Uint8Array(jpeg))
+    vi.stubEnv('HAUS_PROPERTY_PREVIEW_DIR', path.relative(process.cwd(), outputRoot))
+    expect(await loadPropertyPreviews()).toEqual([])
+    vi.stubEnv('HAUS_PROPERTY_PREVIEW_DIR', outputRoot)
+    const altered = Buffer.from(jpeg)
+    altered[altered.length - 1] ^= 1
+    await writeFile(path.join(outputRoot, 'images', 'aerial.jpg'), altered)
+    expect(await loadPropertyPreviewMedia('aerial.jpg')).toBeNull()
+    await writeFile(path.join(outputRoot, 'preparation-report.json'), '{}')
+    expect(await loadPropertyPreviews()).toEqual([])
+  })
+
   it('serves only assigned JPEGs and refuses traversal or unlisted neighbouring files', async () => {
     expect(await loadPropertyPreviewMedia('aerial.jpg', options)).toEqual(new Uint8Array(jpeg))
     await writeFile(path.join(outputRoot, 'images', 'private.jpg'), jpeg)
@@ -285,4 +301,93 @@ it('shows evidenced cluster pricing and rejects changed or unsourced amounts', a
   delete definitions[1].confirmedPricing
   await saveFixture()
   expect(await loadPropertyPreviews(options)).toEqual([])
+})
+
+describe('optional design evidence', () => {
+  async function variantsFixture() {
+    await writeFile(path.join(outputRoot, 'images', 'design-plan.jpg'), jpeg)
+    return {
+      schemaVersion: 1,
+      images: [{ id: 'design-plan', output: {
+        path: path.join(outputRoot, 'images', 'design-plan.jpg'), relativePath: 'images/design-plan.jpg',
+        bytes: jpeg.length, sha256: createHash('sha256').update(jpeg).digest('hex'), width: 2, height: 2, format: 'jpeg',
+      } }],
+      documents: [{
+        slug: 'florence-villas', brochureKey: 'florence-villa-4',
+        sourcePath: 'private-brochure.pdf',
+        designVariants: [{
+          _key: 'villa-a', label: 'Brochure Type A', position: 'standalone',
+          plotAreaSqFt: 3363, sellableAreaSqFt: 3831, plotAreaStatus: 'brochure',
+          sourcePath: 'private-brochure.pdf',
+          images: [{ imageId: 'design-plan', alt: 'Villa render', sourcePath: 'private-original.jpg' }],
+          floorPlans: [{ imageId: 'design-plan', alt: 'Villa floor plan', label: 'Ground and first floors' }],
+        }],
+        interiorSchemes: [{ _key: 'palette-a', label: 'Palette A', images: [{ imageId: 'design-plan', alt: 'Interior render' }] }],
+      }],
+    }
+  }
+
+  async function saveVariants(value: unknown) {
+    await writeFile(path.join(outputRoot, 'variants.json'), JSON.stringify(value))
+  }
+
+  it('loads matched plans and areas while removing private source evidence', async () => {
+    await saveVariants(await variantsFixture())
+    const preview = await loadPropertyPreview('florence-villas', options)
+    const design = preview?.document.designVariants?.[0]
+    expect(design?.plotAreaSqFt).toBe(3363)
+    expect(design?.sellableAreaSqFt).toBe(3831)
+    expect(design?.floorPlans[0]).toEqual({ src: '/dev/property-previews/media/design-plan.jpg', alt: 'Villa floor plan', label: 'Ground and first floors' })
+    expect(preview?.document.interiorSchemes?.[0].label).toBe('Palette A')
+    expect(JSON.stringify(preview)).not.toMatch(/private-|sourcePath|sha256|outputRoot/)
+    expect(await loadPropertyPreviewMedia('design-plan.jpg', options)).toEqual(new Uint8Array(jpeg))
+  })
+
+  it('omits disputed plot figures from client data while retaining sellable area', async () => {
+    const data = await variantsFixture()
+    data.documents[0].designVariants[0].plotAreaStatus = 'conflict'
+    Object.assign(data.documents[0].designVariants[0], { areaNote: 'Private discrepancy: table 2,260; drawing 1,938 sq ft.' })
+    await saveVariants(data)
+    const design = (await loadPropertyPreview('florence-villas', options))?.document.designVariants?.[0]
+    expect(design?.plotAreaStatus).toBe('conflict')
+    expect(design).not.toHaveProperty('plotAreaSqFt')
+    expect(design).not.toHaveProperty('areaNote')
+    expect(design?.sellableAreaSqFt).toBe(3831)
+  })
+
+  it('does not serve unassigned variant images or expose variants in production', async () => {
+    const data = await variantsFixture()
+    data.documents = []
+    await saveVariants(data)
+    expect(await loadPropertyPreviewMedia('design-plan.jpg', options)).toBeNull()
+    await saveVariants(await variantsFixture())
+    const disabled = { env: { NODE_ENV: 'production', HAUS_PROPERTY_PREVIEW_DIR: outputRoot } }
+    expect(await loadPropertyPreviews(disabled)).toEqual([])
+    expect(await loadPropertyPreviewMedia('design-plan.jpg', disabled)).toBeNull()
+  })
+
+  it('rejects escaped paths, mismatched design images and duplicate variant keys', async () => {
+    const escaped = await variantsFixture()
+    escaped.images[0].output.relativePath = '../private.jpg'
+    await saveVariants(escaped)
+    expect(await loadPropertyPreviews(options)).toEqual([])
+    const missing = await variantsFixture()
+    missing.documents[0].designVariants[0].floorPlans[0].imageId = 'unknown'
+    await saveVariants(missing)
+    expect(await loadPropertyPreviews(options)).toEqual([])
+    const duplicate = await variantsFixture()
+    duplicate.documents[0].designVariants.push(duplicate.documents[0].designVariants[0])
+    await saveVariants(duplicate)
+    expect(await loadPropertyPreviews(options)).toEqual([])
+  })
+
+  it('rejects altered image bytes and malformed optional evidence', async () => {
+    await saveVariants(await variantsFixture())
+    const altered = Buffer.from(jpeg)
+    altered[altered.length - 1] ^= 1
+    await writeFile(path.join(outputRoot, 'images', 'design-plan.jpg'), altered)
+    expect(await loadPropertyPreviewMedia('design-plan.jpg', options)).toBeNull()
+    await writeFile(path.join(outputRoot, 'variants.json'), '{')
+    expect(await loadPropertyPreviews(options)).toEqual([])
+  })
 })

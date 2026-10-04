@@ -222,6 +222,26 @@ export const PROPERTY_BY_SLUG_QUERY = `
     amenities,
     locationBenefits,
     gallery,
+    designVariants[]{
+      _key,
+      label,
+      family,
+      rowHomes,
+      position,
+      "plotAreaSqFt": select(plotAreaStatus == "conflict" => null, plotAreaSqFt),
+      sellableAreaSqFt,
+      plotAreaStatus,
+      "areaNote": select(plotAreaStatus == "conflict" => null, areaNote),
+      summary,
+      brochureKey,
+      images[]{"src": asset->url, alt, label},
+      floorPlans[]{"src": asset->url, alt, label}
+    },
+    interiorSchemes[]{
+      _key,
+      label,
+      images[]{"src": asset->url, alt, label}
+    },
     videoUrl,
     enquiryEmail
   }

@@ -35,7 +35,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { trackLeadEvent } from "./analytics";
 import { getLeadAttribution, primeLeadAttribution } from "./attribution";
+import {
+  brochureMessageLimit,
+  brochureRequestNote,
+  leadMessageWithBrochureRequest,
+} from "./brochure-request";
 import type {
+  LeadBrochureRequest,
   LeadInitialPreferences,
   LeadInterest,
   LeadProjectContext,
@@ -115,6 +121,7 @@ interface LeadEoiFormProps {
   initialInterest?: LeadInterest;
   initialEmail?: string;
   initialPreferences?: LeadInitialPreferences;
+  brochureRequest?: LeadBrochureRequest;
   project?: LeadProjectContext;
   modal?: boolean;
   onClose?: () => void;
@@ -238,11 +245,13 @@ export function LeadEoiForm({
   initialInterest,
   initialEmail,
   initialPreferences,
+  brochureRequest,
   project,
   modal = false,
   onClose,
 }: LeadEoiFormProps) {
   const id = useId();
+  const requestNote = brochureRequestNote(project, brochureRequest);
   const [step, setStep] = useState(1);
   const [values, setValues] = useState<FormValues>(() =>
     initialValues(project, initialInterest, initialEmail, initialPreferences),
@@ -421,7 +430,7 @@ export function LeadEoiForm({
         firstName: submitted.firstName.trim(),
         email: submitted.email.trim(),
         phone: optional(submitted.phone),
-        message: optional(submitted.message),
+        message: leadMessageWithBrochureRequest(requestNote, submitted.message),
       },
       privacyAcknowledged: submitted.privacyAcknowledged,
       propertyMatchOptIn: submitted.propertyMatchOptIn,
@@ -504,12 +513,21 @@ export function LeadEoiForm({
           <Check className="h-7 w-7" aria-hidden="true" />
         </div>
         <h2 className="mt-5 font-serif text-3xl font-medium text-estate-700">
-          {successValues.interest === "newsletter_only"
-            ? "Email preferences saved"
-            : supportsPropertyMatches(successValues.interest)
-              ? "Brief received"
-              : "Enquiry received"}
+          {brochureRequest
+            ? "Brochure request saved"
+            : successValues.interest === "newsletter_only"
+              ? "Email preferences saved"
+              : supportsPropertyMatches(successValues.interest)
+                ? "Brief received"
+                : "Enquiry received"}
         </h2>
+        {brochureRequest ? (
+          <p className="mt-3 max-w-md text-sm leading-6 text-muted-foreground">
+            Your request for {project?.title ?? "the selected property"}
+            {brochureRequest.design ? ` — ${brochureRequest.design.label}` : ""} has
+            been saved. Brochure email delivery is not yet available.
+          </p>
+        ) : null}
         <p className="mt-3 max-w-md text-sm leading-6 text-muted-foreground">
           {successValues.interest === "newsletter_only"
             ? "We’ve saved your request for Haus of Estate property news and insights. Our newsletter is still being prepared; this confirms your saved request, not an email being sent."
@@ -544,7 +562,9 @@ export function LeadEoiForm({
   }
 
   const isNewsletterOnly = values.interest === "newsletter_only";
-  const finalSubmitLabel = isNewsletterOnly
+  const finalSubmitLabel = brochureRequest
+    ? "Save brochure request"
+    : isNewsletterOnly
     ? "Save email preferences"
     : supportsPropertyMatches(values.interest)
       ? "Send my brief"
@@ -569,11 +589,22 @@ export function LeadEoiForm({
             />
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase text-estate-700">
-                Selected property
+                {brochureRequest ? "Full brochure request" : "Selected property"}
               </p>
               <p className="truncate text-sm font-medium text-foreground">
                 {project.title ?? project.slug}
               </p>
+              {brochureRequest?.design ? (
+                <p className="text-sm text-foreground">
+                  Design: {brochureRequest.design.label}
+                </p>
+              ) : null}
+              {brochureRequest ? (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  We will save your request with your details. Brochure email
+                  delivery is not yet available. Marketing emails are optional.
+                </p>
+              ) : null}
               {project.community || project.city ? (
                 <p className="truncate text-xs text-muted-foreground">
                   {[project.community, project.city].filter(Boolean).join(", ")}
@@ -628,7 +659,9 @@ export function LeadEoiForm({
             <fieldset className="mt-5">
               <legend className="sr-only">Your property interest</legend>
               <div className="grid gap-2 sm:grid-cols-2">
-                {INTEREST_OPTIONS.map((option) => {
+                {INTEREST_OPTIONS.filter(
+                  (option) => !brochureRequest || option.value !== "newsletter_only",
+                ).map((option) => {
                   const Icon = option.icon;
                   return (
                     <label
@@ -990,7 +1023,7 @@ export function LeadEoiForm({
                     value={values.message}
                     onChange={(event) => update("message", event.target.value)}
                     placeholder="Tell us what would make this enquiry more useful"
-                    maxLength={2_000}
+                    maxLength={brochureMessageLimit(requestNote)}
                     className="min-h-20 pl-9"
                   />
                 </div>

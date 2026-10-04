@@ -32,11 +32,16 @@ export interface LeadInitialPreferences {
   bedrooms?: string;
 }
 
+export interface LeadBrochureRequest {
+  design?: { id: string; label: string };
+}
+
 export interface LeadOpenOptions {
   interest?: LeadInterest;
   email?: string;
   project?: LeadProjectContext;
   initialPreferences?: LeadInitialPreferences;
+  brochureRequest?: LeadBrochureRequest;
   surface?: LeadSurface;
 }
 

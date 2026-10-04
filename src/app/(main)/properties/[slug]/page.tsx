@@ -73,10 +73,37 @@ export default async function PropertyDetailPage({
   if (!property) notFound()
 
   const { isEnabled: draftPreview } = await draftMode()
+  // Project only usable image URLs; omit unresolved plot figures before they
+  // cross the client boundary, including in Sanity Draft Mode.
+  const detail: PropertyDetail = {
+    ...property,
+    designVariants: property.designVariants?.map((design) => ({
+      ...design,
+      plotAreaSqFt: design.plotAreaStatus === 'conflict' || typeof design.plotAreaSqFt !== 'number'
+        ? undefined
+        : design.plotAreaSqFt,
+      areaNote: design.plotAreaStatus === 'conflict' ? undefined : design.areaNote,
+      images: (design.images ?? []).filter((image) => Boolean(image.src)).map((image) => ({
+        ...image,
+        alt: image.alt || `${property.title} — ${design.label}`,
+      })),
+      floorPlans: (design.floorPlans ?? []).filter((image) => Boolean(image.src)).map((image) => ({
+        ...image,
+        alt: image.alt || `${design.label} — floor plan`,
+      })),
+    })),
+    interiorSchemes: property.interiorSchemes?.map((scheme) => ({
+      ...scheme,
+      images: (scheme.images ?? []).filter((image) => Boolean(image.src)).map((image) => ({
+        ...image,
+        alt: image.alt || `${property.title} — ${scheme.label}`,
+      })),
+    })),
+  }
 
   return (
     <PropertyDetailView
-      property={property}
+      property={detail}
       draftPreview={draftPreview}
       media={{
         hero: property.featuredImage ? {
