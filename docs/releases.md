@@ -2,6 +2,9 @@
 
 ## Analytics integration — 5 October 2026
 
+Merge ancestry, actual local test results and remaining release boundaries are
+recorded in the [integration handoff](release-2-main-integration-2026-10-05.md).
+
 Release 2 incorporates `main`'s direct GA4 support while retaining its existing
 consent, route/host and PII controls and all twelve browsing, lead and AskHaus
 event mappings. A valid `NEXT_PUBLIC_GTM_ID` takes precedence; otherwise a valid
