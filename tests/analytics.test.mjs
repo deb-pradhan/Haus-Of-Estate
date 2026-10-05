@@ -4,8 +4,23 @@ import approvedCareerRoles from "../content/careers-roles.json" with { type: "js
 import {
   analyticsPage, analyticsHosts, CONSENT_KEY, consentFromStorage, getAnalyticsConsent,
   saveAnalyticsConsent, syncAnalytics, stopAnalytics, trackAnalytics,
-  installAnalyticsNavigationGuard, subscribeConsent,
+  installAnalyticsNavigationGuard, subscribeConsent, analyticsMode, ga4EventName,
 } from "../src/lib/analytics.ts";
+
+const GA4_EVENT_NAMES = {
+  haus_page_view: "page_view",
+  haus_property_click: "property_click",
+  haus_article_click: "article_click",
+  haus_contact_click: "contact_click",
+  haus_property_search: "property_search",
+  form_view: "form_view",
+  form_start: "form_start",
+  lead_submit_success: "lead_submit_success",
+  newsletter_opt_in: "newsletter_opt_in",
+  property_assistant_opened: "property_assistant_opened",
+  property_assistant_results_shown: "property_assistant_results_shown",
+  property_assistant_adviser_handoff: "property_assistant_adviser_handoff",
+};
 
 test("public-page allowlist excludes private, preview, draft, local and non-production pages", () => {
   for (const path of ["/auth/login", "/auth/reset-password", "/studio", "/studio/desk", "/saved", "/account", "/api/foo", "/match", "/unknown", "/blog/user%40mail.com"]) {
@@ -245,5 +260,182 @@ test("runtime gates scripts, drops backlog and PII, deduplicates pages, revokes 
     delete globalThis.window;
     delete globalThis.document;
     delete globalThis.history;
+  }
+});
+
+test("tag mode: valid GTM takes precedence, GA4 measurement IDs are validated, events map to GA4 names", () => {
+  assert.deepEqual(analyticsMode("GTM-ABC123", "G-FEZF22MELJ"), { mode: "gtm", id: "GTM-ABC123" });
+  assert.deepEqual(analyticsMode(undefined, "G-FEZF22MELJ"), { mode: "ga4", id: "G-FEZF22MELJ" });
+  assert.deepEqual(analyticsMode("invalid", "G-FEZF22MELJ"), { mode: "ga4", id: "G-FEZF22MELJ" });
+  for (const id of ["", "GTM-ABC123", "UA-123-1", "g-abc", "G-ABC 1", "G-ABC&x=1", "G-"]) assert.equal(analyticsMode(undefined, id), null, id);
+  assert.equal(analyticsMode(), null);
+  assert.deepEqual(
+    Object.keys(GA4_EVENT_NAMES).map(ga4EventName),
+    Object.values(GA4_EVENT_NAMES),
+  );
+});
+
+test("GA4-direct mode validates every Release 2 event, gates consent, and safely changes tags", () => {
+  const storage = new Map();
+  const scripts = [];
+  const calls = { reload: 0 };
+  const listeners = new EventTarget();
+  const location = { href: "https://hausofestate.com/?email=private@example.com", hostname: "hausofestate.com", reload: () => calls.reload++ };
+  globalThis.window = {
+    location, localStorage: { getItem: (key) => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value) },
+    addEventListener: listeners.addEventListener.bind(listeners), removeEventListener: listeners.removeEventListener.bind(listeners), dispatchEvent: listeners.dispatchEvent.bind(listeners),
+  };
+  const removed = [];
+  globalThis.document = { cookie: "_ga=abc", head: { appendChild: (script) => scripts.push(script) }, createElement: () => ({}), getElementById: (id) => ({ remove() { removed.push(id); } }) };
+  const config = { ga4Id: "G-TEST123", draft: false, production: true };
+  const commands = () => window.dataLayer?.filter((entry) => entry[0]) || [];
+  const events = () => commands().filter((entry) => entry[0] === "event");
+  const leadValues = { form_version: "2026-09-01.v4", surface: "query_page", interest: "general_enquiry", step: 2, has_project: true };
+  const pii = {
+    email: "private@example.com", first_name: "Private Person", project_title: "Private Project",
+    search_term: "secret", message: "Private Message", prompt: "Private Prompt",
+    conversation_id: "private-conversation", user_id: "private-user", newsletter_preferences: "private-preferences",
+    utm_campaign: "private-campaign", loanAmount: 987654.32, cv: "cv-file.pdf",
+  };
+  const validEvents = [
+    ["haus_property_click", { content_path: "/properties/azizi-florence" }, { content_path: "/properties/azizi-florence" }],
+    ["haus_article_click", { content_path: "/blog/public-article" }, { content_path: "/blog/public-article" }],
+    ["haus_contact_click", { contact_method: "whatsapp" }, { contact_method: "whatsapp" }],
+    ["haus_property_search", { intent: "rent", category: "residential", availability: "off-plan" }, { form_location: "homepage_hero", intent: "rent", category: "residential", availability: "off-plan" }],
+    ...["form_view", "form_start", "lead_submit_success", "newsletter_opt_in"].map((name) => [name, leadValues, { form_name: "lead_eoi", ...leadValues }]),
+    ["property_assistant_opened", { route_scope: "home" }, { route_scope: "home" }],
+    ["property_assistant_results_shown", { route_scope: "home", result_count: 2.9 }, { route_scope: "home", result_count: 2 }],
+    ["property_assistant_adviser_handoff", { route_scope: "home" }, { route_scope: "home" }],
+  ];
+  const sendAll = () => {
+    trackAnalytics("haus_page_view", pii);
+    for (const [name, values] of validEvents) trackAnalytics(name, { ...pii, ...values });
+  };
+  try {
+    syncAnalytics(config);
+    sendAll();
+    assert.equal(scripts.length, 0);
+    assert.equal(window.dataLayer, undefined);
+
+    saveAnalyticsConsent("denied");
+    syncAnalytics(config);
+    sendAll();
+    assert.equal(scripts.length, 0);
+    assert.equal(window.dataLayer, undefined);
+
+    saveAnalyticsConsent("granted");
+    syncAnalytics({ ...config, draft: true });
+    syncAnalytics({ ...config, production: false });
+    syncAnalytics({ ...config, ga4Id: "invalid" });
+    assert.equal(scripts.length, 0);
+    // GA4-direct must also discard any legacy queue from before consent.
+    window.dataLayer = [{ event: "legacy_event", email: "private@example.com" }];
+    syncAnalytics(config);
+    syncAnalytics(config);
+    assert.equal(scripts.length, 1);
+    assert.equal(scripts[0].id, "haus-gtag");
+    assert.equal(scripts[0].src, "https://www.googletagmanager.com/gtag/js?id=G-TEST123");
+    assert.equal(scripts[0].referrerPolicy, "no-referrer");
+    assert.equal(scripts[0].async, true);
+    const [first, , update, js, configCmd] = commands();
+    assert.deepEqual([first[0], first[1], first[2].analytics_storage], ["consent", "default", "denied"]);
+    assert.deepEqual([update[1], update[2].analytics_storage, update[2].ad_storage], ["update", "granted", "denied"]);
+    assert.equal(js[0], "js");
+    assert.deepEqual([configCmd[0], configCmd[1]], ["config", "G-TEST123"]);
+    assert.equal(configCmd[2].send_page_view, false);
+    assert.equal(configCmd[2].allow_google_signals, false);
+    assert.equal(configCmd[2].page_location, "https://hausofestate.com/");
+    assert.equal(window.dataLayer.some((entry) => entry.event), false, "no plain dataLayer events in GA4 mode");
+
+    assert.equal(events().length, 1);
+    assert.equal(events()[0][1], "page_view");
+    assert.deepEqual(events()[0][2], analyticsPage(location.href));
+    for (const [name, values, expected] of validEvents) {
+      trackAnalytics(name, { ...pii, ...values, form_name: "private-form" });
+      const command = events().at(-1);
+      assert.equal(command[1], GA4_EVENT_NAMES[name]);
+      assert.deepEqual(command[2], { ...analyticsPage(location.href), ...expected }, name);
+    }
+    assert.deepEqual(events().map((entry) => entry[1]), Object.values(GA4_EVENT_NAMES));
+    const beforeInvalid = window.dataLayer.length;
+    for (const [name, values] of [
+      ["haus_contact_click", { contact_method: "private@example.com" }],
+      ["haus_property_click", { content_path: "/auth/login" }],
+      ["haus_article_click", { content_path: "/blog/private@example.com" }],
+      ["form_view", { ...leadValues, surface: "private@example.com" }],
+      ["lead_submit_success", { ...leadValues, form_version: "private@example.com" }],
+      ["newsletter_opt_in", {}],
+      ["property_assistant_opened", { route_scope: "properties" }],
+      ["property_assistant_results_shown", { route_scope: "home", result_count: NaN }],
+      ["property_assistant_results_shown", { route_scope: "home", result_count: Infinity }],
+      ["lead_form_submit", pii],
+      ["application_submit", pii],
+    ]) trackAnalytics(name, values);
+    assert.equal(window.dataLayer.length, beforeInvalid);
+    trackAnalytics("form_start", { ...leadValues, interest: "private@example.com", step: 99, has_project: "private@example.com" });
+    assert.deepEqual(events().at(-1)[2], { ...analyticsPage(location.href), ...leadValues, form_name: "lead_eoi", interest: null, step: null, has_project: null });
+
+    for (const path of ["/snagging", "/maintenance", "/register-interest", "/enquire", "/mortgage-calculator", "/sitemap", "/careers", ...approvedCareerRoles.map(({ slug }) => `/careers/${slug}`)]) {
+      location.href = `https://hausofestate.com${path}?email=private@example.com#cv-file.pdf`;
+      const count = events().length;
+      syncAnalytics(config);
+      syncAnalytics(config);
+      assert.equal(events().length, count + 1, path);
+      assert.deepEqual(events().at(-1)[2], analyticsPage(location.href));
+    }
+    for (const path of ["/auth/login", "/studio", "/careers/unknown", "/?preview=true"]) {
+      location.href = `https://hausofestate.com${path}`;
+      const count = window.dataLayer.length;
+      sendAll();
+      assert.equal(window.dataLayer.length, count, path);
+    }
+    location.href = "https://hausofestate.com/";
+    assert.doesNotMatch(JSON.stringify(window.dataLayer), /private@example|Private |secret|private-|987654|cv-file|legacy_event/);
+
+    saveAnalyticsConsent("denied");
+    syncAnalytics(config);
+    const revokedCount = window.dataLayer.length;
+    sendAll();
+    window.dataLayer.push({ event: "late_library_event" });
+    assert.equal(window.dataLayer.length, revokedCount);
+    assert.equal(calls.reload, 1);
+    assert.equal(window["ga-disable-G-TEST123"], true);
+    assert.ok(removed.includes("haus-gtag"));
+    assert.match(document.cookie, /Max-Age=0/);
+
+    saveAnalyticsConsent("granted");
+    syncAnalytics(config);
+    assert.equal(scripts.length, 2);
+    assert.equal(window["ga-disable-G-TEST123"], undefined);
+    assert.equal(events().length, 1, "regrant starts a fresh queue");
+
+    // Disable the old active measurement ID even when configuration already changed.
+    const nextConfig = { ...config, ga4Id: "G-NEXT123" };
+    syncAnalytics(nextConfig);
+    assert.equal(calls.reload, 2);
+    assert.equal(window["ga-disable-G-TEST123"], true);
+    assert.equal(scripts.length, 2);
+    syncAnalytics(nextConfig);
+    assert.equal(scripts.length, 3);
+    assert.equal(window["ga-disable-G-NEXT123"], undefined);
+
+    // Switching to a GTM container mid-document unloads via reload rather than mixing tags.
+    syncAnalytics({ ...config, gtmId: "GTM-TEST123" });
+    assert.equal(calls.reload, 3);
+    assert.equal(window["ga-disable-G-NEXT123"], true);
+    syncAnalytics({ ...config, gtmId: "GTM-TEST123" });
+    assert.equal(scripts.length, 4);
+    assert.equal(scripts.at(-1).id, "haus-gtm");
+    assert.equal(commands().some((entry) => entry[0] === "config"), false, "GTM takes precedence over direct GA4");
+    assert.equal(events().length, 0);
+    assert.equal(window.dataLayer.filter((entry) => entry.event === "haus_page_view").length, 1);
+
+    saveAnalyticsConsent("denied");
+    syncAnalytics(config);
+    assert.equal(scripts.length, 4);
+  } finally {
+    stopAnalytics(false);
+    delete globalThis.window;
+    delete globalThis.document;
   }
 });

@@ -147,9 +147,11 @@ const jsonLd = {
   ],
 };
 
-// Google Tag Manager: no-op until the founder sets NEXT_PUBLIC_GTM_ID once the
-// GTM container exists. Without the env var, no analytics markup is rendered.
+// Optional public IDs, embedded at build time. A valid GTM container takes
+// precedence; otherwise a GA4 measurement ID loads gtag.js directly. Either
+// loads only after analytics consent, on a public production page outside draft mode.
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID;
+const GA4_ID = process.env.NEXT_PUBLIC_GA4_ID;
 const ANALYTICS_ALLOWED_HOSTS = process.env.NEXT_PUBLIC_ANALYTICS_ALLOWED_HOSTS;
 
 export default async function RootLayout({
@@ -180,6 +182,7 @@ export default async function RootLayout({
         <Suspense fallback={null}>
           <ConsentManager
             gtmId={GTM_ID}
+            ga4Id={GA4_ID}
             draft={isDraftModeEnabled}
             allowedHosts={ANALYTICS_ALLOWED_HOSTS}
             production={process.env.NODE_ENV === "production" && (process.env.VERCEL_ENV !== "preview" || Boolean(ANALYTICS_ALLOWED_HOSTS?.trim()))}

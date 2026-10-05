@@ -1,5 +1,22 @@
 # Haus releases
 
+## Analytics integration — 5 October 2026
+
+Release 2 incorporates `main`'s direct GA4 support while retaining its existing
+consent, route/host and PII controls and all twelve browsing, lead and AskHaus
+event mappings. A valid `NEXT_PUBLIC_GTM_ID` takes precedence; otherwise a valid
+`NEXT_PUBLIC_GA4_ID` enables direct GA4. With neither valid ID, analytics stays
+off. These public IDs and `NEXT_PUBLIC_ANALYTICS_ALLOWED_HOSTS` are build-time
+arguments, so a configuration change requires a new build/deployment.
+
+Use the [current GA4 setup checklist](ga4-setup.md) and
+[event runbook](release-1-analytics.md). GTM access is needed only if selecting
+GTM mode. Enhanced measurement must remain off; no conversion/key-event setting,
+feature activation or customer messaging is enabled by this merge. Lead success
+still requires a valid durable intake receipt. Real GA4 Realtime/DebugView receipt
+remains unverified. September Google/dashboard observations below are historical;
+this integration makes no fresh external-configuration or deployment claim.
+
 ## Lead operations audit and priorities — 28 September 2026
 
 The [operations plan](lead-operations-plan-2026-09-28.md) maps fourteen visitor and
@@ -216,10 +233,10 @@ Studio and related project servers were stopped; checks of ports 3000, 3001,
 
 Historical branch: `suryak02/technical-seo-fixes` (remote retired).
 [PR #15](https://github.com/deb-pradhan/Haus-Of-Estate/pull/15) is merged into `main`.
-Contains the technical SEO corrections and consented Google Analytics through
-Google Tag Manager. `docs/release-1-analytics.md` defines the container setup,
-event contract and verification steps. GA4 is accessible, but GTM container
-access/configuration and actual collection remain unverified; a successful build
+Contained the technical SEO corrections and consented Google Analytics through
+Google Tag Manager at that release. The current
+[analytics runbook](release-1-analytics.md) covers both GTM and direct GA4 after
+the integration above. Actual collection remains unverified; a successful build
 or dataLayer event is not proof of collection.
 Meta and advertising tags remain disabled.
 
@@ -299,13 +316,15 @@ to designated test recipients, not mock transport success.
   local handoff files. Six SEO/analytics code checks passed again on 18 September.
 - Exercise public search, Florence previews, saved items, lead forms, account
   routes, careers and consent behaviour on desktop/mobile.
-- GA4: actual UI access to account `405511552`, property `550966592`
-  (`www.hausofestate.com`) and Measurement ID `G-FEZF22MELJ` is confirmed.
-  Property settings are editable, demonstrating editor-level settings capability;
-  the exact assigned role label was not displayed. The UI reports no data received.
-- GTM: Surya's container list is empty. Company container access/ID and the
-  consented configuration still need resolving; this does not prove the company
-  has no container. Do not add a duplicate tracking snippet.
+- GA4: September checks confirmed UI access to account `405511552`, property
+  `550966592` (`www.hausofestate.com`) and measurement ID `G-FEZF22MELJ`, with
+  editable property settings and no received data at that time. The exact role
+  label was not displayed. Verify the deployed mode/configuration and real
+  consented Realtime/DebugView receipt using the current checklist.
+- GTM: September checks found Surya's container list empty; this does not prove
+  the company has no container. Company container access/configuration is required
+  only for GTM mode. Direct GA4 uses the existing measurement ID through the same
+  consent manager. Do not add a duplicate tracking snippet.
 - Search Console: access to domain property `hausofestate.com` works. Settings
   show non-owner access and the add-sitemap UI is available, consistent with Full
   capabilities; the exact role label was not shown. No new invitation is needed;

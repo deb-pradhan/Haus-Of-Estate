@@ -1,6 +1,6 @@
 import approvedCareerRoles from "../../content/careers-roles.json" with { type: "json" };
 
-// Only these public destinations and coarse interaction values may reach GTM.
+// Only these public destinations and coarse interaction values may reach GTM/GA4.
 export const CONSENT_KEY = "haus.analytics-consent.v1";
 export const CONSENT_EVENT = "haus:analytics-consent";
 export const SETTINGS_EVENT = "haus:cookie-settings";
@@ -96,6 +96,27 @@ let draftMode = false;
 let production = false;
 let allowedHosts: string | undefined;
 let lastPath: string | null = null;
+let activeTag: AnalyticsTag | null = null;
+let configuredGa4: string | undefined;
+
+export type AnalyticsTag = { mode: "gtm" | "ga4"; id: string };
+// A valid GTM container takes precedence; direct gtag.js is the fallback when
+// only a GA4 measurement ID exists. Neither valid ID means nothing loads.
+export function analyticsMode(gtmId?: string, ga4Id?: string): AnalyticsTag | null {
+  if (/^GTM-[A-Z0-9]+$/.test(gtmId || "")) return { mode: "gtm", id: gtmId! };
+  if (/^G-[A-Z0-9]+$/.test(ga4Id || "")) return { mode: "ga4", id: ga4Id! };
+  return null;
+}
+
+const GA4_EVENTS: Record<AnalyticsEvent, string> = {
+  haus_page_view: "page_view", haus_property_click: "property_click", haus_article_click: "article_click",
+  haus_contact_click: "contact_click", haus_property_search: "property_search",
+  form_view: "form_view", form_start: "form_start", lead_submit_success: "lead_submit_success",
+  newsletter_opt_in: "newsletter_opt_in", property_assistant_opened: "property_assistant_opened",
+  property_assistant_results_shown: "property_assistant_results_shown",
+  property_assistant_adviser_handoff: "property_assistant_adviser_handoff",
+};
+export function ga4EventName(event: AnalyticsEvent): string { return GA4_EVENTS[event]; }
 
 function gtag(...args: unknown[]) {
   void args;
@@ -149,7 +170,12 @@ export function trackAnalytics(event: AnalyticsEvent, values: Record<string, unk
       payload.result_count = Math.max(0, Math.min(3, Math.trunc(values.result_count)));
     }
   } else return;
-  window.dataLayer?.push(payload);
+  if (activeTag?.mode === "ga4") {
+    // gtag.js ignores plain {event} objects; GA4-direct events need the command form.
+    const { event: name, ...params } = payload;
+    void name;
+    gtag("event", ga4EventName(event), params);
+  } else window.dataLayer?.push(payload);
 }
 
 function clearAnalyticsCookies() {
@@ -164,48 +190,67 @@ function clearAnalyticsCookies() {
 
 export function stopAnalytics(reload = true) {
   const wasRunning = running;
+  const stoppedTag = activeTag;
   running = false;
   lastPath = null;
+  activeTag = null;
   if (!wasRunning) return;
   // Stop known Google tags before unloading their timers/listeners. Removing a
   // script node alone cannot unload an already-executed analytics library.
   for (const id of Object.keys(window.google_tag_manager || {})) {
     if (/^G-/.test(id)) (window as unknown as Record<string, unknown>)[`ga-disable-${id}`] = true;
   }
+  if (stoppedTag?.mode === "ga4") (window as unknown as Record<string, unknown>)[`ga-disable-${stoppedTag.id}`] = true;
+  if (configuredGa4) (window as unknown as Record<string, unknown>)[`ga-disable-${configuredGa4}`] = true;
   gtag("consent", "update", { analytics_storage: "denied", ...deniedAds });
   if (window.dataLayer) window.dataLayer.push = () => 0;
   document.getElementById("haus-gtm")?.remove();
+  document.getElementById("haus-gtag")?.remove();
   clearAnalyticsCookies();
   if (reload) window.location.reload();
 }
 
-export type AnalyticsOptions = { gtmId?: string; draft: boolean; production: boolean; allowedHosts?: string };
+export type AnalyticsOptions = { gtmId?: string; ga4Id?: string; draft: boolean; production: boolean; allowedHosts?: string };
 
 export function syncAnalytics(options: AnalyticsOptions) {
   draftMode = options.draft;
   production = options.production;
   allowedHosts = options.allowedHosts;
+  const tag = analyticsMode(options.gtmId, options.ga4Id);
+  if (/^G-[A-Z0-9]+$/.test(options.ga4Id || "")) configuredGa4 = options.ga4Id;
   const page = analyticsPage(window.location.href, draftMode, production, allowedHosts);
-  if (getAnalyticsConsent() !== "granted" || !page || !/^GTM-[A-Z0-9]+$/.test(options.gtmId || "")) {
+  // A changed tag/ID cannot be swapped in place: unload via reload, then start clean.
+  if (getAnalyticsConsent() !== "granted" || !page || !tag || (running && (activeTag?.mode !== tag.mode || activeTag.id !== tag.id))) {
     stopAnalytics();
     return;
   }
   if (!running) {
     running = true;
     lastPath = null;
+    activeTag = tag;
     // Start with a fresh queue. Nothing before consent is recorded or replayed.
     window.dataLayer = [];
     gtag("consent", "default", { analytics_storage: "denied", ...deniedAds });
     gtag("set", { ...page, send_page_view: false, allow_google_signals: false, allow_ad_personalization_signals: false, ads_data_redaction: true, url_passthrough: false });
     gtag("consent", "update", { analytics_storage: "granted", ...deniedAds });
-    // GTM's Initialization trigger must see sanitized variables immediately.
-    window.dataLayer.push({ ...page });
-    window.dataLayer.push({ "gtm.start": Date.now(), event: "gtm.js" });
     const script = document.createElement("script");
-    script.id = "haus-gtm";
     script.async = true;
-    script.src = `https://www.googletagmanager.com/gtm.js?id=${options.gtmId}`;
     script.referrerPolicy = "no-referrer";
+    if (tag.mode === "gtm") {
+      // GTM's Initialization trigger must see sanitized variables immediately.
+      window.dataLayer.push({ ...page });
+      window.dataLayer.push({ "gtm.start": Date.now(), event: "gtm.js" });
+      script.id = "haus-gtm";
+      script.src = `https://www.googletagmanager.com/gtm.js?id=${tag.id}`;
+    } else {
+      // Consent is granted again (e.g. bfcache restore after a stop): lift an earlier kill switch.
+      delete (window as unknown as Record<string, unknown>)[`ga-disable-${tag.id}`];
+      gtag("js", new Date());
+      // Page views are sent manually by trackAnalytics with sanitized fields only.
+      gtag("config", tag.id, { send_page_view: false, allow_google_signals: false, allow_ad_personalization_signals: false, ...page });
+      script.id = "haus-gtag";
+      script.src = `https://www.googletagmanager.com/gtag/js?id=${tag.id}`;
+    }
     document.head.appendChild(script);
   }
   gtag("set", page);

@@ -118,14 +118,15 @@ This embed does not write appointments into the app's Lead table. A future
 provider webhook integration would need verification and idempotency before
 mirroring confirmed/cancelled events into the enquiry pipeline.
 
-## Google Analytics is already placed through GTM
+## Google Analytics uses the shared consent manager
 
-The site's consent manager loads GTM into `document.head` after analytics consent,
-on permitted public pages and production hosts. A second unconditional Google
-Analytics snippet would bypass that control and can duplicate page views.
-The company GTM container ID is still required in `NEXT_PUBLIC_GTM_ID`, with
-the GA4 stream configured inside that container. Follow [Release 1 analytics](release-1-analytics.md)
-and verify real Tag Assistant/GA4 receipt after access is available. Do not send
+Updated 5 October: a valid `NEXT_PUBLIC_GTM_ID` selects GTM; otherwise a valid
+`NEXT_PUBLIC_GA4_ID` selects direct GA4. The consent manager loads the selected
+script only after analytics consent on allowed hosts/public pages. These public
+settings are embedded at build time. GTM container access is needed only for GTM
+mode. Follow the [current setup checklist](ga4-setup.md), keep Enhanced measurement
+off and verify actual GA4 Realtime/DebugView receipt; this has not been established.
+Do not add an unconditional second tracking snippet or send
 contact messages, email addresses or booking details as analytics parameters.
 Google requires default consent before measurement and updates when consent
 changes: [Google consent setup](https://developers.google.com/tag-platform/security/guides/consent).

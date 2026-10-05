@@ -15,6 +15,7 @@
 /playwright-report/
 /test-results/
 /test-results-analytics/
+/test-results-analytics-ga4/
 /test-results-lead-production/
 
 # next.js
