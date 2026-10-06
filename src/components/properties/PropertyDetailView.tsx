@@ -15,6 +15,7 @@ import { canonicalHausUrl } from '@/lib/share'
 import { PropertyPrice } from '@/components/currency/property-price'
 import { propertyPriceInput, type PropertyPricing } from '@/lib/currency'
 import type { PropertyDesign, PropertyInteriorScheme } from '@/lib/property-designs'
+import { isConceptMedia, propertyMediaCaption, type PropertyImageMetadata, type PropertyMediaImage } from '@/lib/property-media'
 import { PropertyPhotoBranding } from './property-photo-branding'
 import { PropertyDesignExplorer } from './PropertyDesignExplorer'
 
@@ -49,9 +50,9 @@ export interface PropertyDetail extends PropertyPricing {
   keyFeatures?: string[]
   amenities?: string[]
   locationBenefits?: LocationBenefit[]
-  featuredImage?: { alt?: string } & Record<string, unknown>
+  featuredImage?: PropertyImageMetadata & { alt?: string } & Record<string, unknown>
   showHausLogo?: boolean
-  gallery?: (Record<string, unknown> & { alt?: string })[]
+  gallery?: (PropertyImageMetadata & Record<string, unknown> & { alt?: string })[]
   designVariants?: PropertyDesign[]
   interiorSchemes?: PropertyInteriorScheme[]
   videoUrl?: string
@@ -59,8 +60,8 @@ export interface PropertyDetail extends PropertyPricing {
 }
 
 export interface PropertyMedia {
-  hero?: { src: string; alt: string }
-  gallery: { src: string; alt: string }[]
+  hero?: PropertyMediaImage
+  gallery: PropertyMediaImage[]
 }
 
 const COMPLETION_LABEL: Record<string, string> = {
@@ -72,7 +73,7 @@ const COMPLETION_LABEL: Record<string, string> = {
 export function PropertyDetailView({ property, media, preview, draftPreview = false }: {
   property: PropertyDetail
   media: PropertyMedia
-  preview?: { kind: 'development' | 'home-type' }
+  preview?: { kind: 'development' | 'home-type' | 'property' }
   draftPreview?: boolean
 }) {
   const enquiryEmail = property.enquiryEmail || 'info@hausofestate.com'
@@ -85,7 +86,10 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
   const canonicalUrl = canonicalHausUrl(`/properties/${property.slug}`)
   const hasDesigns = Boolean(property.designVariants?.length)
   const firstDesign = property.designVariants?.[0]
-  const hero = firstDesign?.images[0] ?? media.hero
+  const hero: PropertyMediaImage | undefined = firstDesign?.images[0] ?? media.hero
+  const heroCaption = propertyMediaCaption(hero)
+  const individualPreview = preview?.kind === 'property'
+  const hasConceptGallery = media.gallery.some(isConceptMedia)
   const enquiryInterest =
     property.listingType?.length === 1 && property.listingType[0] === 'rent'
       ? 'rent'
@@ -131,11 +135,13 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
     label: 'Size',
     value: hasDesigns ? 'Varies by design' : property.sizeDisplay || (preview ? 'Awaiting confirmation' : 'On application'),
   })
-  facts.push({
-    icon: Building2,
-    label: 'Type',
-    value: property.unitType || (preview ? 'Awaiting confirmation' : ''),
-  })
+  if (property.unitType || !individualPreview) {
+    facts.push({
+      icon: Building2,
+      label: 'Type',
+      value: property.unitType || (preview ? 'Awaiting confirmation' : ''),
+    })
+  }
   if (property.view) {
     facts.push({
       icon: MapPin,
@@ -172,7 +178,14 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
         <div className="border-b border-gold-500/30 bg-gold-500/10 px-4 py-4 text-sm text-estate-700">
           <div className="mx-auto max-w-6xl">
             <p className="font-semibold">Local draft preview · Not published</p>
-            <p className="mt-1">{preview.kind === 'home-type' ? 'A collection of home designs, not an individual available unit.' : 'Community overview for editorial review.'} Artist’s impressions illustrate the home designs and facilities.</p>
+            {individualPreview ? (
+              <>
+                <p className="mt-1">Individual property draft for review. Proposed interiors are AI-assisted concepts, not completed works.</p>
+                <p className="mt-1">Awaiting confirmation: asking price, exact address, property type, floor area, tenure and EPC.</p>
+              </>
+            ) : (
+              <p className="mt-1">{preview.kind === 'home-type' ? 'A collection of home designs, not an individual available unit.' : 'Community overview for editorial review.'} Artist’s impressions illustrate the home designs and facilities.</p>
+            )}
           </div>
         </div>
       )}
@@ -188,7 +201,7 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
             href={preview ? "/dev/property-previews" : "/properties"}
             className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-estate-700"
           >
-            <ArrowLeft className="h-4 w-4" /> {preview ? 'All Florence previews' : 'All properties'}
+            <ArrowLeft className="h-4 w-4" /> {preview ? individualPreview ? 'All property previews' : 'All Florence previews' : 'All properties'}
           </Link>
         </div>
       </div>
@@ -201,8 +214,8 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
             alt={hero.alt}
             fill
             sizes="100vw"
-            className="object-cover"
-            priority
+            className={isConceptMedia(hero) ? 'object-contain' : 'object-cover'}
+            preload
             unoptimized={Boolean(preview)}
           />
         ) : (
@@ -212,6 +225,9 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
         )}
         {hero && <PropertyPhotoBranding enabled={property.showHausLogo} />}
       </div>
+      {heroCaption && (
+        <p className="mx-auto max-w-6xl px-4 pt-3 text-sm leading-relaxed text-estate-700 md:px-6">{heroCaption}</p>
+      )}
       {firstDesign?.images[0] && (
         <p className="mx-auto max-w-6xl px-4 pt-3 text-xs leading-relaxed text-muted-foreground md:px-6">{firstDesign.label} · {firstDesign.images[0].label || firstDesign.images[0].alt}</p>
       )}
@@ -221,7 +237,7 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
           {/* Main */}
           <div>
             <p className="font-serif text-xs font-medium uppercase tracking-[0.22em] text-gold-500">
-              {property.unitType || (preview ? 'Master community' : '')}
+              {property.unitType || (individualPreview ? property.listingType?.includes('sale') ? 'For sale' : 'Individual property' : preview ? 'Master community' : '')}
               {property.completionStatus
                 ? ` · ${COMPLETION_LABEL[property.completionStatus] ?? property.completionStatus}`
                 : ''}
@@ -401,24 +417,26 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
             {!hasDesigns && media.gallery.length > 0 && (
               <div className="mt-10">
                 <h2 className="font-serif text-xl font-medium text-estate-700">
-                  Gallery
+                  {hasConceptGallery ? 'Proposed interiors' : 'Gallery'}
                 </h2>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   {media.gallery.map((img, i) => (
-                    <div
-                      key={i}
-                      className="relative aspect-[4/3] overflow-hidden rounded-xl border border-border"
-                    >
-                      <Image
-                        src={img.src}
-                        alt={img.alt}
-                        fill
-                        sizes="(max-width: 640px) 100vw, 50vw"
-                        unoptimized={Boolean(preview)}
-                        className="object-cover"
-                      />
-                      <PropertyPhotoBranding enabled={property.showHausLogo} />
-                    </div>
+                    <figure key={`${img.src}-${i}`} className="overflow-hidden rounded-xl border border-border bg-surface">
+                      <div className="relative aspect-[4/3] bg-estate-700/5">
+                        <Image
+                          src={img.src}
+                          alt={img.alt}
+                          fill
+                          sizes="(max-width: 640px) 100vw, 50vw"
+                          unoptimized={Boolean(preview)}
+                          className={isConceptMedia(img) ? 'object-contain' : 'object-cover'}
+                        />
+                        <PropertyPhotoBranding enabled={property.showHausLogo} />
+                      </div>
+                      {propertyMediaCaption(img) && (
+                        <figcaption className="px-3 py-3 text-sm leading-relaxed text-estate-700">{propertyMediaCaption(img)}</figcaption>
+                      )}
+                    </figure>
                   ))}
                 </div>
               </div>
@@ -434,13 +452,20 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
                   <p className="mt-2 font-serif text-2xl font-semibold text-estate-700"><PropertyPrice {...propertyPriceInput(property)} fallback="Awaiting confirmation" /></p>
                   {hasDesigns && <p className="mt-2 text-xs leading-relaxed text-muted-foreground">Collection pricing. Individual design and plot pricing is confirmed on enquiry.</p>}
                   <dl className="mt-5 space-y-4 text-sm">
-                    {[
+                    {(individualPreview ? [
+                      ['Asking price', property.priceDisplay],
+                      ['Exact address', undefined],
+                      ['Property type', property.unitType],
+                      ['Floor area', property.sizeDisplay],
+                      ['Tenure', undefined],
+                      ['EPC', undefined],
+                    ] : [
                       ...(!property.priceDisplay ? [['Pricing', undefined]] : []),
                       ['Sizes', hasDesigns ? 'See plot and sellable areas by design' : property.sizeDisplay],
                       ['Payment plan', property.paymentPlan],
                       ['Handover', property.completionStatus],
                       ['Availability', undefined],
-                    ].map(([label, value]) => (
+                    ]).map(([label, value]) => (
                       <div key={label}>
                         <dt className="font-medium text-estate-700">{label}</dt>
                         <dd className="mt-1 text-muted-foreground">{value || 'Awaiting confirmation'}</dd>

@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 3,
+  "sourceEvidence": {
+    "kind": "email",
+    "sourcePath": "evidence.json",
+    "sha256": "df2cd40e4a00ae809711016fe5dee777bf789e3eb4f85c7fa4e282c5df6efbcc",
+    "bytes": 1304,
+    "messageId": "1a0fc0570afd32f4",
+    "receivedAt": "2026-10-02T13:49:52+04:00"
+  },
+  "images": [
+    {
+      "id": "living-comparison",
+      "sourcePath": "Afifa_property transformation Interio_before after living dining space 02.png",
+      "sha256": "f23b8f3507566e644d22a8f1bcc8ccc0dfc0636ed963478b32d32181cd590080",
+      "bytes": 2288440,
+      "width": 1536,
+      "height": 1024,
+      "outputFile": "living-comparison.jpg",
+      "mediaKind": "concept-comparison",
+      "caption": "Living and dining room: supplied existing views beside AI-generated proposed interiors. Panels marked AFTER are concepts, not completed works.",
+      "alt": "Living and dining room comparison showing supplied existing views on the left and proposed AI interiors on the right"
+    },
+    {
+      "id": "living-design-board",
+      "sourcePath": "Afifa_property transformation Interio_before after living dining space 01.png",
+      "sha256": "b3ebe0f794e47143162948aa14a1c53dbc055d1a3b4597142a5a35604b8541ad",
+      "bytes": 1916816,
+      "width": 1312,
+      "height": 1199,
+      "outputFile": "living-design-board.jpg",
+      "mediaKind": "concept-comparison",
+      "caption": "Living and dining design board: supplied existing views and AI-assisted proposed interiors. The top-down illustration is a design concept, not a measured floor plan.",
+      "alt": "Living and dining design board with existing views, proposed interiors and a conceptual furniture layout"
+    },
+    {
+      "id": "kitchen-concept",
+      "sourcePath": "Afifa_property transformation Interio_Kitchen before after.png",
+      "sha256": "3a7649af99a9bc9300130b3f4fefd09b8062618038bb5bfa2e76c54bb768ae72",
+      "bytes": 2214775,
+      "width": 1312,
+      "height": 1199,
+      "outputFile": "kitchen-concept.jpg",
+      "mediaKind": "concept",
+      "caption": "AI-generated kitchen concept — proposed appearance, not the property’s current condition. The layout illustration is not a measured floor plan.",
+      "alt": "Proposed kitchen design board with AI-generated interior views and a conceptual layout"
+    },
+    {
+      "id": "bathroom-comparison",
+      "sourcePath": "Afifa_property transformation Interio_before after_master toilet.png",
+      "sha256": "4b4109154aa2e5b4b2531a2f21cf696b01ad56a470708188dfd8af3df52e9671",
+      "bytes": 2616100,
+      "width": 1536,
+      "height": 1024,
+      "outputFile": "bathroom-comparison.jpg",
+      "mediaKind": "concept-comparison",
+      "caption": "Bathroom: supplied existing view beside an AI-generated proposed interior. AFTER means proposed appearance, not completed works.",
+      "alt": "Bathroom comparison with a supplied existing view on the left and an AI-generated proposal on the right"
+    },
+    {
+      "id": "toilet-comparison",
+      "sourcePath": "Afifa_property transformation Interio_before common toilet.png",
+      "sha256": "1c724ed4d356baf6882f0188b996eddf7ab998b335391a8b97bfb2af3ee03a21",
+      "bytes": 2098822,
+      "width": 1312,
+      "height": 1199,
+      "outputFile": "toilet-comparison.jpg",
+      "mediaKind": "concept-comparison",
+      "caption": "Toilet design board: supplied existing view and AI-assisted proposed interiors. Proposed fittings and finishes are illustrative, not completed works.",
+      "alt": "Toilet design board showing a supplied existing view beside proposed interiors and finish suggestions"
+    }
+  ],
+  "documents": [
+    {
+      "documentId": "drafts.property-north-london-three-bedroom",
+      "title": "Three-bedroom property in North London",
+      "slug": "north-london-three-bedroom-property",
+      "kind": "property",
+      "confirmedFacts": {
+        "bedrooms": 3,
+        "listingType": [
+          "sale"
+        ]
+      },
+      "heroImageId": "living-comparison",
+      "galleryImageIds": [
+        "living-design-board",
+        "kitchen-concept",
+        "bathroom-comparison",
+        "toilet-comparison"
+      ]
+    }
+  ]
+}

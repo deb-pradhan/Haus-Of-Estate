@@ -13,6 +13,28 @@ const currencyOptions = [
   { title: 'USD - US dollar', value: 'USD' },
 ]
 
+const propertyImageContext = [
+  defineField({
+    name: 'caption',
+    title: 'Visible image caption',
+    type: 'string',
+    description: 'Displayed below the image. Clearly identify proposed interiors, AI-assisted concepts and comparison images; do not describe them as completed works.',
+  }),
+  defineField({
+    name: 'mediaKind',
+    title: 'Image context',
+    type: 'string',
+    description: 'Optional for existing photos. Mark concept images so the full image and a visible concept label are shown.',
+    options: {
+      list: [
+        { title: 'Photograph', value: 'photo' },
+        { title: 'Proposed interiors / AI-assisted concept', value: 'concept' },
+        { title: 'Existing view and proposed interiors comparison', value: 'concept-comparison' },
+      ],
+    },
+  }),
+]
+
 const designImage = defineArrayMember({
   type: 'image',
   options: { hotspot: false },
@@ -500,6 +522,7 @@ export const property = defineType({
       type: 'image',
       options: { hotspot: true },
       fields: [
+        ...propertyImageContext,
         defineField({
           name: 'alt',
           title: 'Alt Text',
@@ -518,6 +541,7 @@ export const property = defineType({
           type: 'image',
           options: { hotspot: true },
           fields: [
+            ...propertyImageContext,
             defineField({
               name: 'alt',
               title: 'Alt Text',

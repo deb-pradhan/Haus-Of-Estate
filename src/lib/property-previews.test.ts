@@ -93,6 +93,110 @@ afterEach(async () => {
   await rm(temporaryRoot, { recursive: true, force: true })
 })
 
+async function individualFixture() {
+  report.schemaVersion = 3
+  report.sourceEvidence = {
+    kind: 'email', sourcePath: 'evidence.json', sha256: 'a'.repeat(64), bytes: 100,
+    messageId: 'private-message-123', receivedAt: '2026-10-06T09:00:00Z', copied: false,
+  }
+  report.documents = [{
+    documentId: 'drafts.property-london', title: 'Three-bedroom North London property',
+    slug: 'north-london-three-bedroom', kind: 'property', heroImageId: 'aerial', galleryImageIds: ['villa'],
+    confirmedFacts: { bedrooms: 3, listingType: ['sale'] },
+  }]
+  const photo = { ...imageReference('aerial'), alt: 'Source photograph', mediaKind: 'photo' }
+  const concept = { ...imageReference('villa'), alt: 'Proposed interior comparison',
+    mediaKind: 'concept-comparison', caption: 'Proposed interiors · AI-generated concept; not completed works.' }
+  documents = [{
+    _id: 'drafts.property-london', _type: 'property', title: 'Three-bedroom North London property',
+    slug: { _type: 'slug', current: 'north-london-three-bedroom' }, status: 'draft', featured: false,
+    community: 'North London', city: 'London', country: 'United Kingdom', bedrooms: 3, listingType: ['sale'],
+    summary: 'Three-bedroom property for sale in North London. Further details await confirmation.',
+    verification: { status: 'unverified', notes: 'private-email-notes' }, featuredImage: photo, gallery: [concept],
+  }]
+  Object.assign((report.images as JsonObject[])[0], { mediaKind: photo.mediaKind })
+  Object.assign((report.images as JsonObject[])[1], { mediaKind: concept.mediaKind, caption: concept.caption })
+  await saveFixture()
+}
+
+describe('email-evidenced individual property previews', () => {
+  it('shows confirmed facts and persistent media labels without exposing evidence or inferring missing details', async () => {
+    await individualFixture()
+    const preview = await loadPropertyPreview('north-london-three-bedroom', options)
+    expect(preview?.kind).toBe('property')
+    expect(preview?.document.bedrooms).toBe(3)
+    expect(preview?.document.listingType).toEqual(['sale'])
+    expect(preview?.media.hero.mediaKind).toBe('photo')
+    expect(preview?.media.gallery[0]).toEqual({
+      src: '/dev/property-previews/media/villa.jpg', alt: 'Proposed interior comparison',
+      mediaKind: 'concept-comparison', caption: 'Proposed interiors · AI-generated concept; not completed works.',
+    })
+    for (const field of ['unitType', 'availability', 'priceAmount', 'sizeDisplay', 'tenure', 'epc', 'floorPlans']) {
+      expect(preview?.document).not.toHaveProperty(field)
+    }
+    expect(JSON.stringify(preview)).not.toMatch(/private-|sourceEvidence|sha256|_sanityAsset|evidence.json/)
+    expect(await loadPropertyPreviewMedia('villa.jpg', options)).toEqual(new Uint8Array(jpeg))
+  })
+
+  it.each([
+    ['unconfirmed property type', (d: JsonObject) => { d.unitType = 'House' }],
+    ['unconfirmed availability', (d: JsonObject) => { d.availability = ['ready'] }],
+    ['unconfirmed price', (d: JsonObject) => { d.priceAmount = 500000 }],
+    ['unconfirmed address', (d: JsonObject) => { d.address = '10 Example Road' }],
+    ['unconfirmed tenure', (d: JsonObject) => { d.tenure = 'Freehold' }],
+    ['unconfirmed EPC', (d: JsonObject) => { d.epcRating = 'C' }],
+    ['unsupported floorplans', (d: JsonObject) => { d.floorPlans = [] }],
+    ['wrong bedrooms', (d: JsonObject) => { d.bedrooms = 4 }],
+    ['wrong sale status', (d: JsonObject) => { d.listingType = ['rent'] }],
+  ])('rejects %s in the draft', async (_label, mutate) => {
+    await individualFixture()
+    mutate(documents[0])
+    await saveFixture()
+    expect(await loadPropertyPreviews(options)).toEqual([])
+  })
+
+  it('rejects missing or altered concept captions and mismatched media classifications', async () => {
+    await individualFixture()
+    const gallery = (documents[0].gallery as JsonObject[])[0]
+    delete gallery.caption
+    await saveFixture()
+    expect(await loadPropertyPreviews(options)).toEqual([])
+    gallery.caption = 'Completed renovation'
+    await saveFixture()
+    expect(await loadPropertyPreviews(options)).toEqual([])
+    gallery.caption = (report.images as JsonObject[])[1].caption
+    gallery.mediaKind = 'photo'
+    await saveFixture()
+    expect(await loadPropertyPreviews(options)).toEqual([])
+    Object.assign((report.images as JsonObject[])[1], { caption: undefined })
+    gallery.mediaKind = 'concept-comparison'
+    delete gallery.caption
+    await saveFixture()
+    expect(await loadPropertyPreviews(options)).toEqual([])
+  })
+
+  it('rejects unsupported evidence and facts and keeps version 3 media unavailable in production', async () => {
+    await individualFixture()
+    const facts = (report.documents as JsonObject[])[0].confirmedFacts as JsonObject
+    facts.unitType = 'House'
+    await saveFixture()
+    expect(await loadPropertyPreviews(options)).toEqual([])
+    delete facts.unitType
+    ;(report.sourceEvidence as JsonObject).sourcePath = '../evidence.json'
+    await saveFixture()
+    expect(await loadPropertyPreviews(options)).toEqual([])
+    ;(report.sourceEvidence as JsonObject).sourcePath = 'evidence.json'
+    await saveFixture()
+    const production = { env: { NODE_ENV: 'production', HAUS_PROPERTY_PREVIEW_DIR: outputRoot } }
+    expect(await loadPropertyPreviews(production)).toEqual([])
+    expect(await loadPropertyPreviewMedia('villa.jpg', production)).toBeNull()
+    const altered = Buffer.from(jpeg)
+    altered[altered.length - 1] ^= 1
+    await writeFile(path.join(outputRoot, 'images', 'villa.jpg'), altered)
+    expect(await loadPropertyPreviewMedia('villa.jpg', options)).toBeNull()
+  })
+})
+
 describe('local property preview bundles', () => {
   it('resolves ordered local media and preserves the original draft slug shape', async () => {
     documents.reverse()

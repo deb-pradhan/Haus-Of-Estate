@@ -6,6 +6,7 @@ import { sanityFetch } from '@/sanity/live'
 import { PROPERTY_BY_SLUG_QUERY, PROPERTY_SLUGS_QUERY } from '@/sanity/queries'
 import { DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGES } from '@/lib/seo'
 import { PropertyDetailView, type PropertyDetail } from '@/components/properties/PropertyDetailView'
+import { isConceptMedia } from '@/lib/property-media'
 
 export const revalidate = 60
 
@@ -107,12 +108,20 @@ export default async function PropertyDetailPage({
       draftPreview={draftPreview}
       media={{
         hero: property.featuredImage ? {
-          src: urlFor(property.featuredImage).width(1600).height(900).url(),
+          src: isConceptMedia(property.featuredImage)
+            ? urlFor(property.featuredImage).ignoreImageParams().width(1600).fit('max').url()
+            : urlFor(property.featuredImage).width(1600).height(900).url(),
           alt: property.featuredImage.alt || property.title,
+          caption: property.featuredImage.caption,
+          mediaKind: property.featuredImage.mediaKind,
         } : undefined,
         gallery: (property.gallery ?? []).map((image, index) => ({
-          src: urlFor(image).width(800).height(600).url(),
+          src: isConceptMedia(image)
+            ? urlFor(image).ignoreImageParams().width(1200).fit('max').url()
+            : urlFor(image).width(800).height(600).url(),
           alt: image.alt || `${property.title} — image ${index + 1}`,
+          caption: image.caption,
+          mediaKind: image.mediaKind,
         })),
       }}
     />

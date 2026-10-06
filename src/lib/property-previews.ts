@@ -11,7 +11,12 @@ export type PropertyPreviewEnvironment = {
 
 export type PropertyPreviewOptions = { env?: PropertyPreviewEnvironment }
 
-export type PropertyPreviewImage = { src: string; alt: string }
+export type PropertyPreviewImage = {
+  src: string
+  alt: string
+  mediaKind?: 'photo' | 'concept' | 'concept-comparison'
+  caption?: string
+}
 
 export type PropertyPreviewDocument = Record<string, unknown> & {
   _id: string
@@ -26,6 +31,7 @@ export type PropertyPreviewDocument = Record<string, unknown> & {
   developer?: string
   unitType?: string
   bedrooms?: number
+  listingType?: string[]
   priceDisplay?: string
   priceAmount?: number
   priceCurrency?: string
@@ -39,7 +45,7 @@ export type PropertyPreviewDocument = Record<string, unknown> & {
 
 export type PropertyPreview = {
   document: PropertyPreviewDocument
-  kind: 'development' | 'home-type'
+  kind: 'development' | 'home-type' | 'property'
   media: { hero: PropertyPreviewImage; gallery: PropertyPreviewImage[] }
 }
 
@@ -49,6 +55,8 @@ type PreparedImage = {
   absolutePath: string
   bytes: number
   sha256: string
+  mediaKind?: PropertyPreviewImage['mediaKind']
+  caption?: string
 }
 
 type PreviewBundle = {
@@ -68,6 +76,10 @@ const UNCONFIRMED_FIELDS = [
   'publishedAt', 'availabilityCheckedAt', 'availabilityCheckDueAt',
   'editorialApproval', 'approvals', 'approvedAt', 'approvedBy',
 ]
+const INDIVIDUAL_PENDING_FIELDS = [
+  'address', 'exactAddress', 'postcode', 'tenure', 'epc', 'epcRating',
+  'floorPlans', 'designVariants', 'interiorSchemes',
+]
 
 function requireValue(condition: unknown): asserts condition {
   if (!condition) throw new Error('Invalid local property preview bundle')
@@ -80,6 +92,19 @@ function object(value: unknown): Record<string, unknown> {
 
 function nonempty(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0
+}
+
+function imageLabels(value: Record<string, unknown>, required = false) {
+  requireValue(!required || value.mediaKind !== undefined)
+  if (value.mediaKind !== undefined) {
+    requireValue(['photo', 'concept', 'concept-comparison'].includes(value.mediaKind as string))
+  }
+  if (value.caption !== undefined) requireValue(nonempty(value.caption) && value.caption.length <= 600)
+  requireValue(!['concept', 'concept-comparison'].includes(value.mediaKind as string) || nonempty(value.caption))
+  return {
+    ...(value.mediaKind === undefined ? {} : { mediaKind: value.mediaKind as PropertyPreviewImage['mediaKind'] }),
+    ...(value.caption === undefined ? {} : { caption: value.caption as string }),
+  }
 }
 
 function filenameIsSafe(value: unknown): value is string {
@@ -132,7 +157,8 @@ function imageReference(
   requireValue(image && reference._type === 'image' && reference._key === imageId)
   requireValue(nonempty(reference.alt))
   requireValue(reference._sanityAsset === 'image@' + pathToFileURL(image.absolutePath).href)
-  return { src: MEDIA_PATH + encodeURIComponent(image.filename), alt: reference.alt }
+  requireValue(reference.mediaKind === image.mediaKind && reference.caption === image.caption)
+  return { src: MEDIA_PATH + encodeURIComponent(image.filename), alt: reference.alt, ...imageLabels(reference) }
 }
 
 function plainDescription(value: unknown) {
@@ -183,6 +209,7 @@ function displayDocument(document: Record<string, unknown>): PropertyPreviewDocu
   }
   if (document.priceAmount !== undefined) display.priceAmount = document.priceAmount as number
   if (document.bedrooms !== undefined) display.bedrooms = document.bedrooms as number
+  if (document.listingType !== undefined) display.listingType = [...document.listingType as string[]]
   for (const key of ['keyFeatures', 'amenities'] as const) {
     if (document[key] !== undefined) {
       requireValue(Array.isArray(document[key]) && document[key].every(nonempty))
@@ -318,7 +345,17 @@ async function readBundleUncached(options: PropertyPreviewOptions): Promise<Prev
     requireValue(rootInfo.isDirectory() && !rootInfo.isSymbolicLink())
     requireValue(samePath(root, await realpath(root)))
     const report = object(JSON.parse(await metadata(root, 'preparation-report.json')))
-    requireValue(report.schemaVersion === 2 && report.status === 'complete')
+    requireValue([2, 3].includes(report.schemaVersion as number) && report.status === 'complete')
+    const individual = report.schemaVersion === 3
+    if (individual) {
+      const evidence = object(report.sourceEvidence)
+      requireValue(!Object.hasOwn(report, 'brochure') && evidence.kind === 'email' &&
+        nonempty(evidence.messageId) && nonempty(evidence.receivedAt) && Number.isFinite(Date.parse(evidence.receivedAt)) &&
+        nonempty(evidence.sourcePath) && !/[\\:\u0000-\u001f]/.test(evidence.sourcePath) &&
+        !path.posix.isAbsolute(evidence.sourcePath) && evidence.sourcePath.split('/').every((part) => part && part !== '.' && part !== '..') &&
+        typeof evidence.sha256 === 'string' && /^[a-f0-9]{64}$/.test(evidence.sha256) &&
+        Number.isSafeInteger(evidence.bytes) && (evidence.bytes as number) > 0 && evidence.copied === false)
+    }
     requireValue(typeof report.outputRoot === 'string' && path.isAbsolute(report.outputRoot) &&
       samePath(root, report.outputRoot))
     requireValue(Array.isArray(report.images) && report.images.length > 0 &&
@@ -350,6 +387,7 @@ async function readBundleUncached(options: PropertyPreviewOptions): Promise<Prev
       const prepared: PreparedImage = {
         id: image.id, filename, absolutePath,
         bytes: output.bytes as number, sha256: output.sha256,
+        ...imageLabels(image, individual),
       }
       images.set(filename, prepared)
       imagesById.set(image.id, prepared)
@@ -377,7 +415,8 @@ async function readBundleUncached(options: PropertyPreviewOptions): Promise<Prev
       requireValue(typeof definition.slug === 'string' &&
         /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(definition.slug) && !slugs.has(definition.slug))
       requireValue(nonempty(definition.title) &&
-        (definition.kind === 'development' || definition.kind === 'home-type'))
+        (definition.kind === 'property' || definition.kind === 'development' || definition.kind === 'home-type'))
+      requireValue(individual ? definition.kind === 'property' : definition.kind !== 'property')
       const document = documents.get(definition.documentId)
       requireValue(document && document._type === 'property' &&
         document.title === definition.title && document.status === 'draft' &&
@@ -387,6 +426,10 @@ async function readBundleUncached(options: PropertyPreviewOptions): Promise<Prev
       requireValue(['community', 'city', 'country', 'summary'].every((key) => nonempty(document[key])))
       requireValue((document.summary as string).length <= 280)
       const prices: Record<string, unknown> = {}
+      if (individual) {
+        requireValue(!Object.hasOwn(definition, 'confirmedPricing') &&
+          INDIVIDUAL_PENDING_FIELDS.every((key) => !Object.hasOwn(document, key)))
+      }
       if (definition.confirmedPricing !== undefined) {
         const pricing = object(definition.confirmedPricing)
         const source = object(pricing.source)
@@ -401,11 +444,18 @@ async function readBundleUncached(options: PropertyPreviewOptions): Promise<Prev
         prices.priceDisplay = `AED ${(pricing.startingPrice as number).toLocaleString('en-GB')}–${(pricing.maximumPrice as number).toLocaleString('en-GB')} · ${pricing.scope}`
       }
       requireValue(UNCONFIRMED_FIELDS.every((key) =>
-        Object.hasOwn(prices, key) ? document[key] === prices[key] : !Object.hasOwn(document, key)))
+        individual && key === 'listingType' ? Array.isArray(document.listingType) &&
+          document.listingType.length === 1 && document.listingType[0] === 'sale' :
+          Object.hasOwn(prices, key) ? document[key] === prices[key] : !Object.hasOwn(document, key)))
       const verification = object(document.verification)
       requireValue(verification.status === 'unverified' &&
         Object.keys(verification).every((key) => ['status', 'notes'].includes(key)))
-      if (definition.confirmedFacts !== undefined) {
+      if (individual) {
+        const facts = object(definition.confirmedFacts)
+        requireValue(Object.keys(facts).every((key) => ['bedrooms', 'listingType'].includes(key)) &&
+          facts.bedrooms === 3 && Array.isArray(facts.listingType) && facts.listingType.length === 1 &&
+          facts.listingType[0] === 'sale' && document.bedrooms === 3 && !Object.hasOwn(document, 'unitType'))
+      } else if (definition.confirmedFacts !== undefined) {
         const facts = object(definition.confirmedFacts)
         requireValue(definition.kind === 'home-type' &&
           (facts.unitType === 'Villa' || facts.unitType === 'Townhouse') &&
@@ -436,7 +486,7 @@ async function readBundleUncached(options: PropertyPreviewOptions): Promise<Prev
         media: { hero, gallery },
       })
     }
-    requireValue(previews.filter((preview) => preview.kind === 'development').length === 1)
+    if (!individual) requireValue(previews.filter((preview) => preview.kind === 'development').length === 1)
     // Only assigned report images may be served, even if extra files exist beside them.
     for (const [filename, image] of images) {
       if (!usedImageIds.has(image.id)) images.delete(filename)

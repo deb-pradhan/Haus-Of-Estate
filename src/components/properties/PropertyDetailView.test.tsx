@@ -2,7 +2,7 @@ import { createElement, type ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { LeadOpenOptions, LeadProjectContext } from '@/components/lead-eoi/types'
-import { PropertyDetailView, type PropertyDetail } from './PropertyDetailView'
+import { PropertyDetailView, type PropertyDetail, type PropertyMedia } from './PropertyDetailView'
 import PropertyDetailPage from '@/app/(main)/properties/[slug]/page'
 
 const controls = vi.hoisted(() => ({
@@ -13,13 +13,14 @@ const controls = vi.hoisted(() => ({
   openLead: vi.fn(),
   draftMode: vi.fn(),
   fetch: vi.fn(),
+  urlFor: vi.fn(),
 }))
 
 vi.mock('next/headers', () => ({ draftMode: controls.draftMode }))
 vi.mock('@/sanity/live', () => ({ sanityFetch: controls.fetch }))
-vi.mock('@/sanity', () => ({ urlFor: vi.fn() }))
+vi.mock('@/sanity', () => ({ urlFor: controls.urlFor }))
 vi.mock('next/image', () => ({
-  default: ({ src, alt }: { src: string; alt: string }) => createElement('img', { src, alt }),
+  default: ({ src, alt, className }: { src: string; alt: string; className?: string }) => createElement('img', { src, alt, className }),
 }))
 vi.mock('@/components/blog', () => ({ PortableTextRenderer: () => null }))
 vi.mock('@/components/saved-content', () => ({
@@ -210,6 +211,65 @@ describe('shared property details', () => {
     expect(controls.share).not.toHaveBeenCalled()
     expect(controls.project).not.toHaveBeenCalled()
     expect(controls.lead).not.toHaveBeenCalled()
+  })
+
+  it('labels a London property draft honestly and keeps complete concept comparisons visible', () => {
+    const london: PropertyDetail = {
+      _id: 'drafts.north-london-three-bedroom',
+      title: '3-bedroom property for sale in North London',
+      slug: 'north-london-three-bedroom',
+      community: 'North London',
+      city: 'London',
+      country: 'United Kingdom',
+      summary: 'A three-bedroom property offered for sale in North London.',
+      listingType: ['sale'],
+      bedrooms: 3,
+    }
+    const conceptMedia: PropertyMedia = {
+      hero: { src: '/london-concept.jpg', alt: 'Living room proposal', mediaKind: 'concept', caption: 'Living room — AI-assisted proposed interiors; not completed works' },
+      gallery: [{ src: '/london-comparison.jpg', alt: 'Existing living room beside a proposed interior', mediaKind: 'concept-comparison' }],
+    }
+    const html = renderToStaticMarkup(<PropertyDetailView property={london} media={conceptMedia} preview={{ kind: 'property' }} />)
+
+    expect(html).toContain('For sale')
+    expect(html).toContain('Awaiting confirmation: asking price, exact address, property type, floor area, tenure and EPC.')
+    expect(html).toContain('Living room — AI-assisted proposed interiors; not completed works</p>')
+    expect(html).toContain('Existing view and proposed interiors — AI-assisted concept; not completed works</figcaption>')
+    expect(html.match(/class="object-contain"/g)).toHaveLength(2)
+    expect(html).not.toContain('Florence')
+    expect(html).not.toContain('Master community')
+    expect(html).not.toContain('Handover')
+    expect(html).not.toContain('Payment plan')
+    expect(html).toContain('Enquiries disabled in preview')
+    expect(controls.save).not.toHaveBeenCalled()
+    expect(controls.share).not.toHaveBeenCalled()
+    expect(controls.project).not.toHaveBeenCalled()
+    expect(controls.lead).not.toHaveBeenCalled()
+  })
+
+  it('preserves concept captions and full images when mapping Sanity media to the property view', async () => {
+    const builder = {
+      ignoreImageParams: vi.fn().mockReturnThis(),
+      width: vi.fn().mockReturnThis(),
+      height: vi.fn().mockReturnThis(),
+      fit: vi.fn().mockReturnThis(),
+      url: vi.fn().mockReturnValue('/resolved-concept.jpg'),
+    }
+    controls.urlFor.mockReturnValue(builder)
+    controls.fetch.mockResolvedValue({ data: {
+      ...property,
+      featuredImage: { alt: 'Proposal', caption: 'Proposed interior — AI-assisted concept; not completed works', mediaKind: 'concept' },
+      gallery: [{ alt: 'Comparison', mediaKind: 'concept-comparison' }],
+    } })
+    const page = await PropertyDetailPage({ params: Promise.resolve({ slug: property.slug }) })
+    const html = renderToStaticMarkup(page)
+
+    expect(html).toContain('Proposed interior — AI-assisted concept; not completed works</p>')
+    expect(html).toContain('Existing view and proposed interiors — AI-assisted concept; not completed works</figcaption>')
+    expect(html.match(/class="object-contain"/g)).toHaveLength(2)
+    expect(builder.ignoreImageParams).toHaveBeenCalledTimes(2)
+    expect(builder.height).not.toHaveBeenCalled()
+    expect(builder.fit).toHaveBeenCalledWith('max')
   })
 
   it.each(['drafts.property-florence', 'versions.release.property-florence'])(

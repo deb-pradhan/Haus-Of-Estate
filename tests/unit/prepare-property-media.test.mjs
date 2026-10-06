@@ -119,6 +119,99 @@ async function multiFixture(t) {
   return f
 }
 
+async function individualFixture(t) {
+  const f = await fixture(t)
+  const evidence = Buffer.from(JSON.stringify({ messageId: 'email-123', text: 'Three bedrooms, North London, for sale.' }))
+  await writeFile(path.join(f.sourceRoot, 'evidence.json'), evidence)
+  f.manifest.schemaVersion = 3
+  delete f.manifest.project
+  delete f.manifest.brochure
+  f.manifest.sourceEvidence = {
+    kind: 'email', sourcePath: 'evidence.json', sha256: digest(evidence), bytes: evidence.length,
+    messageId: 'email-123', receivedAt: '2026-10-06T09:00:00Z',
+  }
+  f.manifest.documents = [{
+    documentId: f.draft._id, title: f.draft.title, slug: f.draft.slug.current, kind: 'property',
+    confirmedFacts: { bedrooms: 3, listingType: ['sale'] },
+    heroImageId: 'hero', galleryImageIds: ['living-room'],
+  }]
+  for (const image of f.manifest.images) {
+    delete image.role
+    delete image.galleryOrder
+    delete image.brochurePages
+    image.mediaKind = image.id === 'hero' ? 'photo' : 'concept-comparison'
+  }
+  f.manifest.images[1].caption = 'Proposed interiors · AI-generated concept comparison; not completed works.'
+  Object.assign(f.draft, {
+    bedrooms: 3, listingType: ['sale'], community: 'North London', city: 'London', country: 'United Kingdom',
+  })
+  delete f.options.brochure
+  await f.save()
+  return f
+}
+
+test('v3 email preparation needs no brochure and preserves labelled concepts without inventing property facts', async (t) => {
+  const f = await individualFixture(t)
+  const report = await preparePropertyMedia(f.options)
+  const prepared = JSON.parse(await readFile(path.join(f.options.output, 'properties.staging-draft.ndjson'), 'utf8'))
+  assert.equal(report.schemaVersion, 3)
+  assert.equal(report.sourceEvidence.copied, false)
+  assert.equal(Object.hasOwn(report, 'brochure'), false)
+  assert.equal(prepared.bedrooms, 3)
+  assert.deepEqual(prepared.listingType, ['sale'])
+  for (const field of ['unitType', 'availability', 'sizeDisplay', 'priceAmount', 'tenure', 'epc', 'floorPlans']) {
+    assert.equal(Object.hasOwn(prepared, field), false)
+  }
+  assert.equal(prepared.featuredImage.mediaKind, 'photo')
+  assert.equal(prepared.gallery[0].mediaKind, 'concept-comparison')
+  assert.equal(prepared.gallery[0].caption, f.manifest.images[1].caption)
+  assert.equal(report.images[1].caption, prepared.gallery[0].caption)
+  assert.deepEqual((await readdir(f.options.output)).sort(), ['images', 'preparation-report.json', 'properties.staging-draft.ndjson'])
+  assert.doesNotThrow(() => parseArgs(['--manifest', 'manifest.json', '--draft', 'draft.ndjson',
+    '--source-root', 'source', '--output', 'output']))
+})
+
+test('v3 refuses incomplete image labels, unsupported facts and unknown commercial details', async (t) => {
+  const f = await individualFixture(t)
+  for (const mutate of [
+    (m) => { delete m.images[0].mediaKind },
+    (m) => { delete m.images[1].caption },
+    (m) => { m.images[1].mediaKind = 'renovated' },
+    (m) => { m.images[1].caption = ' ' },
+    (m) => { m.images[1].caption = 'x'.repeat(601) },
+    (m) => { m.documents[0].confirmedFacts.bedrooms = 4 },
+    (m) => { m.documents[0].confirmedFacts.unitType = 'House' },
+    (m) => { m.documents[0].confirmedFacts.listingType = ['rent'] },
+    (m) => { m.documents[0].confirmedPricing = {} },
+    (m) => { m.documents[0].kind = 'development' },
+    (m) => { m.sourceEvidence.sourcePath = '../evidence.json' },
+    (m) => { m.sourceEvidence.receivedAt = 'unknown' },
+  ]) {
+    const changed = clone(f.manifest)
+    mutate(changed)
+    assert.throws(() => validateManifest(changed))
+  }
+  for (const field of ['unitType', 'availability', 'priceAmount', 'sizeDisplay', 'completionStatus',
+    'address', 'exactAddress', 'postcode', 'tenure', 'epc', 'epcRating', 'floorPlans', 'designVariants']) {
+    assert.throws(() => validateDraft({ ...f.draft, [field]: 'unconfirmed' }, f.manifest))
+  }
+  assert.throws(() => validateDraft({ ...f.draft, bedrooms: 4 }, f.manifest))
+  assert.throws(() => validateDraft({ ...f.draft, listingType: ['rent'] }, f.manifest))
+})
+
+test('v3 checks email evidence before creating output and refuses overwriting prepared work', async (t) => {
+  const f = await individualFixture(t)
+  const original = f.manifest.sourceEvidence.sha256
+  f.manifest.sourceEvidence.sha256 = '0'.repeat(64)
+  await f.save()
+  await assert.rejects(preparePropertyMedia(f.options), /Email evidence SHA256 mismatch/)
+  await missing(f.options.output)
+  f.manifest.sourceEvidence.sha256 = original
+  await f.save()
+  await preparePropertyMedia(f.options)
+  await assert.rejects(preparePropertyMedia(f.options), /Output already exists/)
+})
+
 test('successful local preparation resizes, auto-orients, strips metadata and preserves sources', async (t) => {
   const f = await fixture(t)
   const before = {

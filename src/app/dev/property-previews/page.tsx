@@ -3,10 +3,12 @@ import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { loadPropertyPreviews } from '@/lib/property-previews'
 import { PropertyPrice } from '@/components/currency/property-price'
+import { isConceptMedia, propertyMediaCaption } from '@/lib/property-media'
 
 export default async function PropertyPreviewsPage() {
   const previews = await loadPropertyPreviews()
   const overview = previews.find(({ kind }) => kind === 'development')
+  const individualProperties = previews.filter(({ kind }) => kind === 'property')
   const groups = [
     { type: 'Villa', title: 'Villas', id: 'villas' },
     { type: 'Townhouse', title: 'Townhouses', id: 'townhouses' },
@@ -15,6 +17,8 @@ export default async function PropertyPreviewsPage() {
     homes: previews.filter(({ kind, document }) => kind === 'home-type' && document.unitType === group.type)
       .sort((a, b) => (a.document.bedrooms ?? 0) - (b.document.bedrooms ?? 0)),
   }))
+  const hasHomeTypes = groups.some(({ homes }) => homes.length > 0)
+  const hasFlorence = Boolean(overview) || hasHomeTypes
 
   return (
     <div className="min-h-screen bg-background px-4 py-12 md:px-6 md:py-16">
@@ -24,11 +28,13 @@ export default async function PropertyPreviewsPage() {
           <span aria-hidden>/</span>
           <Link href="/properties" className="hover:text-estate-700 hover:underline">Properties</Link>
           <span aria-hidden>/</span>
-          <span aria-current="page">Azizi Florence</span>
+          <span aria-current="page">{hasFlorence ? 'Azizi Florence' : 'Property draft previews'}</span>
         </nav>
         <div className="mt-4 rounded-xl border border-gold-500/30 bg-gold-500/10 px-4 py-3 text-xs leading-relaxed text-estate-700">
-          <strong>Draft preview · not published.</strong> Prices apply to Clusters 1 & 2. Design areas are brochure figures; flagged plot areas await clarification. Current payment terms, handover and availability require confirmation. Enquiries are disabled.
+          <strong>Draft preview · not published.</strong>{' '}
+          {hasFlorence ? 'Florence prices apply to Clusters 1 & 2. Design areas are brochure figures; flagged plot areas await clarification. Current payment terms, handover and availability require confirmation.' : 'Listing details await confirmation. Proposed interiors are AI-assisted concepts, not completed works.'} Enquiries are disabled.
         </div>
+        {!overview && <h1 className="mt-8 font-serif text-4xl font-medium text-estate-700">Property draft previews</h1>}
 
         {previews.length === 0 ? (
           <p className="mt-10 rounded-xl border border-border bg-surface p-6 text-sm text-muted-foreground">No prepared bundle is available. Set HAUS_PROPERTY_PREVIEW_DIR to the complete local preparation output directory, then restart the development server.</p>
@@ -38,7 +44,7 @@ export default async function PropertyPreviewsPage() {
               <section aria-labelledby="florence-title" className="mt-8 overflow-hidden rounded-2xl border border-border bg-surface">
                 <div className="grid lg:grid-cols-[1.2fr_1fr]">
                   <div className="relative min-h-72 lg:min-h-[430px]">
-                    <Image src={overview.media.hero.src} alt={overview.media.hero.alt} fill unoptimized priority sizes="(min-width: 1024px) 640px, 100vw" className="object-cover" />
+                    <Image src={overview.media.hero.src} alt={overview.media.hero.alt} fill unoptimized preload sizes="(min-width: 1024px) 640px, 100vw" className="object-cover" />
                   </div>
                   <div className="flex flex-col justify-center p-6 md:p-10">
                     <p className="text-xs uppercase tracking-[0.2em] text-gold-500">Community overview · {overview.document.city}</p>
@@ -56,7 +62,7 @@ export default async function PropertyPreviewsPage() {
                 </div>
               </section>
             )}
-            <div className="mt-12 flex flex-col justify-between gap-4 border-b border-border pb-6 sm:flex-row sm:items-end">
+            {hasHomeTypes && <div className="mt-12 flex flex-col justify-between gap-4 border-b border-border pb-6 sm:flex-row sm:items-end">
               <div>
                 <h2 className="font-serif text-3xl text-estate-700">Find your home at Florence</h2>
                 <p className="mt-2 text-sm text-muted-foreground">Explore the home designs. Individual units await confirmed inventory.</p>
@@ -64,7 +70,7 @@ export default async function PropertyPreviewsPage() {
               <nav aria-label="Home types" className="flex gap-5 text-sm text-estate-700">
                 {groups.filter(({ homes }) => homes.length).map(({ id, title }) => <a key={id} href={`#${id}`} className="py-2 underline underline-offset-4">{title}</a>)}
               </nav>
-            </div>
+            </div>}
             {groups.filter(({ homes }) => homes.length).map(({ id, title, homes }) => {
               const prices = homes.map(({ document }) => document.priceCurrency === 'AED' ? document.priceAmount : undefined)
               const startingPrice = prices.every((price): price is number => typeof price === 'number') ? Math.min(...prices) : undefined
@@ -92,6 +98,30 @@ export default async function PropertyPreviewsPage() {
                 </section>
               )
             })}
+            {individualProperties.length > 0 && (
+              <section aria-labelledby="individual-properties-title" className="mt-10 md:mt-12">
+                <h2 id="individual-properties-title" className="font-serif text-2xl text-estate-700">Individual property drafts</h2>
+                <p className="mt-2 text-sm text-muted-foreground">Review the supplied property information and proposed interiors before publication.</p>
+                <div className="mt-5 grid gap-6 md:grid-cols-2">
+                  {individualProperties.map(({ document, media }) => (
+                    <Link key={document._id} href={`/dev/property-previews/${document.slug.current}`} className="overflow-hidden rounded-2xl border border-border bg-surface transition-shadow hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-estate-700">
+                      <figure>
+                        <div className="relative aspect-[3/2] bg-estate-700/5">
+                          <Image src={media.hero.src} alt={media.hero.alt} fill unoptimized sizes="(min-width: 768px) 50vw, 100vw" className={isConceptMedia(media.hero) ? 'object-contain' : 'object-cover'} />
+                        </div>
+                        {propertyMediaCaption(media.hero) && <figcaption className="border-b border-border px-5 py-3 text-sm leading-relaxed text-estate-700">{propertyMediaCaption(media.hero)}</figcaption>}
+                      </figure>
+                      <div className="p-5 md:p-6">
+                        <p className="text-xs uppercase tracking-wider text-gold-500">{[document.community, document.city].filter(Boolean).join(', ')}</p>
+                        <h3 className="mt-2 font-serif text-2xl font-medium text-estate-700">{document.title}</h3>
+                        <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{document.summary}</p>
+                        <span className="mt-5 flex items-center justify-between border-t border-border pt-4 text-sm text-estate-700">Review property draft <ArrowRight aria-hidden className="h-4 w-4" /></span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
           </>
         )}
       </div>

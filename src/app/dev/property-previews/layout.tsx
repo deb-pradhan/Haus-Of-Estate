@@ -6,7 +6,7 @@ import { getCareersInbox } from '@/lib/careers-settings'
 import { isAuthEnabled } from '@/lib/features'
 
 export const metadata: Metadata = {
-  title: 'Local Florence drafts',
+  title: 'Local property drafts',
   robots: {
     index: false,
     follow: false,

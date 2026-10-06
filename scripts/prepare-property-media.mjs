@@ -21,12 +21,17 @@ export const UNCONFIRMED_DRAFT_FIELDS = Object.freeze([
   'editorialApproval', 'approvals', 'approvedAt', 'approvedBy',
 ])
 
+const INDIVIDUAL_PENDING_FIELDS = [
+  'address', 'exactAddress', 'postcode', 'tenure', 'epc', 'epcRating',
+  'floorPlans', 'designVariants', 'interiorSchemes',
+]
+
 const HELP = [
   'Prepare verified property images and native Sanity drafts locally.',
   '',
   'node scripts/prepare-property-media.mjs',
-  '  --manifest <v1-or-v2.json> --draft <matching-documents.ndjson>',
-  '  --source-root <local-source-directory> --brochure <local.pdf>',
+  '  --manifest <v1-v2-or-v3.json> --draft <matching-documents.ndjson>',
+  '  --source-root <local-source-directory> [--brochure <local.pdf>]',
   '  --output <new-local-directory>',
   '',
   'The output parent must already exist. Output must be outside Git repositories,',
@@ -34,6 +39,8 @@ const HELP = [
   'No upload, publication, database access or brochure copy is performed.',
   'V1 produces property.staging-draft.ndjson; V2 produces properties.staging-draft.ndjson.',
   'V2 input must contain exactly every manifest document, with no extras or duplicates.',
+  'V3 prepares email-evidenced individual properties; no brochure is required.',
+  'V1/V2 still require --brochure. V2/V3 produce properties.staging-draft.ndjson.',
   'Generated file URLs refer to this output location; regenerate after moving it.',
 ].join('\n')
 
@@ -64,15 +71,51 @@ function safeOutputFile(value) {
     !/^(con|prn|aux|nul|com[1-9]|lpt[1-9])\./i.test(value)
 }
 
+function imageLabels(image, required = false) {
+  requireValue(!required || image.mediaKind !== undefined, 'V3 images require mediaKind: ' + image.id)
+  if (image.mediaKind !== undefined) {
+    requireValue(['photo', 'concept', 'concept-comparison'].includes(image.mediaKind),
+      'Invalid mediaKind: ' + image.id)
+  }
+  if (image.caption !== undefined) {
+    requireValue(nonempty(image.caption) && image.caption.length <= 600,
+      'Image caption must be nonempty and at most 600 characters: ' + image.id)
+  }
+  requireValue(!['concept', 'concept-comparison'].includes(image.mediaKind) || nonempty(image.caption),
+    'Concept images require a visible caption: ' + image.id)
+  return {
+    ...(image.mediaKind === undefined ? {} : { mediaKind: image.mediaKind }),
+    ...(image.caption === undefined ? {} : { caption: image.caption }),
+  }
+}
+
+function validateIndividualFacts(facts) {
+  requireValue(facts && !Array.isArray(facts) &&
+    Object.keys(facts).every((key) => ['bedrooms', 'listingType'].includes(key)) &&
+    facts.bedrooms === 3 && Array.isArray(facts.listingType) &&
+    facts.listingType.length === 1 && facts.listingType[0] === 'sale',
+  'V3 confirmedFacts must contain only bedrooms 3 and listingType sale.')
+}
+
 export function validateManifest(manifest) {
-  requireValue([1, 2].includes(manifest?.schemaVersion), 'Unsupported manifest schemaVersion.')
+  requireValue([1, 2, 3].includes(manifest?.schemaVersion), 'Unsupported manifest schemaVersion.')
+  const individual = manifest.schemaVersion === 3
   if (manifest.schemaVersion === 1) {
     validateDocumentIdentity({ ...manifest.project, title: manifest.project?.name })
   }
   const brochure = manifest.brochure
-  requireValue(portableSourcePath(brochure?.sourcePath) && shaValid(brochure?.sha256) &&
-    positiveInteger(brochure?.bytes) && positiveInteger(brochure?.pageCount),
-  'Manifest brochure path, SHA256, byte size and page count are required.')
+  if (individual) {
+    const evidence = manifest.sourceEvidence
+    requireValue(!Object.hasOwn(manifest, 'brochure') && evidence?.kind === 'email' &&
+      portableSourcePath(evidence.sourcePath) && shaValid(evidence.sha256) &&
+      positiveInteger(evidence.bytes) && nonempty(evidence.messageId) &&
+      nonempty(evidence.receivedAt) && Number.isFinite(Date.parse(evidence.receivedAt)),
+    'V3 requires dated email sourceEvidence with a local path, SHA256 and byte size, without a brochure.')
+  } else {
+    requireValue(portableSourcePath(brochure?.sourcePath) && shaValid(brochure?.sha256) &&
+      positiveInteger(brochure?.bytes) && positiveInteger(brochure?.pageCount),
+    'Manifest brochure path, SHA256, byte size and page count are required.')
+  }
   requireValue(Array.isArray(manifest.images) && manifest.images.length > 0,
     'Manifest must contain images.')
   const ids = new Set()
@@ -93,13 +136,18 @@ export function validateManifest(manifest) {
     requireValue(!sources.has(image.sourcePath.toLowerCase()), 'Duplicate sourcePath: ' + image.sourcePath)
     sources.add(image.sourcePath.toLowerCase())
     requireValue(nonempty(image.alt), 'Nonempty alt text is required: ' + image.id)
+    imageLabels(image, individual)
     requireValue(shaValid(image.sha256) && positiveInteger(image.bytes) &&
       positiveInteger(image.width) && positiveInteger(image.height),
     'Invalid source hash, byte size or dimensions: ' + image.id)
-    requireValue(Array.isArray(image.brochurePages) &&
-      image.brochurePages.every((page) => positiveInteger(page) && page <= brochure.pageCount),
-    'Invalid brochure page references: ' + image.id)
-    if (manifest.schemaVersion === 2) {
+    if (individual) {
+      requireValue(!Object.hasOwn(image, 'brochurePages'), 'V3 images must not claim brochure pages: ' + image.id)
+    } else {
+      requireValue(Array.isArray(image.brochurePages) &&
+        image.brochurePages.every((page) => positiveInteger(page) && page <= brochure.pageCount),
+      'Invalid brochure page references: ' + image.id)
+    }
+    if (manifest.schemaVersion >= 2) {
       requireValue(!Object.hasOwn(image, 'role') && !Object.hasOwn(image, 'galleryOrder'),
         'V2 images must not have global role or galleryOrder: ' + image.id)
     } else if (image.role === 'hero') {
@@ -127,8 +175,8 @@ export function validateManifest(manifest) {
       requireValue(!slugs.has(document.slug), 'Duplicate document slug: ' + document.slug)
       documentIds.add(document.documentId)
       slugs.add(document.slug)
-      requireValue(['development', 'home-type'].includes(document.kind),
-        'Document kind must be development or home-type: ' + document.documentId)
+      requireValue((individual ? ['property'] : ['development', 'home-type']).includes(document.kind),
+        'Document kind does not match the manifest version: ' + document.documentId)
       requireValue(ids.has(document.heroImageId), 'Unknown heroImageId: ' + document.heroImageId)
       requireValue(Array.isArray(document.galleryImageIds) &&
         document.galleryImageIds.every((id) => ids.has(id)),
@@ -139,6 +187,11 @@ export function validateManifest(manifest) {
         'Hero must not also appear in its document gallery: ' + document.documentId)
       requireValue(document.kind !== 'home-type' || document.galleryImageIds.length <= 6,
         'Home-type gallery must contain at most six images: ' + document.documentId)
+      if (individual) {
+        requireValue(!Object.hasOwn(document, 'confirmedPricing'), 'V3 pricing remains unconfirmed.')
+        validateIndividualFacts(document.confirmedFacts)
+        continue
+      }
       if (Object.hasOwn(document, 'confirmedPricing')) {
         requireValue(document.kind === 'home-type' && document.confirmedFacts, 'Pricing requires a confirmed home type.')
         confirmedPriceFields(document.confirmedPricing)
@@ -153,8 +206,10 @@ export function validateManifest(manifest) {
         'Invalid confirmedFacts or brochure evidence: ' + document.documentId)
       }
     }
-    requireValue(manifest.documents.filter((document) => document.kind === 'development').length === 1,
-      'V2 manifest must contain exactly one development overview.')
+    if (!individual) {
+      requireValue(manifest.documents.filter((document) => document.kind === 'development').length === 1,
+        'V2 manifest must contain exactly one development overview.')
+    }
   }
   return manifest
 }
@@ -181,7 +236,7 @@ function validateDocumentIdentity(document) {
 }
 
 function documentDefinitions(manifest) {
-  if (manifest.schemaVersion === 2) return manifest.documents
+  if (manifest.schemaVersion >= 2) return manifest.documents
   return [{
     documentId: manifest.project.documentId, title: manifest.project.name, slug: manifest.project.slug,
     heroImageId: manifest.images.find((image) => image.role === 'hero').id,
@@ -193,7 +248,7 @@ function documentDefinitions(manifest) {
 export function validateDraft(draft, manifest) {
   requireValue(draft && !Array.isArray(draft) && draft._type === 'property',
     'Input must be one native property document.')
-  const definition = manifest.schemaVersion === 2
+  const definition = manifest.schemaVersion >= 2
     ? manifest.documents.find((document) => document.documentId === draft._id)
     : { ...manifest.project, title: manifest.project.name }
   requireValue(typeof draft._id === 'string' && draft._id.startsWith('drafts.') &&
@@ -202,14 +257,25 @@ export function validateDraft(draft, manifest) {
     'Input must remain status draft and featured false.')
   requireValue(draft.title === definition.title && draft.slug?.current === definition.slug,
     'Draft project title and slug must match the manifest.')
-  const facts = manifest.schemaVersion === 2 ? definition.confirmedFacts : undefined
+  const facts = manifest.schemaVersion >= 2 ? definition.confirmedFacts : undefined
+  const individual = manifest.schemaVersion === 3
+  if (individual) {
+    validateIndividualFacts(facts)
+    requireValue(INDIVIDUAL_PENDING_FIELDS.every((field) => !Object.hasOwn(draft, field)),
+      'V3 address, tenure, EPC and floorplans remain unconfirmed.')
+  }
   const prices = definition.confirmedPricing ? confirmedPriceFields(definition.confirmedPricing) : {}
   for (const field of UNCONFIRMED_DRAFT_FIELDS) {
     if (Object.hasOwn(prices, field)) {
       requireValue(draft[field] === prices[field], 'Draft pricing must exactly match supplied evidence: ' + field)
       continue
     }
-    if (facts && ['unitType', 'bedrooms'].includes(field)) {
+    if (individual && field === 'listingType') {
+      requireValue(Array.isArray(draft.listingType) && draft.listingType.length === 1 &&
+        draft.listingType[0] === 'sale', 'Draft listingType must match confirmedFacts.')
+      continue
+    }
+    if (facts && (individual ? ['bedrooms'] : ['unitType', 'bedrooms']).includes(field)) {
       requireValue(Object.hasOwn(draft, field) && draft[field] === facts[field],
         'Draft ' + field + ' must exactly match confirmedFacts: ' + draft._id)
       continue
@@ -218,7 +284,7 @@ export function validateDraft(draft, manifest) {
   }
   requireValue(!Object.hasOwn(draft, 'featuredImage') && !Object.hasOwn(draft, 'gallery'),
     'Input draft already has media; refuse to replace existing work.')
-  if (manifest.schemaVersion === 2 || draft.verification !== undefined) {
+  if (manifest.schemaVersion >= 2 || draft.verification !== undefined) {
     requireValue(draft.verification?.status === 'unverified' &&
       Object.keys(draft.verification).every((key) => ['status', 'notes'].includes(key)),
     'Draft verification must remain unverified without approval or check dates.')
@@ -330,6 +396,7 @@ function imageReference(image, outputRoot) {
   // _sanityAsset belongs on the image object; importing is a separate authorized operation.
   return {
     _key: image.id, _type: 'image', alt: image.alt,
+    ...imageLabels(image),
     _sanityAsset: 'image@' + pathToFileURL(path.join(outputRoot, 'images', image.outputFile)).href,
   }
 }
@@ -342,15 +409,16 @@ export async function preparePropertyMedia(options) {
   const drafts = validateDrafts(lines.map((line) => JSON.parse(line)), manifest)
   const definitions = documentDefinitions(manifest)
   const heroIds = new Set(definitions.map((document) => document.heroImageId))
-  const draftFilename = manifest.schemaVersion === 2
+  const draftFilename = manifest.schemaVersion >= 2
     ? 'properties.staging-draft.ndjson' : 'property.staging-draft.ndjson'
   const sourceRoot = await realpath(localPath(options.sourceRoot, 'Source root'))
   requireValue((await stat(sourceRoot)).isDirectory(), 'Source root must be a directory.')
-  const brochureInputPath = localPath(options.brochure, 'Brochure')
-  const brochurePath = await realpath(brochureInputPath)
-  const brochureParents = [
+  const individual = manifest.schemaVersion === 3
+  const brochureInputPath = individual ? undefined : localPath(options.brochure, 'Brochure')
+  const brochurePath = brochureInputPath ? await realpath(brochureInputPath) : undefined
+  const brochureParents = brochurePath ? [
     await realpath(path.dirname(brochureInputPath)), path.dirname(brochurePath),
-  ]
+  ] : []
   const outputRoot = await validateOutput(options.output, sourceRoot, brochureParents)
   const images = [...manifest.images]
   if (manifest.schemaVersion === 1) {
@@ -360,7 +428,12 @@ export async function preparePropertyMedia(options) {
   const imagesById = new Map(images.map((image) => [image.id, image]))
 
   // Finish all source checks before creating even the output directory.
-  await verifiedFile(brochurePath, manifest.brochure, 'Brochure')
+  if (individual) {
+    const evidencePath = await sourcePathInside(sourceRoot, manifest.sourceEvidence.sourcePath)
+    await verifiedFile(evidencePath, manifest.sourceEvidence, 'Email evidence')
+  } else {
+    await verifiedFile(brochurePath, manifest.brochure, 'Brochure')
+  }
   const sources = []
   for (const image of images) {
     const sourcePath = await sourcePathInside(sourceRoot, image.sourcePath)
@@ -385,9 +458,10 @@ export async function preparePropertyMedia(options) {
       settings: { format: 'jpeg', quality: 85, progressive: true, colourspace: 'srgb',
         heroMaxEdge: 2560, galleryMaxEdge: 2000, withoutEnlargement: true, metadata: 'stripped' },
     },
-    ...(manifest.schemaVersion === 2 ? { documents: manifest.documents } : { documentId: drafts[0]._id }),
+    ...(manifest.schemaVersion >= 2 ? { documents: manifest.documents } : { documentId: drafts[0]._id }),
     manifestPath, draftPath, sourceRoot, outputRoot,
-    brochure: { ...manifest.brochure, sourcePath: brochurePath, copied: false },
+    ...(individual ? { sourceEvidence: { ...manifest.sourceEvidence, copied: false } }
+      : { brochure: { ...manifest.brochure, sourcePath: brochurePath, copied: false } }),
     images: [],
   }
   let reportWritten = false
@@ -411,6 +485,7 @@ export async function preparePropertyMedia(options) {
       await writeFile(outputPath, data, { flag: 'wx' })
       report.images.push({
         id: image.id,
+        ...imageLabels(image),
         ...(manifest.schemaVersion === 1 ? { role: image.role, galleryOrder: image.galleryOrder } : {}),
         source: { path: sourcePath, relativePath: image.sourcePath, sha256: image.sha256,
           bytes: image.bytes, width: image.width, height: image.height, format },
@@ -461,6 +536,7 @@ export function parseArgs(args) {
     parsed[name] = value
   }
   for (const [flag, name] of Object.entries(names)) {
+    if (name === 'brochure') continue // V1/V2 enforce this after reading their manifest.
     requireValue(nonempty(parsed[name]), 'Required option: ' + flag)
   }
   return parsed
