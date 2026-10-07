@@ -1,19 +1,10 @@
-import { test, expect, type BrowserContext, type Page } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
+import { interceptGoogle as intercept, release2EventContract } from "./analytics-contract";
 import { readFileSync } from "node:fs";
 
 const consentKey = "haus.analytics-consent.v1";
 const consent = { version: 1, analytics: "granted", expiresAt: Date.now() + 86_400_000 };
 
-async function interceptGoogle(context: BrowserContext) {
-  const requests: string[] = [];
-  await context.route(/https?:\/\/([^/]*\.)?(googletagmanager\.com|google-analytics\.com|google\.com|googleadservices\.com|doubleclick\.net)\//, async (route) => {
-    requests.push(route.request().url());
-    if (route.request().url().includes("/gtm.js")) {
-      await route.fulfill({ contentType: "application/javascript", body: 'window.google_tag_manager = {"G-TEST": {}}; document.cookie = "_ga=browser-test; Path=/; SameSite=Lax";' });
-    } else await route.abort();
-  });
-  return requests;
-}
 
 async function events(page: Page) {
   return page.evaluate(() => (window.dataLayer || []).filter((entry) => "event" in entry && String(entry.event).startsWith("haus_")) as Record<string, unknown>[]);
@@ -25,7 +16,7 @@ async function choose(page: Page, choice: "Accept analytics" | "Reject analytics
 }
 
 test("consent, navigation, clicks, search and withdrawal work without sending real Google traffic", async ({ context, page }, testInfo) => {
-  const requests = await interceptGoogle(context);
+  const requests = await intercept(context, "gtm");
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/", { waitUntil: "domcontentloaded" });
@@ -42,6 +33,11 @@ test("consent, navigation, clicks, search and withdrawal work without sending re
   await page.getByRole("button", { name: "Cookie Settings", exact: true }).click();
   await choose(page, "Accept analytics");
   await expect.poll(() => requests.length).toBe(1);
+  // This build has BOTH valid IDs: only the GTM container may load.
+  expect(requests[0]).toBe("https://www.googletagmanager.com/gtm.js?id=GTM-TEST123");
+  await expect(page.locator("#haus-gtag")).toHaveCount(0);
+  expect(await page.evaluate(() => (window.dataLayer || []).some((entry) =>
+    Object.prototype.toString.call(entry) === "[object Arguments]" && Array.from(entry as IArguments)[0] === "config"))).toBe(false);
   expect((await events(page)).filter((event) => event.event === "haus_page_view")).toHaveLength(1);
   const identity = await page.evaluate(() => { const marker = crypto.randomUUID(); Object.assign(window, { browserDocumentMarker: marker }); return marker; });
   await page.locator('footer a[href="/about"]').click();
@@ -69,7 +65,8 @@ test("consent, navigation, clicks, search and withdrawal work without sending re
 
   await page.locator('a[href="/"]').first().click();
   await expect(page).toHaveURL("http://localhost:3131/");
-  await page.getByRole("button", { name: "Find my match", exact: true }).click();
+  await page.getByRole("form", { name: "Find a property", exact: true })
+    .getByRole("button", { name: "Search properties", exact: true }).click();
   await expect(page).toHaveURL(/\/properties/);
   await expect.poll(async () => (await events(page)).filter((event) => event.event === "haus_property_search").length).toBe(1);
   expect((await events(page)).some((event) => event.event === "lead_form_submit")).toBe(false);
@@ -86,7 +83,7 @@ test("consent, navigation, clicks, search and withdrawal work without sending re
 });
 
 test("accepted consent never loads analytics on private, preview, draft, or unlisted hosts", async ({ context, page }) => {
-  const requests = await interceptGoogle(context);
+  const requests = await intercept(context, "gtm");
   await context.addInitScript(({ consentKey, consent }) => localStorage.setItem(consentKey, JSON.stringify(consent)), { consentKey, consent });
   await page.goto("/");
   await expect.poll(() => requests.length).toBe(1);
@@ -116,16 +113,16 @@ test("accepted consent never loads analytics on private, preview, draft, or unli
   await expect(page.locator("#haus-gtm")).toHaveCount(0);
   expect(requests).toHaveLength(2);
 
-  const manifest = JSON.parse(readFileSync(".next/prerender-manifest.json", "utf8"));
+  const manifest = JSON.parse(readFileSync(".next-analytics/prerender-manifest.json", "utf8"));
   await context.addCookies([{ name: "__prerender_bypass", value: manifest.preview.previewModeId, domain: "localhost", path: "/", httpOnly: true, sameSite: "Lax" }]);
   await page.goto("/");
-  await expect(page.getByText("Preview Mode", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Exit preview", exact: true })).toBeVisible();
   await expect(page.locator("#haus-gtm")).toHaveCount(0);
   expect(requests).toHaveLength(2);
 });
 
 test("withdrawing consent in another tab unloads already active analytics", async ({ context, page }) => {
-  const requests = await interceptGoogle(context);
+  const requests = await intercept(context, "gtm");
   await page.goto("/");
   await choose(page, "Accept analytics");
   const second = await context.newPage();
@@ -142,3 +139,5 @@ test("withdrawing consent in another tab unloads already active analytics", asyn
   expect(await events(second)).toEqual([]);
   expect(requests).toHaveLength(2);
 });
+
+release2EventContract("gtm");

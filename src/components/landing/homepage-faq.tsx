@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { sanityFetch } from "@/sanity";
+import { sanityFetch } from "@/sanity/live";
 import { FEATURED_FAQS_QUERY } from "@/sanity/queries";
 import { FaqAccordion, type FaqItem } from "@/components/faq/faq-accordion";
 

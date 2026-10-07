@@ -1,12 +1,70 @@
 import { defineType, defineField, defineArrayMember } from 'sanity'
 import HomeIcon from '@sanity/icons/Home'
 import { ALL_UNIT_TYPES } from '../../lib/property-taxonomy'
+import {
+  EDITORIAL_STATUS_OPTIONS,
+  getEditorialApprovalIssues,
+} from '../editorial-workflow'
+
+const currencyOptions = [
+  { title: 'AED - UAE dirham', value: 'AED' },
+  { title: 'GBP - British pound', value: 'GBP' },
+  { title: 'EUR - Euro', value: 'EUR' },
+  { title: 'USD - US dollar', value: 'USD' },
+]
+
+const propertyImageContext = [
+  defineField({
+    name: 'caption',
+    title: 'Visible image caption',
+    type: 'string',
+    description: 'Displayed below the image. Clearly identify proposed interiors, AI-assisted concepts and comparison images; do not describe them as completed works.',
+  }),
+  defineField({
+    name: 'mediaKind',
+    title: 'Image context',
+    type: 'string',
+    description: 'Optional for existing photos. Mark concept images so the full image and a visible concept label are shown.',
+    options: {
+      list: [
+        { title: 'Photograph', value: 'photo' },
+        { title: 'Proposed interiors / AI-assisted concept', value: 'concept' },
+        { title: 'Existing view and proposed interiors comparison', value: 'concept-comparison' },
+      ],
+    },
+  }),
+]
+
+const designImage = defineArrayMember({
+  type: 'image',
+  options: { hotspot: false },
+  fields: [
+    defineField({ name: 'alt', title: 'Alt text', type: 'string', validation: (rule) => rule.required() }),
+    defineField({ name: 'label', title: 'Caption', type: 'string' }),
+  ],
+})
 
 export const property = defineType({
   name: 'property',
   title: 'Property',
   type: 'document',
   icon: HomeIcon,
+  fieldsets: [
+    {
+      name: 'structuredPricing',
+      title: 'Structured pricing',
+      description:
+        'Machine-readable values for filtering and integrations. Keep the public display text until existing content is backfilled and reviewed.',
+      options: { columns: 2, collapsible: true },
+    },
+    {
+      name: 'availabilityGovernance',
+      title: 'Availability and verification',
+      description:
+        'Internal checks only. Never claim a price, availability or escrow status that has not been confirmed.',
+      options: { collapsible: true },
+    },
+  ],
   fields: [
     defineField({
       name: 'title',
@@ -123,7 +181,7 @@ export const property = defineType({
       title: 'Unit Type',
       type: 'string',
       description:
-        'Primary offering. For a development/community showcase, use the generic type (e.g. "Apartment" or "Mansion"); per-unit variants go in Key Features.',
+        'Primary offering. Choose Development for a mixed community overview. Use the specific type (e.g. Villa or Townhouse) for a home collection or individual listing.',
       options: {
         list: ALL_UNIT_TYPES.map((value) => ({ title: value, value })),
       },
@@ -199,7 +257,7 @@ export const property = defineType({
       title: 'Sale price (display text)',
       type: 'string',
       description:
-        'Free text — e.g. "From £140,000" or "Price on application". The brand shows prices in GBP (£).',
+        'Original price wording, including ranges or qualifications. Enter the numeric amount and ISO currency below to enable indicative GBP, USD and AED display conversions; this text is preserved alongside them.',
       initialValue: 'Price on application',
     }),
     defineField({
@@ -208,6 +266,173 @@ export const property = defineType({
       type: 'string',
       description:
         'Free text shown when the listing is For rent — e.g. "From £2,500 / month". Leave blank for sale-only listings.',
+    }),
+    defineField({
+      name: 'priceAmount',
+      title: 'Sale price amount',
+      type: 'number',
+      fieldset: 'structuredPricing',
+      description: 'Number only; do not include a currency symbol or separators.',
+      validation: (rule) =>
+        rule.positive().precision(2).custom((value, context) => {
+          const document = context.document as
+            | { status?: string; listingType?: string[] }
+            | undefined
+          return document?.status === 'published' &&
+            document.listingType?.includes('sale') &&
+            value == null
+            ? 'Published sale listings should have a structured sale price, unless the price is genuinely on application.'
+            : true
+        }).warning(),
+    }),
+    defineField({
+      name: 'priceCurrency',
+      title: 'Sale price currency',
+      type: 'string',
+      fieldset: 'structuredPricing',
+      options: { list: currencyOptions },
+      validation: (rule) =>
+        rule.custom((value, context) => {
+          const document = context.document as { priceAmount?: number } | undefined
+          return document?.priceAmount != null && !value
+            ? 'Choose a currency whenever a sale price amount is entered.'
+            : true
+        }).warning(),
+    }),
+    defineField({
+      name: 'rentAmount',
+      title: 'Rent amount',
+      type: 'number',
+      fieldset: 'structuredPricing',
+      description: 'Number only; do not include a currency symbol or separators.',
+      validation: (rule) => rule.positive().precision(2),
+    }),
+    defineField({
+      name: 'rentCurrency',
+      title: 'Rent currency',
+      type: 'string',
+      fieldset: 'structuredPricing',
+      options: { list: currencyOptions },
+      validation: (rule) =>
+        rule.custom((value, context) => {
+          const document = context.document as { rentAmount?: number } | undefined
+          return document?.rentAmount != null && !value
+            ? 'Choose a currency whenever a rent amount is entered.'
+            : true
+        }).warning(),
+    }),
+    defineField({
+      name: 'rentPeriod',
+      title: 'Rent period',
+      type: 'string',
+      fieldset: 'structuredPricing',
+      options: {
+        list: [
+          { title: 'Per week', value: 'week' },
+          { title: 'Per month', value: 'month' },
+          { title: 'Per year', value: 'year' },
+        ],
+      },
+      validation: (rule) =>
+        rule.custom((value, context) => {
+          const document = context.document as { rentAmount?: number } | undefined
+          return document?.rentAmount != null && !value
+            ? 'Choose a period whenever a rent amount is entered.'
+            : true
+        }).warning(),
+    }),
+    defineField({
+      name: 'listingState',
+      title: 'Current listing state',
+      type: 'string',
+      fieldset: 'availabilityGovernance',
+      options: {
+        list: [
+          { title: 'Active', value: 'active' },
+          { title: 'Reserved', value: 'reserved' },
+          { title: 'Under offer', value: 'under_offer' },
+          { title: 'Sold', value: 'sold' },
+          { title: 'Rented', value: 'rented' },
+          { title: 'Withdrawn', value: 'withdrawn' },
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'active',
+      validation: (rule) =>
+        rule.custom((value, context) => {
+          const document = context.document as { status?: string } | undefined
+          return document?.status === 'published' && !value
+            ? 'Published properties should have a current listing state.'
+            : true
+        }).warning(),
+    }),
+    defineField({
+      name: 'availabilityCheckedAt',
+      title: 'Availability last checked',
+      type: 'datetime',
+      fieldset: 'availabilityGovernance',
+      validation: (rule) => rule.max(new Date().toISOString()),
+    }),
+    defineField({
+      name: 'availabilityCheckDueAt',
+      title: 'Availability check due',
+      type: 'datetime',
+      fieldset: 'availabilityGovernance',
+      description: 'The listing should be re-confirmed on or before this date.',
+    }),
+    defineField({
+      name: 'verification',
+      title: 'Listing verification',
+      type: 'object',
+      fieldset: 'availabilityGovernance',
+      fields: [
+        defineField({
+          name: 'status',
+          title: 'Verification status',
+          type: 'string',
+          options: {
+            list: [
+              { title: 'Unverified', value: 'unverified' },
+              { title: 'Verified', value: 'verified' },
+              { title: 'Expired', value: 'expired' },
+            ],
+            layout: 'radio',
+          },
+          initialValue: 'unverified',
+        }),
+        defineField({
+          name: 'checkedAt',
+          title: 'Checked at',
+          type: 'datetime',
+        }),
+        defineField({
+          name: 'checkedBy',
+          title: 'Checked by',
+          type: 'string',
+          validation: (rule) => rule.max(120),
+        }),
+        defineField({
+          name: 'sourceUrl',
+          title: 'Verification source',
+          type: 'url',
+          description: 'Internal evidence link; not exposed on the public website.',
+          validation: (rule) => rule.uri({ scheme: ['https'] }),
+        }),
+        defineField({
+          name: 'notes',
+          title: 'Verification notes',
+          type: 'text',
+          rows: 3,
+        }),
+      ],
+      validation: (rule) =>
+        rule.custom((value, context) => {
+          const document = context.document as { status?: string } | undefined
+          const verification = value as { status?: string } | undefined
+          return document?.status === 'published' && !verification?.status
+            ? 'Published properties should have an explicit verification status.'
+            : true
+        }).warning(),
     }),
     defineField({
       name: 'completionStatus',
@@ -285,11 +510,19 @@ export const property = defineType({
       ],
     }),
     defineField({
+      name: 'showHausLogo',
+      title: 'Show Haus logo on property photos',
+      type: 'boolean',
+      initialValue: false,
+      description: 'Display the Haus of Estate logo on this property’s website photos. Original image files stay unchanged. Off unless enabled for this listing.',
+    }),
+    defineField({
       name: 'featuredImage',
       title: 'Featured Image',
       type: 'image',
       options: { hotspot: true },
       fields: [
+        ...propertyImageContext,
         defineField({
           name: 'alt',
           title: 'Alt Text',
@@ -303,7 +536,72 @@ export const property = defineType({
       name: 'gallery',
       title: 'Gallery',
       type: 'array',
-      of: [defineArrayMember({ type: 'image', options: { hotspot: true } })],
+      of: [
+        defineArrayMember({
+          type: 'image',
+          options: { hotspot: true },
+          fields: [
+            ...propertyImageContext,
+            defineField({
+              name: 'alt',
+              title: 'Alt Text',
+              type: 'string',
+              description: 'Describe this image for accessibility. Add when preparing new gallery images.',
+            }),
+          ],
+        }),
+      ],
+    }),
+    defineField({
+      name: 'designVariants',
+      title: 'Home designs',
+      type: 'array',
+      description: 'Optional brochure designs within this collection. Preserve source labels; these are not individual available units or selectable combinations.',
+      of: [defineArrayMember({
+        name: 'propertyDesign',
+        title: 'Home design',
+        type: 'object',
+        fields: [
+          defineField({ name: 'label', title: 'Source design label', type: 'string', validation: (rule) => rule.required() }),
+          defineField({ name: 'family', title: 'Named family', type: 'string', description: 'Use only a family explicitly identified by the supplied source.' }),
+          defineField({ name: 'rowHomes', title: 'Homes in the row', type: 'number', description: 'Connected homes in the row, not bedrooms.', validation: (rule) => rule.integer().min(2) }),
+          defineField({
+            name: 'position', title: 'Position', type: 'string',
+            options: { list: [{ title: 'Corner', value: 'corner' }, { title: 'Middle', value: 'middle' }, { title: 'Standalone', value: 'standalone' }] },
+          }),
+          defineField({
+            name: 'plotAreaStatus', title: 'Plot area evidence', type: 'string', initialValue: 'brochure',
+            options: { list: [{ title: 'Brochure figure', value: 'brochure' }, { title: 'Conflicting source figures — hide plot area', value: 'conflict' }] },
+            description: 'Conflicting plot figures are omitted from the public page until confirmed.',
+          }),
+          defineField({ name: 'plotAreaSqFt', title: 'Plot area (sq ft)', type: 'number', validation: (rule) => rule.positive() }),
+          defineField({ name: 'sellableAreaSqFt', title: 'Built-up area (sq ft)', type: 'number', description: 'For Florence, Sonia confirmed on 7 October 2026 that the brochure sellable-area figures should be labelled built-up area. Preserve the source figure; confirm the measurement definition for other projects.', validation: (rule) => rule.required().positive() }),
+          defineField({ name: 'areaNote', title: 'Public area note', type: 'text', rows: 2, description: 'For conflicting sources, say the plot is awaiting confirmation. Do not repeat disputed numeric figures.' }),
+          defineField({ name: 'summary', title: 'Design summary', type: 'text', rows: 3 }),
+          defineField({ name: 'brochureKey', title: 'Collection brochure key', type: 'string', description: 'Internal collection identity for future approved fulfilment. This is not a public download URL.' }),
+          defineField({ name: 'images', title: 'Matched design images', type: 'array', of: [designImage] }),
+          defineField({ name: 'floorPlans', title: 'Matched floor plans', type: 'array', description: 'Upload uncropped plan images. Plans are shown publicly and can be opened to zoom.', of: [designImage] }),
+          defineField({ name: 'brochureRevision', title: 'Brochure revision', type: 'string', description: 'Internal source reference; not shown on the website.' }),
+          defineField({ name: 'sourceEvidence', title: 'Source evidence', type: 'text', rows: 3, description: 'Internal source filename/page references and unresolved mappings; not shown on the website.' }),
+        ],
+        preview: { select: { title: 'label', subtitle: 'family', media: 'images.0' } },
+      })],
+    }),
+    defineField({
+      name: 'interiorSchemes',
+      title: 'Interior schemes shown in the brochure',
+      type: 'array',
+      description: 'Separate reference imagery. This does not establish selectable finishes, applicable homes, upgrades or included furniture.',
+      of: [defineArrayMember({
+        name: 'propertyInteriorScheme',
+        title: 'Interior scheme',
+        type: 'object',
+        fields: [
+          defineField({ name: 'label', title: 'Source scheme label', type: 'string', validation: (rule) => rule.required() }),
+          defineField({ name: 'images', title: 'Scheme images', type: 'array', of: [designImage] }),
+        ],
+        preview: { select: { title: 'label', media: 'images.0' } },
+      })],
     }),
     defineField({
       name: 'videoUrl',
@@ -333,18 +631,62 @@ export const property = defineType({
       initialValue: () => new Date().toISOString(),
     }),
     defineField({
+      name: 'editorialApproval',
+      title: 'Editorial approval',
+      type: 'object',
+      description:
+        'Required before the website publication state can be released with Sanity Publish.',
+      fields: [
+        defineField({
+          name: 'contentApproved',
+          title: 'Listing facts and asset rights approved',
+          type: 'boolean',
+          initialValue: false,
+        }),
+        defineField({
+          name: 'seoApproved',
+          title: 'SEO, links and tracking approved',
+          type: 'boolean',
+          initialValue: false,
+        }),
+        defineField({
+          name: 'approvedBy',
+          title: 'Approved by',
+          type: 'string',
+          validation: (rule) => rule.max(160),
+        }),
+        defineField({
+          name: 'approvedAt',
+          title: 'Approved at',
+          type: 'datetime',
+        }),
+        defineField({
+          name: 'notes',
+          title: 'Review notes',
+          type: 'text',
+          rows: 3,
+        }),
+      ],
+    }),
+    defineField({
       name: 'status',
-      title: 'Status',
+      title: 'Website publication state',
       type: 'string',
+      description:
+        'The public website only reads Published records. Complete review and approval before selecting Published, then use Sanity Publish to release the saved revision.',
       options: {
-        list: [
-          { title: 'Draft', value: 'draft' },
-          { title: 'Published', value: 'published' },
-          { title: 'Archived', value: 'archived' },
-        ],
+        list: [...EDITORIAL_STATUS_OPTIONS],
         layout: 'radio',
       },
       initialValue: 'draft',
+      validation: (rule) =>
+        rule.required().custom((status, context) => {
+          const issues = getEditorialApprovalIssues({
+            ...context.document,
+            status,
+          })
+          return issues.length === 0 ? true : issues.join(' ')
+        }),
     }),
     defineField({
       name: 'featured',

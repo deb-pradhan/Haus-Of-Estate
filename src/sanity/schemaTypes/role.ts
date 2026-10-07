@@ -11,7 +11,7 @@ export const role = defineType({
       name: 'title',
       title: 'Title',
       type: 'string',
-      description: 'Public job title, e.g. "Property Advisor — London".',
+      description: 'Use the exact approved title from content/careers-roles.json.',
       validation: (rule) => rule.required().max(140),
     }),
     defineField({
@@ -28,12 +28,9 @@ export const role = defineType({
       description: 'Used to group roles on /careers.',
       options: {
         list: [
-          { title: 'Advisory', value: 'Advisory' },
-          { title: 'Lettings', value: 'Lettings' },
-          { title: 'Operations', value: 'Operations' },
-          { title: 'Marketing', value: 'Marketing' },
-          { title: 'Technology', value: 'Technology' },
-          { title: 'Finance', value: 'Finance' },
+          { title: 'Lettings Agent', value: 'Lettings Agent' },
+          { title: 'Sales Agent', value: 'Sales Agent' },
+          { title: 'Career Experience Openings', value: 'Career Experience Openings' },
         ],
       },
     }),
@@ -48,16 +45,17 @@ export const role = defineType({
       name: 'employmentType',
       title: 'Employment Type',
       type: 'string',
+      description: 'Leave empty unless the arrangement has been confirmed for this role.',
       options: {
         list: [
           { title: 'Full-time', value: 'Full-time' },
           { title: 'Part-time', value: 'Part-time' },
           { title: 'Contract', value: 'Contract' },
           { title: 'Internship', value: 'Internship' },
+          { title: 'Self Employed', value: 'Self Employed' },
         ],
         layout: 'radio',
       },
-      initialValue: 'Full-time',
     }),
     defineField({
       name: 'summary',
@@ -111,9 +109,9 @@ export const role = defineType({
       name: 'applyEmail',
       title: 'Apply email',
       type: 'string',
-      description: 'Mailbox to send applications to.',
-      initialValue: 'info@hausofestate.com',
-      validation: (rule) => rule.required().email(),
+      description: 'Retained for history. The website contact and application destination are both set by CAREERS_EMAIL (HR mailbox by default).',
+      readOnly: true,
+      validation: (rule) => rule.email(),
     }),
     defineField({
       name: 'publishedAt',
@@ -125,6 +123,7 @@ export const role = defineType({
       name: 'status',
       title: 'Status',
       type: 'string',
+      description: 'Public vacancies are limited to the approved 22 September reopening list in content/careers-roles.json. Website application intake is enabled separately. Close retired records; do not delete their history.',
       options: {
         list: [
           { title: 'Draft', value: 'draft' },

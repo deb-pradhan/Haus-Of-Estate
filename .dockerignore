@@ -3,8 +3,7 @@ node_modules
 .git
 *.md
 .env*
-!env.example
-prisma/migrations
+!.env.example
 terminals
 *.txt
 test_dubai_api.py

@@ -1,10 +1,21 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { MapPin, BedDouble, Building2, X } from 'lucide-react'
-import { sanityFetch, urlFor } from '@/sanity'
+import { draftMode } from 'next/headers'
+import { MapPin, BedDouble, Building2, ArrowRight, X } from 'lucide-react'
+import { urlFor } from '@/sanity'
+import { sanityFetch } from '@/sanity/live'
 import { PROPERTIES_FILTERED_QUERY } from '@/sanity/queries'
 import { EmptyStateCTA } from '@/components/properties/empty-state-cta'
 import { Breadcrumbs } from '@/components/properties/breadcrumbs'
+import { PropertyPhotoBranding } from './property-photo-branding'
+import { SaveContentButton } from '@/components/saved-content'
+import { PropertyAssistantSearchEntry } from '@/components/property-assistant/property-assistant-search-entry'
+import { isPropertyAssistantEnabled } from '@/lib/features'
+import { PropertyPrice } from '@/components/currency/property-price'
+import { propertyPriceInput, type PropertyPricing } from '@/lib/currency'
+import { matchesPropertySearch, searchAmount } from '@/lib/property-search'
+import { PropertySearchForm } from './property-search-form'
+import { isLocalCataloguePreviewEnabled, loadCataloguePreviewGroups } from '@/lib/property-catalogue-preview'
 import {
   type Category,
   type Availability,
@@ -20,7 +31,7 @@ import {
   buildPropertiesHref,
 } from '@/lib/property-taxonomy'
 
-interface PropertyCard {
+interface PropertyCard extends PropertyPricing {
   _id: string
   title: string
   slug: string
@@ -41,6 +52,7 @@ interface PropertyCard {
   summary: string
   featured?: boolean
   featuredImage?: { alt?: string } & Record<string, unknown>
+  showHausLogo?: boolean
 }
 
 export interface PropertyListingSearchParams {
@@ -48,8 +60,14 @@ export interface PropertyListingSearchParams {
   availability?: string
   intent?: string
   type?: string
+  country?: string
+  city?: string
   location?: string
   beds?: string
+  q?: string
+  minPrice?: string
+  maxPrice?: string
+  currency?: string
 }
 
 const COMPLETION_LABEL: Record<string, string> = {
@@ -73,8 +91,13 @@ type FilterKey =
   | 'availability'
   | 'intent'
   | 'type'
+  | 'country'
+  | 'city'
   | 'location'
   | 'beds'
+  | 'q'
+  | 'minPrice'
+  | 'maxPrice'
 
 export async function PropertyListing({
   params,
@@ -89,6 +112,9 @@ export async function PropertyListing({
   heading?: React.ReactNode
   intro?: string
 }) {
+  const { isEnabled: draftPreview } = await draftMode()
+  const localCataloguePreview = isLocalCataloguePreviewEnabled()
+  const assistantEnabled = isPropertyAssistantEnabled() && !draftPreview && !localCataloguePreview
   // ── Normalise the taxonomy selection ──────────────────────────────────
   const category: '' | Category =
     forceCategory ?? (isCategory(params.category) ? params.category : '')
@@ -100,15 +126,21 @@ export async function PropertyListing({
   if (availability === 'off-plan') intent = 'sale'
 
   const type = params.type?.trim() || ''
+  const country = params.country?.trim() || ''
+  const city = params.city?.trim() || ''
   const location = params.location?.trim() || ''
+  const q = params.q?.trim().slice(0, 120) || ''
+  const minPrice = searchAmount(params.minPrice) === null ? '' : params.minPrice!
+  const maxPrice = searchAmount(params.maxPrice) === null ? '' : params.maxPrice!
+  const currency = ['GBP', 'AED', 'USD'].includes(params.currency ?? '') ? params.currency! : 'GBP'
   const bedsRaw = params.beds ? parseInt(params.beds, 10) : NaN
 
   const hideBeds =
     category === 'commercial' || (type !== '' && LAND_TYPES.includes(type))
-  const minBeds = !hideBeds && Number.isFinite(bedsRaw) ? bedsRaw : null
+  const minBeds = !hideBeds && Number.isInteger(bedsRaw) && bedsRaw >= 0 ? bedsRaw : null
 
   // ── Fetch (server-side GROQ filtering) ────────────────────────────────
-  const { data: properties } = await sanityFetch<PropertyCard[]>({
+  const [{ data: properties }, cataloguePreviews] = await Promise.all([sanityFetch<PropertyCard[]>({
     query: PROPERTIES_FILTERED_QUERY,
     params: {
       category: category || '',
@@ -116,12 +148,29 @@ export async function PropertyListing({
       intent: intent || '',
       type: type || '',
     },
-  })
+  }), localCataloguePreview ? loadCataloguePreviewGroups({
+    ...params,
+    category: category || undefined,
+    availability: availability || undefined,
+    intent: intent || undefined,
+  }) : Promise.resolve([])])
   const fetched = properties ?? []
 
-  // ── Remaining JS filters (location + beds) ────────────────────────────
+  // ── Remaining JS filters (geography + beds) ──────────────────────────
+  const countryLC = country.toLocaleLowerCase('en-GB')
+  const cityLC = city.toLocaleLowerCase('en-GB')
   const locLC = location.toLowerCase()
   const list = fetched.filter((p) => {
+    if (!matchesPropertySearch(p, { q, minPrice, maxPrice, currency, intent })) return false
+    if (
+      countryLC &&
+      p.country?.trim().toLocaleLowerCase('en-GB') !== countryLC
+    ) {
+      return false
+    }
+    if (cityLC && p.city?.trim().toLocaleLowerCase('en-GB') !== cityLC) {
+      return false
+    }
     if (locLC) {
       const hay = [p.community, p.city, p.country, p.masterDevelopment]
         .filter(Boolean)
@@ -131,6 +180,7 @@ export async function PropertyListing({
     }
     if (minBeds !== null) {
       if (typeof p.bedrooms !== 'number') return false
+      if (minBeds === 0 && p.bedrooms !== 0) return false
       if (p.bedrooms < minBeds) return false
     }
     return true
@@ -149,7 +199,12 @@ export async function PropertyListing({
   if (intent && availability !== 'off-plan')
     activeFilters.push({ label: INTENT_LABELS[intent], key: 'intent' })
   if (type) activeFilters.push({ label: type, key: 'type' })
+  if (country) activeFilters.push({ label: country, key: 'country' })
+  if (city) activeFilters.push({ label: city, key: 'city' })
   if (location) activeFilters.push({ label: location, key: 'location' })
+  if (q) activeFilters.push({ label: `Search: ${q}`, key: 'q' })
+  if (minPrice) activeFilters.push({ label: `From ${currency} ${Number(minPrice).toLocaleString('en-GB')}${intent === 'rent' ? ' / month' : ''}`, key: 'minPrice' })
+  if (maxPrice) activeFilters.push({ label: `Up to ${currency} ${Number(maxPrice).toLocaleString('en-GB')}${intent === 'rent' ? ' / month' : ''}`, key: 'maxPrice' })
   if (minBeds !== null)
     activeFilters.push({
       label: minBeds === 0 ? 'Studio' : `${minBeds}+ bedrooms`,
@@ -166,8 +221,16 @@ export async function PropertyListing({
       availability: remove === 'availability' ? undefined : availability || undefined,
       intent: remove === 'intent' ? undefined : intent || undefined,
       type: remove === 'type' ? undefined : type || undefined,
+      country: remove === 'country' ? undefined : country || undefined,
+      city:
+        remove === 'country' || remove === 'city' ? undefined : city || undefined,
       location: remove === 'location' ? undefined : location || undefined,
       beds: remove === 'beds' || minBeds === null ? undefined : minBeds,
+      q: remove === 'q' ? undefined : q,
+      // A rental budget is monthly; do not carry it into an unscoped sale search.
+      minPrice: remove === 'intent' || remove === 'minPrice' ? undefined : minPrice,
+      maxPrice: remove === 'intent' || remove === 'maxPrice' ? undefined : maxPrice,
+      currency: remove !== 'intent' && (minPrice || maxPrice) ? currency : undefined,
     })
   }
 
@@ -188,30 +251,43 @@ export async function PropertyListing({
 
   return (
     <div className="min-h-screen">
+      {draftPreview && (
+        <div className="border-b border-gold-500/30 bg-gold-500/10 px-4 py-4 text-sm text-estate-700">
+          <p className="mx-auto max-w-6xl">
+            <strong>Sanity draft preview.</strong> This catalogue includes unpublished content. Saving is disabled while reviewing drafts.
+          </p>
+        </div>
+      )}
+      {localCataloguePreview && (
+        <div className="border-b border-gold-500/30 bg-gold-500/10 px-4 py-4 text-sm text-estate-700">
+          <p className="mx-auto max-w-6xl">
+            <strong>Local catalogue preview.</strong> Unpublished editorial collections appear separately from published listings. Enquiries and saving are disabled in this local preview.
+          </p>
+        </div>
+      )}
       {/* Hero */}
-      <section className="bg-estate-700 px-4 py-20 md:px-6 md:py-24">
+      <section className="bg-estate-700 px-4 py-12 md:px-6 md:py-16">
         <div className="mx-auto max-w-4xl text-center">
           <p className="font-serif text-xs font-medium uppercase tracking-[0.3em] text-gold-400">
             {eyebrow}
           </p>
           <h1 className="mt-4 font-serif text-4xl font-medium leading-[1.05] text-white md:text-5xl">
-            {heading ?? (
-              <>
-                Homes in communities{' '}
-                <span className="text-gold-400">worth living in.</span>
-              </>
-            )}
+            {heading ?? `${category === 'commercial' ? 'Commercial properties' : category === 'residential' ? 'Homes' : 'Properties'}${intent === 'rent' ? ' to rent' : intent === 'sale' ? ' for sale' : ''}${country ? ` in ${country}` : ''}`}
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/80 md:text-lg">
             {intro ??
-              "A considered selection across our partner communities. Tell us what you're after and we'll connect you with a vetted agent — no hard sell, no obligation."}
+              (localCataloguePreview
+                ? 'Explore published properties and review community drafts by location, property type and budget.'
+                : 'Explore our published collection by location, property type and budget.')}
           </p>
         </div>
+        <div className="mt-8"><PropertySearchForm key={JSON.stringify(params)} initial={{ category: category || undefined, intent: intent || undefined, availability: availability || undefined, country, city, type, beds: minBeds ?? '', q: q || location, minPrice, maxPrice, currency }} /></div>
       </section>
 
       {/* Listings */}
       <section className="bg-background px-4 py-16 md:px-6 md:py-24">
         <div className="mx-auto max-w-6xl">
+          {assistantEnabled && <PropertyAssistantSearchEntry />}
           {showBreadcrumbs && (
             <Breadcrumbs
               className="mb-8"
@@ -227,8 +303,8 @@ export async function PropertyListing({
             <div className="mb-10 flex flex-wrap items-center gap-3">
               <p className="text-sm font-medium text-estate-700">
                 {list.length === 0
-                  ? `No ${rentContextGlobal ? 'rentals' : 'listings'} match your filters`
-                  : `Showing ${list.length} ${list.length === 1 ? 'listing' : 'listings'}${rentContextGlobal ? ' to rent' : ''}`}
+                  ? `No ${localCataloguePreview ? 'published ' : ''}${rentContextGlobal ? 'rentals' : 'listings'} match your filters`
+                  : `Showing ${list.length} ${localCataloguePreview ? 'published ' : ''}${list.length === 1 ? 'listing' : 'listings'}${rentContextGlobal ? ' to rent' : ''}`}
               </p>
               <div className="flex flex-wrap items-center gap-2">
                 {activeFilters.map((f) => (
@@ -251,6 +327,65 @@ export async function PropertyListing({
             </div>
           )}
 
+          {cataloguePreviews.length > 0 && (
+            <section aria-labelledby="community-previews-title" className="mb-16">
+              <div className="mb-6 flex flex-wrap items-baseline justify-between gap-2">
+                <h2 id="community-previews-title" className="font-serif text-2xl font-medium text-estate-700 md:text-3xl">Community previews</h2>
+                <p className="text-sm text-muted-foreground">{cataloguePreviews.length} unpublished community {cataloguePreviews.length === 1 ? 'preview' : 'previews'}</p>
+              </div>
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {cataloguePreviews.map(({ overview, homes }) => {
+                  const prices = [
+                    { type: 'Villa', label: 'Villas' },
+                    { type: 'Townhouse', label: 'Townhouses' },
+                  ].flatMap(({ type, label }) => {
+                    const collections = homes.filter(({ document }) => document.unitType === type)
+                    if (collections.length === 0) return []
+                    const amounts = collections.map(({ document }) => document.priceCurrency === 'AED' ? document.priceAmount : undefined)
+                    const amount = amounts.every((value): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0)
+                      ? Math.min(...amounts)
+                      : undefined
+                    const scope = amount !== undefined && collections.every(({ document }) => document.priceDisplay?.includes('Clusters 1 & 2'))
+                      ? 'Clusters 1 & 2'
+                      : undefined
+                    return [{ label, amount, scope }]
+                  })
+                  return (
+                    <article key={overview.document._id} className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-estate-700/40 hover:shadow-xl hover:shadow-estate-700/5">
+                      <Link href="/dev/property-previews" className="flex flex-1 flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-estate-700/50 focus-visible:ring-inset">
+                        <div className="relative aspect-[4/3] overflow-hidden bg-estate-700">
+                          <Image src={overview.media.hero.src} alt={overview.media.hero.alt} fill unoptimized sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" className="object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transform-none" />
+                          <span className="absolute left-3 top-3 rounded-full bg-surface/95 px-3 py-1 text-[11px] font-semibold text-estate-700 shadow-sm">Draft community · not published</span>
+                        </div>
+                        <div className="flex flex-1 flex-col p-5">
+                          <p className="font-serif text-[11px] font-semibold uppercase tracking-widest text-gold-500">Community overview</p>
+                          <h3 className="mt-1 font-serif text-lg font-medium text-estate-700">{overview.document.title}</h3>
+                          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{overview.document.summary}</p>
+                          <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground"><MapPin aria-hidden className="h-3.5 w-3.5 shrink-0" />{[overview.document.city, overview.document.country].filter(Boolean).join(', ')}</p>
+                          {prices.length > 0 && (
+                            <dl className="mt-4 space-y-3 border-t border-border pt-3 text-sm">
+                              {prices.map(({ label, amount, scope }) => (
+                                <div key={label}>
+                                  <dt className="font-medium text-estate-700">{label}</dt>
+                                  <dd className="mt-1 text-estate-700">
+                                    <PropertyPrice amount={amount} currency={amount === undefined ? undefined : 'AED'} prefix={amount === undefined ? '' : 'From '} fallback="Pricing awaiting confirmation" />
+                                    {scope && <span className="mt-1 block text-xs text-muted-foreground">{scope}</span>}
+                                  </dd>
+                                </div>
+                              ))}
+                            </dl>
+                          )}
+                          <span className="mt-5 flex items-center justify-between gap-3 border-t border-border pt-3 text-sm font-medium text-estate-700">Explore community and home designs <ArrowRight aria-hidden className="h-4 w-4 shrink-0" /></span>
+                        </div>
+                      </Link>
+                    </article>
+                  )
+                })}
+              </div>
+            </section>
+          )}
+
+          {localCataloguePreview && <p className="mb-6 text-sm font-medium text-estate-700">{list.length} published {list.length === 1 ? 'listing' : 'listings'}</p>}
           {communities.length === 0 ? (
             hasFilters || forceCategory ? (
               <EmptyStateCTA
@@ -289,78 +424,87 @@ export async function PropertyListing({
                         rentContextGlobal ||
                         (p.listingType?.includes('rent') &&
                           !p.listingType?.includes('sale'))
-                      const price =
-                        cardRentContext && p.rentPriceDisplay
-                          ? p.rentPriceDisplay
-                          : p.priceDisplay || 'Price on application'
                       const showBeds =
                         typeof p.bedrooms === 'number' &&
                         !bedroomsHidden(p.category, p.unitType)
                       return (
-                        <Link
+                        <article
                           key={p._id}
-                          href={`/properties/${p.slug}`}
-                          className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-estate-700/40 hover:shadow-xl hover:shadow-estate-700/5"
+                          className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-estate-700/40 hover:shadow-xl hover:shadow-estate-700/5"
                         >
-                          <div className="relative aspect-[4/3] overflow-hidden bg-estate-700">
-                            {p.featuredImage ? (
-                              <Image
-                                src={urlFor(p.featuredImage)
-                                  .width(800)
-                                  .height(600)
-                                  .url()}
-                                alt={p.featuredImage.alt || p.title}
-                                fill
-                                className="object-cover transition-transform duration-500 group-hover:scale-105"
-                              />
-                            ) : (
-                              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-estate-600 to-estate-800">
-                                <Building2 className="h-10 w-10 text-white/30" />
-                              </div>
-                            )}
-                            <div className="absolute left-3 top-3 flex flex-wrap items-center gap-1.5">
-                              {p.completionStatus && (
-                                <span className="rounded-full bg-surface/95 px-3 py-1 text-[11px] font-semibold text-estate-700 shadow-sm">
-                                  {COMPLETION_LABEL[p.completionStatus] ??
-                                    p.completionStatus}
-                                </span>
+                          <Link
+                            href={`/properties/${p.slug}`}
+                            className="flex flex-1 flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-estate-700/50 focus-visible:ring-inset"
+                          >
+                            <div className="relative aspect-[4/3] overflow-hidden bg-estate-700">
+                              {p.featuredImage ? (
+                                <Image
+                                  src={urlFor(p.featuredImage)
+                                    .width(800)
+                                    .height(600)
+                                    .url()}
+                                  alt={p.featuredImage.alt || p.title}
+                                  fill
+                                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                />
+                              ) : (
+                                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-estate-600 to-estate-800">
+                                  <Building2 className="h-10 w-10 text-white/30" />
+                                </div>
                               )}
-                              {badge && (
-                                <span className="rounded-full bg-estate-700/90 px-3 py-1 text-[11px] font-semibold text-white shadow-sm">
-                                  {badge}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex flex-1 flex-col p-5">
-                            <p className="font-serif text-[11px] font-semibold uppercase tracking-widest text-gold-500">
-                              {p.unitType}
-                            </p>
-                            <h3 className="mt-1 font-serif text-lg font-medium text-estate-700">
-                              {p.title}
-                            </h3>
-                            <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
-                              {p.summary}
-                            </p>
-                            <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
-                              <span className="font-serif text-base font-semibold text-estate-700">
-                                {price}
-                              </span>
-                              <span className="flex items-center gap-3 text-xs text-muted-foreground">
-                                {showBeds && (
-                                  <span className="flex items-center gap-1">
-                                    <BedDouble className="h-3.5 w-3.5" />
-                                    {p.bedrooms === 0 ? 'Studio' : p.bedrooms}
+                              {p.featuredImage && <PropertyPhotoBranding enabled={p.showHausLogo} />}
+                              <div className="absolute left-3 top-3 flex max-w-[calc(100%-4.25rem)] flex-wrap items-center gap-1.5">
+                                {p.completionStatus && (
+                                  <span className="rounded-full bg-surface/95 px-3 py-1 text-[11px] font-semibold text-estate-700 shadow-sm">
+                                    {COMPLETION_LABEL[p.completionStatus] ??
+                                      p.completionStatus}
                                   </span>
                                 )}
-                                <span className="flex items-center gap-1">
-                                  <MapPin className="h-3.5 w-3.5" />
-                                  {p.city}
-                                </span>
-                              </span>
+                                {badge && (
+                                  <span className="rounded-full bg-estate-700/90 px-3 py-1 text-[11px] font-semibold text-white shadow-sm">
+                                    {badge}
+                                  </span>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        </Link>
+                            <div className="flex flex-1 flex-col p-5">
+                              <p className="font-serif text-[11px] font-semibold uppercase tracking-widest text-gold-500">
+                                {p.unitType}
+                              </p>
+                              <h3 className="mt-1 font-serif text-lg font-medium text-estate-700">
+                                {p.title}
+                              </h3>
+                              <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
+                                {p.summary}
+                              </p>
+                              <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
+                                <span className="font-serif text-base font-semibold text-estate-700">
+                                  <PropertyPrice {...propertyPriceInput(p, Boolean(cardRentContext))} />
+                                </span>
+                                <span className="flex items-center gap-3 text-xs text-muted-foreground">
+                                  {showBeds && (
+                                    <span className="flex items-center gap-1">
+                                      <BedDouble className="h-3.5 w-3.5" />
+                                      {p.bedrooms === 0 ? 'Studio' : p.bedrooms}
+                                    </span>
+                                  )}
+                                  <span className="flex items-center gap-1">
+                                    <MapPin className="h-3.5 w-3.5" />
+                                    {p.city}
+                                  </span>
+                                </span>
+                              </div>
+                            </div>
+                          </Link>
+                          {!draftPreview && !localCataloguePreview && (
+                            <SaveContentButton
+                              contentType="PROPERTY"
+                              sanityDocumentId={p._id}
+                              title={p.title}
+                              className="absolute right-3 top-3 z-10"
+                            />
+                          )}
+                        </article>
                       )
                     })}
                   </div>

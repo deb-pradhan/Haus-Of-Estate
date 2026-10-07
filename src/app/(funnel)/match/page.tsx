@@ -9,23 +9,19 @@ import {
   Palmtree,
   Key,
   Building2,
-  Warehouse,
-  Castle,
-  Trees,
   MapPin,
   ChevronLeft,
   Check,
   ArrowRight,
   Lock,
-  Share2,
   SlidersHorizontal,
-  BadgeCheck,
   Landmark,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { submitLeadEnquiry, type LeadSubmissionAttempt } from "@/lib/lead-intake/client";
+import { LEAD_FORM_VERSION, PRIVACY_NOTICE_VERSION, PRIVACY_ACKNOWLEDGEMENT_WORDING } from "@/lib/lead-intake/contract";
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -48,7 +44,8 @@ interface QuizState {
   phone: string;
   isSubmitting: boolean;
   isSubmitted: boolean;
-  matchCount: number;
+  privacyAcknowledged: boolean;
+  submitError: string;
 }
 
 type QuizAction =
@@ -62,7 +59,9 @@ type QuizAction =
   | { type: "NEXT" }
   | { type: "BACK" }
   | { type: "SUBMIT_START" }
-  | { type: "SUBMIT_SUCCESS"; payload: number }
+  | { type: "SUBMIT_SUCCESS" }
+  | { type: "SUBMIT_ERROR"; payload: string }
+  | { type: "SET_PRIVACY"; payload: boolean }
   | { type: "UPDATE_FIELD"; payload: { field: "firstName" | "whatsapp" | "email" | "phone"; value: string } };
 
 function reducer(state: QuizState, action: QuizAction): QuizState {
@@ -100,9 +99,13 @@ function reducer(state: QuizState, action: QuizAction): QuizState {
     case "BACK":
       return { ...state, step: Math.max(1, state.step - 1) };
     case "SUBMIT_START":
-      return { ...state, isSubmitting: true };
+      return { ...state, isSubmitting: true, submitError: "" };
     case "SUBMIT_SUCCESS":
-      return { ...state, isSubmitting: false, isSubmitted: true, step: 8, matchCount: action.payload };
+      return { ...state, isSubmitting: false, isSubmitted: true, step: 8 };
+    case "SUBMIT_ERROR":
+      return { ...state, isSubmitting: false, submitError: action.payload };
+    case "SET_PRIVACY":
+      return { ...state, privacyAcknowledged: action.payload };
     case "UPDATE_FIELD":
       return { ...state, [action.payload.field]: action.payload.value };
     default:
@@ -124,7 +127,8 @@ const initialState: QuizState = {
   phone: "",
   isSubmitting: false,
   isSubmitted: false,
-  matchCount: 0,
+  privacyAcknowledged: false,
+  submitError: "",
 };
 
 // ─── Market Data ────────────────────────────────────────────────────────────────
@@ -269,24 +273,6 @@ const BUDGET_RANGES: Record<
   },
 };
 
-// ─── Trust Signals per Market ──────────────────────────────────────────────────
-
-const TRUST_SIGNALS: Record<Market, string[]> = {
-  dubai: [
-    "240+ Verified Listings",
-    "Zero Spam, Zero Obligation",
-  ],
-  uk: [
-    "500+ Verified Listings",
-    "Zero Spam, Zero Obligation",
-  ],
-  bali: [
-    "180+ Verified Listings",
-    "Licensed Indonesian Agents",
-    "Zero Spam, Zero Obligation",
-  ],
-};
-
 // ─── Market Flag SVGs (inline) ─────────────────────────────────────────────────
 
 function MarketIcon({ market }: { market: Market }) {
@@ -373,7 +359,6 @@ function QuizCard({
   label,
   subtitle,
   icon,
-  imageSrc,
   multi,
 }: QuizCardProps) {
   return (
@@ -456,7 +441,7 @@ function HeroSection({ onStart }: { onStart: () => void }) {
           Find Your Perfect Property in 90 Seconds
         </h1>
         <p className="mt-4 text-base leading-relaxed text-white/80 md:text-lg">
-          Answer 5 quick questions across Dubai, the UK, and Bali. We'll match you with verified properties curated by our local team — not an algorithm.
+          Tell us what you are looking for in Dubai, the UK or Bali. Send your preferences for our team to review.
         </p>
         <button
           onClick={onStart}
@@ -703,7 +688,7 @@ function BudgetStep({
     <div className="mx-auto w-full max-w-md px-4 pt-12">
       <p className="mb-1 text-sm font-medium text-muted-foreground">Step 5 of 5</p>
       <h2 className="font-serif text-2xl font-medium text-foreground md:text-3xl">
-        What's your {isRent ? "monthly rent" : "purchase"} budget?
+        What&apos;s your {isRent ? "monthly rent" : "purchase"} budget?
       </h2>
       <div className="mt-6 flex flex-wrap gap-2">
         {options.map((opt) => (
@@ -783,58 +768,13 @@ function TimelineStep({
 
 // ─── Lead Gate ────────────────────────────────────────────────────────────────
 
-function LoadingScreen({ market }: { market: Market }) {
-  const [done, setDone] = useReducer((v) => v + 1, 0);
-  const signals = [
-    `Checking ${TRUST_SIGNALS[market][0].replace(/\d+ /, "")}...`,
-    "Filtering by your budget",
-    "Curating your personalised shortlist",
-  ];
-
-  useEffect(() => {
-    const timers = signals.map((_, i) => setTimeout(() => setDone(), 700 * (i + 1)));
-    return () => timers.forEach(clearTimeout);
-  }, []);
-
-  return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="mb-8">
-        <div className="mb-3 flex items-center gap-3 justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-estate-700 border-t-transparent" />
-          <span className="font-serif text-xl font-medium text-estate-700">
-            Matching your preferences...
-          </span>
-        </div>
-        <div className="mt-6 space-y-3">
-          {signals.slice(0, done).map((step, i) => (
-            <div
-              key={i}
-              className="flex items-center justify-center gap-2 text-sm text-muted-foreground"
-            >
-              <Check className="h-4 w-4 shrink-0 text-trust-teal" />
-              {step}
-            </div>
-          ))}
-          {signals.slice(done).map((step, i) => (
-            <div
-              key={`pending-${i}`}
-              className="flex items-center justify-center gap-2 text-sm text-muted-foreground/40"
-            >
-              <div className="h-4 w-4 rounded-full border border-current" />
-              {step}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function LeadGateForm({
   market,
   onSubmit,
   onBack,
-  matchCount,
+  privacyAcknowledged,
+  submitError,
+  onPrivacyChange,
   isSubmitting,
   firstName,
   whatsapp,
@@ -845,7 +785,9 @@ function LeadGateForm({
   market: Market;
   onSubmit: () => void;
   onBack: () => void;
-  matchCount: number;
+  privacyAcknowledged: boolean;
+  submitError: string;
+  onPrivacyChange: (value: boolean) => void;
   isSubmitting: boolean;
   firstName: string;
   whatsapp: string;
@@ -853,12 +795,11 @@ function LeadGateForm({
   phone: string;
   onUpdate: (field: "firstName" | "whatsapp" | "email" | "phone", value: string) => void;
 }) {
-  const canSubmitName = firstName.trim().length > 0;
-  const canSubmitPhone = phone.trim().length > 0 || whatsapp.trim().length > 0;
-  const canSubmit = canSubmitName && canSubmitPhone;
-  const isValidPhone = (v: string) => /^[\d\s+]{7,15}$/.test(v.replace(/\s/g, ""));
   const showWhatsApp = market === "dubai";
   const phoneValue = showWhatsApp ? whatsapp : phone;
+  const isValidPhone = (value: string) => /^\+?[\d\s]{7,15}$/.test(value.replace(/\s/g, ""));
+  const canSubmit = firstName.trim().length > 0 && isValidPhone(phoneValue) &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) && privacyAcknowledged;
 
   return (
     <div className="mx-auto w-full max-w-sm px-4 pt-12 text-center">
@@ -867,21 +808,20 @@ function LeadGateForm({
           <SlidersHorizontal className="h-6 w-6 text-estate-700" />
         </div>
         <h2 className="font-serif text-2xl font-medium md:text-3xl">
-          Your matches are ready.
+          Request a property shortlist.
         </h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          {matchCount > 0
-            ? `We found ${matchCount} properties that match your criteria in ${market === "dubai" ? "Dubai" : market === "uk" ? "the UK" : "Bali"}.`
-            : "Enter your details to see your personalised shortlist."}
+          Enter your contact details so our team can review your preferences.
         </p>
       </div>
 
       <div className="space-y-3 text-left">
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-foreground">
-            First Name <span className="text-destructive">*</span>
+          <label htmlFor="match-first-name" className="mb-1.5 block text-sm font-medium text-foreground">
+            First name <span className="text-destructive">*</span>
           </label>
           <Input
+            id="match-first-name"
             value={firstName}
             onChange={(e) => onUpdate("firstName", e.target.value)}
             placeholder="Your first name"
@@ -892,14 +832,15 @@ function LeadGateForm({
 
         {showWhatsApp ? (
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground">
-              WhatsApp Number <span className="text-destructive">*</span>
+            <label htmlFor="match-whatsapp" className="mb-1.5 block text-sm font-medium text-foreground">
+              WhatsApp number <span className="text-destructive">*</span>
             </label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
                 +971
               </span>
               <Input
+                id="match-whatsapp"
                 value={whatsapp}
                 onChange={(e) => {
                   const v = e.target.value.replace(/[^\d]/g, "");
@@ -918,10 +859,11 @@ function LeadGateForm({
           </div>
         ) : (
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground">
-              Phone Number <span className="text-destructive">*</span>
+            <label htmlFor="match-phone" className="mb-1.5 block text-sm font-medium text-foreground">
+              Phone number <span className="text-destructive">*</span>
             </label>
             <Input
+              id="match-phone"
               value={phone}
               onChange={(e) => onUpdate("phone", e.target.value)}
               placeholder="+44 7700 900000"
@@ -934,20 +876,25 @@ function LeadGateForm({
         )}
 
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-foreground">
-            Email{" "}
-            <span className="font-normal text-muted-foreground">(optional)</span>
+          <label htmlFor="match-email" className="mb-1.5 block text-sm font-medium text-foreground">
+            Email <span className="text-destructive">*</span>
           </label>
           <Input
+            id="match-email"
             value={email}
             onChange={(e) => onUpdate("email", e.target.value)}
-            placeholder="Email (optional)"
+            placeholder="Email address"
             className="h-12"
             type="email"
             autoComplete="email"
           />
         </div>
 
+        <label className="flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
+          <input type="checkbox" checked={privacyAcknowledged} onChange={(event) => onPrivacyChange(event.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-estate-700" />
+          <span>{PRIVACY_ACKNOWLEDGEMENT_WORDING} <Link href="/legal/privacy-policy" className="underline">Privacy Policy</Link></span>
+        </label>
+        {submitError ? <p role="alert" className="text-sm text-destructive">{submitError}</p> : null}
         <Button
           onClick={onSubmit}
           disabled={!canSubmit || isSubmitting}
@@ -961,7 +908,7 @@ function LeadGateForm({
             </div>
           ) : (
             <>
-              See My Properties
+              Send my enquiry
               <ArrowRight className="h-4 w-4" />
             </>
           )}
@@ -970,7 +917,7 @@ function LeadGateForm({
 
       <div className="mt-4 flex items-start gap-2 text-left text-xs text-muted-foreground">
         <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-        <p>Your details are private. No spam — our agents will reach out once with your personalised list.</p>
+        <p>Your details are private. No spam — we will use them to respond to your enquiry.</p>
       </div>
 
       <button
@@ -986,146 +933,13 @@ function LeadGateForm({
 
 // ─── Thank You ─────────────────────────────────────────────────────────────────
 
-const MARKET_PREVIEW: Record<
-  Market,
-  { name: string; area: string; price: string }[]
-> = {
-  dubai: [
-    { name: "Marina Gate Residences", area: "Dubai Marina", price: "AED 2,450,000" },
-    { name: "Downtown Views Apartment", area: "Downtown Dubai", price: "AED 3,850,000" },
-    { name: "Palm Jumeirah Villa", area: "Palm Jumeirah", price: "AED 18,500,000" },
-  ],
-  uk: [
-    { name: "Canary Wharf Penthouse", area: "London", price: "£1,850,000" },
-    { name: "Manchester City Apartment", area: "Manchester", price: "£485,000" },
-    { name: "Edinburgh New Town Flat", area: "Edinburgh", price: "£725,000" },
-  ],
-  bali: [
-    { name: "Canggu Modern Villa", area: "Canggu", price: "$380,000" },
-    { name: "Ubud Ricefield Estate", area: "Ubud", price: "$650,000" },
-    { name: "Uluwatu Cliff Villa", area: "Uluwatu", price: "$1,200,000" },
-  ],
-};
-
-const MARKET_IMAGES: Record<Market, string[]> = {
-  dubai: [
-    "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&q=70",
-    "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=70",
-    "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600&q=70",
-  ],
-  uk: [
-    "https://images.unsplash.com/photo-1555636222-cae831e670b3?w=600&q=70",
-    "https://images.unsplash.com/photo-1592595896551-12b371d546d5?w=600&q=70",
-    "https://images.unsplash.com/photo-1449158743715-0a90ebb6d2d8?w=600&q=70",
-  ],
-  bali: [
-    "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600&q=70",
-    "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=70",
-    "https://images.unsplash.com/photo-1540541338287-41700207dee6?w=600&q=70",
-  ],
-};
-
-function ThankYouSection({
-  firstName,
-  market,
-}: {
-  firstName: string;
-  market: Market;
-}) {
-  const shareText = encodeURIComponent(
-    `I just found my perfect property ${market === "dubai" ? "in Dubai" : market === "uk" ? "in the UK" : "in Bali"} — try this tool: https://haus.ae/match`,
-  );
-  const preview = MARKET_PREVIEW[market];
-  const images = MARKET_IMAGES[market];
-
+function ThankYouSection({ firstName }: { firstName: string }) {
   return (
-    <div className="mx-auto w-full max-w-md px-4 pt-12 text-center">
-      <div className="mb-6">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-trust-teal/10">
-          <Check className="h-7 w-7 text-trust-teal" />
-        </div>
-        <h2 className="font-serif text-2xl font-medium md:text-3xl">
-          You're in, {firstName}. 🎉
-        </h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Your personalised shortlist is being prepared by our {market === "dubai" ? "Dubai" : market === "uk" ? "UK" : "Bali"} team. Expect a message within 2 hours.
-        </p>
-      </div>
-
-      {/* Market badge */}
-      <div className="mb-4 flex items-center justify-center gap-2">
-        <MarketIcon market={market} />
-        <span className="text-sm font-medium text-foreground">
-          {MARKETS.find((m) => m.id === market)?.label}
-        </span>
-      </div>
-
-      {/* Preview cards */}
-      <div className="space-y-3">
-        <p className="text-left text-sm font-medium text-foreground">
-          Here's a preview of what we found:
-        </p>
-        {preview.map((p, i) => (
-          <div
-            key={i}
-            className={cn(
-              "relative overflow-hidden rounded-xl border border-border bg-white text-left",
-              i > 0 && "blur-sm",
-            )}
-          >
-            <div className="relative h-36 w-full">
-              <Image src={images[i]} alt={p.name} fill className="object-cover" />
-              <Badge className="absolute left-2 top-2 bg-trust-teal/90 text-white backdrop-blur-sm border-0">
-                <BadgeCheck className="mr-0.5 h-3 w-3" />
-                Verified
-              </Badge>
-            </div>
-            <div className="p-3">
-              <p className="font-medium text-foreground">{p.name}</p>
-              <p className="text-xs text-muted-foreground">{p.area}</p>
-              <div className="mt-2 flex items-center justify-between">
-                <span className="font-serif text-base font-semibold text-estate-700">
-                  {p.price}
-                </span>
-              </div>
-            </div>
-            {i > 0 && (
-              <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-sm">
-                <p className="px-4 text-sm font-medium text-foreground/60">
-                  Unlock your full shortlist — check your {market === "dubai" ? "WhatsApp" : "messages"}.
-                </p>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-6 space-y-3">
-        <Button
-          asChild
-          variant="outline"
-          className="h-11 w-full border-estate-700 bg-transparent text-estate-700 hover:bg-estate-700/5"
-        >
-          <Link href="/search">
-            Browse all properties while you wait
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Link>
-        </Button>
-        <Button
-          asChild
-          variant="ghost"
-          className="h-11 w-full text-muted-foreground"
-        >
-          <Link
-            href={`https://wa.me/?text=${shareText}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Share2 className="mr-2 h-4 w-4" />
-            Share with someone who's also looking
-          </Link>
-        </Button>
-      </div>
+    <div className="mx-auto w-full max-w-md px-4 py-16 text-center" role="status">
+      <Check className="mx-auto mb-4 h-10 w-10 text-trust-teal" aria-hidden="true" />
+      <h2 className="font-serif text-2xl font-medium">Enquiry saved, {firstName}.</h2>
+      <p className="mt-3 text-sm text-muted-foreground">Your preferences and contact details have been saved for our team to review. We will respond using the details you provided.</p>
+      <Button asChild variant="outline" className="mt-6"><Link href="/properties">Browse properties</Link></Button>
     </div>
   );
 }
@@ -1135,6 +949,8 @@ function ThankYouSection({
 export default function MatchPage() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const containerRef = useRef<HTMLDivElement>(null);
+  const submissionAttempt = useRef<LeadSubmissionAttempt | null>(null);
+  const sending = useRef(false);
 
   const scrollToTop = useCallback(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1145,29 +961,40 @@ export default function MatchPage() {
   }, [state.step, scrollToTop]);
 
   const handleSubmit = async () => {
+    if (sending.current || !state.market || !state.intent) return;
+    sending.current = true;
     dispatch({ type: "SUBMIT_START" });
+    const market = state.market;
+    const budgetOptions = BUDGET_RANGES[market][state.intent === "rent" ? "rent" : "buy"];
     try {
-      await fetch("/api/funnel", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          intent: state.intent,
-          market: state.market,
-          propertyTypes: state.propertyTypes,
-          areas: state.areas,
-          budget: state.budget,
-          timeline: state.timeline,
+      await submitLeadEnquiry({
+        interest: state.intent === "holiday" ? "buy" : state.intent,
+        preferences: {
+          market: { dubai: "United Arab Emirates", uk: "United Kingdom", bali: "Indonesia" }[market],
+          location: state.areas.map((id) => AREAS[market].find((area) => area.id === id)?.label ?? id).join(", "),
+          propertyType: state.propertyTypes.map((id) => PROPERTY_TYPES[market].find((type) => type.id === id)?.label ?? id).join(", "),
+          timeframe: state.timeline ?? "",
+        },
+        contact: {
           firstName: state.firstName,
-          whatsapp: state.whatsapp,
-          phone: state.phone,
           email: state.email,
-        }),
-      });
-    } catch (_) {
-      // graceful failure — still show thank you
+          phone: market === "dubai" ? `+971${state.whatsapp.replace(/^0/, "")}` : state.phone,
+          message: `Purpose: ${state.intent}. Budget: ${budgetOptions.find((budget) => budget.id === state.budget)?.label ?? state.budget ?? "Not specified"}.`,
+        },
+        privacyAcknowledged: state.privacyAcknowledged,
+        newsletterOptIn: false,
+        propertyMatchOptIn: false,
+        overseasCashBuyer: false,
+        formVersion: LEAD_FORM_VERSION,
+        privacyNoticeVersion: PRIVACY_NOTICE_VERSION,
+        context: { surface: "manual_cta", pagePath: "/match" },
+      }, submissionAttempt);
+      dispatch({ type: "SUBMIT_SUCCESS" });
+    } catch (error) {
+      dispatch({ type: "SUBMIT_ERROR", payload: error instanceof Error ? error.message : "Please try again." });
+    } finally {
+      sending.current = false;
     }
-    const count = Math.floor(Math.random() * 8) + 4;
-    dispatch({ type: "SUBMIT_SUCCESS", payload: count });
   };
 
   // Transition copy after each step
@@ -1287,13 +1114,14 @@ export default function MatchPage() {
         const mkt = state.market;
         return (
           <div className="min-h-screen pt-16 pb-8">
-            <LoadingScreen market={mkt} />
             <div className="mt-6">
               <LeadGateForm
                 market={mkt}
                 onSubmit={handleSubmit}
                 onBack={() => dispatch({ type: "BACK" })}
-                matchCount={0}
+                privacyAcknowledged={state.privacyAcknowledged}
+                onPrivacyChange={(value) => dispatch({ type: "SET_PRIVACY", payload: value })}
+                submitError={state.submitError}
                 isSubmitting={state.isSubmitting}
                 firstName={state.firstName}
                 whatsapp={state.whatsapp}
@@ -1310,10 +1138,9 @@ export default function MatchPage() {
 
       {/* ── Thank You ── */}
       {state.step === 8 && state.market && (() => {
-        const mkt = state.market;
         return (
           <div className="min-h-screen pt-16 pb-24">
-            <ThankYouSection firstName={state.firstName} market={mkt} />
+            <ThankYouSection firstName={state.firstName} />
           </div>
         );
       })()}

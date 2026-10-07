@@ -1,0 +1,69 @@
+{
+  "description": "Review only. Not applied to Sanity. Close legacy roles without deleting content. Re-fetch IDs and revisions before applying in the intended dataset.",
+  "mutations": [
+    {
+      "patch": {
+        "id": "role-property-advisor-london",
+        "set": {
+          "status": "closed"
+        }
+      }
+    },
+    {
+      "patch": {
+        "id": "role-lettings-specialist-cardiff",
+        "set": {
+          "status": "closed"
+        }
+      }
+    },
+    {
+      "patch": {
+        "id": "role-social-media-manager",
+        "set": {
+          "status": "closed"
+        }
+      }
+    },
+    {
+      "patch": {
+        "id": "role-video-editor",
+        "set": {
+          "status": "closed"
+        }
+      }
+    },
+    {
+      "patch": {
+        "id": "role-interior-design-intern",
+        "set": {
+          "status": "closed"
+        }
+      }
+    },
+    {
+      "patch": {
+        "id": "role-property-management-intern",
+        "set": {
+          "status": "closed"
+        }
+      }
+    },
+    {
+      "patch": {
+        "id": "role-staging-interiors-intern",
+        "set": {
+          "status": "closed"
+        }
+      }
+    },
+    {
+      "patch": {
+        "id": "role-international-markets-associate-remote",
+        "set": {
+          "status": "closed"
+        }
+      }
+    }
+  ]
+}

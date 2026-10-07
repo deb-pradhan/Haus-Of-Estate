@@ -1,6 +1,6 @@
-// Sonia requested a public takedown on 18 September 2026. Reopening requires
-// her approval and a reviewed replacement role list; CMS edits must not reopen it.
-export const CAREERS_PUBLIC_ENABLED = false;
+// Approved replacement vacancies can be browsed. Application intake is a separate
+// server setting and stays disabled until hosted delivery has been verified.
+export const CAREERS_PUBLIC_ENABLED = true;
 
 export const CAREERS_CLOSED_HEADERS = {
   "Cache-Control": "no-store",
