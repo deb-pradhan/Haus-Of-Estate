@@ -115,7 +115,7 @@ export function PropertyDesignExplorer({ designs, interiorSchemes = [], project,
             <dd className="mt-1 text-lg font-medium text-estate-700">{plotArea}</dd>
           </div>
           <div className="rounded-xl border border-border bg-background p-4">
-            <dt className="text-xs uppercase tracking-wider text-muted-foreground">Sellable area</dt>
+            <dt className="text-xs uppercase tracking-wider text-muted-foreground">Built-up area</dt>
             <dd className="mt-1 text-lg font-medium text-estate-700">{areaFormatter.format(selected.sellableAreaSqFt)} sq ft</dd>
           </div>
         </dl>

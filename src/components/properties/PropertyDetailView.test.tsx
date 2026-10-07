@@ -140,7 +140,7 @@ describe('shared property details', () => {
     expect(html).toContain('Brochure Type A')
     expect(html).toContain('Brochure Type B')
     expect(html).toContain('Plot area')
-    expect(html).toContain('Sellable area')
+    expect(html).toContain('Built-up area')
     expect(html).toContain('2,660 sq ft')
     expect(html).toContain('Awaiting confirmation')
     expect(html).not.toContain('2,260')

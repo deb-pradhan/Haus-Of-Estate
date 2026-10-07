@@ -1,10 +1,12 @@
 # Florence designs and brochure requests - 4 October 2026
 
-Surya authorised a first implementation showing matched property designs, images, floor plans and the two distinct brochure area figures. He explicitly chose public plans and areas, with the full brochure requested separately. Interior scheme choice remains unconfirmed. Use the brochure term **sellable area** until Haus supplies the approved alternative; do not substitute built-up or internal area.
+Surya authorised a first implementation showing matched property designs, images, floor plans and the two distinct brochure area figures. He explicitly chose public plans and areas, with the full brochure requested separately. Interior scheme choice remains unconfirmed.
+
+**7 October 2026 terminology clarification:** Surya relayed Sonia's confirmation that Florence's brochure "sellable area" should be displayed as **Built-up area**. This supersedes the original instruction to retain "sellable area" in the UI. Keep all numeric figures, separate plot areas and unresolved plot discrepancies unchanged. The existing `sellableAreaSqFt` storage key and original brochure evidence remain intact; this is a display terminology correction, not a recalculation or a confirmation of available-unit specifications.
 
 ## Content and display
 
-Keep the community overview and five existing bedroom collections. Seven villa brochure designs and twelve townhouse family/row/position combinations sit within those properties. Their keys identify brochure designs, not currently available units. The selected design controls its photographs, plot area, sellable area and whole floor-plan spreads. Townhouse row plans identify multiple connected homes; captions distinguish corner and middle homes and the row's bedroom mix.
+Keep the community overview and five existing bedroom collections. Seven villa brochure designs and twelve townhouse family/row/position combinations sit within those properties. Their keys identify brochure designs, not currently available units. The selected design controls its photographs, plot area, built-up area and whole floor-plan spreads. Townhouse row plans identify multiple connected homes; captions distinguish corner and middle homes and the row's bedroom mix.
 
 Villa brochure Type A/B/C, map facade V1/V2/V3, map mirrored A/B, townhouse family codes and interior Palette A/B are separate concepts. The supplied files do not establish every correspondence. Mediterranean Maggio/Rossa/Corsina designs remain unpopulated because no matched exterior brochure was supplied. Palette comparison does not assert buyer choice, included furnishings or an upgrade price.
 

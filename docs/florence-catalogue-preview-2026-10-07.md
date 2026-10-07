@@ -7,7 +7,7 @@ The 3017 preview server was stopped on 7 October, causing `ERR_CONNECTION_REFUSE
 1. Open `http://127.0.0.1:3017/properties`.
 2. Under **Community previews**, choose **Azizi Florence — Explore community and home designs**. One community card shows the supplied starting prices for the matching villa/townhouse collections; it is separate from published listings.
 3. The existing `/dev/property-previews` page shows the large Florence overview, then **Villas** and **Townhouses**.
-4. Choose a bedroom collection, then a design. Its matching images, plot/sellable areas and floor plans remain in the existing shared property detail presentation. Flagged brochure-area discrepancies remain visible; brochure requests and enquiries remain disabled.
+4. Choose a bedroom collection, then a design. Its matching images, plot/built-up areas and floor plans remain in the existing shared property detail presentation. Sonia's terminology clarification of 7 October changes the displayed "sellable area" label to "Built-up area" without changing the figures. Flagged brochure-area discrepancies remain visible; brochure requests and enquiries remain disabled.
 
 The catalogue's existing location selector includes **United Arab Emirates → Sharjah** in this local mode. Geography is derived from the verified prepared bundle using the existing location grouping. Type, bedroom, text and source-currency budget filters apply to the home collections. Explicit rental or availability filters do not invent missing availability. A sales browsing context may show an editorial collection; it does not assert that individual units are available.
 

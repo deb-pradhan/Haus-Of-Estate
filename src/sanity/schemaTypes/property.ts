@@ -575,7 +575,7 @@ export const property = defineType({
             description: 'Conflicting plot figures are omitted from the public page until confirmed.',
           }),
           defineField({ name: 'plotAreaSqFt', title: 'Plot area (sq ft)', type: 'number', validation: (rule) => rule.positive() }),
-          defineField({ name: 'sellableAreaSqFt', title: 'Sellable area (sq ft)', type: 'number', description: 'Preserve the brochure measurement term; do not substitute built-up or internal area.', validation: (rule) => rule.required().positive() }),
+          defineField({ name: 'sellableAreaSqFt', title: 'Built-up area (sq ft)', type: 'number', description: 'For Florence, Sonia confirmed on 7 October 2026 that the brochure sellable-area figures should be labelled built-up area. Preserve the source figure; confirm the measurement definition for other projects.', validation: (rule) => rule.required().positive() }),
           defineField({ name: 'areaNote', title: 'Public area note', type: 'text', rows: 2, description: 'For conflicting sources, say the plot is awaiting confirmation. Do not repeat disputed numeric figures.' }),
           defineField({ name: 'summary', title: 'Design summary', type: 'text', rows: 3 }),
           defineField({ name: 'brochureKey', title: 'Collection brochure key', type: 'string', description: 'Internal collection identity for future approved fulfilment. This is not a public download URL.' }),

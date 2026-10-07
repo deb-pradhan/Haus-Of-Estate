@@ -461,7 +461,7 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
                       ['EPC', undefined],
                     ] : [
                       ...(!property.priceDisplay ? [['Pricing', undefined]] : []),
-                      ['Sizes', hasDesigns ? 'See plot and sellable areas by design' : property.sizeDisplay],
+                      ['Sizes', hasDesigns ? 'See plot and built-up areas by design' : property.sizeDisplay],
                       ['Payment plan', property.paymentPlan],
                       ['Handover', property.completionStatus],
                       ['Availability', undefined],

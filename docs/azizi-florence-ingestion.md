@@ -4,6 +4,8 @@ This is an internal evidence and preparation record. The local Florence content 
 
 ## Sources actually received
 
+**Later clarification, 7 October 2026:** Surya relayed Sonia's confirmation to label Florence's brochure "sellable area" as **Built-up area** on the website. The original assessment and verbatim brochure tables below retain their source terminology. See `docs/florence-designs-2026-10-04.md` for the subsequent approval to display matched design areas/plans and this terminology update. Neither this clarification nor the display approval resolves the disputed plot figures or confirms available inventory.
+
 The current image package is `C:\Users\surya\Downloads\OneDrive_2_9-4-2026`. It contains **109 raster images, 3,832,154,969 bytes** (approximately 3.57 GiB): 87 JPG, 17 JPEG and five PNG files. No PDF, video, ZIP, written fact sheet or independent commercial schedule is inside that image package.
 
 | Source folder | Images | Contents |
