@@ -7,6 +7,7 @@ import { getCareersInbox } from "@/lib/careers-settings";
 import { isLeadIntakeReady } from "@/lib/lead-intake/security";
 import { draftMode } from "next/headers";
 import { isSanityLivePreviewConfigured, SanityLive } from "@/sanity/live";
+import { isLocalCataloguePreviewEnabled } from "@/lib/property-catalogue-preview";
 
 export default async function MainLayout({
   children,
@@ -14,8 +15,9 @@ export default async function MainLayout({
   children: React.ReactNode;
 }) {
   const { isEnabled: isDraftModeEnabled } = await draftMode();
-  const leadIntakeEnabled = isLeadIntakeReady();
-  const assistantEnabled = isPropertyAssistantEnabled();
+  const localCataloguePreview = isLocalCataloguePreviewEnabled();
+  const leadIntakeEnabled = !localCataloguePreview && isLeadIntakeReady();
+  const assistantEnabled = !localCataloguePreview && isPropertyAssistantEnabled();
   const content = (
     <div className="flex min-h-screen flex-col">
       <Header authEnabled={isAuthEnabled()} />
@@ -33,9 +35,9 @@ export default async function MainLayout({
       ) : (
         content
       )}
-      <SanityLive
+      {!localCataloguePreview && <SanityLive
         includeDrafts={isDraftModeEnabled && isSanityLivePreviewConfigured}
-      />
+      />}
     </LeadModalProvider>
   );
 }

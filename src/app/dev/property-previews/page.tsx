@@ -26,7 +26,7 @@ export default async function PropertyPreviewsPage() {
         <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <Link href="/" className="hover:text-estate-700 hover:underline">Home</Link>
           <span aria-hidden>/</span>
-          <Link href="/properties" className="hover:text-estate-700 hover:underline">Properties</Link>
+          <Link href="/properties" className="hover:text-estate-700 hover:underline">Properties catalogue</Link>
           <span aria-hidden>/</span>
           <span aria-current="page">{hasFlorence ? 'Azizi Florence' : 'Property draft previews'}</span>
         </nav>

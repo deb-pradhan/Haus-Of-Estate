@@ -39,6 +39,7 @@ describe('local property preview index', () => {
     expect(html).toContain('Existing view and proposed interiors — AI-assisted concept; not completed works</figcaption>')
     expect(html).toContain('class="object-contain"')
     expect(html).toContain('href="/dev/property-previews/north-london-three-bedroom"')
+    expect(html).toMatch(/href="\/properties"[^>]*>Properties catalogue<\/a>/)
     expect(html).not.toContain('Florence')
     expect(html).not.toContain('Clusters')
     expect(html).not.toContain('Villas')

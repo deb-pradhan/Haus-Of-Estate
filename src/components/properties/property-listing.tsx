@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { draftMode } from 'next/headers'
-import { MapPin, BedDouble, Building2, X } from 'lucide-react'
+import { MapPin, BedDouble, Building2, ArrowRight, X } from 'lucide-react'
 import { urlFor } from '@/sanity'
 import { sanityFetch } from '@/sanity/live'
 import { PROPERTIES_FILTERED_QUERY } from '@/sanity/queries'
@@ -15,6 +15,7 @@ import { PropertyPrice } from '@/components/currency/property-price'
 import { propertyPriceInput, type PropertyPricing } from '@/lib/currency'
 import { matchesPropertySearch, searchAmount } from '@/lib/property-search'
 import { PropertySearchForm } from './property-search-form'
+import { isLocalCataloguePreviewEnabled, loadCataloguePreviewGroups } from '@/lib/property-catalogue-preview'
 import {
   type Category,
   type Availability,
@@ -112,7 +113,8 @@ export async function PropertyListing({
   intro?: string
 }) {
   const { isEnabled: draftPreview } = await draftMode()
-  const assistantEnabled = isPropertyAssistantEnabled() && !draftPreview
+  const localCataloguePreview = isLocalCataloguePreviewEnabled()
+  const assistantEnabled = isPropertyAssistantEnabled() && !draftPreview && !localCataloguePreview
   // ── Normalise the taxonomy selection ──────────────────────────────────
   const category: '' | Category =
     forceCategory ?? (isCategory(params.category) ? params.category : '')
@@ -138,7 +140,7 @@ export async function PropertyListing({
   const minBeds = !hideBeds && Number.isInteger(bedsRaw) && bedsRaw >= 0 ? bedsRaw : null
 
   // ── Fetch (server-side GROQ filtering) ────────────────────────────────
-  const { data: properties } = await sanityFetch<PropertyCard[]>({
+  const [{ data: properties }, cataloguePreviews] = await Promise.all([sanityFetch<PropertyCard[]>({
     query: PROPERTIES_FILTERED_QUERY,
     params: {
       category: category || '',
@@ -146,7 +148,12 @@ export async function PropertyListing({
       intent: intent || '',
       type: type || '',
     },
-  })
+  }), localCataloguePreview ? loadCataloguePreviewGroups({
+    ...params,
+    category: category || undefined,
+    availability: availability || undefined,
+    intent: intent || undefined,
+  }) : Promise.resolve([])])
   const fetched = properties ?? []
 
   // ── Remaining JS filters (geography + beds) ──────────────────────────
@@ -251,6 +258,13 @@ export async function PropertyListing({
           </p>
         </div>
       )}
+      {localCataloguePreview && (
+        <div className="border-b border-gold-500/30 bg-gold-500/10 px-4 py-4 text-sm text-estate-700">
+          <p className="mx-auto max-w-6xl">
+            <strong>Local catalogue preview.</strong> Unpublished editorial collections appear separately from published listings. Enquiries and saving are disabled in this local preview.
+          </p>
+        </div>
+      )}
       {/* Hero */}
       <section className="bg-estate-700 px-4 py-12 md:px-6 md:py-16">
         <div className="mx-auto max-w-4xl text-center">
@@ -262,7 +276,9 @@ export async function PropertyListing({
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/80 md:text-lg">
             {intro ??
-              'Explore our published collection by location, property type and budget.'}
+              (localCataloguePreview
+                ? 'Explore published properties and review community drafts by location, property type and budget.'
+                : 'Explore our published collection by location, property type and budget.')}
           </p>
         </div>
         <div className="mt-8"><PropertySearchForm key={JSON.stringify(params)} initial={{ category: category || undefined, intent: intent || undefined, availability: availability || undefined, country, city, type, beds: minBeds ?? '', q: q || location, minPrice, maxPrice, currency }} /></div>
@@ -287,8 +303,8 @@ export async function PropertyListing({
             <div className="mb-10 flex flex-wrap items-center gap-3">
               <p className="text-sm font-medium text-estate-700">
                 {list.length === 0
-                  ? `No ${rentContextGlobal ? 'rentals' : 'listings'} match your filters`
-                  : `Showing ${list.length} ${list.length === 1 ? 'listing' : 'listings'}${rentContextGlobal ? ' to rent' : ''}`}
+                  ? `No ${localCataloguePreview ? 'published ' : ''}${rentContextGlobal ? 'rentals' : 'listings'} match your filters`
+                  : `Showing ${list.length} ${localCataloguePreview ? 'published ' : ''}${list.length === 1 ? 'listing' : 'listings'}${rentContextGlobal ? ' to rent' : ''}`}
               </p>
               <div className="flex flex-wrap items-center gap-2">
                 {activeFilters.map((f) => (
@@ -311,6 +327,65 @@ export async function PropertyListing({
             </div>
           )}
 
+          {cataloguePreviews.length > 0 && (
+            <section aria-labelledby="community-previews-title" className="mb-16">
+              <div className="mb-6 flex flex-wrap items-baseline justify-between gap-2">
+                <h2 id="community-previews-title" className="font-serif text-2xl font-medium text-estate-700 md:text-3xl">Community previews</h2>
+                <p className="text-sm text-muted-foreground">{cataloguePreviews.length} unpublished community {cataloguePreviews.length === 1 ? 'preview' : 'previews'}</p>
+              </div>
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {cataloguePreviews.map(({ overview, homes }) => {
+                  const prices = [
+                    { type: 'Villa', label: 'Villas' },
+                    { type: 'Townhouse', label: 'Townhouses' },
+                  ].flatMap(({ type, label }) => {
+                    const collections = homes.filter(({ document }) => document.unitType === type)
+                    if (collections.length === 0) return []
+                    const amounts = collections.map(({ document }) => document.priceCurrency === 'AED' ? document.priceAmount : undefined)
+                    const amount = amounts.every((value): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0)
+                      ? Math.min(...amounts)
+                      : undefined
+                    const scope = amount !== undefined && collections.every(({ document }) => document.priceDisplay?.includes('Clusters 1 & 2'))
+                      ? 'Clusters 1 & 2'
+                      : undefined
+                    return [{ label, amount, scope }]
+                  })
+                  return (
+                    <article key={overview.document._id} className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-estate-700/40 hover:shadow-xl hover:shadow-estate-700/5">
+                      <Link href="/dev/property-previews" className="flex flex-1 flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-estate-700/50 focus-visible:ring-inset">
+                        <div className="relative aspect-[4/3] overflow-hidden bg-estate-700">
+                          <Image src={overview.media.hero.src} alt={overview.media.hero.alt} fill unoptimized sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" className="object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transform-none" />
+                          <span className="absolute left-3 top-3 rounded-full bg-surface/95 px-3 py-1 text-[11px] font-semibold text-estate-700 shadow-sm">Draft community · not published</span>
+                        </div>
+                        <div className="flex flex-1 flex-col p-5">
+                          <p className="font-serif text-[11px] font-semibold uppercase tracking-widest text-gold-500">Community overview</p>
+                          <h3 className="mt-1 font-serif text-lg font-medium text-estate-700">{overview.document.title}</h3>
+                          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{overview.document.summary}</p>
+                          <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground"><MapPin aria-hidden className="h-3.5 w-3.5 shrink-0" />{[overview.document.city, overview.document.country].filter(Boolean).join(', ')}</p>
+                          {prices.length > 0 && (
+                            <dl className="mt-4 space-y-3 border-t border-border pt-3 text-sm">
+                              {prices.map(({ label, amount, scope }) => (
+                                <div key={label}>
+                                  <dt className="font-medium text-estate-700">{label}</dt>
+                                  <dd className="mt-1 text-estate-700">
+                                    <PropertyPrice amount={amount} currency={amount === undefined ? undefined : 'AED'} prefix={amount === undefined ? '' : 'From '} fallback="Pricing awaiting confirmation" />
+                                    {scope && <span className="mt-1 block text-xs text-muted-foreground">{scope}</span>}
+                                  </dd>
+                                </div>
+                              ))}
+                            </dl>
+                          )}
+                          <span className="mt-5 flex items-center justify-between gap-3 border-t border-border pt-3 text-sm font-medium text-estate-700">Explore community and home designs <ArrowRight aria-hidden className="h-4 w-4 shrink-0" /></span>
+                        </div>
+                      </Link>
+                    </article>
+                  )
+                })}
+              </div>
+            </section>
+          )}
+
+          {localCataloguePreview && <p className="mb-6 text-sm font-medium text-estate-700">{list.length} published {list.length === 1 ? 'listing' : 'listings'}</p>}
           {communities.length === 0 ? (
             hasFilters || forceCategory ? (
               <EmptyStateCTA
@@ -421,7 +496,7 @@ export async function PropertyListing({
                               </div>
                             </div>
                           </Link>
-                          {!draftPreview && (
+                          {!draftPreview && !localCataloguePreview && (
                             <SaveContentButton
                               contentType="PROPERTY"
                               sanityDocumentId={p._id}
