@@ -32,6 +32,7 @@ export type PropertyPreviewDocument = Record<string, unknown> & {
   unitType?: string
   bedrooms?: number
   listingType?: string[]
+  availability?: string[]
   priceDisplay?: string
   priceAmount?: number
   priceCurrency?: string
@@ -77,7 +78,9 @@ const UNCONFIRMED_FIELDS = [
   'editorialApproval', 'approvals', 'approvedAt', 'approvedBy',
 ]
 const INDIVIDUAL_PENDING_FIELDS = [
-  'address', 'exactAddress', 'postcode', 'tenure', 'epc', 'epcRating',
+  'address', 'exactAddress', 'streetAddress', 'postcode', 'road', 'roadName', 'street', 'streetName',
+  'map', 'mapUrl', 'mapEmbed', 'mapEmbedUrl', 'location', 'coordinates', 'latitude', 'longitude',
+  'tenure', 'epc', 'epcRating',
   'floorPlans', 'designVariants', 'interiorSchemes',
 ]
 
@@ -92,6 +95,30 @@ function object(value: unknown): Record<string, unknown> {
 
 function nonempty(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0
+}
+
+function confirmedIndividualFields(value: unknown): Record<string, unknown> {
+  const details = object(value)
+  const dateOnly = (date: unknown): date is string => typeof date === 'string' &&
+    /^\d{4}-\d{2}-\d{2}$/.test(date) && Number.isFinite(Date.parse(date)) &&
+    new Date(date).toISOString().slice(0, 10) === date
+  requireValue(Object.keys(details).every((key) =>
+    ['unitType', 'availability', 'priceAmount', 'priceCurrency', 'priceDisplay', 'source'].includes(key)) &&
+    details.unitType === 'Terraced House' && Array.isArray(details.availability) &&
+    details.availability.length === 1 && details.availability[0] === 'ready' &&
+    Number.isSafeInteger(details.priceAmount) && (details.priceAmount as number) > 0 &&
+    details.priceCurrency === 'GBP' &&
+    details.priceDisplay === `£${(details.priceAmount as number).toLocaleString('en-GB')}`)
+  const source = object(details.source)
+  requireValue(Object.keys(source).every((key) =>
+    ['kind', 'attributedTo', 'dated', 'receivedAt', 'reference'].includes(key)) &&
+    source.kind === 'user-supplied-message' && nonempty(source.attributedTo) &&
+    source.attributedTo.length <= 200 && nonempty(source.reference) && source.reference.length <= 1000 &&
+    dateOnly(source.dated) && dateOnly(source.receivedAt) && source.receivedAt >= source.dated)
+  return {
+    unitType: details.unitType, availability: [...details.availability],
+    priceAmount: details.priceAmount, priceCurrency: details.priceCurrency, priceDisplay: details.priceDisplay,
+  }
 }
 
 function imageLabels(value: Record<string, unknown>, required = false) {
@@ -210,6 +237,7 @@ function displayDocument(document: Record<string, unknown>): PropertyPreviewDocu
   if (document.priceAmount !== undefined) display.priceAmount = document.priceAmount as number
   if (document.bedrooms !== undefined) display.bedrooms = document.bedrooms as number
   if (document.listingType !== undefined) display.listingType = [...document.listingType as string[]]
+  if (document.availability !== undefined) display.availability = [...document.availability as string[]]
   for (const key of ['keyFeatures', 'amenities'] as const) {
     if (document[key] !== undefined) {
       requireValue(Array.isArray(document[key]) && document[key].every(nonempty))
@@ -426,9 +454,13 @@ async function readBundleUncached(options: PropertyPreviewOptions): Promise<Prev
       requireValue(['community', 'city', 'country', 'summary'].every((key) => nonempty(document[key])))
       requireValue((document.summary as string).length <= 280)
       const prices: Record<string, unknown> = {}
+      const details = individual && Object.hasOwn(definition, 'confirmedDetails')
+        ? confirmedIndividualFields(definition.confirmedDetails) : {}
       if (individual) {
         requireValue(!Object.hasOwn(definition, 'confirmedPricing') &&
           INDIVIDUAL_PENDING_FIELDS.every((key) => !Object.hasOwn(document, key)))
+      } else {
+        requireValue(!Object.hasOwn(definition, 'confirmedDetails'))
       }
       if (definition.confirmedPricing !== undefined) {
         const pricing = object(definition.confirmedPricing)
@@ -446,6 +478,10 @@ async function readBundleUncached(options: PropertyPreviewOptions): Promise<Prev
       requireValue(UNCONFIRMED_FIELDS.every((key) =>
         individual && key === 'listingType' ? Array.isArray(document.listingType) &&
           document.listingType.length === 1 && document.listingType[0] === 'sale' :
+          Object.hasOwn(details, key) ? key === 'availability'
+            ? Array.isArray(document.availability) && document.availability.length === 1 &&
+              document.availability[0] === (details.availability as string[])[0]
+            : document[key] === details[key] :
           Object.hasOwn(prices, key) ? document[key] === prices[key] : !Object.hasOwn(document, key)))
       const verification = object(document.verification)
       requireValue(verification.status === 'unverified' &&
@@ -454,7 +490,9 @@ async function readBundleUncached(options: PropertyPreviewOptions): Promise<Prev
         const facts = object(definition.confirmedFacts)
         requireValue(Object.keys(facts).every((key) => ['bedrooms', 'listingType'].includes(key)) &&
           facts.bedrooms === 3 && Array.isArray(facts.listingType) && facts.listingType.length === 1 &&
-          facts.listingType[0] === 'sale' && document.bedrooms === 3 && !Object.hasOwn(document, 'unitType'))
+          facts.listingType[0] === 'sale' && document.bedrooms === 3)
+        requireValue(Object.hasOwn(details, 'unitType')
+          ? document.unitType === details.unitType : !Object.hasOwn(document, 'unitType'))
       } else if (definition.confirmedFacts !== undefined) {
         const facts = object(definition.confirmedFacts)
         requireValue(definition.kind === 'home-type' &&

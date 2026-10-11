@@ -119,7 +119,115 @@ async function individualFixture() {
   await saveFixture()
 }
 
+function addConfirmedDetails() {
+  const fields = {
+    unitType: 'Terraced House', availability: ['ready'],
+    priceAmount: 500000, priceCurrency: 'GBP', priceDisplay: '£500,000',
+  }
+  const details = {
+    ...fields,
+    source: {
+      kind: 'user-supplied-message', attributedTo: 'Sonia / Haus', dated: '2026-10-07',
+      receivedAt: '2026-10-11', reference: 'WhatsApp conversation supplied by Surya on 11 October 2026',
+    },
+  }
+  ;(report.documents as JsonObject[])[0].confirmedDetails = details
+  Object.assign(documents[0], fields)
+  return details
+}
+
 describe('email-evidenced individual property previews', () => {
+  it('projects newly confirmed details while keeping message provenance and pending facts private', async () => {
+    await individualFixture()
+    addConfirmedDetails()
+    await saveFixture()
+    const preview = await loadPropertyPreview('north-london-three-bedroom', options)
+    expect(preview?.document).toMatchObject({
+      unitType: 'Terraced House', availability: ['ready'], bedrooms: 3, listingType: ['sale'],
+      priceAmount: 500000, priceCurrency: 'GBP', priceDisplay: '£500,000', status: 'draft', featured: false,
+    })
+    for (const field of ['completionStatus', 'availabilityCheckedAt', 'sizeDisplay', 'tenure', 'epc', 'postcode', 'road', 'map']) {
+      expect(preview?.document).not.toHaveProperty(field)
+    }
+    expect(JSON.stringify(preview)).not.toMatch(/Sonia|WhatsApp|confirmedDetails|sourceEvidence|receivedAt|private-|_sanityAsset/)
+  })
+
+  it('rejects mismatched or missing newly confirmed draft details', async () => {
+    await individualFixture()
+    addConfirmedDetails()
+    const original = structuredClone(documents[0])
+    for (const [field, value] of [
+      ['unitType', 'House'], ['availability', ['off-plan']], ['availability', ['ready', 'ready']],
+      ['priceAmount', 500001], ['priceCurrency', 'AED'], ['priceDisplay', '£500,001'],
+    ] as const) {
+      documents[0] = { ...original, [field]: value }
+      await saveFixture()
+      expect(await loadPropertyPreviews(options), field).toEqual([])
+    }
+    for (const field of ['unitType', 'availability', 'priceAmount', 'priceCurrency', 'priceDisplay']) {
+      documents[0] = { ...original }
+      delete documents[0][field]
+      await saveFixture()
+      expect(await loadPropertyPreviews(options), field).toEqual([])
+    }
+  })
+
+  it('rejects invalid or incomplete confirmation records even when draft prices match', async () => {
+    await individualFixture()
+    const original = addConfirmedDetails()
+    const mutations: ((details: JsonObject) => void)[] = [
+      (d) => { d.unitType = 'House' },
+      (d) => { d.availability = ['off-plan'] },
+      (d) => { d.availability = ['ready', 'ready'] },
+      (d) => { d.priceAmount = 0 },
+      (d) => { d.priceAmount = -500000 },
+      (d) => { d.priceAmount = 500000.50 },
+      (d) => { d.priceAmount = '500000' },
+      (d) => { d.priceAmount = Number.MAX_SAFE_INTEGER + 1 },
+      (d) => { d.priceCurrency = 'AED' },
+      (d) => { d.priceDisplay = '£500,001' },
+      (d) => { d.priceDisplay = '£500,000 onwards' },
+      (d) => { d.completionStatus = 'completed' },
+      (d) => { d.postcode = 'N1 1AA' },
+      (d) => { d.source = null },
+      (d) => { (d.source as JsonObject).kind = 'inferred' },
+      (d) => { (d.source as JsonObject).attributedTo = ' ' },
+      (d) => { (d.source as JsonObject).reference = '' },
+      (d) => { (d.source as JsonObject).dated = '2026-02-30' },
+      (d) => { (d.source as JsonObject).receivedAt = 'unknown' },
+      (d) => { (d.source as JsonObject).receivedAt = '2026-10-06' },
+      (d) => { (d.source as JsonObject).approved = true },
+      ...Object.keys(original).map((key) => (d: JsonObject) => { delete d[key] }),
+      ...Object.keys(original.source).map((key) => (d: JsonObject) => { delete (d.source as JsonObject)[key] }),
+    ]
+    for (const mutate of mutations) {
+      const details: JsonObject = structuredClone(original)
+      mutate(details)
+      ;(report.documents as JsonObject[])[0].confirmedDetails = details
+      for (const field of ['unitType', 'availability', 'priceAmount', 'priceCurrency', 'priceDisplay']) {
+        documents[0][field] = details[field]
+      }
+      await saveFixture()
+      expect(await loadPropertyPreviews(options)).toEqual([])
+    }
+  })
+
+  it('keeps address, commercial and release fields blocked after the additional details are confirmed', async () => {
+    await individualFixture()
+    addConfirmedDetails()
+    const original = structuredClone(documents[0])
+    for (const field of [
+      'address', 'exactAddress', 'streetAddress', 'postcode', 'road', 'roadName', 'street', 'streetName',
+      'map', 'mapUrl', 'mapEmbed', 'mapEmbedUrl', 'location', 'coordinates', 'latitude', 'longitude',
+      'sizeDisplay', 'plotSizeDisplay', 'bathrooms', 'tenure', 'epc', 'epcRating', 'floorPlans',
+      'designVariants', 'interiorSchemes', 'completionStatus', 'availabilityCheckedAt', 'editorialApproval',
+    ]) {
+      documents[0] = { ...original, [field]: null }
+      await saveFixture()
+      expect(await loadPropertyPreviews(options), field).toEqual([])
+    }
+  })
+
   it('shows confirmed facts and persistent media labels without exposing evidence or inferring missing details', async () => {
     await individualFixture()
     const preview = await loadPropertyPreview('north-london-three-bedroom', options)

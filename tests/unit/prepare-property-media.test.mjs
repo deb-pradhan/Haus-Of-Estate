@@ -150,6 +150,26 @@ async function individualFixture(t) {
   return f
 }
 
+function confirmedDetails() {
+  return {
+    unitType: 'Terraced House', availability: ['ready'],
+    priceAmount: 500000, priceCurrency: 'GBP', priceDisplay: '£500,000',
+    source: {
+      kind: 'user-supplied-message', attributedTo: 'Sonia / Haus', dated: '2026-10-07',
+      receivedAt: '2026-10-11', reference: 'WhatsApp conversation supplied by Surya on 11 October 2026',
+    },
+  }
+}
+
+function addConfirmedDetails(f) {
+  const details = confirmedDetails()
+  f.manifest.documents[0].confirmedDetails = details
+  const fields = clone(details)
+  delete fields.source
+  Object.assign(f.draft, fields)
+  return details
+}
+
 test('v3 email preparation needs no brochure and preserves labelled concepts without inventing property facts', async (t) => {
   const f = await individualFixture(t)
   const report = await preparePropertyMedia(f.options)
@@ -210,6 +230,90 @@ test('v3 checks email evidence before creating output and refuses overwriting pr
   await f.save()
   await preparePropertyMedia(f.options)
   await assert.rejects(preparePropertyMedia(f.options), /Output already exists/)
+})
+
+test('v3 prepares only the additional facts matched to attributed message evidence', async (t) => {
+  const f = await individualFixture(t)
+  const details = addConfirmedDetails(f)
+  validateManifest(f.manifest)
+  validateDraft(f.draft, f.manifest)
+  await f.save()
+  const report = await preparePropertyMedia(f.options)
+  const prepared = JSON.parse(await readFile(path.join(f.options.output, 'properties.staging-draft.ndjson'), 'utf8'))
+  assert.deepEqual(report.documents[0].confirmedDetails, details)
+  assert.equal(prepared.unitType, 'Terraced House')
+  assert.deepEqual(prepared.availability, ['ready'])
+  assert.equal(prepared.priceAmount, 500000)
+  assert.equal(prepared.priceCurrency, 'GBP')
+  assert.equal(prepared.priceDisplay, '£500,000')
+  assert.equal(prepared.bedrooms, 3)
+  assert.deepEqual(prepared.listingType, ['sale'])
+  assert.equal(prepared.verification.status, 'unverified')
+  for (const key of ['source', 'completionStatus', 'availabilityCheckedAt', 'postcode', 'road', 'map']) {
+    assert.equal(Object.hasOwn(prepared, key), false)
+  }
+  const changed = clone(f.manifest)
+  Object.assign(changed.documents[0].confirmedDetails, { priceAmount: 525000, priceDisplay: '£525,000' })
+  assert.doesNotThrow(() => validateManifest(changed))
+})
+
+test('v3 rejects unsupported detail fields, inexact prices and missing or invalid message provenance', async (t) => {
+  const f = await individualFixture(t)
+  addConfirmedDetails(f)
+  for (const mutate of [
+    (d) => { d.unitType = 'House' },
+    (d) => { d.availability = ['off-plan'] },
+    (d) => { d.availability = ['ready', 'ready'] },
+    (d) => { d.availability = 'ready' },
+    (d) => { d.priceAmount = 0 },
+    (d) => { d.priceAmount = -500000 },
+    (d) => { d.priceAmount = 500000.50 },
+    (d) => { d.priceAmount = '500000' },
+    (d) => { d.priceAmount = Number.MAX_SAFE_INTEGER + 1 },
+    (d) => { d.priceCurrency = 'AED' },
+    (d) => { d.priceDisplay = '£500,001' },
+    (d) => { d.priceDisplay = '£500,000 onwards' },
+    (d) => { d.completionStatus = 'completed' },
+    (d) => { d.postcode = 'N1 1AA' },
+    (d) => { d.source = null },
+    (d) => { d.source.kind = 'inferred' },
+    (d) => { d.source.attributedTo = ' ' },
+    (d) => { d.source.reference = '' },
+    (d) => { d.source.dated = '2026-02-30' },
+    (d) => { d.source.receivedAt = 'unknown' },
+    (d) => { d.source.receivedAt = '2026-10-06' },
+    (d) => { d.source.approved = true },
+    ...Object.keys(confirmedDetails()).map((key) => (d) => { delete d[key] }),
+    ...Object.keys(confirmedDetails().source).map((key) => (d) => { delete d.source[key] }),
+  ]) {
+    const changed = clone(f.manifest)
+    mutate(changed.documents[0].confirmedDetails)
+    assert.throws(() => validateManifest(changed), /confirmedDetails/)
+    assert.throws(() => validateDraft(f.draft, changed), /confirmedDetails/)
+  }
+})
+
+test('v3 requires an exact draft match and keeps pending details blocked after confirmation', async (t) => {
+  const f = await individualFixture(t)
+  addConfirmedDetails(f)
+  for (const [key, value] of [
+    ['unitType', 'House'], ['availability', ['off-plan']], ['availability', ['ready', 'ready']],
+    ['priceAmount', 500001], ['priceCurrency', 'AED'], ['priceDisplay', '£500,001'],
+  ]) {
+    assert.throws(() => validateDraft({ ...f.draft, [key]: value }, f.manifest), /exactly match confirmedDetails/)
+  }
+  for (const key of ['unitType', 'availability', 'priceAmount', 'priceCurrency', 'priceDisplay']) {
+    const changed = clone(f.draft)
+    delete changed[key]
+    assert.throws(() => validateDraft(changed, f.manifest), /exactly match confirmedDetails/)
+  }
+  const allowed = ['bedrooms', 'listingType', 'unitType', 'availability', 'priceAmount', 'priceCurrency', 'priceDisplay']
+  for (const key of [...UNCONFIRMED_DRAFT_FIELDS.filter((field) => !allowed.includes(field)),
+    'address', 'exactAddress', 'streetAddress', 'postcode', 'road', 'roadName', 'street', 'streetName',
+    'map', 'mapUrl', 'mapEmbed', 'mapEmbedUrl', 'location', 'coordinates', 'latitude', 'longitude',
+    'tenure', 'epc', 'epcRating', 'floorPlans', 'designVariants', 'interiorSchemes']) {
+    assert.throws(() => validateDraft({ ...f.draft, [key]: null }, f.manifest), /unconfirmed|must remain absent/)
+  }
 })
 
 test('successful local preparation resizes, auto-orients, strips metadata and preserves sources', async (t) => {

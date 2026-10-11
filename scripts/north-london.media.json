@@ -73,7 +73,7 @@
   "documents": [
     {
       "documentId": "drafts.property-north-london-three-bedroom",
-      "title": "Three-bedroom property in North London",
+      "title": "Three-bedroom terraced house in North London",
       "slug": "north-london-three-bedroom-property",
       "kind": "property",
       "confirmedFacts": {
@@ -88,7 +88,23 @@
         "kitchen-concept",
         "bathroom-comparison",
         "toilet-comparison"
-      ]
+      ],
+      "confirmedDetails": {
+        "unitType": "Terraced House",
+        "availability": [
+          "ready"
+        ],
+        "priceAmount": 500000,
+        "priceCurrency": "GBP",
+        "priceDisplay": "£500,000",
+        "source": {
+          "kind": "user-supplied-message",
+          "attributedTo": "Sonia / Haus",
+          "dated": "2026-10-07",
+          "receivedAt": "2026-10-11",
+          "reference": "WhatsApp conversation supplied by Surya on 11 October 2026"
+        }
+      }
     }
   ]
 }

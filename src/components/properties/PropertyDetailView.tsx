@@ -181,7 +181,7 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
             {individualPreview ? (
               <>
                 <p className="mt-1">Individual property draft for review. Proposed interiors are AI-assisted concepts, not completed works.</p>
-                <p className="mt-1">Awaiting confirmation: asking price, exact address, property type, floor area, tenure and EPC.</p>
+                <p className="mt-1">Remaining particulars need Haus confirmation before publication. The public location shows the area and city only.</p>
               </>
             ) : (
               <p className="mt-1">{preview.kind === 'home-type' ? 'A collection of home designs, not an individual available unit.' : 'Community overview for editorial review.'} Artist’s impressions illustrate the home designs and facilities.</p>
@@ -454,8 +454,9 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
                   <dl className="mt-5 space-y-4 text-sm">
                     {(individualPreview ? [
                       ['Asking price', property.priceDisplay],
-                      ['Exact address', undefined],
+                      ['Location', [property.community, property.city].filter(Boolean).join(', ')],
                       ['Property type', property.unitType],
+                      ['Property status', property.availability?.includes('ready') ? 'Ready' : undefined],
                       ['Floor area', property.sizeDisplay],
                       ['Tenure', undefined],
                       ['EPC', undefined],

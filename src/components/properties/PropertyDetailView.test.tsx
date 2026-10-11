@@ -232,7 +232,9 @@ describe('shared property details', () => {
     const html = renderToStaticMarkup(<PropertyDetailView property={london} media={conceptMedia} preview={{ kind: 'property' }} />)
 
     expect(html).toContain('For sale')
-    expect(html).toContain('Awaiting confirmation: asking price, exact address, property type, floor area, tenure and EPC.')
+    expect(html).toContain('Remaining particulars need Haus confirmation before publication.')
+    expect(html).toContain('The public location shows the area and city only.')
+    expect(html).not.toContain('Exact address')
     expect(html).toContain('Living room — AI-assisted proposed interiors; not completed works</p>')
     expect(html).toContain('Existing view and proposed interiors — AI-assisted concept; not completed works</figcaption>')
     expect(html.match(/class="object-contain"/g)).toHaveLength(2)

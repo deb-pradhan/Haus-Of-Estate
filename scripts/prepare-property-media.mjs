@@ -22,7 +22,9 @@ export const UNCONFIRMED_DRAFT_FIELDS = Object.freeze([
 ])
 
 const INDIVIDUAL_PENDING_FIELDS = [
-  'address', 'exactAddress', 'postcode', 'tenure', 'epc', 'epcRating',
+  'address', 'exactAddress', 'streetAddress', 'postcode', 'road', 'roadName', 'street', 'streetName',
+  'map', 'mapUrl', 'mapEmbed', 'mapEmbedUrl', 'location', 'coordinates', 'latitude', 'longitude',
+  'tenure', 'epc', 'epcRating',
   'floorPlans', 'designVariants', 'interiorSchemes',
 ]
 
@@ -95,6 +97,30 @@ function validateIndividualFacts(facts) {
     facts.bedrooms === 3 && Array.isArray(facts.listingType) &&
     facts.listingType.length === 1 && facts.listingType[0] === 'sale',
   'V3 confirmedFacts must contain only bedrooms 3 and listingType sale.')
+}
+
+function confirmedIndividualFields(details) {
+  const dateOnly = (value) => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+    Number.isFinite(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value
+  requireValue(details && typeof details === 'object' && !Array.isArray(details) &&
+    Object.keys(details).every((key) =>
+      ['unitType', 'availability', 'priceAmount', 'priceCurrency', 'priceDisplay', 'source'].includes(key)) &&
+    details.unitType === 'Terraced House' && Array.isArray(details.availability) &&
+    details.availability.length === 1 && details.availability[0] === 'ready' &&
+    positiveInteger(details.priceAmount) && details.priceCurrency === 'GBP' &&
+    details.priceDisplay === `£${details.priceAmount.toLocaleString('en-GB')}`,
+  'Invalid V3 confirmedDetails: only evidenced property type, ready availability and exact GBP pricing are allowed.')
+  const source = details.source
+  requireValue(source && typeof source === 'object' && !Array.isArray(source) &&
+    Object.keys(source).every((key) => ['kind', 'attributedTo', 'dated', 'receivedAt', 'reference'].includes(key)) &&
+    source.kind === 'user-supplied-message' && nonempty(source.attributedTo) &&
+    source.attributedTo.length <= 200 && nonempty(source.reference) && source.reference.length <= 1000 &&
+    dateOnly(source.dated) && dateOnly(source.receivedAt) && source.receivedAt >= source.dated,
+  'V3 confirmedDetails require attributed, dated user-supplied message provenance.')
+  return {
+    unitType: details.unitType, availability: [...details.availability],
+    priceAmount: details.priceAmount, priceCurrency: details.priceCurrency, priceDisplay: details.priceDisplay,
+  }
 }
 
 export function validateManifest(manifest) {
@@ -188,10 +214,12 @@ export function validateManifest(manifest) {
       requireValue(document.kind !== 'home-type' || document.galleryImageIds.length <= 6,
         'Home-type gallery must contain at most six images: ' + document.documentId)
       if (individual) {
-        requireValue(!Object.hasOwn(document, 'confirmedPricing'), 'V3 pricing remains unconfirmed.')
+        requireValue(!Object.hasOwn(document, 'confirmedPricing'), 'V3 pricing must use confirmedDetails evidence.')
         validateIndividualFacts(document.confirmedFacts)
+        if (Object.hasOwn(document, 'confirmedDetails')) confirmedIndividualFields(document.confirmedDetails)
         continue
       }
+      requireValue(!Object.hasOwn(document, 'confirmedDetails'), 'confirmedDetails is only supported for V3 properties.')
       if (Object.hasOwn(document, 'confirmedPricing')) {
         requireValue(document.kind === 'home-type' && document.confirmedFacts, 'Pricing requires a confirmed home type.')
         confirmedPriceFields(document.confirmedPricing)
@@ -259,13 +287,23 @@ export function validateDraft(draft, manifest) {
     'Draft project title and slug must match the manifest.')
   const facts = manifest.schemaVersion >= 2 ? definition.confirmedFacts : undefined
   const individual = manifest.schemaVersion === 3
+  const details = individual && Object.hasOwn(definition, 'confirmedDetails')
+    ? confirmedIndividualFields(definition.confirmedDetails) : {}
   if (individual) {
     validateIndividualFacts(facts)
+    requireValue(!Object.hasOwn(definition, 'confirmedPricing'), 'V3 pricing must use confirmedDetails evidence.')
     requireValue(INDIVIDUAL_PENDING_FIELDS.every((field) => !Object.hasOwn(draft, field)),
       'V3 address, tenure, EPC and floorplans remain unconfirmed.')
   }
   const prices = definition.confirmedPricing ? confirmedPriceFields(definition.confirmedPricing) : {}
   for (const field of UNCONFIRMED_DRAFT_FIELDS) {
+    if (Object.hasOwn(details, field)) {
+      requireValue(field === 'availability'
+        ? Array.isArray(draft.availability) && draft.availability.length === 1 &&
+          draft.availability[0] === details.availability[0]
+        : draft[field] === details[field], 'Draft ' + field + ' must exactly match confirmedDetails: ' + draft._id)
+      continue
+    }
     if (Object.hasOwn(prices, field)) {
       requireValue(draft[field] === prices[field], 'Draft pricing must exactly match supplied evidence: ' + field)
       continue
