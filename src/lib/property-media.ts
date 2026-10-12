@@ -1,4 +1,4 @@
-export type PropertyMediaKind = 'photo' | 'concept' | 'concept-comparison'
+export type PropertyMediaKind = 'photo' | 'concept' | 'concept-comparison' | 'floor-plan'
 
 export interface PropertyImageMetadata {
   caption?: string

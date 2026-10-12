@@ -222,6 +222,7 @@ export const PROPERTY_BY_SLUG_QUERY = `
     amenities,
     locationBenefits,
     gallery,
+    floorPlans[]{"src": asset->url, alt, caption, mediaKind},
     designVariants[]{
       _key,
       label,

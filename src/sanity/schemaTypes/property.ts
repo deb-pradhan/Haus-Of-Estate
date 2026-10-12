@@ -553,6 +553,21 @@ export const property = defineType({
       ],
     }),
     defineField({
+      name: 'floorPlans',
+      title: 'Property floor plans',
+      type: 'array',
+      description: 'Supplied plans for this property, separate from gallery images and development design variants. Preserve the full plan, measurements and disclaimer.',
+      of: [defineArrayMember({
+        type: 'image',
+        options: { hotspot: false },
+        fields: [
+          defineField({ name: 'alt', title: 'Alt text', type: 'string', validation: (rule) => rule.required() }),
+          defineField({ name: 'caption', title: 'Caption / measurement disclaimer', type: 'string' }),
+          defineField({ name: 'mediaKind', title: 'Image context', type: 'string', initialValue: 'floor-plan', options: { list: [{ title: 'Floor plan', value: 'floor-plan' }] } }),
+        ],
+      })],
+    }),
+    defineField({
       name: 'designVariants',
       title: 'Home designs',
       type: 'array',

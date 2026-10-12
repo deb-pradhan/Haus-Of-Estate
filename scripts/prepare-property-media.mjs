@@ -76,7 +76,7 @@ function safeOutputFile(value) {
 function imageLabels(image, required = false) {
   requireValue(!required || image.mediaKind !== undefined, 'V3 images require mediaKind: ' + image.id)
   if (image.mediaKind !== undefined) {
-    requireValue(['photo', 'concept', 'concept-comparison'].includes(image.mediaKind),
+    requireValue(['photo', 'concept', 'concept-comparison', 'floor-plan'].includes(image.mediaKind),
       'Invalid mediaKind: ' + image.id)
   }
   if (image.caption !== undefined) {
@@ -121,6 +121,32 @@ function confirmedIndividualFields(details) {
     unitType: details.unitType, availability: [...details.availability],
     priceAmount: details.priceAmount, priceCurrency: details.priceCurrency, priceDisplay: details.priceDisplay,
   }
+}
+
+function individualFloorPlanIds(document, images) {
+  const ids = document.floorPlanImageIds ?? []
+  requireValue(Array.isArray(ids) && ids.length <= 8 &&
+    (!Object.hasOwn(document, 'floorPlanImageIds') || ids.length > 0) &&
+    new Set(ids).size === ids.length && ids.every((id) =>
+      images.some((image) => image.id === id && image.mediaKind === 'floor-plan') &&
+      id !== document.heroImageId && !document.galleryImageIds?.includes(id)),
+  'V3 floorPlanImageIds must reference distinct floor-plan images outside the hero and gallery.')
+  requireValue([document.heroImageId, ...(document.galleryImageIds ?? [])].every((id) =>
+    images.find((image) => image.id === id)?.mediaKind !== 'floor-plan'),
+  'Floor-plan images must be assigned separately from hero and gallery images.')
+  return ids
+}
+
+function confirmedMeasurementFields(document, images) {
+  const ids = individualFloorPlanIds(document, images)
+  if (!Object.hasOwn(document, 'confirmedMeasurements')) return {}
+  const measurements = document.confirmedMeasurements
+  requireValue(measurements && typeof measurements === 'object' && !Array.isArray(measurements) &&
+    Object.keys(measurements).every((key) => ['sizeDisplay', 'sourceImageId'].includes(key)) &&
+    nonempty(measurements.sizeDisplay) && measurements.sizeDisplay.length <= 180 &&
+    !/[<>\u0000-\u001f\u007f]/.test(measurements.sizeDisplay) && ids.includes(measurements.sourceImageId),
+  'V3 confirmedMeasurements require a safe sizeDisplay and an assigned source floor-plan image.')
+  return { sizeDisplay: measurements.sizeDisplay }
 }
 
 export function validateManifest(manifest) {
@@ -217,9 +243,12 @@ export function validateManifest(manifest) {
         requireValue(!Object.hasOwn(document, 'confirmedPricing'), 'V3 pricing must use confirmedDetails evidence.')
         validateIndividualFacts(document.confirmedFacts)
         if (Object.hasOwn(document, 'confirmedDetails')) confirmedIndividualFields(document.confirmedDetails)
+        confirmedMeasurementFields(document, manifest.images)
         continue
       }
       requireValue(!Object.hasOwn(document, 'confirmedDetails'), 'confirmedDetails is only supported for V3 properties.')
+      requireValue(!Object.hasOwn(document, 'floorPlanImageIds') && !Object.hasOwn(document, 'confirmedMeasurements'),
+        'Individual floor plans and confirmedMeasurements are only supported for V3 properties.')
       if (Object.hasOwn(document, 'confirmedPricing')) {
         requireValue(document.kind === 'home-type' && document.confirmedFacts, 'Pricing requires a confirmed home type.')
         confirmedPriceFields(document.confirmedPricing)
@@ -289,14 +318,20 @@ export function validateDraft(draft, manifest) {
   const individual = manifest.schemaVersion === 3
   const details = individual && Object.hasOwn(definition, 'confirmedDetails')
     ? confirmedIndividualFields(definition.confirmedDetails) : {}
+  const measurements = individual ? confirmedMeasurementFields(definition, manifest.images) : {}
   if (individual) {
     validateIndividualFacts(facts)
     requireValue(!Object.hasOwn(definition, 'confirmedPricing'), 'V3 pricing must use confirmedDetails evidence.')
     requireValue(INDIVIDUAL_PENDING_FIELDS.every((field) => !Object.hasOwn(draft, field)),
-      'V3 address, tenure, EPC and floorplans remain unconfirmed.')
+      'V3 address, tenure and EPC remain unconfirmed; input floorplans must be assigned through the manifest.')
   }
   const prices = definition.confirmedPricing ? confirmedPriceFields(definition.confirmedPricing) : {}
   for (const field of UNCONFIRMED_DRAFT_FIELDS) {
+    if (Object.hasOwn(measurements, field)) {
+      requireValue(draft[field] === measurements[field],
+        'Draft ' + field + ' must exactly match confirmedMeasurements: ' + draft._id)
+      continue
+    }
     if (Object.hasOwn(details, field)) {
       requireValue(field === 'availability'
         ? Array.isArray(draft.availability) && draft.availability.length === 1 &&
@@ -536,6 +571,9 @@ export async function preparePropertyMedia(options) {
       ...draft,
       featuredImage: imageReference(imagesById.get(definitions[index].heroImageId), outputRoot),
       gallery: definitions[index].galleryImageIds.map((id) => imageReference(imagesById.get(id), outputRoot)),
+      ...(definitions[index].floorPlanImageIds === undefined ? {} : {
+        floorPlans: definitions[index].floorPlanImageIds.map((id) => imageReference(imagesById.get(id), outputRoot)),
+      }),
     }))
     await writeFile(incompleteDraftPath, preparedDrafts.map((draft) => JSON.stringify(draft)).join('\n') + '\n',
       { flag: 'wx' })

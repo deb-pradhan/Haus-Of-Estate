@@ -14,7 +14,7 @@ export type PropertyPreviewOptions = { env?: PropertyPreviewEnvironment }
 export type PropertyPreviewImage = {
   src: string
   alt: string
-  mediaKind?: 'photo' | 'concept' | 'concept-comparison'
+  mediaKind?: 'photo' | 'concept' | 'concept-comparison' | 'floor-plan'
   caption?: string
 }
 
@@ -36,6 +36,8 @@ export type PropertyPreviewDocument = Record<string, unknown> & {
   priceDisplay?: string
   priceAmount?: number
   priceCurrency?: string
+  sizeDisplay?: string
+  floorPlans?: PropertyPreviewImage[]
   description?: unknown[]
   keyFeatures?: string[]
   amenities?: string[]
@@ -81,7 +83,7 @@ const INDIVIDUAL_PENDING_FIELDS = [
   'address', 'exactAddress', 'streetAddress', 'postcode', 'road', 'roadName', 'street', 'streetName',
   'map', 'mapUrl', 'mapEmbed', 'mapEmbedUrl', 'location', 'coordinates', 'latitude', 'longitude',
   'tenure', 'epc', 'epcRating',
-  'floorPlans', 'designVariants', 'interiorSchemes',
+  'designVariants', 'interiorSchemes',
 ]
 
 function requireValue(condition: unknown): asserts condition {
@@ -124,7 +126,7 @@ function confirmedIndividualFields(value: unknown): Record<string, unknown> {
 function imageLabels(value: Record<string, unknown>, required = false) {
   requireValue(!required || value.mediaKind !== undefined)
   if (value.mediaKind !== undefined) {
-    requireValue(['photo', 'concept', 'concept-comparison'].includes(value.mediaKind as string))
+    requireValue(['photo', 'concept', 'concept-comparison', 'floor-plan'].includes(value.mediaKind as string))
   }
   if (value.caption !== undefined) requireValue(nonempty(value.caption) && value.caption.length <= 600)
   requireValue(!['concept', 'concept-comparison'].includes(value.mediaKind as string) || nonempty(value.caption))
@@ -228,7 +230,7 @@ function displayDocument(document: Record<string, unknown>): PropertyPreviewDocu
     status: 'draft',
     featured: false,
   }
-  for (const key of ['masterDevelopment', 'developer', 'category', 'unitType', 'priceDisplay', 'priceCurrency']) {
+  for (const key of ['masterDevelopment', 'developer', 'category', 'unitType', 'priceDisplay', 'priceCurrency', 'sizeDisplay']) {
     if (document[key] !== undefined) {
       requireValue(nonempty(document[key]))
       display[key] = document[key]
@@ -456,6 +458,20 @@ async function readBundleUncached(options: PropertyPreviewOptions): Promise<Prev
       const prices: Record<string, unknown> = {}
       const details = individual && Object.hasOwn(definition, 'confirmedDetails')
         ? confirmedIndividualFields(definition.confirmedDetails) : {}
+      const floorPlanIds = definition.floorPlanImageIds ?? []
+      requireValue(Array.isArray(floorPlanIds) && floorPlanIds.length <= 8 &&
+        (!Object.hasOwn(definition, 'floorPlanImageIds') || floorPlanIds.length > 0) &&
+        new Set(floorPlanIds).size === floorPlanIds.length && floorPlanIds.every((id) =>
+          typeof id === 'string' && imagesById.get(id)?.mediaKind === 'floor-plan' &&
+          id !== definition.heroImageId && Array.isArray(definition.galleryImageIds) && !definition.galleryImageIds.includes(id)))
+      if (Object.hasOwn(definition, 'confirmedMeasurements')) {
+        const measurements = object(definition.confirmedMeasurements)
+        requireValue(individual && Object.keys(measurements).every((key) => ['sizeDisplay', 'sourceImageId'].includes(key)) &&
+          nonempty(measurements.sizeDisplay) && measurements.sizeDisplay.length <= 180 &&
+          !/[<>\u0000-\u001f\u007f]/.test(measurements.sizeDisplay) && floorPlanIds.includes(measurements.sourceImageId))
+        details.sizeDisplay = measurements.sizeDisplay
+      }
+      if (!individual) requireValue(!Object.hasOwn(definition, 'floorPlanImageIds') && !Object.hasOwn(document, 'floorPlans'))
       if (individual) {
         requireValue(!Object.hasOwn(definition, 'confirmedPricing') &&
           INDIVIDUAL_PENDING_FIELDS.every((key) => !Object.hasOwn(document, key)))
@@ -515,11 +531,15 @@ async function readBundleUncached(options: PropertyPreviewOptions): Promise<Prev
       const hero = imageReference(document.featuredImage, definition.heroImageId, imagesById)
       const gallery = galleryIds.map((id, index) =>
         imageReference((document.gallery as unknown[])[index], id, imagesById))
+      requireValue([hero, ...gallery].every((image) => image.mediaKind !== 'floor-plan'))
+      requireValue(floorPlanIds.length ? Array.isArray(document.floorPlans) && document.floorPlans.length === floorPlanIds.length
+        : !Object.hasOwn(document, 'floorPlans'))
+      const floorPlans = floorPlanIds.map((id, index) => imageReference((document.floorPlans as unknown[])[index], id, imagesById))
       usedDocumentIds.add(definition.documentId)
       slugs.add(definition.slug)
-      for (const id of [definition.heroImageId, ...galleryIds]) usedImageIds.add(id)
+      for (const id of [definition.heroImageId, ...galleryIds, ...floorPlanIds]) usedImageIds.add(id)
       previews.push({
-        document: displayDocument(document),
+        document: { ...displayDocument(document), ...(floorPlans.length ? { floorPlans } : {}) },
         kind: definition.kind,
         media: { hero, gallery },
       })

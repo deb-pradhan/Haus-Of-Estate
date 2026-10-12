@@ -137,6 +137,42 @@ function addConfirmedDetails() {
 }
 
 describe('email-evidenced individual property previews', () => {
+  it('serves assigned floor plans separately and only projects area backed by that plan', async () => {
+    await individualFixture()
+    const definition = (report.documents as JsonObject[])[0]
+    definition.galleryImageIds = []
+    definition.floorPlanImageIds = ['villa']
+    definition.confirmedMeasurements = { sourceImageId: 'villa', sizeDisplay: 'Approx. Gross Internal Floor Area: 889.9 sq ft / 82.67 m²' }
+    Object.assign((report.images as JsonObject[])[1], { mediaKind: 'floor-plan', caption: 'Approximate measurements.' })
+    documents[0].gallery = []
+    documents[0].floorPlans = [{ ...imageReference('villa'), mediaKind: 'floor-plan', caption: 'Approximate measurements.' }]
+    documents[0].sizeDisplay = 'Approx. Gross Internal Floor Area: 889.9 sq ft / 82.67 m²'
+    await saveFixture()
+    const preview = await loadPropertyPreview('north-london-three-bedroom', options)
+    expect(preview?.media.gallery).toEqual([])
+    expect(preview?.document.floorPlans).toEqual([{ src: '/dev/property-previews/media/villa.jpg', alt: 'villa architectural rendering', mediaKind: 'floor-plan', caption: 'Approximate measurements.' }])
+    expect(preview?.document.sizeDisplay).toBe(documents[0].sizeDisplay)
+    expect(await loadPropertyPreviewMedia('villa.jpg', options)).toEqual(new Uint8Array(jpeg))
+    expect(JSON.stringify(preview)).not.toMatch(/sourceImageId|confirmedMeasurements|_sanityAsset|file:/)
+    const originalDefinition = structuredClone(definition)
+    const originalDocument = structuredClone(documents[0])
+    for (const mutate of [
+      () => { documents[0].sizeDisplay = '900 sq ft' },
+      () => { documents[0].plotSizeDisplay = '1000 sq ft' },
+      () => { delete documents[0].floorPlans },
+      () => { definition.floorPlanImageIds = ['aerial'] },
+      () => { definition.floorPlanImageIds = ['villa', 'villa'] },
+      () => { definition.confirmedMeasurements = { sourceImageId: 'aerial', sizeDisplay: documents[0].sizeDisplay } },
+      () => { definition.confirmedMeasurements = { sourceImageId: 'villa', sizeDisplay: documents[0].sizeDisplay, plotSizeDisplay: '1000 sq ft' } },
+    ]) {
+      Object.assign(definition, structuredClone(originalDefinition))
+      documents[0] = structuredClone(originalDocument)
+      mutate()
+      await saveFixture()
+      expect(await loadPropertyPreviews(options)).toEqual([])
+    }
+  })
+
   it('projects newly confirmed details while keeping message provenance and pending facts private', async () => {
     await individualFixture()
     addConfirmedDetails()

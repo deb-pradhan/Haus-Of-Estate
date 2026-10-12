@@ -161,6 +161,43 @@ function confirmedDetails() {
   }
 }
 
+test('v3 prepares a separately assigned plan with its evidenced area and refuses mismatched or unsupported measurements', async (t) => {
+  const f = await individualFixture(t)
+  const definition = f.manifest.documents[0]
+  definition.galleryImageIds = []
+  definition.floorPlanImageIds = ['living-room']
+  definition.confirmedMeasurements = { sourceImageId: 'living-room', sizeDisplay: 'Approx. Gross Internal Floor Area: 889.9 sq ft / 82.67 m²' }
+  f.manifest.images[1].mediaKind = 'floor-plan'
+  f.manifest.images[1].caption = 'Measurements are approximate and for guidance only.'
+  f.draft.sizeDisplay = definition.confirmedMeasurements.sizeDisplay
+  validateManifest(f.manifest)
+  validateDraft(f.draft, f.manifest)
+  assert.throws(() => validateDraft({ ...f.draft, sizeDisplay: '900 sq ft' }, f.manifest), /exactly match/)
+  assert.throws(() => validateDraft({ ...f.draft, plotSizeDisplay: '1000 sq ft' }, f.manifest), /unconfirmed/i)
+  for (const mutate of [
+    (d) => { d.floorPlanImageIds = ['hero'] },
+    (d) => { d.floorPlanImageIds = ['living-room', 'living-room'] },
+    (d) => { d.galleryImageIds = ['living-room'] },
+    (d) => { d.confirmedMeasurements.sourceImageId = 'hero' },
+    (d) => { d.confirmedMeasurements.plotSizeDisplay = '1000 sq ft' },
+    (d) => { d.confirmedMeasurements.sizeDisplay = '<script>bad</script>' },
+  ]) {
+    const changed = clone(f.manifest)
+    mutate(changed.documents[0])
+    assert.throws(() => validateManifest(changed))
+  }
+  await f.save()
+  await preparePropertyMedia(f.options)
+  const prepared = JSON.parse(await readFile(path.join(f.options.output, 'properties.staging-draft.ndjson'), 'utf8'))
+  assert.equal(prepared.sizeDisplay, f.draft.sizeDisplay)
+  assert.deepEqual(prepared.gallery, [])
+  assert.equal(prepared.floorPlans.length, 1)
+  assert.equal(prepared.floorPlans[0].mediaKind, 'floor-plan')
+  assert.equal(prepared.floorPlans[0].caption, f.manifest.images[1].caption)
+  assert.match(prepared.floorPlans[0]._sanityAsset, /^image@file:/)
+  assert.equal(Object.hasOwn(prepared, 'plotSizeDisplay'), false)
+})
+
 function addConfirmedDetails(f) {
   const details = confirmedDetails()
   f.manifest.documents[0].confirmedDetails = details

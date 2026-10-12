@@ -68,6 +68,18 @@
       "mediaKind": "concept-comparison",
       "caption": "Toilet design board: supplied existing view and AI-assisted proposed interiors. Proposed fittings and finishes are illustrative, not completed works.",
       "alt": "Toilet design board showing a supplied existing view beside proposed interiors and finish suggestions"
+    },
+    {
+      "id": "north-london-floor-plan",
+      "sourcePath": "north-london-floor-plan-2026-10-11.png",
+      "sha256": "8d85661d32e054dd0dd674cbb3f651fdca495cbe4845a50aca93bd7be571524f",
+      "bytes": 406944,
+      "width": 1169,
+      "height": 1983,
+      "outputFile": "north-london-floor-plan.jpg",
+      "mediaKind": "floor-plan",
+      "caption": "Supplied ground- and first-floor plan. Approx. Gross Internal Floor Area: 889.9 sq ft / 82.67 m². Measurements are approximate and for guidance only. Floor areas have been calculated in accordance with Property Measurement Standards.",
+      "alt": "Ground- and first-floor plan showing three bedrooms, one first-floor bathroom, a separate ground-floor WC, living room, kitchen, backyard and front garden"
     }
   ],
   "documents": [
@@ -104,6 +116,13 @@
           "receivedAt": "2026-10-11",
           "reference": "WhatsApp conversation supplied by Surya on 11 October 2026"
         }
+      },
+      "floorPlanImageIds": [
+        "north-london-floor-plan"
+      ],
+      "confirmedMeasurements": {
+        "sizeDisplay": "Approx. Gross Internal Floor Area: 889.9 sq ft / 82.67 m²",
+        "sourceImageId": "north-london-floor-plan"
       }
     }
   ]

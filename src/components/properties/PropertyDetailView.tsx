@@ -53,6 +53,7 @@ export interface PropertyDetail extends PropertyPricing {
   featuredImage?: PropertyImageMetadata & { alt?: string } & Record<string, unknown>
   showHausLogo?: boolean
   gallery?: (PropertyImageMetadata & Record<string, unknown> & { alt?: string })[]
+  floorPlans?: PropertyMediaImage[]
   designVariants?: PropertyDesign[]
   interiorSchemes?: PropertyInteriorScheme[]
   videoUrl?: string
@@ -90,6 +91,7 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
   const heroCaption = propertyMediaCaption(hero)
   const individualPreview = preview?.kind === 'property'
   const hasConceptGallery = media.gallery.some(isConceptMedia)
+  const floorPlans = property.floorPlans?.filter((plan) => Boolean(plan.src)) ?? []
   const enquiryInterest =
     property.listingType?.length === 1 && property.listingType[0] === 'rent'
       ? 'rent'
@@ -390,6 +392,30 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
                   </ul>
                 </div>
               )}
+
+            {floorPlans.length > 0 && (
+              <section id="floor-plans" className="mt-10 scroll-mt-24" aria-labelledby="property-floor-plans-heading">
+                <h2 id="property-floor-plans-heading" className="font-serif text-xl font-medium text-estate-700">
+                  {floorPlans.length === 1 ? 'Floor plan' : 'Floor plans'}
+                </h2>
+                <p className="mt-2 text-sm text-muted-foreground">Open a plan to view it full size in a new tab.</p>
+                <div className="mt-4 space-y-6">
+                  {floorPlans.map((plan, index) => (
+                    <figure key={`${plan.src}-${index}`} className="overflow-hidden rounded-2xl border border-border bg-white">
+                      <a href={plan.src} target="_blank" rel="noopener noreferrer"
+                        aria-label={`Open floor plan ${index + 1} in a new tab`}
+                        className="block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-estate-700">
+                        <span className="relative block h-[32rem] sm:h-[44rem]">
+                          <Image src={plan.src} alt={plan.alt} fill sizes="(max-width: 1024px) 100vw, 700px" className="object-contain" unoptimized={Boolean(preview)} />
+                        </span>
+                        <span className="block border-t border-border px-4 py-3 text-sm font-medium text-estate-700">Open full-size floor plan</span>
+                      </a>
+                      {plan.caption && <figcaption className="border-t border-border px-4 py-3 text-sm leading-relaxed text-muted-foreground">{plan.caption}</figcaption>}
+                    </figure>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {/* Gallery */}
             {property.videoUrl && (() => {

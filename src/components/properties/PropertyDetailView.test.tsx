@@ -71,6 +71,23 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs())
 
 describe('shared property details', () => {
+  it('shows supplied property plans uncropped and separately from proposed interiors, with the source area wording', () => {
+    const html = renderToStaticMarkup(<PropertyDetailView
+      property={{ ...property, _id: 'drafts.london',
+        sizeDisplay: 'Approx. Gross Internal Floor Area: 889.9 sq ft / 82.67 m²',
+        floorPlans: [{ src: '/london-plan.jpg', alt: 'Ground and first floors', mediaKind: 'floor-plan', caption: 'Measurements are approximate and for guidance only.' }],
+      }}
+      media={{ gallery: [{ src: '/concept.jpg', alt: 'Proposed interior', mediaKind: 'concept' }] }}
+      preview={{ kind: 'property' }}
+    />)
+    expect(html).toContain('id="floor-plans"')
+    expect(html).toContain('href="/london-plan.jpg" target="_blank" rel="noopener noreferrer"')
+    expect(html).toContain('alt="Ground and first floors" class="object-contain"')
+    expect(html).toContain('Measurements are approximate and for guidance only.')
+    expect(html).toContain('Approx. Gross Internal Floor Area: 889.9 sq ft / 82.67 m²')
+    expect(html.indexOf('id="floor-plans"')).toBeLessThan(html.indexOf('Proposed interiors</h2>'))
+  })
+
   it('preserves a Monaco-style property without designs, including its original media, sizes and public actions', () => {
     const monaco: PropertyDetail = {
       ...property,
@@ -92,6 +109,7 @@ describe('shared property details', () => {
     expect(html).toContain('Size supplied by listing')
     expect(html).toContain('Plot supplied by listing')
     expect(html).not.toContain('Home designs')
+    expect(html).not.toContain('id="floor-plans"')
     expect(html).not.toContain('Varies by design')
     expect(html).not.toContain('Request full brochure')
     expect(controls.save).toHaveBeenCalledWith(expect.objectContaining({ sanityDocumentId: monaco._id }))
