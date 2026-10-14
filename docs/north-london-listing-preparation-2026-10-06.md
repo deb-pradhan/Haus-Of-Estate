@@ -71,6 +71,12 @@ The current [CMA unfair-commercial-practices guidance](https://www.gov.uk/govern
 
 ## Verification
 
+### 14 October navigation and sidebar update
+
+- Removed the unconfirmed EPC and Tenure placeholder rows from the individual-property preview sidebar at Surya's request. Internal evidence and publication requirements remain recorded above.
+- Every property detail now has a top-left breadcrumb: Home → Properties → current property. Local drafts include the draft-preview index; Florence home collections also link to their community overview. Links reuse existing routes and do not add unpublished drafts to the public catalogue.
+- All 14 shared-detail regression tests, TypeScript and scoped ESLint passed. Coverage includes public Monaco navigation, London draft navigation/placeholder removal, Florence parent navigation and floor-plan rendering. Browser review remains unverified because access to the local preview was previously blocked by browser security policy.
+
 ### 12 October floor-plan update
 
 - Prepared one native draft and six JPEGs, including the complete supplied plan. Verified source/output hashes, dimensions and local import references; visually inspected the uncropped derivative and its printed disclaimer. Originals and earlier bundles remain outside Git.

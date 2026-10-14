@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import type { ComponentProps } from 'react'
-import { ArrowLeft, ArrowRight, MapPin, BedDouble, Bath, Maximize2, Building2, Check } from 'lucide-react'
+import { ArrowRight, ChevronRight, MapPin, BedDouble, Bath, Maximize2, Building2, Check } from 'lucide-react'
 import { PortableTextRenderer } from '@/components/blog'
 import { LeadEoiTrigger } from '@/components/lead-eoi/lead-eoi-trigger'
 import { LeadProjectContextRegistration } from '@/components/lead-eoi/lead-project-context'
@@ -90,6 +90,15 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
   const hero: PropertyMediaImage | undefined = firstDesign?.images[0] ?? media.hero
   const heroCaption = propertyMediaCaption(hero)
   const individualPreview = preview?.kind === 'property'
+  const breadcrumbs: { label: string; href?: string }[] = [
+    { label: 'Home', href: '/' },
+    { label: 'Properties', href: '/properties' },
+    ...(preview ? [{ label: 'Draft previews', href: '/dev/property-previews' }] : []),
+    ...(preview?.kind === 'home-type'
+      ? [{ label: 'Azizi Florence', href: '/dev/property-previews/azizi-florence' }]
+      : []),
+    { label: property.title },
+  ]
   const hasConceptGallery = media.gallery.some(isConceptMedia)
   const floorPlans = property.floorPlans?.filter((plan) => Boolean(plan.src)) ?? []
   const enquiryInterest =
@@ -199,12 +208,22 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
       {/* Top bar */}
       <div className="border-b border-border bg-surface">
         <div className="mx-auto max-w-6xl px-4 py-4 md:px-6">
-          <Link
-            href={preview ? "/dev/property-previews" : "/properties"}
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-estate-700"
-          >
-            <ArrowLeft className="h-4 w-4" /> {preview ? individualPreview ? 'All property previews' : 'All Florence previews' : 'All properties'}
-          </Link>
+          <nav aria-label="Breadcrumb">
+            <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+              {breadcrumbs.map((crumb, index) => (
+                <li key={crumb.href ?? 'current'} className="flex min-w-0 items-center gap-2">
+                  {index > 0 && <ChevronRight aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />}
+                  {crumb.href ? (
+                    <Link href={crumb.href} className="break-words py-1 transition-colors hover:text-estate-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-estate-700">
+                      {crumb.label}
+                    </Link>
+                  ) : (
+                    <span aria-current="page" className="min-w-0 break-words py-1 font-medium text-estate-700">{crumb.label}</span>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </nav>
         </div>
       </div>
 
@@ -484,8 +503,6 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
                       ['Property type', property.unitType],
                       ['Property status', property.availability?.includes('ready') ? 'Ready' : undefined],
                       ['Floor area', property.sizeDisplay],
-                      ['Tenure', undefined],
-                      ['EPC', undefined],
                     ] : [
                       ...(!property.priceDisplay ? [['Pricing', undefined]] : []),
                       ['Sizes', hasDesigns ? 'See plot and built-up areas by design' : property.sizeDisplay],

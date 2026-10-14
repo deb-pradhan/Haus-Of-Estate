@@ -104,6 +104,11 @@ describe('shared property details', () => {
     }
     const html = renderToStaticMarkup(<PropertyDetailView property={monaco} media={monacoMedia} />)
 
+    const breadcrumb = html.match(/<nav aria-label="Breadcrumb">[\s\S]*?<\/nav>/)?.[0] ?? ''
+    expect(breadcrumb).toContain('href="/"')
+    expect(breadcrumb).toContain('href="/properties"')
+    expect(breadcrumb).toMatch(/aria-current="page"[^>]*>Azizi Monaco Mansions<\/span>/)
+    expect(breadcrumb).not.toContain('/dev/')
     expect(html).toContain('src="/monaco-exterior.jpg"')
     expect(html).toContain('src="/monaco-interior.jpg"')
     expect(html).toContain('Size supplied by listing')
@@ -216,6 +221,10 @@ describe('shared property details', () => {
       <PropertyDetailView property={property} media={media} preview={{ kind: 'home-type' }} />,
     )
 
+    const breadcrumb = html.match(/<nav aria-label="Breadcrumb">[\s\S]*?<\/nav>/)?.[0] ?? ''
+    expect(breadcrumb).toContain('href="/properties"')
+    expect(breadcrumb).toContain('href="/dev/property-previews"')
+    expect(breadcrumb).toContain('href="/dev/property-previews/azizi-florence"')
     expect(html).toContain('Local draft preview')
     expect(html).toContain('Awaiting confirmation')
     expect(html).toContain('View the Florence community overview')
@@ -249,6 +258,13 @@ describe('shared property details', () => {
     }
     const html = renderToStaticMarkup(<PropertyDetailView property={london} media={conceptMedia} preview={{ kind: 'property' }} />)
 
+    const breadcrumb = html.match(/<nav aria-label="Breadcrumb">[\s\S]*?<\/nav>/)?.[0] ?? ''
+    expect(breadcrumb).toContain('href="/"')
+    expect(breadcrumb).toContain('href="/properties"')
+    expect(breadcrumb).toContain('href="/dev/property-previews"')
+    expect(breadcrumb).toMatch(/aria-current="page"[^>]*>3-bedroom property for sale in North London<\/span>/)
+    expect(html).not.toContain('Tenure')
+    expect(html).not.toContain('EPC')
     expect(html).toContain('For sale')
     expect(html).toContain('Remaining particulars need Haus confirmation before publication.')
     expect(html).toContain('The public location shows the area and city only.')
