@@ -1,12 +1,20 @@
+import { draftMode } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 import { Bed, MapPin, ArrowRight, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { OpenBuyerButton } from "@/components/lead-modal/open-buyer-button";
-import { sanityFetch, urlFor } from "@/sanity";
+import { urlFor } from "@/sanity";
+import { sanityFetch } from "@/sanity/live";
 import { FEATURED_PROPERTIES_QUERY } from "@/sanity/queries";
+import { SaveContentButton } from "@/components/saved-content";
+import { sanityDocumentIdSchema } from "@/lib/saved-content/contracts";
+import { PropertyPrice } from "@/components/currency/property-price";
+import { propertyPriceInput, type PropertyPricing } from "@/lib/currency";
+import { PropertyPhotoBranding } from "@/components/properties/property-photo-branding";
+import { isConceptMedia, propertyMediaCaption, type PropertyImageMetadata } from "@/lib/property-media";
 
-interface FeaturedProperty {
+interface FeaturedProperty extends PropertyPricing {
   _id: string;
   title: string;
   slug: string;
@@ -21,7 +29,8 @@ interface FeaturedProperty {
   rentPriceDisplay?: string;
   completionStatus?: string;
   summary: string;
-  featuredImage?: { alt?: string } & Record<string, unknown>;
+  featuredImage?: { alt?: string } & PropertyImageMetadata & Record<string, unknown>;
+  showHausLogo?: boolean;
 }
 
 const COMPLETION_LABEL: Record<string, string> = {
@@ -57,82 +66,111 @@ function buildAlt(property: FeaturedProperty): string {
 
 function PropertyCard({
   property,
+  canSave,
 }: {
   property: FeaturedProperty;
+  canSave: boolean;
 }) {
-  return (
-    <Link
-      href={`/properties/${property.slug}`}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-estate-700/5"
-    >
-      <div className="relative aspect-[4/3] overflow-hidden bg-estate-700">
-        {property.featuredImage ? (
-          <Image
-            src={urlFor(property.featuredImage).width(800).height(600).url()}
-            alt={buildAlt(property)}
-            fill
-            sizes="(max-width: 767px) calc(100vw - 2rem), (max-width: 1279px) 33vw, 400px"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-estate-600 to-estate-800">
-            <Building2 className="h-10 w-10 text-white/30" />
-          </div>
-        )}
-        <div className="absolute left-3 top-3 flex flex-wrap items-center gap-1.5">
-          {property.completionStatus && (
-            <span className="rounded-full bg-surface/95 px-3 py-1 text-[11px] font-semibold text-estate-700 shadow-sm">
-              {COMPLETION_LABEL[property.completionStatus] ??
-                property.completionStatus}
-            </span>
-          )}
-          {saleRentLabel(property.listingType) && (
-            <span className="rounded-full bg-estate-700/90 px-3 py-1 text-[11px] font-semibold text-white shadow-sm">
-              {saleRentLabel(property.listingType)}
-            </span>
-          )}
-        </div>
-      </div>
+  const conceptImage = isConceptMedia(property.featuredImage);
+  const mediaCaption = propertyMediaCaption(property.featuredImage);
 
-      <div className="flex flex-1 flex-col p-4">
-        <p className="font-serif text-[11px] font-semibold uppercase tracking-widest text-gold-500">
-          {property.unitType}
-        </p>
-        <h3 className="mt-1 font-serif text-lg font-medium text-estate-700">
-          {property.title}
-        </h3>
-        <p className="mt-1.5 flex-1 text-xs leading-relaxed text-muted-foreground">
-          {property.summary}
-        </p>
-        <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
-          <span className="font-serif text-base font-semibold text-estate-700">
-            {property.priceDisplay || "Price on application"}
-          </span>
-          <span className="flex items-center gap-3 text-xs text-muted-foreground">
-            {typeof property.bedrooms === "number" && (
-              <span className="flex items-center gap-1">
-                <Bed className="h-3.5 w-3.5" />
-                {property.bedrooms === 0 ? "Studio" : property.bedrooms}
-              </span>
+  return (
+    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-estate-700/5">
+      <Link
+        href={`/properties/${property.slug}`}
+        className="flex flex-1 flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-estate-700/50 focus-visible:ring-inset"
+      >
+        <figure>
+          <div className="relative aspect-[4/3] overflow-hidden bg-estate-700">
+            {property.featuredImage ? (
+              <Image
+                src={conceptImage
+                  ? urlFor(property.featuredImage).ignoreImageParams().width(800).fit("max").url()
+                  : urlFor(property.featuredImage).width(800).height(600).url()}
+                alt={buildAlt(property)}
+                fill
+                sizes="(max-width: 767px) calc(100vw - 2rem), (max-width: 1279px) 33vw, 400px"
+                className={conceptImage
+                  ? "object-contain"
+                  : "object-cover transition-transform duration-500 group-hover:scale-105"}
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-estate-600 to-estate-800">
+                <Building2 className="h-10 w-10 text-white/30" />
+              </div>
             )}
-            <span className="flex items-center gap-1">
-              <MapPin className="h-3.5 w-3.5" />
-              {property.city}
+            {property.featuredImage && <PropertyPhotoBranding enabled={property.showHausLogo} />}
+            <div className="absolute left-3 top-3 flex max-w-[calc(100%-4.25rem)] flex-wrap items-center gap-1.5">
+              {property.completionStatus && (
+                <span className="rounded-full bg-surface/95 px-3 py-1 text-[11px] font-semibold text-estate-700 shadow-sm">
+                  {COMPLETION_LABEL[property.completionStatus] ??
+                    property.completionStatus}
+                </span>
+              )}
+              {saleRentLabel(property.listingType) && (
+                <span className="rounded-full bg-estate-700/90 px-3 py-1 text-[11px] font-semibold text-white shadow-sm">
+                  {saleRentLabel(property.listingType)}
+                </span>
+              )}
+            </div>
+          </div>
+          {mediaCaption && (
+            <figcaption className="border-b border-border px-4 py-2 text-xs leading-relaxed text-muted-foreground">
+              {mediaCaption}
+            </figcaption>
+          )}
+        </figure>
+
+        <div className="flex flex-1 flex-col p-4">
+          <p className="font-serif text-[11px] font-semibold uppercase tracking-widest text-gold-500">
+            {property.unitType}
+          </p>
+          <h3 className="mt-1 font-serif text-lg font-medium text-estate-700">
+            {property.title}
+          </h3>
+          <p className="mt-1.5 flex-1 text-xs leading-relaxed text-muted-foreground">
+            {property.summary}
+          </p>
+          <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+            <span className="font-serif text-base font-semibold text-estate-700">
+              <PropertyPrice {...propertyPriceInput(property)} />
             </span>
-          </span>
+            <span className="flex items-center gap-3 text-xs text-muted-foreground">
+              {typeof property.bedrooms === "number" && (
+                <span className="flex items-center gap-1">
+                  <Bed className="h-3.5 w-3.5" />
+                  {property.bedrooms === 0 ? "Studio" : property.bedrooms}
+                </span>
+              )}
+              <span className="flex items-center gap-1">
+                <MapPin className="h-3.5 w-3.5" />
+                {property.city}
+              </span>
+            </span>
+          </div>
         </div>
-      </div>
-    </Link>
+      </Link>
+      {canSave && sanityDocumentIdSchema.safeParse(property._id).success && (
+        <SaveContentButton
+          contentType="PROPERTY"
+          sanityDocumentId={property._id}
+          title={property.title}
+          className="absolute right-3 top-3 z-10"
+        />
+      )}
+    </article>
   );
 }
 
 export async function PropertyShowcase() {
-  const { data } = await sanityFetch<FeaturedProperty[]>({
-    query: FEATURED_PROPERTIES_QUERY,
-    throwOnError: true,
-  });
+  const [{ data }, { isEnabled: draftPreview }] = await Promise.all([
+    sanityFetch<FeaturedProperty[]>({
+      query: FEATURED_PROPERTIES_QUERY,
+      throwOnError: true,
+    }),
+    draftMode(),
+  ]);
   const properties = data ?? [];
-
   if (properties.length === 0) return null;
 
   return (
@@ -153,7 +191,7 @@ export async function PropertyShowcase() {
 
         <div className="grid gap-6 md:grid-cols-3">
           {properties.map((p) => (
-            <PropertyCard key={p._id} property={p} />
+            <PropertyCard key={p._id} property={p} canSave={!draftPreview} />
           ))}
         </div>
 

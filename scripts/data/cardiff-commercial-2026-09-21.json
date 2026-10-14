@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "projectId": "jdxbkry4",
+  "dataset": "production",
+  "sourceCheckedAt": "2026-09-21T09:01:15Z",
+  "entries": [
+    {
+      "sourceId": "HP-37595-property",
+      "sourceUrl": "https://www.hafrenproperties.co.uk/property/1250-pcm-a1-a3-ground-floor-commercial-unit-in-city-road-roath-cardiff-cf24-3bp/",
+      "slug": "city-road-cardiff-commercial-unit-285-sq-ft",
+      "title": "City Road, Cardiff — 285 sq ft commercial unit",
+      "rentAmount": 1250,
+      "headlineSqFt": 285,
+      "shopFloorSqFt": 260,
+      "shopFloorSourceSqM": 24,
+      "wcSqFt": 20,
+      "wcSourceSqM": 1.85,
+      "accessStreet": "Tavistock Street",
+      "photoUrls": [
+        "https://www.hafrenproperties.co.uk/wp-content/uploads/2026/04/2-24.jpeg",
+        "https://www.hafrenproperties.co.uk/wp-content/uploads/2026/04/3-18.jpeg",
+        "https://www.hafrenproperties.co.uk/wp-content/uploads/2026/04/2-25.jpeg",
+        "https://www.hafrenproperties.co.uk/wp-content/uploads/2026/04/1-24.jpeg"
+      ]
+    },
+    {
+      "sourceId": "HP-37590-property",
+      "sourceUrl": "https://www.hafrenproperties.co.uk/property/1500-pcm-a1-a3-ground-floor-commercial-unit-in-city-road-roath-cardiff-cf24-3bp/",
+      "slug": "city-road-cardiff-commercial-unit-240-sq-ft",
+      "title": "City Road, Cardiff — 240 sq ft commercial unit",
+      "rentAmount": 1500,
+      "headlineSqFt": 240,
+      "shopFloorSqFt": 215,
+      "shopFloorSourceSqM": 20,
+      "wcSqFt": 20,
+      "wcSourceSqM": 1.85,
+      "accessStreet": "City Road",
+      "photoUrls": [
+        "https://www.hafrenproperties.co.uk/wp-content/uploads/2026/04/2-22.jpeg",
+        "https://www.hafrenproperties.co.uk/wp-content/uploads/2026/04/2-23.jpeg",
+        "https://www.hafrenproperties.co.uk/wp-content/uploads/2026/04/1-23.jpeg"
+      ]
+    },
+    {
+      "sourceId": "HP-37584-property",
+      "sourceUrl": "https://www.hafrenproperties.co.uk/property/2000-pcm-a1-a3-ground-floor-commercial-unit-in-city-road-roath-cardiff-cf24-3bp/",
+      "slug": "city-road-cardiff-commercial-unit-325-sq-ft",
+      "title": "City Road, Cardiff — 325 sq ft commercial unit",
+      "rentAmount": 2000,
+      "headlineSqFt": 325,
+      "shopFloorSqFt": 300,
+      "shopFloorSourceSqM": 28,
+      "wcSqFt": 20,
+      "wcSourceSqM": 1.85,
+      "accessStreet": "City Road",
+      "photoUrls": [
+        "https://www.hafrenproperties.co.uk/wp-content/uploads/2026/04/2-21.jpeg",
+        "https://www.hafrenproperties.co.uk/wp-content/uploads/2026/04/1-22.jpeg"
+      ]
+    }
+  ]
+}

@@ -1,19 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PhoneInput, isValidMobile } from "@/components/ui/phone-input";
 import { Check, ArrowRight, Loader2 } from "lucide-react";
+import { submitLeadEnquiry, type LeadSubmissionAttempt } from "@/lib/lead-intake/client";
 
 interface AccountModalProps {
   open: boolean;
@@ -29,8 +29,11 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
   const [mobile, setMobile] = useState("");
   const [consent, setConsent] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const submissionAttempt = useRef<LeadSubmissionAttempt | null>(null);
+  const sending = useRef(false);
 
   const reset = () => {
+    submissionAttempt.current = null;
     setStep("form");
     setIsSubmitting(false);
     setFirstName("");
@@ -42,6 +45,7 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
   };
 
   const handleOpenChange = (open: boolean) => {
+    if (sending.current) return;
     if (!open) reset();
     onOpenChange(open);
   };
@@ -60,29 +64,31 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (sending.current) return;
     const errs = validate();
     if (Object.keys(errs).length) {
       setErrors(errs);
       return;
     }
     setErrors({});
+    sending.current = true;
     setIsSubmitting(true);
     try {
-      await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      await submitLeadEnquiry({
           intent: "account",
           firstName,
           surname,
           email,
           mobile,
           consentGiven: consent,
-        }),
-      });
-    } catch (_) {}
-    setIsSubmitting(false);
-    setStep("success");
+      }, submissionAttempt);
+      setStep("success");
+    } catch (error) {
+      setErrors({ request: error instanceof Error ? error.message : "Please try again." });
+    } finally {
+      sending.current = false;
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -186,6 +192,7 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
                 )}
               </div>
 
+              {errors.request ? <p role="alert" className="text-sm text-destructive">{errors.request}</p> : null}
               <Button
                 type="submit"
                 disabled={isSubmitting}
@@ -206,7 +213,7 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
             </form>
 
             <p className="mt-3 text-center text-xs text-muted-foreground">
-              No spam. Our team will be in touch within 2 hours.
+              Your details will be used to respond to this enquiry.
             </p>
           </div>
         ) : (
@@ -218,7 +225,7 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
               Thanks, {firstName}.
             </DialogTitle>
             <DialogDescription className="mt-2 text-sm text-muted-foreground">
-              A specialist will be in touch within 2 hours to discuss your enquiry.
+              Your enquiry has been saved for our team to review and respond using the details you provided.
             </DialogDescription>
             <Button
               onClick={() => handleOpenChange(false)}

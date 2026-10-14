@@ -44,6 +44,7 @@ export const TYPES_BY_CATEGORY: Record<Category, readonly string[]> = {
   residential: [
     'Apartment',
     'Townhouse',
+    'Terraced House',
     'Villa',
     'Mansion',
     'Building',
@@ -103,6 +104,8 @@ export const ALL_UNIT_TYPES: readonly string[] = Array.from(
     ...LEGACY_RESIDENTIAL_UNIT_TYPES,
     ...TYPES_BY_CATEGORY.commercial,
     ...OFFPLAN_TYPES_BY_CATEGORY.commercial,
+    // Mixed community overviews are developments, not a single home type.
+    'Development',
   ]),
 )
 
@@ -145,13 +148,20 @@ export interface PropertyQuery {
   availability?: Availability | string
   intent?: Intent | string
   type?: string
+  country?: string
+  city?: string
   location?: string
   beds?: string | number
+  q?: string
+  minPrice?: string | number
+  maxPrice?: string | number
+  currency?: string
 }
 
 /**
  * Build a canonical `/properties` href from a taxonomy selection.
- * Produces: /properties?category=&availability=&intent=&type=&location=&beds=
+ * Produces: /properties?category=&availability=&intent=&type=&country=&city=&location=&beds=
+ * `location` remains available for older broad-location links.
  * Off-Plan is buy-only, so intent is forced to `sale` whenever
  * availability is `off-plan`.
  */
@@ -166,10 +176,16 @@ export function buildPropertiesHref(query: PropertyQuery = {}): string {
   if (intent) params.set('intent', String(intent))
 
   if (query.type) params.set('type', String(query.type))
+  if (query.country) params.set('country', String(query.country))
+  if (query.city) params.set('city', String(query.city))
   if (query.location) params.set('location', String(query.location))
   if (query.beds !== undefined && query.beds !== null && query.beds !== '') {
     params.set('beds', String(query.beds))
   }
+  if (query.q?.trim()) params.set('q', query.q.trim().slice(0, 120))
+  if (query.minPrice !== undefined && query.minPrice !== '') params.set('minPrice', String(query.minPrice))
+  if (query.maxPrice !== undefined && query.maxPrice !== '') params.set('maxPrice', String(query.maxPrice))
+  if (query.currency) params.set('currency', query.currency)
 
   const qs = params.toString()
   return qs ? `/properties?${qs}` : '/properties'
@@ -232,14 +248,6 @@ export function buildPropertiesMenu(): MenuColumn[] {
             muted: categoryMuted,
           },
         ],
-      },
-      {
-        heading: 'Browse by type',
-        links: TYPES_BY_CATEGORY[category].map((type) => ({
-          label: type,
-          href: buildPropertiesHref({ category, type }),
-          muted: categoryMuted,
-        })),
       },
     ]
 

@@ -4,14 +4,14 @@ import { DEFAULT_OG_IMAGES } from "@/lib/seo";
 export const metadata: Metadata = {
   title: "Services",
   description:
-    "End-to-end property services from Haus of Estate — property management, sourcing, interiors and renovations, backed by vetted specialists and transparent workflows.",
+    "Property services from Haus of Estate — property management, sourcing, interiors, renovations and maintenance.",
   alternates: {
     canonical: "/services",
   },
   openGraph: {
     title: "Services — Haus of Estate",
     description:
-      "End-to-end property services — property management, sourcing, interiors and renovations, backed by vetted specialists.",
+      "Property management, sourcing, interiors, renovations and maintenance from Haus of Estate.",
     url: "/services",
     type: "website",
     images: DEFAULT_OG_IMAGES,

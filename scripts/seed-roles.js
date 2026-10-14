@@ -1,3 +1,5 @@
+// Legacy roles retired following Sonia’s 12 September 2026 hiring list.
+// Retain records and descriptions; never reopen them through this seed.
 // Seed Role documents into Sanity. Two modes:
 //   1. With SANITY_WRITE_TOKEN set  -> createOrReplace via the API.
 //   2. Without a token              -> writes scripts/roles.ndjson, which
@@ -88,7 +90,7 @@ const ROLES = [
       'A second language relevant to our client base.',
     ],
     applyEmail: 'info@hausofestate.com',
-    status: 'open',
+    status: 'closed',
     featured: true,
   },
   {
@@ -124,7 +126,7 @@ const ROLES = [
       'ARLA Propertymark qualification or in progress.',
     ],
     applyEmail: 'info@hausofestate.com',
-    status: 'open',
+    status: 'closed',
     featured: false,
   },
   {
@@ -169,7 +171,7 @@ const ROLES = [
       'Light hands-on motion or photo editing skills.',
     ],
     applyEmail: 'info@hausofestate.com',
-    status: 'open',
+    status: 'closed',
     featured: true,
   },
   {
@@ -213,7 +215,7 @@ const ROLES = [
       'Experience working in the property, luxury, hospitality or travel sectors.',
     ],
     applyEmail: 'info@hausofestate.com',
-    status: 'open',
+    status: 'closed',
     featured: true,
   },
   {
@@ -260,7 +262,7 @@ const ROLES = [
       'Photography or styling experience.',
     ],
     applyEmail: 'hr@hausofestate.com',
-    status: 'open',
+    status: 'closed',
     featured: false,
   },
   {
@@ -307,7 +309,7 @@ const ROLES = [
       'A full UK driving licence, useful for property visits.',
     ],
     applyEmail: 'hr@hausofestate.com',
-    status: 'open',
+    status: 'closed',
     featured: false,
   },
   {
@@ -354,7 +356,7 @@ const ROLES = [
       'A full UK driving licence.',
     ],
     applyEmail: 'hr@hausofestate.com',
-    status: 'open',
+    status: 'closed',
     featured: false,
   },
   {
@@ -391,7 +393,7 @@ const ROLES = [
       'A second language: Arabic, Bahasa Indonesia or Mandarin.',
     ],
     applyEmail: 'info@hausofestate.com',
-    status: 'open',
+    status: 'closed',
     featured: false,
   },
 ];

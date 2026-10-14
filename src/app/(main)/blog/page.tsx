@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import { sanityFetch } from '@/sanity'
+import { sanityFetch } from '@/sanity/live'
 import { POST_FIELDS, CATEGORIES_QUERY, POSTS_COUNT_QUERY } from '@/sanity/queries'
 import {
   FeaturedPost,

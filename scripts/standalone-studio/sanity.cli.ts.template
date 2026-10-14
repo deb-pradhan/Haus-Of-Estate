@@ -1,0 +1,24 @@
+import { defineCliConfig } from 'sanity/cli'
+
+export default defineCliConfig({
+  api: { projectId: 'jdxbkry4', dataset: 'production' },
+  server: { hostname: 'localhost', port: 3333 },
+  vite: (config) => ({
+    ...config,
+    resolve: {
+      ...config.resolve,
+      dedupe: [...(config.resolve?.dedupe || []), 'react', 'react-dom', 'sanity', '@sanity/ui', 'styled-components'],
+    },
+    server: {
+      ...config.server,
+      fs: { ...config.server?.fs, allow: ['.', '__APP_RELATIVE_PATH__'] },
+    },
+  }),
+  typegen: {
+    enabled: true,
+    path: '__APP_RELATIVE_PATH__/src/**/*.{ts,tsx,js,jsx}',
+    schema: 'schema.json',
+    generates: './sanity.types.ts',
+    overloadClientMethods: true,
+  },
+})

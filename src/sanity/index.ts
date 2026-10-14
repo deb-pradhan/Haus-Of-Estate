@@ -1,1 +1,1 @@
-export { client, sanityFetch, urlFor } from './client'
+export { client, urlFor } from './client'

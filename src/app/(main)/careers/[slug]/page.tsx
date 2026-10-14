@@ -1,4 +1,6 @@
 import { notFound } from 'next/navigation'
+import { draftMode } from 'next/headers'
+import type { ComponentProps } from 'react'
 import { CAREERS_PUBLIC_ENABLED } from '@/lib/careers-availability'
 import Link from 'next/link'
 import {
@@ -9,50 +11,47 @@ import {
   Building2,
   Check,
 } from 'lucide-react'
-import { sanityFetch } from '@/sanity'
-import { ROLE_BY_SLUG_QUERY, ROLE_SLUGS_QUERY } from '@/sanity/queries'
+import { sanityFetch } from '@/sanity/live'
+import { ROLE_BY_SLUG_QUERY, ROLES_QUERY } from '@/sanity/queries'
+import { careerRoleLabel, resolveCareerRole, resolveCareerRoles, type CareerRole } from '@/lib/career-roles'
+import { getCareersInbox, isCareersIntakeEnabled } from '@/lib/careers-settings'
 import { DEFAULT_OG_IMAGES } from '@/lib/seo'
 import { PortableTextRenderer } from '@/components/blog'
 import { ApplicationForm } from '@/components/careers/application-form'
 import type { Metadata } from 'next'
 
-interface RoleDetail {
-  _id: string
-  title: string
-  slug: string
-  department?: string
-  location: string
-  employmentType?: string
-  summary: string
-  description?: unknown
-  responsibilities?: string[]
-  requirements?: string[]
-  niceToHave?: string[]
-  applyEmail?: string
-  featured?: boolean
-  publishedAt?: string
-}
-
 interface RolePageProps {
   params: Promise<{ slug: string }>
+}
+
+async function getVisibleCareerRole(slug: string) {
+  if (!resolveCareerRole(slug)) return null
+  const [{ data }, { isEnabled: draftPreview }] = await Promise.all([
+    sanityFetch<{ role: CareerRole | null }>({
+      // The envelope distinguishes an absent brief from a failed CMS request.
+      query: `{ "role": ${ROLE_BY_SLUG_QUERY} }`,
+      params: { slug },
+    }),
+    draftMode(),
+  ])
+  if (!data) throw new Error('Unable to load the current career opportunity')
+  return draftPreview ? data.role : resolveCareerRole(slug, data.role)
 }
 
 export async function generateMetadata({ params }: RolePageProps): Promise<Metadata> {
   if (!CAREERS_PUBLIC_ENABLED) notFound()
 
   const { slug } = await params
-  const { data } = await sanityFetch<RoleDetail>({
-    query: ROLE_BY_SLUG_QUERY,
-    params: { slug },
-  })
-  if (!data) return { title: 'Role Not Found' }
+  const data = await getVisibleCareerRole(slug)
+  if (!data) notFound()
+  const label = careerRoleLabel(data)
   return {
-    title: `${data.title} — Careers`,
-    description: data.summary,
+    title: `${label} — Careers`,
+    description: data.summary || `Explore the ${label} opportunity at Haus of Estate.`,
     alternates: { canonical: `/careers/${slug}` },
     openGraph: {
-      title: `${data.title} — Careers at Haus of Estate`,
-      description: data.summary,
+      title: `${label} — Careers at Haus of Estate`,
+      description: data.summary || `Explore the ${label} opportunity at Haus of Estate.`,
       url: `/careers/${slug}`,
       type: 'article',
       images: DEFAULT_OG_IMAGES,
@@ -63,8 +62,8 @@ export async function generateMetadata({ params }: RolePageProps): Promise<Metad
 export async function generateStaticParams() {
   if (!CAREERS_PUBLIC_ENABLED) return []
 
-  const { data } = await sanityFetch<Array<{ slug: string }>>({ query: ROLE_SLUGS_QUERY })
-  return data?.map((r) => ({ slug: r.slug })) || []
+  const { data } = await sanityFetch<CareerRole[]>({ query: ROLES_QUERY })
+  return data === null ? [] : resolveCareerRoles(data).map(({ slug }) => ({ slug }))
 }
 
 export const revalidate = 60
@@ -73,18 +72,14 @@ export default async function RolePage({ params }: RolePageProps) {
   if (!CAREERS_PUBLIC_ENABLED) notFound()
 
   const { slug } = await params
-  const { data: role } = await sanityFetch<RoleDetail>({
-    query: ROLE_BY_SLUG_QUERY,
-    params: { slug },
-  })
+  const [role, { isEnabled: draftPreview }] = await Promise.all([
+    getVisibleCareerRole(slug),
+    draftMode(),
+  ])
   if (!role) notFound()
 
-  const applyEmail = role.applyEmail || 'info@hausofestate.com'
-  const applyHref = `mailto:${applyEmail}?subject=${encodeURIComponent(
-    `Application — ${role.title}`,
-  )}&body=${encodeURIComponent(
-    `Hi Haus of Estate team,\n\nI'd like to apply for the ${role.title} role.\n\nA short note about me:\n[…]\n\nMy CV is attached.\n\nThanks,\n`,
-  )}`
+  const applyEmail = getCareersInbox()
+  const intakeEnabled = isCareersIntakeEnabled() && !draftPreview
 
   return (
     <div className="min-h-screen">
@@ -95,7 +90,7 @@ export default async function RolePage({ params }: RolePageProps) {
             href="/careers"
             className="inline-flex items-center gap-1.5 text-sm text-white/70 transition-colors hover:text-white"
           >
-            <ArrowLeft className="h-3.5 w-3.5" /> All open roles
+            <ArrowLeft className="h-3.5 w-3.5" /> All opportunities
           </Link>
 
           <p className="mt-8 font-serif text-xs font-medium uppercase tracking-[0.3em] text-gold-400">
@@ -106,9 +101,9 @@ export default async function RolePage({ params }: RolePageProps) {
           </h1>
 
           <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-white/80">
-            <span className="inline-flex items-center gap-1.5">
+            {role.location && <span className="inline-flex items-center gap-1.5">
               <MapPin className="h-4 w-4" /> {role.location}
-            </span>
+            </span>}
             {role.employmentType && (
               <span className="inline-flex items-center gap-1.5">
                 <Briefcase className="h-4 w-4" /> {role.employmentType}
@@ -126,10 +121,10 @@ export default async function RolePage({ params }: RolePageProps) {
           </p>
 
           <a
-            href="#apply"
+            href="#applications"
             className="mt-8 inline-flex h-11 items-center justify-center gap-2 rounded-md bg-gold-500 px-6 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gold-400"
           >
-            Apply for this role <ArrowRight className="h-4 w-4" />
+            {intakeEnabled ? 'Apply for this role' : 'Application information'} <ArrowRight className="h-4 w-4" />
           </a>
         </div>
       </section>
@@ -139,9 +134,14 @@ export default async function RolePage({ params }: RolePageProps) {
         <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[1.4fr_1fr]">
           {/* Main content */}
           <div className="space-y-10">
+            {!role.description && !role.summary && (
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                Full role details will be added here. For questions about this opportunity, contact our team using the email below.
+              </p>
+            )}
             {role.description ? (
               <div className="prose prose-neutral max-w-none">
-                <PortableTextRenderer content={role.description as any} />
+                <PortableTextRenderer content={role.description as ComponentProps<typeof PortableTextRenderer>['content']} />
               </div>
             ) : null}
 
@@ -195,22 +195,25 @@ export default async function RolePage({ params }: RolePageProps) {
           </div>
 
           {/* Apply card (sticky on desktop) */}
-          <aside id="apply">
+          <aside id="applications" className="scroll-mt-24">
             <div className="sticky top-24 rounded-2xl border border-border bg-surface p-6 shadow-sm">
               <p className="font-serif text-xs font-medium uppercase tracking-[0.22em] text-gold-500">
-                Apply
+                Applications
               </p>
               <h3 className="mt-2 font-serif text-xl font-medium text-estate-700">
-                Apply for this role
+                {intakeEnabled ? 'Apply for this role' : 'Online applications are not open yet'}
               </h3>
               <p className="mt-2 mb-5 text-sm leading-relaxed text-muted-foreground">
-                Share a few details and we&apos;ll reply within two working days.
+                {intakeEnabled ? 'Share your details and CV with our recruitment team.' : 'Please check back for application updates.'}
               </p>
-              <ApplicationForm
+              {intakeEnabled ? <ApplicationForm
                 roleSlug={role.slug}
                 roleTitle={role.title}
                 applyEmail={applyEmail}
-              />
+              /> : <p className="text-sm leading-relaxed text-muted-foreground">
+                Questions about this role?{' '}
+                <a href={`mailto:${applyEmail}`} className="break-words text-estate-700 underline underline-offset-4">{applyEmail}</a>
+              </p>}
             </div>
           </aside>
         </div>

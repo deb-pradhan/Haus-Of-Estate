@@ -1,0 +1,463 @@
+{
+  "schemaVersion": 1,
+  "description": "Local preparation only. Physical PDF pages identify exact brochure designs; facade codes, map orientation and palette entitlement remain unmapped. Townhouse row plans show multiple homes.",
+  "brochures": [
+    {
+      "key": "villa-4br",
+      "file": "Standalone Villa 4 (A-B)_260830_073634.pdf",
+      "sha256": "b5f47ea84e36b5b5a0b6ec23111517115728934349b9e6e64dcf36f0b0d1dd2d",
+      "pageCount": 14
+    },
+    {
+      "key": "villa-5br",
+      "file": "Standalone Villa 5 (A-B).pdf",
+      "sha256": "9a2c8b075ada07a67a1ecff6fddf9359e660766a2061ffa707a84714ea4b22d1",
+      "pageCount": 9
+    },
+    {
+      "key": "villa-6br",
+      "file": "Standalone Villa 6 (A-B-C).pdf",
+      "sha256": "e6c4fb555ea9e2423d45975af36811f18427803a5d79c88fd93f1c6cf0f142e6",
+      "pageCount": 14
+    },
+    {
+      "key": "townhouse-3-4br",
+      "file": "TownHouse 3-4.pdf",
+      "sha256": "d8842cb77697f8eb894289f7f0c2a655be2769b7ee4fef22cb5309ba83b7011d",
+      "pageCount": 52
+    }
+  ],
+  "documents": [
+    {
+      "slug": "azizi-florence-4-bedroom-villas",
+      "brochureKey": "villa-4br",
+      "bedrooms": 4,
+      "designVariants": [
+        {
+          "_key": "villa-4br-type-a",
+          "label": "Brochure Type A",
+          "position": "standalone",
+          "plotAreaSqFt": 3363,
+          "sellableAreaSqFt": 3831,
+          "plotAreaStatus": "brochure",
+          "photoPages": [
+            1,
+            2
+          ],
+          "floorPlanPages": [
+            3,
+            4
+          ],
+          "areaEvidencePage": 4,
+          "summary": "4-bedroom standalone villa, shown as Type A in the collection brochure."
+        },
+        {
+          "_key": "villa-4br-type-b",
+          "label": "Brochure Type B",
+          "position": "standalone",
+          "plotAreaSqFt": 3363,
+          "sellableAreaSqFt": 3714,
+          "plotAreaStatus": "brochure",
+          "photoPages": [
+            5,
+            6
+          ],
+          "floorPlanPages": [
+            7,
+            8
+          ],
+          "areaEvidencePage": 8,
+          "summary": "4-bedroom standalone villa, shown as Type B in the collection brochure."
+        }
+      ],
+      "interiorSchemes": []
+    },
+    {
+      "slug": "azizi-florence-5-bedroom-villas",
+      "brochureKey": "villa-5br",
+      "bedrooms": 5,
+      "designVariants": [
+        {
+          "_key": "villa-5br-type-a",
+          "label": "Brochure Type A",
+          "position": "standalone",
+          "plotAreaSqFt": 3767,
+          "sellableAreaSqFt": 4635,
+          "plotAreaStatus": "brochure",
+          "photoPages": [
+            2,
+            3
+          ],
+          "floorPlanPages": [
+            4,
+            5
+          ],
+          "areaEvidencePage": 5,
+          "summary": "5-bedroom standalone villa, shown as Type A in the collection brochure."
+        },
+        {
+          "_key": "villa-5br-type-b",
+          "label": "Brochure Type B",
+          "position": "standalone",
+          "plotAreaSqFt": 3767,
+          "sellableAreaSqFt": 4629,
+          "plotAreaStatus": "brochure",
+          "photoPages": [
+            6,
+            7
+          ],
+          "floorPlanPages": [
+            8,
+            9
+          ],
+          "areaEvidencePage": 9,
+          "summary": "5-bedroom standalone villa, shown as Type B in the collection brochure."
+        }
+      ],
+      "interiorSchemes": []
+    },
+    {
+      "slug": "azizi-florence-6-bedroom-villas",
+      "brochureKey": "villa-6br",
+      "bedrooms": 6,
+      "designVariants": [
+        {
+          "_key": "villa-6br-type-a",
+          "label": "Brochure Type A",
+          "position": "standalone",
+          "plotAreaSqFt": 4843,
+          "sellableAreaSqFt": 4949,
+          "plotAreaStatus": "brochure",
+          "photoPages": [
+            2,
+            3
+          ],
+          "floorPlanPages": [
+            4,
+            5
+          ],
+          "areaEvidencePage": 5,
+          "summary": "6-bedroom standalone villa, shown as Type A in the collection brochure."
+        },
+        {
+          "_key": "villa-6br-type-b",
+          "label": "Brochure Type B",
+          "position": "standalone",
+          "plotAreaSqFt": 4843,
+          "sellableAreaSqFt": 4930,
+          "plotAreaStatus": "brochure",
+          "photoPages": [
+            6,
+            7
+          ],
+          "floorPlanPages": [
+            8,
+            9
+          ],
+          "areaEvidencePage": 9,
+          "summary": "6-bedroom standalone villa, shown as Type B in the collection brochure."
+        },
+        {
+          "_key": "villa-6br-type-c",
+          "label": "Brochure Type C",
+          "position": "standalone",
+          "plotAreaSqFt": 4843,
+          "sellableAreaSqFt": 4944,
+          "plotAreaStatus": "brochure",
+          "photoPages": [
+            10,
+            11
+          ],
+          "floorPlanPages": [
+            12,
+            13
+          ],
+          "areaEvidencePage": 13,
+          "summary": "6-bedroom standalone villa, shown as Type C in the collection brochure."
+        }
+      ],
+      "interiorSchemes": []
+    },
+    {
+      "slug": "azizi-florence-3-bedroom-townhouses",
+      "brochureKey": "townhouse-3-4br",
+      "bedrooms": 3,
+      "designVariants": [
+        {
+          "_key": "tasso-4-home-corner",
+          "label": "Tasso - 4-home row - corner",
+          "family": "Tasso",
+          "rowHomes": 4,
+          "position": "corner",
+          "plotAreaSqFt": 1938,
+          "sellableAreaSqFt": 2354,
+          "plotAreaStatus": "brochure",
+          "photoPages": [
+            8,
+            10
+          ],
+          "floorPlanPages": [
+            11,
+            12
+          ],
+          "areaEvidencePage": 13,
+          "summary": "3-bedroom corner home in the Tasso 4-home row. Shared row views and plans show multiple homes."
+        },
+        {
+          "_key": "tasso-4-home-middle",
+          "label": "Tasso - 4-home row - middle",
+          "family": "Tasso",
+          "rowHomes": 4,
+          "position": "middle",
+          "plotAreaSqFt": 1615,
+          "sellableAreaSqFt": 2228,
+          "plotAreaStatus": "brochure",
+          "photoPages": [
+            8,
+            10
+          ],
+          "floorPlanPages": [
+            11,
+            12
+          ],
+          "areaEvidencePage": 13,
+          "summary": "3-bedroom middle home in the Tasso 4-home row. Shared row views and plans show multiple homes."
+        },
+        {
+          "_key": "novoli-4-home-middle",
+          "label": "Novoli - 4-home row - middle",
+          "family": "Novoli",
+          "rowHomes": 4,
+          "position": "middle",
+          "plotAreaSqFt": 1615,
+          "sellableAreaSqFt": 2225,
+          "plotAreaStatus": "brochure",
+          "photoPages": [
+            2,
+            4
+          ],
+          "floorPlanPages": [
+            5,
+            6
+          ],
+          "areaEvidencePage": 7,
+          "summary": "3-bedroom middle home in the Novoli 4-home row. Shared row views and plans show multiple homes."
+        },
+        {
+          "_key": "novoli-6-home-middle",
+          "label": "Novoli - 6-home row - middle",
+          "family": "Novoli",
+          "rowHomes": 6,
+          "position": "middle",
+          "plotAreaSqFt": 1615,
+          "sellableAreaSqFt": 2224,
+          "plotAreaStatus": "brochure",
+          "photoPages": [
+            28,
+            30
+          ],
+          "floorPlanPages": [
+            31,
+            32
+          ],
+          "areaEvidencePage": 33,
+          "summary": "3-bedroom middle home in the Novoli 6-home row. Shared row views and plans show multiple homes."
+        },
+        {
+          "_key": "spada-8-home-middle",
+          "label": "Spada - 8-home row - middle",
+          "family": "Spada",
+          "rowHomes": 8,
+          "position": "middle",
+          "plotAreaSqFt": 1615,
+          "sellableAreaSqFt": 2225,
+          "plotAreaStatus": "brochure",
+          "photoPages": [
+            40,
+            42
+          ],
+          "floorPlanPages": [
+            43,
+            44
+          ],
+          "areaEvidencePage": 45,
+          "summary": "3-bedroom middle home in the Spada 8-home row. Shared row views and plans show multiple homes."
+        }
+      ],
+      "interiorSchemes": [
+        {
+          "_key": "palette-a",
+          "label": "Palette A",
+          "photoPage": 24
+        },
+        {
+          "_key": "palette-b",
+          "label": "Palette B",
+          "photoPage": 49
+        }
+      ]
+    },
+    {
+      "slug": "azizi-florence-4-bedroom-townhouses",
+      "brochureKey": "townhouse-3-4br",
+      "bedrooms": 4,
+      "designVariants": [
+        {
+          "_key": "novoli-4-home-corner",
+          "label": "Novoli - 4-home row - corner",
+          "family": "Novoli",
+          "rowHomes": 4,
+          "position": "corner",
+          "plotAreaSqFt": 2260,
+          "sellableAreaSqFt": 2711,
+          "plotAreaStatus": "conflict",
+          "photoPages": [
+            2,
+            4
+          ],
+          "floorPlanPages": [
+            5,
+            6
+          ],
+          "areaEvidencePage": 7,
+          "summary": "4-bedroom corner home in the Novoli 4-home row. Shared row views and plans show multiple homes.",
+          "areaNote": "Plot area pending clarification: the brochure table states 2,260 sq ft while its 9 m by 20 m drawing is approximately 1,938 sq ft."
+        },
+        {
+          "_key": "novoli-6-home-corner",
+          "label": "Novoli - 6-home row - corner",
+          "family": "Novoli",
+          "rowHomes": 6,
+          "position": "corner",
+          "plotAreaSqFt": 2260,
+          "sellableAreaSqFt": 2709,
+          "plotAreaStatus": "conflict",
+          "photoPages": [
+            28,
+            30
+          ],
+          "floorPlanPages": [
+            31,
+            32
+          ],
+          "areaEvidencePage": 33,
+          "summary": "4-bedroom corner home in the Novoli 6-home row. Shared row views and plans show multiple homes.",
+          "areaNote": "Plot area pending clarification: the brochure table states 2,260 sq ft while its 9 m by 20 m drawing is approximately 1,938 sq ft."
+        },
+        {
+          "_key": "spada-4-home-corner",
+          "label": "Spada - 4-home row - corner",
+          "family": "Spada",
+          "rowHomes": 4,
+          "position": "corner",
+          "plotAreaSqFt": 2260,
+          "sellableAreaSqFt": 2709,
+          "plotAreaStatus": "brochure",
+          "photoPages": [
+            14,
+            16
+          ],
+          "floorPlanPages": [
+            18,
+            19
+          ],
+          "areaEvidencePage": 20,
+          "summary": "4-bedroom corner home in the Spada 4-home row. Shared row views and plans show multiple homes."
+        },
+        {
+          "_key": "spada-4-home-middle",
+          "label": "Spada - 4-home row - middle",
+          "family": "Spada",
+          "rowHomes": 4,
+          "position": "middle",
+          "plotAreaSqFt": 1938,
+          "sellableAreaSqFt": 2660,
+          "plotAreaStatus": "brochure",
+          "photoPages": [
+            14,
+            16
+          ],
+          "floorPlanPages": [
+            18,
+            19
+          ],
+          "areaEvidencePage": 20,
+          "summary": "4-bedroom middle home in the Spada 4-home row. Shared row views and plans show multiple homes."
+        },
+        {
+          "_key": "spada-6-home-corner",
+          "label": "Spada - 6-home row - corner",
+          "family": "Spada",
+          "rowHomes": 6,
+          "position": "corner",
+          "plotAreaSqFt": 2260,
+          "sellableAreaSqFt": 2717,
+          "plotAreaStatus": "brochure",
+          "photoPages": [
+            34,
+            36
+          ],
+          "floorPlanPages": [
+            37,
+            38
+          ],
+          "areaEvidencePage": 39,
+          "summary": "4-bedroom corner home in the Spada 6-home row. Shared row views and plans show multiple homes."
+        },
+        {
+          "_key": "spada-6-home-middle",
+          "label": "Spada - 6-home row - middle",
+          "family": "Spada",
+          "rowHomes": 6,
+          "position": "middle",
+          "plotAreaSqFt": 1938,
+          "sellableAreaSqFt": 2663,
+          "plotAreaStatus": "brochure",
+          "photoPages": [
+            34,
+            36
+          ],
+          "floorPlanPages": [
+            37,
+            38
+          ],
+          "areaEvidencePage": 39,
+          "summary": "4-bedroom middle home in the Spada 6-home row. Shared row views and plans show multiple homes."
+        },
+        {
+          "_key": "spada-8-home-corner",
+          "label": "Spada - 8-home row - corner",
+          "family": "Spada",
+          "rowHomes": 8,
+          "position": "corner",
+          "plotAreaSqFt": 2260,
+          "sellableAreaSqFt": 2718,
+          "plotAreaStatus": "conflict",
+          "photoPages": [
+            40,
+            42
+          ],
+          "floorPlanPages": [
+            43,
+            44
+          ],
+          "areaEvidencePage": 45,
+          "summary": "4-bedroom corner home in the Spada 8-home row. Shared row views and plans show multiple homes.",
+          "areaNote": "Plot area pending clarification: the brochure table states 2,260 sq ft while its 9 m by 20 m drawing is approximately 1,938 sq ft."
+        }
+      ],
+      "interiorSchemes": [
+        {
+          "_key": "palette-a",
+          "label": "Palette A",
+          "photoPage": 21
+        },
+        {
+          "_key": "palette-b",
+          "label": "Palette B",
+          "photoPage": 46
+        }
+      ]
+    }
+  ]
+}

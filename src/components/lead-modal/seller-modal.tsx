@@ -17,10 +17,10 @@ import {
   ArrowLeft,
   Check,
   Loader2,
-  Upload,
   AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { submitLeadEnquiry, type LeadSubmissionAttempt } from "@/lib/lead-intake/client";
 
 interface SellerModalProps {
   open: boolean;
@@ -46,26 +46,25 @@ export function SellerModal({ open, onOpenChange }: SellerModalProps) {
   const [size, setSize] = useState("");
   const [viewType, setViewType] = useState("");
   const [urgency, setUrgency] = useState<string | null>(null);
-  const [titleDeed, setTitleDeed] = useState<File | null>(null);
-  const [passport, setPassport] = useState<File | null>(null);
   const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
   const [consent, setConsent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const titleRef = useRef<HTMLInputElement>(null);
-  const passportRef = useRef<HTMLInputElement>(null);
+  const submissionAttempt = useRef<LeadSubmissionAttempt | null>(null);
+  const sending = useRef(false);
 
   const reset = () => {
     setStep(1); setSellOrRent(null); setPropertyType("");
     setBedrooms(""); setLocation(""); setSize(""); setViewType("");
-    setUrgency(null); setTitleDeed(null); setPassport(null);
+    setUrgency(null); submissionAttempt.current = null;
     setFirstName(""); setEmail(""); setMobile(""); setConsent(false);
     setIsSubmitting(false); setErrors({});
   };
 
   const handleOpenChange = (open: boolean) => {
+    if (sending.current) return;
     if (!open) reset();
     onOpenChange(open);
   };
@@ -81,18 +80,14 @@ export function SellerModal({ open, onOpenChange }: SellerModalProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (sending.current) return;
     const errs = validateLead();
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setErrors({});
+    sending.current = true;
     setIsSubmitting(true);
-    const formData = new FormData();
-    if (titleDeed) formData.append("titleDeed", titleDeed);
-    if (passport) formData.append("passport", passport);
     try {
-      await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      await submitLeadEnquiry({
           intent: "seller",
           sellOrRent,
           propertyType,
@@ -105,11 +100,14 @@ export function SellerModal({ open, onOpenChange }: SellerModalProps) {
           email,
           mobile,
           consentGiven: consent,
-        }),
-      });
-    } catch (_) {}
-    setIsSubmitting(false);
-    setStep(6);
+      }, submissionAttempt);
+      setStep(6);
+    } catch (error) {
+      setErrors({ request: error instanceof Error ? error.message : "Please try again." });
+    } finally {
+      sending.current = false;
+      setIsSubmitting(false);
+    }
   };
 
   const totalSteps = 5;
@@ -136,7 +134,7 @@ export function SellerModal({ open, onOpenChange }: SellerModalProps) {
                 {step === 1 && "Are you looking to sell or rent your property?"}
                 {step === 2 && "Tell us about your property"}
                 {step === 3 && "Is this urgent?"}
-                {step === 4 && "Upload documents"}
+                {step === 4 && "Property documents"}
               </DialogTitle>
             </DialogHeader>
           )}
@@ -281,65 +279,11 @@ export function SellerModal({ open, onOpenChange }: SellerModalProps) {
             </div>
           )}
 
-          {/* Step 4: File upload */}
+          {/* Step 4: Documents are requested separately after the enquiry. */}
           {step === 4 && (
             <div className="space-y-4">
-              <p className="text-xs text-muted-foreground">
-                Upload your title deed and passport copy to help us verify your property quickly.
-              </p>
-
-              {/* Title deed */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-foreground">Title Deed</Label>
-                <input
-                  ref={titleRef}
-                  type="file"
-                  accept="image/*,.pdf"
-                  onChange={(e) => setTitleDeed(e.target.files?.[0] ?? null)}
-                  className="hidden"
-                />
-                <button
-                  onClick={() => titleRef.current?.click()}
-                  className="flex w-full items-center gap-3 rounded-xl border-2 border-dashed border-border p-4 text-left transition-colors hover:border-estate-700/40"
-                >
-                  <Upload className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium text-foreground">
-                      {titleDeed ? titleDeed.name : "Click to upload"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">PDF or image</p>
-                  </div>
-                  {titleDeed && <Check className="ml-auto h-4 w-4 text-trust-teal" />}
-                </button>
-              </div>
-
-              {/* Passport */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-foreground">Passport Copy</Label>
-                <input
-                  ref={passportRef}
-                  type="file"
-                  accept="image/*,.pdf"
-                  onChange={(e) => setPassport(e.target.files?.[0] ?? null)}
-                  className="hidden"
-                />
-                <button
-                  onClick={() => passportRef.current?.click()}
-                  className="flex w-full items-center gap-3 rounded-xl border-2 border-dashed border-border p-4 text-left transition-colors hover:border-estate-700/40"
-                >
-                  <Upload className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium text-foreground">
-                      {passport ? passport.name : "Click to upload"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">PDF or image</p>
-                  </div>
-                  {passport && <Check className="ml-auto h-4 w-4 text-trust-teal" />}
-                </button>
-              </div>
-
-              <p className="text-xs text-muted-foreground">
-                Your documents are encrypted and only accessible to our authorised agents.
+              <p className="text-sm text-muted-foreground">
+                Document uploads are not available on this form. Our team can explain any documents needed after reviewing your enquiry.
               </p>
 
               <div className="flex gap-2 pt-2">
@@ -365,7 +309,7 @@ export function SellerModal({ open, onOpenChange }: SellerModalProps) {
                   Almost there{firstName ? `, ${firstName}` : ""}.
                 </DialogTitle>
                 <DialogDescription className="text-sm text-muted-foreground">
-                  We'll review your property and be in touch within 2 hours.
+                  Send your property details for our team to review.
                 </DialogDescription>
               </DialogHeader>
 
@@ -392,6 +336,7 @@ export function SellerModal({ open, onOpenChange }: SellerModalProps) {
                   </label>
                   {errors.consent && <p className="text-xs text-destructive">{errors.consent}</p>}
                 </div>
+                {errors.request ? <p role="alert" className="text-sm text-destructive">{errors.request}</p> : null}
                 <Button type="submit" disabled={isSubmitting} className="h-11 w-full bg-estate-700 text-white hover:bg-estate-600 disabled:opacity-50">
                   {isSubmitting ? <div className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Submitting...</div> : <><ArrowRight className="mr-1.5 h-4 w-4" /> Submit enquiry</>}
                 </Button>
@@ -409,10 +354,10 @@ export function SellerModal({ open, onOpenChange }: SellerModalProps) {
                 <Check className="h-7 w-7 text-estate-700" />
               </div>
               <DialogTitle className="font-serif text-2xl font-medium text-estate-700">
-                You're all set{firstName ? `, ${firstName}` : ""}. 🎉
+                Enquiry saved{firstName ? `, ${firstName}` : ""}.
               </DialogTitle>
               <DialogDescription className="mt-2 text-sm text-muted-foreground">
-                Our team will review your property details and be in touch within 2 hours.
+                Your property enquiry has been saved for our team to review and respond using the details you provided.
               </DialogDescription>
               <Button onClick={() => handleOpenChange(false)} className="mt-6 h-11 bg-estate-700 text-white hover:bg-estate-600">
                 Done

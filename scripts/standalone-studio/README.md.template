@@ -1,0 +1,32 @@
+# Haus Of Estate standalone Sanity Studio
+
+This folder is a separate React/Vite application alongside `Haus-of-Estate`.
+It connects to the existing Sanity project `jdxbkry4`, dataset `production`.
+Schemas and editorial actions are imported from the Release 2 app source, so
+Florence property fields and editorial approvals have one source of truth.
+
+```powershell
+cd C:/Users/surya/OneDrive/Documents/ChatGPT/studio-haus-of-estate
+npm.cmd install
+npm.cmd run dev
+```
+
+Open http://localhost:3333 and sign in with the account Deb invited to Sanity.
+The CLI can be authenticated separately with `npx.cmd sanity login`.
+The local initializer could not authenticate automatically on this machine.
+
+Run `npm.cmd run schema:validate`, `npm.cmd run typecheck`, and `npm.cmd run build`
+to verify local configuration. These do not publish documents or deploy the Studio.
+The production dataset is an explicit choice from the supplied setup instructions.
+
+The Next.js app runs separately on http://localhost:3000. Set
+`SANITY_STUDIO_PREVIEW_ORIGIN` in an untracked `.env.local` to change its preview
+origin. Draft preview also requires the app's server-only Sanity read token and
+matching Sanity CORS configuration. Never put secret tokens in `SANITY_STUDIO_*`.
+Use `localhost`, not `127.0.0.1`: the existing project accepts the localhost
+Studio origin, while the IP address displays Sanity's CORS connection prompt.
+
+`npm.cmd run typegen` extracts the shared schema and scans frontend queries. Its
+generated output stays in this folder until the app adopts query result types.
+Content import, publication, cloud schema deployment, and Studio deployment are
+separate actions; this local setup performs none of them.

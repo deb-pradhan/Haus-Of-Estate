@@ -8,6 +8,7 @@ import { teamMember } from './teamMember'
 import { testimonial } from './testimonial'
 import { cultureMoment } from './cultureMoment'
 import { contentTable, tableRow } from './contentTable'
+import { socialCampaign } from './socialCampaign'
 
 export const schemaTypes = [
   post,
@@ -21,4 +22,5 @@ export const schemaTypes = [
   cultureMoment,
   contentTable,
   tableRow,
+  socialCampaign,
 ]
