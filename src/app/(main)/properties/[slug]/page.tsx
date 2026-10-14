@@ -3,10 +3,11 @@ import { draftMode } from 'next/headers'
 import type { Metadata } from 'next'
 import { urlFor } from '@/sanity'
 import { sanityFetch } from '@/sanity/live'
-import { PROPERTY_BY_SLUG_QUERY, PROPERTY_SLUGS_QUERY } from '@/sanity/queries'
+import { PROPERTY_BY_SLUG_QUERY, PROPERTY_SLUGS_QUERY, PROPERTY_DEVELOPMENTS_QUERY } from '@/sanity/queries'
 import { DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGES } from '@/lib/seo'
 import { PropertyDetailView, type PropertyDetail } from '@/components/properties/PropertyDetailView'
 import { isConceptMedia } from '@/lib/property-media'
+import { findPropertyDevelopment, type PropertyDevelopment } from '@/lib/property-developments'
 
 export const revalidate = 60
 
@@ -29,7 +30,9 @@ export async function generateMetadata({
   })
   if (!property) return { title: 'Property' }
 
-  const ogImage = property.featuredImage
+  // Cropping a concept comparison can hide its BEFORE/AFTER labels. Use the
+  // branded social image; the page itself preserves the complete captioned board.
+  const ogImage = property.featuredImage && !isConceptMedia(property.featuredImage)
     ? urlFor(property.featuredImage)
         .width(1200)
         .height(630)
@@ -74,6 +77,10 @@ export default async function PropertyDetailPage({
   if (!property) notFound()
 
   const { isEnabled: draftPreview } = await draftMode()
+  const { data: developments } = !draftPreview && (property.unitType === 'Development' || property.masterDevelopment)
+    ? await sanityFetch<PropertyDevelopment[]>({ query: PROPERTY_DEVELOPMENTS_QUERY })
+    : { data: [] }
+  const development = findPropertyDevelopment(property, developments ?? [])
   // Project only usable image URLs; omit unresolved plot figures before they
   // cross the client boundary, including in Sanity Draft Mode.
   const detail: PropertyDetail = {
@@ -106,6 +113,8 @@ export default async function PropertyDetailPage({
     <PropertyDetailView
       property={detail}
       draftPreview={draftPreview}
+      development={development?._id === property._id ? development : undefined}
+      parentDevelopment={development && development._id !== property._id ? development : undefined}
       media={{
         hero: property.featuredImage ? {
           src: isConceptMedia(property.featuredImage)

@@ -177,6 +177,31 @@ const PROPERTY_CARD_FIELDS = `
   featuredImage
 `
 
+// Public community navigation must never reveal an unpublished parent or
+// collection, including when the caller is reviewing another document in Draft Mode.
+const PUBLISHED_DISCOVERABLE_PROPERTY = `
+  status == "published" &&
+  !(_id in path("drafts.**")) && !(_id in path("versions.**")) &&
+  !(coalesce(_originalId, _id) in path("drafts.**")) && !(coalesce(_originalId, _id) in path("versions.**")) &&
+  coalesce(listingState, "active") in ["active", "reserved", "under_offer"]
+`
+
+export const PROPERTY_DEVELOPMENTS_QUERY = `
+  *[_type == "property" && ${PUBLISHED_DISCOVERABLE_PROPERTY} && unitType == "Development"
+    && defined(slug.current) && defined(title) && defined(community) && defined(city) && defined(country)] {
+    ${PROPERTY_CARD_FIELDS},
+    amenities,
+    "collections": *[_type == "property" && ${PUBLISHED_DISCOVERABLE_PROPERTY}
+      && defined(slug.current) && masterDevelopment == ^.title
+      && community == ^.community && city == ^.city && country == ^.country
+      && unitType in ["Villa", "Townhouse"]] | order(bedrooms asc, title asc) {
+      ${PROPERTY_CARD_FIELDS},
+      "designCount": count(designVariants),
+      "designImage": designVariants[0].images[0]{"src": asset->url, alt, label}
+    }
+  }
+`
+
 export const PROPERTIES_QUERY = `
   *[_type == "property" && ${DISCOVERABLE_PROPERTY}]
     | order(featured desc, publishedAt desc) {

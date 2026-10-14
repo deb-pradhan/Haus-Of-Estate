@@ -4,7 +4,7 @@ import { draftMode } from 'next/headers'
 import { MapPin, BedDouble, Building2, ArrowRight, X } from 'lucide-react'
 import { urlFor } from '@/sanity'
 import { sanityFetch } from '@/sanity/live'
-import { PROPERTIES_FILTERED_QUERY } from '@/sanity/queries'
+import { PROPERTIES_FILTERED_QUERY, PROPERTY_DEVELOPMENTS_QUERY } from '@/sanity/queries'
 import { EmptyStateCTA } from '@/components/properties/empty-state-cta'
 import { Breadcrumbs } from '@/components/properties/breadcrumbs'
 import { PropertyPhotoBranding } from './property-photo-branding'
@@ -16,6 +16,9 @@ import { propertyPriceInput, type PropertyPricing } from '@/lib/currency'
 import { matchesPropertySearch, searchAmount } from '@/lib/property-search'
 import { PropertySearchForm } from './property-search-form'
 import { isLocalCataloguePreviewEnabled, loadCataloguePreviewGroups } from '@/lib/property-catalogue-preview'
+import { groupDevelopmentResults, type PropertyDevelopment } from '@/lib/property-developments'
+import { isConceptMedia, propertyMediaCaption, type PropertyImageMetadata } from '@/lib/property-media'
+import { PropertyDevelopmentCard } from './property-development'
 import {
   type Category,
   type Availability,
@@ -51,7 +54,7 @@ interface PropertyCard extends PropertyPricing {
   completionStatus?: string
   summary: string
   featured?: boolean
-  featuredImage?: { alt?: string } & Record<string, unknown>
+  featuredImage?: PropertyImageMetadata & { alt?: string } & Record<string, unknown>
   showHausLogo?: boolean
 }
 
@@ -140,7 +143,7 @@ export async function PropertyListing({
   const minBeds = !hideBeds && Number.isInteger(bedsRaw) && bedsRaw >= 0 ? bedsRaw : null
 
   // ── Fetch (server-side GROQ filtering) ────────────────────────────────
-  const [{ data: properties }, cataloguePreviews] = await Promise.all([sanityFetch<PropertyCard[]>({
+  const [{ data: properties }, cataloguePreviews, { data: developments }] = await Promise.all([sanityFetch<PropertyCard[]>({
     query: PROPERTIES_FILTERED_QUERY,
     params: {
       category: category || '',
@@ -153,7 +156,10 @@ export async function PropertyListing({
     category: category || undefined,
     availability: availability || undefined,
     intent: intent || undefined,
-  }) : Promise.resolve([])])
+  }) : Promise.resolve([]),
+  !draftPreview && !localCataloguePreview
+    ? sanityFetch<PropertyDevelopment[]>({ query: PROPERTY_DEVELOPMENTS_QUERY })
+    : Promise.resolve({ data: [] })])
   const fetched = properties ?? []
 
   // ── Remaining JS filters (geography + beds) ──────────────────────────
@@ -185,6 +191,9 @@ export async function PropertyListing({
     }
     return true
   })
+
+  const { groups: developmentGroups, properties: individualProperties } = groupDevelopmentResults(list, developments ?? [])
+  const resultCount = individualProperties.length + developmentGroups.length
 
   // ── Active-filter chips ───────────────────────────────────────────────
   const activeFilters: { label: string; key: FilterKey }[] = []
@@ -240,7 +249,7 @@ export async function PropertyListing({
 
   // ── Group by community ────────────────────────────────────────────────
   const byCommunity = new Map<string, PropertyCard[]>()
-  for (const p of list) {
+  for (const p of individualProperties) {
     const c = p.community || 'Other'
     if (!byCommunity.has(c)) byCommunity.set(c, [])
     byCommunity.get(c)!.push(p)
@@ -302,9 +311,9 @@ export async function PropertyListing({
           {hasFilters && (
             <div className="mb-10 flex flex-wrap items-center gap-3">
               <p className="text-sm font-medium text-estate-700">
-                {list.length === 0
+                {resultCount === 0
                   ? `No ${localCataloguePreview ? 'published ' : ''}${rentContextGlobal ? 'rentals' : 'listings'} match your filters`
-                  : `Showing ${list.length} ${localCataloguePreview ? 'published ' : ''}${list.length === 1 ? 'listing' : 'listings'}${rentContextGlobal ? ' to rent' : ''}`}
+                  : `Showing ${resultCount} ${localCataloguePreview ? 'published ' : ''}${resultCount === 1 ? 'listing' : 'listings'}${rentContextGlobal ? ' to rent' : ''}`}
               </p>
               <div className="flex flex-wrap items-center gap-2">
                 {activeFilters.map((f) => (
@@ -386,7 +395,15 @@ export async function PropertyListing({
           )}
 
           {localCataloguePreview && <p className="mb-6 text-sm font-medium text-estate-700">{list.length} published {list.length === 1 ? 'listing' : 'listings'}</p>}
-          {communities.length === 0 ? (
+          {developmentGroups.length > 0 && (
+            <section aria-labelledby="published-communities-title" className="mb-16">
+              <h2 id="published-communities-title" className="mb-6 font-serif text-2xl font-medium text-estate-700 md:text-3xl">Explore communities</h2>
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {developmentGroups.map((development) => <PropertyDevelopmentCard key={development._id} development={development} />)}
+              </div>
+            </section>
+          )}
+          {resultCount === 0 ? (
             hasFilters || forceCategory ? (
               <EmptyStateCTA
                 category={category || undefined}
@@ -439,13 +456,13 @@ export async function PropertyListing({
                             <div className="relative aspect-[4/3] overflow-hidden bg-estate-700">
                               {p.featuredImage ? (
                                 <Image
-                                  src={urlFor(p.featuredImage)
-                                    .width(800)
-                                    .height(600)
-                                    .url()}
+                                  src={isConceptMedia(p.featuredImage)
+                                    ? urlFor(p.featuredImage).ignoreImageParams().width(800).fit('max').url()
+                                    : urlFor(p.featuredImage).width(800).height(600).url()}
                                   alt={p.featuredImage.alt || p.title}
                                   fill
-                                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                  sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                                  className={isConceptMedia(p.featuredImage) ? 'object-contain' : 'object-cover transition-transform duration-500 group-hover:scale-105'}
                                 />
                               ) : (
                                 <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-estate-600 to-estate-800">
@@ -467,6 +484,7 @@ export async function PropertyListing({
                                 )}
                               </div>
                             </div>
+                            {propertyMediaCaption(p.featuredImage) && <p className="border-b border-border px-5 py-3 text-sm leading-relaxed text-estate-700">{propertyMediaCaption(p.featuredImage)}</p>}
                             <div className="flex flex-1 flex-col p-5">
                               <p className="font-serif text-[11px] font-semibold uppercase tracking-widest text-gold-500">
                                 {p.unitType}

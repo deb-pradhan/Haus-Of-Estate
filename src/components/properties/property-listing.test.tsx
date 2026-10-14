@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { PropertyListing } from './property-listing'
 import { generateMetadata } from '@/app/(main)/properties/page'
 import type { PropertyPreview } from '@/lib/property-previews'
-import { PROPERTIES_FILTERED_QUERY } from '@/sanity/queries'
+import { PROPERTIES_FILTERED_QUERY, PROPERTY_DEVELOPMENTS_QUERY } from '@/sanity/queries'
 
 const controls = vi.hoisted(() => ({
   draftMode: vi.fn(),
@@ -79,6 +79,50 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs())
 
 describe('property catalogue draft isolation', () => {
+  it('groups published Florence collections without duplicate cards and honors child bedroom filters', async () => {
+    const development = {
+      _id: 'published-florence', title: 'Azizi Florence', slug: 'azizi-florence', unitType: 'Development',
+      community: 'Florence', city: 'Sharjah', country: 'United Arab Emirates', summary: 'Florence community overview.',
+    }
+    const collections = [
+      { bedrooms: 4, unitType: 'Villa', priceAmount: 3_350_000 },
+      { bedrooms: 5, unitType: 'Villa', priceAmount: 4_200_000 },
+      { bedrooms: 3, unitType: 'Townhouse', priceAmount: 1_890_000 },
+    ].map((home) => ({
+      ...development, ...home, _id: `collection-${home.bedrooms}`, title: `${home.bedrooms}-bedroom collection`,
+      slug: `collection-${home.bedrooms}`, masterDevelopment: 'Azizi Florence', priceCurrency: 'AED', priceDisplay: 'Clusters 1 & 2',
+    }))
+    controls.fetch.mockImplementation(async ({ query }) => ({ data: query === PROPERTY_DEVELOPMENTS_QUERY
+      ? [{ ...development, collections }] : [development, ...collections] }))
+
+    const html = renderToStaticMarkup(await PropertyListing({ params: { beds: '5' } }))
+    expect(html).toContain('Showing 1 listing')
+    expect(html).toContain('href="/properties/azizi-florence"')
+    expect(html).toContain('4,200,000')
+    expect(html).not.toContain('3,350,000')
+    expect(html).not.toContain('Townhouses</dt>')
+    expect(html).not.toContain('href="/properties/collection-')
+    expect(html).not.toContain('No properties live')
+    expect(html).not.toContain('/dev/property-previews')
+  })
+
+  it('keeps London concept cards complete and visibly captioned', async () => {
+    controls.fetch.mockImplementation(async ({ query }) => ({ data: query === PROPERTY_DEVELOPMENTS_QUERY ? [] : [{
+      _id: 'london', title: 'North London house', slug: 'north-london-house', community: 'North London', city: 'London',
+      unitType: 'Terraced House', summary: 'Existing views and proposed concepts.', featuredImage: {
+        asset: { _ref: 'image-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-1600x900-jpg' }, mediaKind: 'concept-comparison',
+        alt: 'Existing view beside proposed interiors', caption: 'Proposed interiors are AI-assisted concepts, not completed works.',
+        crop: { top: 0.1, bottom: 0.1, left: 0.2, right: 0.2 },
+      },
+    }] }))
+    const html = renderToStaticMarkup(await PropertyListing({ params: {} }))
+    expect(html).toContain('object-contain')
+    expect(html).toContain('Proposed interiors are AI-assisted concepts, not completed works.')
+    expect(html).toContain('fit%3Dmax')
+    expect(html).not.toContain('rect%3D')
+    expect(html).not.toContain('h%3D600')
+  })
+
   it('keeps saving available on the public catalogue', async () => {
     const html = renderToStaticMarkup(await PropertyListing({ params: {} }))
     expect(html).toContain('Florence villas')

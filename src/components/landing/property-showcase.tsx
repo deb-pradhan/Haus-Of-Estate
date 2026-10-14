@@ -12,6 +12,7 @@ import { sanityDocumentIdSchema } from "@/lib/saved-content/contracts";
 import { PropertyPrice } from "@/components/currency/property-price";
 import { propertyPriceInput, type PropertyPricing } from "@/lib/currency";
 import { PropertyPhotoBranding } from "@/components/properties/property-photo-branding";
+import { isConceptMedia, propertyMediaCaption, type PropertyImageMetadata } from "@/lib/property-media";
 
 interface FeaturedProperty extends PropertyPricing {
   _id: string;
@@ -28,7 +29,7 @@ interface FeaturedProperty extends PropertyPricing {
   rentPriceDisplay?: string;
   completionStatus?: string;
   summary: string;
-  featuredImage?: { alt?: string } & Record<string, unknown>;
+  featuredImage?: { alt?: string } & PropertyImageMetadata & Record<string, unknown>;
   showHausLogo?: boolean;
 }
 
@@ -70,41 +71,55 @@ function PropertyCard({
   property: FeaturedProperty;
   canSave: boolean;
 }) {
+  const conceptImage = isConceptMedia(property.featuredImage);
+  const mediaCaption = propertyMediaCaption(property.featuredImage);
+
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-estate-700/5">
       <Link
         href={`/properties/${property.slug}`}
         className="flex flex-1 flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-estate-700/50 focus-visible:ring-inset"
       >
-        <div className="relative aspect-[4/3] overflow-hidden bg-estate-700">
-          {property.featuredImage ? (
-            <Image
-              src={urlFor(property.featuredImage).width(800).height(600).url()}
-              alt={buildAlt(property)}
-              fill
-              sizes="(max-width: 767px) calc(100vw - 2rem), (max-width: 1279px) 33vw, 400px"
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-estate-600 to-estate-800">
-              <Building2 className="h-10 w-10 text-white/30" />
+        <figure>
+          <div className="relative aspect-[4/3] overflow-hidden bg-estate-700">
+            {property.featuredImage ? (
+              <Image
+                src={conceptImage
+                  ? urlFor(property.featuredImage).ignoreImageParams().width(800).fit("max").url()
+                  : urlFor(property.featuredImage).width(800).height(600).url()}
+                alt={buildAlt(property)}
+                fill
+                sizes="(max-width: 767px) calc(100vw - 2rem), (max-width: 1279px) 33vw, 400px"
+                className={conceptImage
+                  ? "object-contain"
+                  : "object-cover transition-transform duration-500 group-hover:scale-105"}
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-estate-600 to-estate-800">
+                <Building2 className="h-10 w-10 text-white/30" />
+              </div>
+            )}
+            {property.featuredImage && <PropertyPhotoBranding enabled={property.showHausLogo} />}
+            <div className="absolute left-3 top-3 flex max-w-[calc(100%-4.25rem)] flex-wrap items-center gap-1.5">
+              {property.completionStatus && (
+                <span className="rounded-full bg-surface/95 px-3 py-1 text-[11px] font-semibold text-estate-700 shadow-sm">
+                  {COMPLETION_LABEL[property.completionStatus] ??
+                    property.completionStatus}
+                </span>
+              )}
+              {saleRentLabel(property.listingType) && (
+                <span className="rounded-full bg-estate-700/90 px-3 py-1 text-[11px] font-semibold text-white shadow-sm">
+                  {saleRentLabel(property.listingType)}
+                </span>
+              )}
             </div>
-          )}
-          {property.featuredImage && <PropertyPhotoBranding enabled={property.showHausLogo} />}
-          <div className="absolute left-3 top-3 flex max-w-[calc(100%-4.25rem)] flex-wrap items-center gap-1.5">
-            {property.completionStatus && (
-              <span className="rounded-full bg-surface/95 px-3 py-1 text-[11px] font-semibold text-estate-700 shadow-sm">
-                {COMPLETION_LABEL[property.completionStatus] ??
-                  property.completionStatus}
-              </span>
-            )}
-            {saleRentLabel(property.listingType) && (
-              <span className="rounded-full bg-estate-700/90 px-3 py-1 text-[11px] font-semibold text-white shadow-sm">
-                {saleRentLabel(property.listingType)}
-              </span>
-            )}
           </div>
-        </div>
+          {mediaCaption && (
+            <figcaption className="border-b border-border px-4 py-2 text-xs leading-relaxed text-muted-foreground">
+              {mediaCaption}
+            </figcaption>
+          )}
+        </figure>
 
         <div className="flex flex-1 flex-col p-4">
           <p className="font-serif text-[11px] font-semibold uppercase tracking-widest text-gold-500">

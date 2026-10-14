@@ -3,7 +3,9 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { LeadOpenOptions, LeadProjectContext } from '@/components/lead-eoi/types'
 import { PropertyDetailView, type PropertyDetail, type PropertyMedia } from './PropertyDetailView'
-import PropertyDetailPage from '@/app/(main)/properties/[slug]/page'
+import PropertyDetailPage, { generateMetadata } from '@/app/(main)/properties/[slug]/page'
+import { PROPERTY_DEVELOPMENTS_QUERY } from '@/sanity/queries'
+import { DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGES } from '@/lib/seo'
 
 const controls = vi.hoisted(() => ({
   save: vi.fn(),
@@ -71,6 +73,49 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs())
 
 describe('shared property details', () => {
+  it('renders the published community overview, grouped home links and public parent navigation', async () => {
+    controls.urlFor.mockReturnValue({ width: vi.fn().mockReturnThis(), height: vi.fn().mockReturnThis(), fit: vi.fn().mockReturnThis(), url: () => '/sized-villa-design.jpg' })
+    const overview = { ...property, unitType: 'Development' }
+    const villa = { ...property, _id: 'villa-four', title: 'Four-bedroom villas', slug: 'florence-four-villas',
+      masterDevelopment: property.title, unitType: 'Villa', bedrooms: 4, priceAmount: 3_350_000, priceCurrency: 'AED',
+      priceDisplay: 'AED 3,350,000 · Clusters 1 & 2', designCount: 2,
+      designImage: { src: '/villa-design.jpg', alt: 'Matched villa design' },
+    }
+    const townhouse = { ...villa, _id: 'townhouse-three', title: 'Three-bedroom townhouses', slug: 'florence-three-townhouses', unitType: 'Townhouse', bedrooms: 3 }
+    const development = { ...overview, collections: [villa, townhouse] }
+    controls.fetch.mockImplementation(async ({ query }) => ({ data: query === PROPERTY_DEVELOPMENTS_QUERY ? [development] : overview }))
+    const html = renderToStaticMarkup(await PropertyDetailPage({ params: Promise.resolve({ slug: overview.slug }) }))
+    expect(html.match(/<h1\b/g)).toHaveLength(1)
+    expect(html).toContain('Community overview · Dubai')
+    expect(html).toContain('id="villas"')
+    expect(html).toContain('id="townhouses"')
+    expect(html).toContain('href="/properties/florence-four-villas"')
+    expect(html).toContain('href="/properties/florence-three-townhouses"')
+    expect(html).toContain('Matched villa design')
+    expect(html).toContain('2 brochure designs')
+    expect(html).toContain('Clusters 1 &amp; 2')
+    expect(html).toContain('current availability are confirmed on enquiry')
+    expect(html).not.toContain('/dev/property-previews')
+
+    controls.fetch.mockImplementation(async ({ query }) => ({ data: query === PROPERTY_DEVELOPMENTS_QUERY ? [development] : villa }))
+    const child = renderToStaticMarkup(await PropertyDetailPage({ params: Promise.resolve({ slug: villa.slug }) }))
+    const breadcrumb = child.match(/<nav aria-label="Breadcrumb">[\s\S]*?<\/nav>/)?.[0] ?? ''
+    expect(breadcrumb).toContain('href="/properties/azizi-florence"')
+    expect(child).toContain('View the Azizi Florence community overview')
+
+    controls.fetch.mockImplementation(async ({ query }) => ({ data: query === PROPERTY_DEVELOPMENTS_QUERY ? [] : villa }))
+    const withoutParent = renderToStaticMarkup(await PropertyDetailPage({ params: Promise.resolve({ slug: villa.slug }) }))
+    expect(withoutParent).not.toContain('href="/properties/azizi-florence"')
+  })
+
+  it.each(['concept', 'concept-comparison'] as const)('uses branded social metadata for %s without cropping its labels', async (mediaKind) => {
+    controls.fetch.mockResolvedValue({ data: { ...property, featuredImage: { mediaKind, alt: 'Before and proposed after' } } })
+    const metadata = await generateMetadata({ params: Promise.resolve({ slug: property.slug }) })
+    expect(metadata.openGraph?.images).toEqual(DEFAULT_OG_IMAGES)
+    expect(metadata.twitter && 'images' in metadata.twitter ? metadata.twitter.images : undefined).toEqual([DEFAULT_OG_IMAGE])
+    expect(controls.urlFor).not.toHaveBeenCalled()
+  })
+
   it('shows supplied property plans uncropped and separately from proposed interiors, with the source area wording', () => {
     const html = renderToStaticMarkup(<PropertyDetailView
       property={{ ...property, _id: 'drafts.london',

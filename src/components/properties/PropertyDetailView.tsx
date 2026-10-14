@@ -18,6 +18,8 @@ import type { PropertyDesign, PropertyInteriorScheme } from '@/lib/property-desi
 import { isConceptMedia, propertyMediaCaption, type PropertyImageMetadata, type PropertyMediaImage } from '@/lib/property-media'
 import { PropertyPhotoBranding } from './property-photo-branding'
 import { PropertyDesignExplorer } from './PropertyDesignExplorer'
+import { PropertyDevelopmentShowcase } from './property-development'
+import type { PropertyDevelopment } from '@/lib/property-developments'
 
 interface LocationBenefit {
   destination?: string
@@ -71,11 +73,13 @@ const COMPLETION_LABEL: Record<string, string> = {
   'completed-offplan': 'Completed & off-plan',
 }
 
-export function PropertyDetailView({ property, media, preview, draftPreview = false }: {
+export function PropertyDetailView({ property, media, preview, draftPreview = false, development, parentDevelopment }: {
   property: PropertyDetail
   media: PropertyMedia
   preview?: { kind: 'development' | 'home-type' | 'property' }
   draftPreview?: boolean
+  development?: PropertyDevelopment
+  parentDevelopment?: Pick<PropertyDevelopment, 'title' | 'slug'>
 }) {
   const enquiryEmail = property.enquiryEmail || 'info@hausofestate.com'
   const enquiryHref = `mailto:${enquiryEmail}?subject=${encodeURIComponent(
@@ -96,7 +100,7 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
     ...(preview ? [{ label: 'Draft previews', href: '/dev/property-previews' }] : []),
     ...(preview?.kind === 'home-type'
       ? [{ label: 'Azizi Florence', href: '/dev/property-previews/azizi-florence' }]
-      : []),
+      : parentDevelopment ? [{ label: parentDevelopment.title, href: `/properties/${parentDevelopment.slug}` }] : []),
     { label: property.title },
   ]
   const hasConceptGallery = media.gallery.some(isConceptMedia)
@@ -228,6 +232,7 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
       </div>
 
       {/* Hero image */}
+      {development ? <PropertyDevelopmentShowcase development={development} hero={hero} /> : <>
       <div className="relative aspect-[16/9] max-h-[460px] w-full overflow-hidden bg-estate-700">
         {hero ? (
           <Image
@@ -252,11 +257,13 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
       {firstDesign?.images[0] && (
         <p className="mx-auto max-w-6xl px-4 pt-3 text-xs leading-relaxed text-muted-foreground md:px-6">{firstDesign.label} · {firstDesign.images[0].label || firstDesign.images[0].alt}</p>
       )}
+      </>}
 
       <div className="mx-auto max-w-6xl px-4 py-12 md:px-6 md:py-16">
         <div className="grid gap-12 lg:grid-cols-[1fr_340px]">
           {/* Main */}
           <div>
+            {!development && <>
             <p className="font-serif text-xs font-medium uppercase tracking-[0.22em] text-gold-500">
               {property.unitType || (individualPreview ? property.listingType?.includes('sale') ? 'For sale' : 'Individual property' : preview ? 'Master community' : '')}
               {property.completionStatus
@@ -293,6 +300,8 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
             {preview?.kind === 'home-type' && (
               <Link href="/dev/property-previews/azizi-florence" className="mt-4 inline-flex text-sm text-estate-700 underline underline-offset-4">View the Florence community overview</Link>
             )}
+            {parentDevelopment && <Link href={`/properties/${parentDevelopment.slug}`} className="mt-4 inline-flex text-sm text-estate-700 underline underline-offset-4">View the {parentDevelopment.title} community overview</Link>}
+            </>}
 
             {publicActionsEnabled && (
               <div className="mt-4 lg:hidden">
@@ -306,7 +315,7 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
             )}
 
             {/* Fact strip */}
-            <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {!development && <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
               {facts.map((f) => (
                 <div
                   key={f.label}
@@ -321,7 +330,7 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
                   </p>
                 </div>
               ))}
-            </div>
+            </div>}
 
             {hasDesigns && (
               <PropertyDesignExplorer

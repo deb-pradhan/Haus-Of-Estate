@@ -1,5 +1,22 @@
 # Haus releases
 
+## London and Florence publication preparation — 14 October 2026
+
+See the [current property release handoff](property-release-2026-10-14.md). Surya
+requested the London listing and Florence community journey on the public site.
+London is now in Sanity as a native draft with its supplied plan; the five existing
+Florence collection drafts now contain nineteen brochure designs and their plans.
+The existing overview was retained. All unrelated property revisions and existing
+published records were verified unchanged. This supersedes earlier notes that
+London had not been imported or Florence's latest designs existed only locally.
+
+The application changes add the published-only community catalogue/grouped detail
+journey and preserve complete, captioned London concept boards on public cards.
+Deb must deploy the reviewed Release 2 application before the intended seven
+records are published through the editorial workflow. This does not release other
+held content or enable intake, delivery, accounts or AskHaus. Existing-domain DNS
+and customer email automation are separate from this content release.
+
 ## Analytics integration — 5 October 2026
 
 Merge ancestry, actual local test results and remaining release boundaries are
