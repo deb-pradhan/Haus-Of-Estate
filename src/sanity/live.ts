@@ -29,7 +29,9 @@ export async function sanityFetch<const T>({
   try {
     // Keep source-map encoding off until every URL, comparison, metadata field,
     // and JSON-LD value has been audited for invisible stega characters.
-    const result = await liveFetch({ query, params, stega: false });
+    // Match the signed webhook's shared tag. next-sanity's generated sync tags
+    // are different and do not, by themselves, respond to revalidateTag('sanity').
+    const result = await liveFetch({ query, params, stega: false, tags: ['sanity'] });
     return { data: result.data as T };
   } catch (error) {
     console.error("Sanity fetch failed", {

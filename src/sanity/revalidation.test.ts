@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { getSanityRevalidationTargets } from './revalidation'
 
 describe('getSanityRevalidationTargets', () => {
-  it('revalidates property lists plus current and previous detail URLs', () => {
+  it('refreshes property discovery, community relationships and current/previous URLs', () => {
     const targets = getSanityRevalidationTargets({
       _id: 'drafts.property-1',
       _type: 'property',
@@ -15,12 +15,16 @@ describe('getSanityRevalidationTargets', () => {
       expect.arrayContaining([
         { path: '/' },
         { path: '/properties' },
+        { path: '/properties/[slug]', type: 'page' },
+        { path: '/api/property-locations' },
+        { path: '/sitemap' },
         { path: '/properties/new-slug' },
         { path: '/properties/old-slug' },
         { path: '/sitemap.xml' },
       ]),
     )
     expect(targets?.tags).toContain('sanity:property:property-1')
+    expect(targets?.tags).toContain('sanity')
   })
 
   it('never interprets a malformed slug as a path', () => {

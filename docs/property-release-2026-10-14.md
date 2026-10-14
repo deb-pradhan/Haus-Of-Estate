@@ -1,5 +1,7 @@
 # London and Florence release handoff — 14 October 2026
 
+The [15 October combined launch checklist](london-florence-launch-checklist.md) contains the exact seven Studio identities, refreshed asset check, publication-state validation and final publication steps. Both London and Florence use this same release; neither needs a new content model.
+
 Surya relayed Sonia's request to show the London property and the website updates on the public site, and asked to release Florence with the accepted community/collection/design journey. Continue the existing Release 2 branch and draft PR #16. This request does not enable automatic customer emails, accounts, saved content, AskHaus or careers intake.
 
 ## Current release evidence

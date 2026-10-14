@@ -112,6 +112,11 @@ export const getSanityRevalidationTargets = (
         { path: '/properties' },
         { path: '/properties/residential' },
         { path: '/properties/commercial' },
+        // A collection changes the parent showcase and sibling navigation too.
+        // The webhook does not need to accept or look up additional parent URLs.
+        { path: '/properties/[slug]', type: 'page' },
+        { path: '/api/property-locations' },
+        { path: '/sitemap' },
         { path: '/sitemap.xml' },
         ...detailPaths('/properties', currentSlug, previousSlug),
       )
