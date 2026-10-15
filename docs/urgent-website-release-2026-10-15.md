@@ -46,3 +46,15 @@ The London images and plan were already uploaded. Do not upload raw source folde
 - No fresh desktop/mobile browser result is claimed: local inspection was blocked by browser security policy. Review/deployed visual checks remain required. Mocked analytics checks do not establish real GA4 receipt.
 
 Local checks do not establish a successful Railway deployment, native Sanity publication or hosted visual acceptance. No production content, account permissions or outbound customer messaging is changed by this branch preparation.
+
+## Pre-merge review — 16 October 2026
+
+Surya explicitly authorised merging this focused PR after local visual/function checks, leaving Railway build approval with Deb. This does not authorise publishing Florence or merging PR #16.
+
+Browser inspection now works through the same supported in-app browser. The historical tool rejection reported a disallowed URL protocol even though the supplied target was HTTP; it did not establish a blanket localhost restriction. An internal error-page URL is a possible explanation, not a confirmed root cause.
+
+- Reviewed the unchanged `da9be9c0` production build on loopback port 3019: catalogue-to-Monaco navigation, photo rendering, breadcrumbs, desktop footer, loaded 80px white PolicyBee badge, blog listing/article company attribution and the legal identity block. Mobile blog/footer review at 390px showed no horizontal overflow; inspected pages produced no browser console errors.
+- Reviewed London on desktop and mobile using an explicitly labelled, unpublished SSR fixture outside Git. It rendered the exact committed property component with the saved native draft revision `00fe5fb0-f827-483c-b8e2-b15675410b19`, real Portable Text, real Next Image markup and production CSS. All six images loaded, comparison labels/captions remained visible, the GIA text was readable, and the full floor-plan link opened the supplied 1169 × 1983 image in a new tab. No horizontal overflow was found.
+- The London fixture substitutes the saved draft at the data-fetch boundary and uses unoptimised CDN images; it is not a production route, publication test or hydrated full-site preview. Public draft exclusion remains covered separately by the passing GROQ tests. No app gates or CMS records were changed for this review.
+- Reran the careers-closure suite against the running production build: **4/4 passed**, including the previously skipped page/role/prefetch/application-entry-point test. Together with the unchanged 15 October suites, all 26 distinct checks now have a passing result. No application email was sent.
+- No new release-blocking anomaly was found. This follow-up changes documentation only; app code, dependencies and build artifacts are unchanged. Deployment verification and native London publication remain separate steps after the merge.
