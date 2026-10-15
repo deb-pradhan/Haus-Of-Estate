@@ -2,6 +2,28 @@ import { defineType, defineField, defineArrayMember } from 'sanity'
 import HomeIcon from '@sanity/icons/Home'
 import { ALL_UNIT_TYPES } from '../../lib/property-taxonomy'
 
+const propertyImageContext = [
+  defineField({
+    name: 'caption',
+    title: 'Visible image caption',
+    type: 'string',
+    description: 'Displayed below the image. Clearly identify proposed interiors, AI-assisted concepts and comparison images; do not describe them as completed works.',
+  }),
+  defineField({
+    name: 'mediaKind',
+    title: 'Image context',
+    type: 'string',
+    description: 'Optional for existing photos. Mark concept images so the full image and a visible concept label are shown.',
+    options: {
+      list: [
+        { title: 'Photograph', value: 'photo' },
+        { title: 'Proposed interiors / AI-assisted concept', value: 'concept' },
+        { title: 'Existing view and proposed interiors comparison', value: 'concept-comparison' },
+      ],
+    },
+  }),
+]
+
 export const property = defineType({
   name: 'property',
   title: 'Property',
@@ -290,6 +312,7 @@ export const property = defineType({
       type: 'image',
       options: { hotspot: true },
       fields: [
+        ...propertyImageContext,
         defineField({
           name: 'alt',
           title: 'Alt Text',
@@ -303,7 +326,29 @@ export const property = defineType({
       name: 'gallery',
       title: 'Gallery',
       type: 'array',
-      of: [defineArrayMember({ type: 'image', options: { hotspot: true } })],
+      of: [defineArrayMember({
+        type: 'image',
+        options: { hotspot: true },
+        fields: [
+          ...propertyImageContext,
+          defineField({ name: 'alt', title: 'Alt text', type: 'string' }),
+        ],
+      })],
+    }),
+    defineField({
+      name: 'floorPlans',
+      title: 'Property floor plans',
+      type: 'array',
+      description: 'Supplied plans for this property, separate from gallery images. Preserve the full plan, measurements and disclaimer.',
+      of: [defineArrayMember({
+        type: 'image',
+        options: { hotspot: false },
+        fields: [
+          defineField({ name: 'alt', title: 'Alt text', type: 'string', validation: (rule) => rule.required() }),
+          defineField({ name: 'caption', title: 'Caption / measurement disclaimer', type: 'string' }),
+          defineField({ name: 'mediaKind', title: 'Image context', type: 'string', initialValue: 'floor-plan', options: { list: [{ title: 'Floor plan', value: 'floor-plan' }] } }),
+        ],
+      })],
     }),
     defineField({
       name: 'videoUrl',

@@ -3,7 +3,8 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
-import { urlFor } from '@/sanity'
+import { BLOG_AUTHOR_NAME } from '@/lib/blog-author'
+import { blogThumbnailPosition } from '@/lib/blog-thumbnail'
 import { FALLBACK_IMAGES, FALLBACK_ALTS } from '@/sanity/fallbackImages'
 
 interface Post {
@@ -11,8 +12,7 @@ interface Post {
   title: string
   subtitle?: string
   slug: string
-  featuredImage?: any
-  author?: { name: string; avatar?: any; role?: string }
+  featuredImage?: { url?: string; asset?: { url?: string }; alt?: string }
   categories?: Array<{ title: string; slug: string; color?: string }>
   publishedAt: string
   readMins?: number
@@ -48,8 +48,8 @@ export function BlogCard({ post, variant = 'default', index = 0 }: BlogCardProps
     return (
       <Link href={`/blog/${post.slug}`} className="group flex items-start gap-3">
         {imageUrl && (
-          <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-stone-100">
-            <Image src={imageUrl} alt={alt} fill sizes="56px" className="object-cover" />
+          <div className="relative aspect-video w-24 flex-shrink-0 overflow-hidden rounded-lg bg-stone-100">
+            <Image src={imageUrl} alt={alt} fill sizes="96px" className="object-cover" style={{ objectPosition: blogThumbnailPosition(imageUrl) }} />
           </div>
         )}
         <div className="min-w-0">
@@ -69,24 +69,21 @@ export function BlogCard({ post, variant = 'default', index = 0 }: BlogCardProps
       style={{ animationDelay: `${Math.min(index, 8) * 70}ms`, animationFillMode: 'both' }}
       className="group flex animate-fade-up flex-col overflow-hidden rounded-2xl border border-border/70 bg-surface transition-all duration-300 hover:-translate-y-1.5 hover:border-transparent hover:shadow-[0_20px_50px_-20px_rgba(30,31,33,0.28)] motion-reduce:animate-none"
     >
-      <div className="relative aspect-[16/10] overflow-hidden bg-stone-100">
+      <div className="relative aspect-video overflow-hidden bg-stone-100">
         {imageUrl && (
           <Image
             src={imageUrl}
             alt={alt}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 380px"
-            className="object-cover transition-transform duration-[800ms] ease-out group-hover:scale-[1.06]"
+            className="object-cover"
+            style={{ objectPosition: blogThumbnailPosition(imageUrl) }}
           />
-        )}
-        {eyebrow && (
-          <span className="absolute left-4 top-4 rounded-full bg-white/85 px-3 py-1 text-xs font-semibold text-ink-900 shadow-sm backdrop-blur-md">
-            {eyebrow}
-          </span>
         )}
       </div>
 
       <div className="flex flex-1 flex-col p-6">
+        {eyebrow && <p className="mb-3 text-xs font-semibold text-estate-700">{eyebrow}</p>}
         <p className="flex items-center gap-2 text-xs font-medium text-slate-700">
           <span>{formatDate(post.publishedAt)}</span>
           <span className="h-1 w-1 rounded-full bg-mist-400" />
@@ -103,19 +100,7 @@ export function BlogCard({ post, variant = 'default', index = 0 }: BlogCardProps
 
         <div className="mt-6 flex items-center justify-between border-t border-border/60 pt-4">
           <span className="flex items-center gap-2.5">
-            {post.author?.avatar && (
-              <span className="relative h-7 w-7 overflow-hidden rounded-full ring-1 ring-black/5">
-                <Image
-                  src={urlFor(post.author.avatar).width(56).height(56).url()}
-                  alt={post.author.name}
-                  fill
-                  className="object-cover"
-                />
-              </span>
-            )}
-            {post.author?.name && (
-              <span className="text-sm font-medium text-ink-900">{post.author.name}</span>
-            )}
+            <span className="text-sm font-medium text-ink-900">By {BLOG_AUTHOR_NAME}</span>
           </span>
           <span className="flex h-8 w-8 items-center justify-center rounded-full text-estate-700 transition-all duration-300 group-hover:bg-estate-700 group-hover:text-white">
             <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />

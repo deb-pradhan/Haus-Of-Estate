@@ -1,7 +1,8 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
-import { urlFor } from '@/sanity'
+import { BLOG_AUTHOR_NAME } from '@/lib/blog-author'
+import { blogThumbnailPosition } from '@/lib/blog-thumbnail'
 import { FALLBACK_IMAGES, FALLBACK_ALTS } from '@/sanity/fallbackImages'
 
 interface FeaturedPostProps {
@@ -10,8 +11,7 @@ interface FeaturedPostProps {
     title: string
     subtitle?: string
     slug: string
-    featuredImage?: any
-    author?: { name: string; avatar?: any; role?: string }
+    featuredImage?: { url?: string; asset?: { url?: string }; alt?: string }
     categories?: Array<{ title: string; slug: string; color?: string }>
     publishedAt: string
     readMins?: number
@@ -43,23 +43,22 @@ export function FeaturedPost({ post }: FeaturedPostProps) {
       href={`/blog/${post.slug}`}
       className="group relative block overflow-hidden rounded-[1.5rem] bg-ink-900 ring-1 ring-black/5 md:rounded-[2rem]"
     >
-      <div className="relative aspect-[4/5] w-full sm:aspect-[16/10] lg:aspect-[21/9]">
+      <div className="relative aspect-video w-full">
         {imageUrl && (
           <Image
             src={imageUrl}
             alt={alt}
             fill
-            priority
+            preload
             sizes="(max-width: 1024px) 100vw, 1216px"
-            className="object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.04]"
+            className="object-cover"
+            style={{ objectPosition: blogThumbnailPosition(imageUrl) }}
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-ink-900 via-ink-900/55 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-ink-900/60 via-transparent to-transparent" />
       </div>
 
       {/* Content */}
-      <div className="absolute inset-x-0 bottom-0 p-6 sm:p-9 lg:p-12">
+      <div className="p-6 sm:p-9 lg:p-12">
         <div className="flex items-end justify-between gap-6">
           <div className="max-w-2xl">
             <div className="flex items-center gap-3">
@@ -87,17 +86,7 @@ export function FeaturedPost({ post }: FeaturedPostProps) {
             )}
 
             <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-white/75">
-              {post.author?.avatar && (
-                <span className="relative h-8 w-8 overflow-hidden rounded-full ring-2 ring-white/25">
-                  <Image
-                    src={urlFor(post.author.avatar).width(64).height(64).url()}
-                    alt={post.author.name}
-                    fill
-                    className="object-cover"
-                  />
-                </span>
-              )}
-              {post.author?.name && <span className="font-medium text-white">{post.author.name}</span>}
+              <span className="font-medium text-white">By {BLOG_AUTHOR_NAME}</span>
               <span className="text-white/40">·</span>
               <span>{date}</span>
               <span className="text-white/40">·</span>

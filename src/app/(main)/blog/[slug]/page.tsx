@@ -3,7 +3,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Suspense } from 'react'
 import { ChevronRight, Clock, CalendarDays } from 'lucide-react'
-import { sanityFetch, urlFor } from '@/sanity'
+import { sanityFetch } from '@/sanity'
+import { BLOG_AUTHOR_NAME, BLOG_AUTHOR_JSON_LD } from '@/lib/blog-author'
 import { POST_BY_SLUG_QUERY, RELATED_POSTS_QUERY, SEO_QUERY } from '@/sanity/queries'
 import {
   PortableTextRenderer,
@@ -95,7 +96,6 @@ async function PostContent({ slug }: { slug: string }) {
 
   const { url: imageUrl, alt } = getPostImageUrl(post)
   const readMins = readingTimeFromBlocks(post.body)
-  const authorName = post.author?.name || 'Haus of Estate'
   const primaryCategory = post.categories?.[0]
   const tags = (post.categories || []).map((c) => ({ title: c.title, slug: c.slug }))
 
@@ -108,7 +108,7 @@ async function PostContent({ slug }: { slug: string }) {
     ...(post.publishedAt
       ? { datePublished: post.publishedAt, dateModified: post.publishedAt }
       : {}),
-    author: { '@type': 'Person', name: authorName },
+    author: BLOG_AUTHOR_JSON_LD,
     publisher: {
       '@type': 'Organization',
       name: 'Haus of Estate',
@@ -158,17 +158,7 @@ async function PostContent({ slug }: { slug: string }) {
 
           <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3 text-sm text-slate-700">
             <span className="flex items-center gap-2">
-              {post.author?.avatar && (
-                <span className="relative h-8 w-8 overflow-hidden rounded-full ring-1 ring-black/5">
-                  <Image
-                    src={urlFor(post.author.avatar).width(64).height(64).url()}
-                    alt={authorName}
-                    fill
-                    className="object-cover"
-                  />
-                </span>
-              )}
-              <span className="font-medium text-ink-900">{authorName}</span>
+              <span className="font-medium text-ink-900">By {BLOG_AUTHOR_NAME}</span>
             </span>
             {primaryCategory && (
               <Link
@@ -197,14 +187,14 @@ async function PostContent({ slug }: { slug: string }) {
 
         {/* Hero image */}
         {imageUrl && (
-          <div className="relative mt-8 aspect-[16/10] overflow-hidden rounded-2xl bg-stone-100 sm:aspect-[16/9] md:rounded-3xl">
+          <div className="relative mt-8 aspect-video overflow-hidden rounded-2xl bg-stone-100 md:rounded-3xl">
             <Image
               src={imageUrl}
               alt={alt}
               fill
-              priority
+              preload
               sizes="(max-width: 1152px) 100vw, 1152px"
-              className="object-cover"
+              className="object-contain"
             />
           </div>
         )}
@@ -213,11 +203,9 @@ async function PostContent({ slug }: { slug: string }) {
         <div className="mt-12 grid gap-12 lg:grid-cols-12 lg:gap-16">
           <div className="min-w-0 lg:col-span-8">
             {post.body && <PortableTextRenderer content={post.body} />}
-            {post.author && (
-              <div className="mt-14 border-t border-border pt-10">
-                <AuthorCard author={post.author} variant="full" />
-              </div>
-            )}
+            <div className="mt-14 border-t border-border pt-10">
+              <AuthorCard variant="full" />
+            </div>
           </div>
           <div className="lg:col-span-4">
             <BlogSidebar

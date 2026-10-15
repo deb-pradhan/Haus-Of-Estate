@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { COMPANY_IDENTITY } from "@/lib/company-identity";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
@@ -32,7 +33,7 @@ export default function PrivacyPolicyPage() {
         <div className="mb-8">
           <p className="font-serif text-sm font-medium uppercase tracking-widest text-gold-500 mb-2">Legal</p>
           <h1 className="font-serif text-4xl font-medium text-estate-700">Privacy Policy</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Last updated: February 2026</p>
+          <p className="mt-2 text-sm text-muted-foreground">Last updated: 25 September 2026</p>
         </div>
 
         <div className="space-y-8 text-sm leading-relaxed text-foreground">
@@ -44,10 +45,20 @@ export default function PrivacyPolicyPage() {
             </p>
             <p className="mt-2">
               <strong>Company details:</strong><br />
-              Haus of Estate Ltd<br />
-              Registered in England and Wales<br />
-              Company number: [To be confirmed]<br />
-              Registered address: [To be confirmed]<br />
+              {COMPANY_IDENTITY.legalName}<br />
+              Registered in {COMPANY_IDENTITY.registeredJurisdiction}<br />
+              Company number: {COMPANY_IDENTITY.number}<br />
+              Registered office: {COMPANY_IDENTITY.registeredOffice}<br />
+              ICO registration:{" "}
+              <a
+                href={COMPANY_IDENTITY.icoRegisterUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-trust-teal hover:underline"
+              >
+                {COMPANY_IDENTITY.icoRegistrationNumber}
+              </a>
+              <br />
               Email:{" "}
               <a href="mailto:privacy@hausofestate.com" className="text-trust-teal hover:underline">
                 privacy@hausofestate.com
@@ -200,7 +211,7 @@ export default function PrivacyPolicyPage() {
                 privacy@hausofestate.com
               </a>
               <br />
-              <strong>Post:</strong> Haus of Estate Ltd, [Registered Address], England
+              <strong>Post:</strong> {COMPANY_IDENTITY.legalName}, {COMPANY_IDENTITY.registeredOffice}
             </p>
           </section>
 

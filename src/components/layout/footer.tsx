@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowRight,
   Facebook,
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 import { useLeadModals } from "@/components/lead-modal/modal-context";
 import { CookieSettingsButton } from "@/components/analytics/consent-manager";
+import { COMPANY_IDENTITY } from "@/lib/company-identity";
 
 const COMPANY_PHONE_DISPLAY = "+44 7496 033321";
 const COMPANY_PHONE_HREF = "tel:+447496033321";
@@ -112,9 +114,40 @@ export function Footer() {
             <span className="text-xs text-white/60">Rated 4.8 · Excellent</span>
           </div>
 
-          <p className="mt-4 text-xs leading-relaxed text-white/45">
-            Rent Smart Wales Registered · Propertymark CMP Registered
-          </p>
+          <div className="mt-4 max-w-sm space-y-2 text-xs leading-relaxed text-white/60">
+            <p className="font-semibold text-white/80">{COMPANY_IDENTITY.legalName}</p>
+            <p>
+              Registered in {COMPANY_IDENTITY.registeredJurisdiction}.{" "}
+              <a
+                href={COMPANY_IDENTITY.companiesHouseUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline underline-offset-4 transition-colors hover:text-white"
+              >
+                Company number {COMPANY_IDENTITY.number}
+              </a>
+            </p>
+            <p>Registered office: {COMPANY_IDENTITY.registeredOffice}</p>
+            <p>
+              <a
+                href={COMPANY_IDENTITY.icoRegisterUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline underline-offset-4 transition-colors hover:text-white"
+              >
+                ICO registration {COMPANY_IDENTITY.icoRegistrationNumber}
+              </a>
+            </p>
+          </div>
+
+          <Image
+            src="/badges/policybee-insured-white.png"
+            alt="Insured through PolicyBee"
+            width={80}
+            height={80}
+            sizes="80px"
+            className="mt-5 h-20 w-20 object-contain"
+          />
 
           {/* Quick actions */}
           <div className="mt-5 flex flex-wrap gap-2">
@@ -215,7 +248,10 @@ export function Footer() {
           </li>
           <li className="flex items-start gap-2.5 text-sm text-white/60">
             <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-gold-400" />
-            <address className="not-italic">115 City Road, Unit A, Cardiff, Wales, United Kingdom, CF24 3BP</address>
+            <address className="not-italic">
+              <span className="block font-medium text-white/80">Trading address</span>
+              115 City Road, Unit A, Cardiff, Wales, United Kingdom, CF24 3BP
+            </address>
           </li>
         </FooterCol>
       </div>
@@ -223,7 +259,7 @@ export function Footer() {
       {/* Legal bar */}
       <div className="border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-white/45 md:flex-row md:px-6">
-          <span>&copy; {year} Haus of Estate. All rights reserved.</span>
+          <span>&copy; {year} {COMPANY_IDENTITY.legalName}. All rights reserved.</span>
           <CookieSettingsButton />
           <span>UK English · Prices indicative · Subject to availability</span>
         </div>
