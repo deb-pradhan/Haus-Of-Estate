@@ -44,6 +44,7 @@ export const TYPES_BY_CATEGORY: Record<Category, readonly string[]> = {
   residential: [
     'Apartment',
     'Townhouse',
+    'Terraced House',
     'Villa',
     'Mansion',
     'Building',

@@ -5,6 +5,7 @@ import { sanityFetch, urlFor } from '@/sanity'
 import { PROPERTIES_FILTERED_QUERY } from '@/sanity/queries'
 import { EmptyStateCTA } from '@/components/properties/empty-state-cta'
 import { Breadcrumbs } from '@/components/properties/breadcrumbs'
+import { isConceptMedia, propertyMediaCaption, type PropertyImageMetadata } from '@/lib/property-media'
 import {
   type Category,
   type Availability,
@@ -40,7 +41,7 @@ interface PropertyCard {
   completionStatus?: string
   summary: string
   featured?: boolean
-  featuredImage?: { alt?: string } & Record<string, unknown>
+  featuredImage?: PropertyImageMetadata & { alt?: string } & Record<string, unknown>
 }
 
 export interface PropertyListingSearchParams {
@@ -285,6 +286,11 @@ export async function PropertyListing({
                   <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                     {items.map((p) => {
                       const badge = saleRentLabel(p.listingType)
+                      const conceptImage = isConceptMedia(p.featuredImage)
+                      const mediaCaption = propertyMediaCaption(p.featuredImage)
+                      const statusLabel = p.completionStatus
+                        ? COMPLETION_LABEL[p.completionStatus] ?? p.completionStatus
+                        : p.availability?.includes('ready') ? 'Ready' : undefined
                       const cardRentContext =
                         rentContextGlobal ||
                         (p.listingType?.includes('rent') &&
@@ -302,27 +308,28 @@ export async function PropertyListing({
                           href={`/properties/${p.slug}`}
                           className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-estate-700/40 hover:shadow-xl hover:shadow-estate-700/5"
                         >
-                          <div className="relative aspect-[4/3] overflow-hidden bg-estate-700">
-                            {p.featuredImage ? (
-                              <Image
-                                src={urlFor(p.featuredImage)
-                                  .width(800)
-                                  .height(600)
-                                  .url()}
-                                alt={p.featuredImage.alt || p.title}
-                                fill
-                                className="object-cover transition-transform duration-500 group-hover:scale-105"
-                              />
-                            ) : (
-                              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-estate-600 to-estate-800">
-                                <Building2 className="h-10 w-10 text-white/30" />
-                              </div>
-                            )}
-                            <div className="absolute left-3 top-3 flex flex-wrap items-center gap-1.5">
-                              {p.completionStatus && (
+                          <figure className="relative">
+                            <div className="relative aspect-[4/3] overflow-hidden bg-estate-700">
+                              {p.featuredImage ? (
+                                <Image
+                                  src={conceptImage
+                                    ? urlFor(p.featuredImage).ignoreImageParams().width(800).fit('max').url()
+                                    : urlFor(p.featuredImage).width(800).height(600).url()}
+                                  alt={p.featuredImage.alt || p.title}
+                                  fill
+                                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
+                                  className={conceptImage ? 'object-contain' : 'object-cover transition-transform duration-500 group-hover:scale-105'}
+                                />
+                              ) : (
+                                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-estate-600 to-estate-800">
+                                  <Building2 className="h-10 w-10 text-white/30" />
+                                </div>
+                              )}
+                            </div>
+                            <div className={conceptImage ? 'flex flex-wrap items-center gap-1.5 px-5 pt-3' : 'absolute left-3 top-3 flex flex-wrap items-center gap-1.5'}>
+                              {statusLabel && (
                                 <span className="rounded-full bg-surface/95 px-3 py-1 text-[11px] font-semibold text-estate-700 shadow-sm">
-                                  {COMPLETION_LABEL[p.completionStatus] ??
-                                    p.completionStatus}
+                                  {statusLabel}
                                 </span>
                               )}
                               {badge && (
@@ -331,7 +338,10 @@ export async function PropertyListing({
                                 </span>
                               )}
                             </div>
-                          </div>
+                            {mediaCaption && (
+                              <figcaption className="border-b border-border px-5 py-3 text-xs leading-relaxed text-muted-foreground">{mediaCaption}</figcaption>
+                            )}
+                          </figure>
                           <div className="flex flex-1 flex-col p-5">
                             <p className="font-serif text-[11px] font-semibold uppercase tracking-widest text-gold-500">
                               {p.unitType}

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { OpenBuyerButton } from "@/components/lead-modal/open-buyer-button";
 import { sanityFetch, urlFor } from "@/sanity";
 import { FEATURED_PROPERTIES_QUERY } from "@/sanity/queries";
+import { isConceptMedia, propertyMediaCaption, type PropertyImageMetadata } from "@/lib/property-media";
 
 interface FeaturedProperty {
   _id: string;
@@ -21,7 +22,7 @@ interface FeaturedProperty {
   rentPriceDisplay?: string;
   completionStatus?: string;
   summary: string;
-  featuredImage?: { alt?: string } & Record<string, unknown>;
+  featuredImage?: PropertyImageMetadata & { alt?: string } & Record<string, unknown>;
 }
 
 const COMPLETION_LABEL: Record<string, string> = {
@@ -60,30 +61,39 @@ function PropertyCard({
 }: {
   property: FeaturedProperty;
 }) {
+  const conceptImage = isConceptMedia(property.featuredImage);
+  const mediaCaption = propertyMediaCaption(property.featuredImage);
+  const statusLabel = property.completionStatus
+    ? COMPLETION_LABEL[property.completionStatus] ?? property.completionStatus
+    : property.availability?.includes("ready") ? "Ready" : undefined;
+
   return (
     <Link
       href={`/properties/${property.slug}`}
       className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-estate-700/5"
     >
-      <div className="relative aspect-[4/3] overflow-hidden bg-estate-700">
-        {property.featuredImage ? (
-          <Image
-            src={urlFor(property.featuredImage).width(800).height(600).url()}
-            alt={buildAlt(property)}
-            fill
-            sizes="(max-width: 767px) calc(100vw - 2rem), (max-width: 1279px) 33vw, 400px"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-estate-600 to-estate-800">
-            <Building2 className="h-10 w-10 text-white/30" />
-          </div>
-        )}
-        <div className="absolute left-3 top-3 flex flex-wrap items-center gap-1.5">
-          {property.completionStatus && (
+      <figure className="relative">
+        <div className="relative aspect-[4/3] overflow-hidden bg-estate-700">
+          {property.featuredImage ? (
+            <Image
+              src={conceptImage
+                ? urlFor(property.featuredImage).ignoreImageParams().width(800).fit("max").url()
+                : urlFor(property.featuredImage).width(800).height(600).url()}
+              alt={buildAlt(property)}
+              fill
+              sizes="(max-width: 767px) calc(100vw - 2rem), (max-width: 1279px) 33vw, 400px"
+              className={conceptImage ? "object-contain" : "object-cover transition-transform duration-500 group-hover:scale-105"}
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-estate-600 to-estate-800">
+              <Building2 className="h-10 w-10 text-white/30" />
+            </div>
+          )}
+        </div>
+        <div className={conceptImage ? "flex flex-wrap items-center gap-1.5 px-4 pt-3" : "absolute left-3 top-3 flex flex-wrap items-center gap-1.5"}>
+          {statusLabel && (
             <span className="rounded-full bg-surface/95 px-3 py-1 text-[11px] font-semibold text-estate-700 shadow-sm">
-              {COMPLETION_LABEL[property.completionStatus] ??
-                property.completionStatus}
+              {statusLabel}
             </span>
           )}
           {saleRentLabel(property.listingType) && (
@@ -92,7 +102,10 @@ function PropertyCard({
             </span>
           )}
         </div>
-      </div>
+        {mediaCaption && (
+          <figcaption className="border-b border-border px-4 py-3 text-xs leading-relaxed text-muted-foreground">{mediaCaption}</figcaption>
+        )}
+      </figure>
 
       <div className="flex flex-1 flex-col p-4">
         <p className="font-serif text-[11px] font-semibold uppercase tracking-widest text-gold-500">

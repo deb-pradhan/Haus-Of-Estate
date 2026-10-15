@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { COMPANY_IDENTITY } from "@/lib/company-identity";
 
 export const metadata: Metadata = {
   title: "Cookie Policy",
@@ -32,7 +33,7 @@ export default function CookiePolicyPage() {
         <div className="mb-8">
           <p className="font-serif text-sm font-medium uppercase tracking-widest text-gold-500 mb-2">Legal</p>
           <h1 className="font-serif text-4xl font-medium text-estate-700">Cookie Policy</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Last updated: February 2026</p>
+          <p className="mt-2 text-sm text-muted-foreground">Last updated: 25 September 2026</p>
         </div>
 
         <div className="space-y-8 text-sm leading-relaxed text-foreground">
@@ -249,7 +250,7 @@ export default function CookiePolicyPage() {
                 privacy@hausofestate.com
               </a>
               <br />
-              <strong>Post:</strong> Haus of Estate Ltd, [Registered Address], England
+              <strong>Post:</strong> {COMPANY_IDENTITY.legalName}, {COMPANY_IDENTITY.registeredOffice}
             </p>
           </section>
 

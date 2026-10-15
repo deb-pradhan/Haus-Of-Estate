@@ -7,7 +7,7 @@ export const POST_FIELDS = `
     ...,
     "url": asset->url
   },
-  "author": author->{name, "slug": slug.current, avatar, role},
+  "author": {"name": "Haus of Estate"},
   "categories": categories[]->{_id, title, "slug": slug.current, color},
   publishedAt,
   featured,
@@ -148,7 +148,7 @@ const PROPERTY_CARD_FIELDS = `
 `
 
 export const PROPERTIES_QUERY = `
-  *[_type == "property" && status == "published"]
+  *[_type == "property" && status == "published" && !(_id in path("drafts.**")) && !(_id in path("versions.**"))]
     | order(featured desc, publishedAt desc) {
       ${PROPERTY_CARD_FIELDS}
     }
@@ -157,7 +157,7 @@ export const PROPERTIES_QUERY = `
 // Server-side filtered listing. Pass empty-string params to skip a filter.
 // $availability / $intent match against the array fields (membership).
 export const PROPERTIES_FILTERED_QUERY = `
-  *[_type == "property" && status == "published"
+  *[_type == "property" && status == "published" && !(_id in path("drafts.**")) && !(_id in path("versions.**"))
     && ($category == "" || category == $category)
     && ($availability == "" || $availability in availability)
     && ($intent == "" || $intent in listingType)
@@ -168,27 +168,33 @@ export const PROPERTIES_FILTERED_QUERY = `
 `
 
 export const FEATURED_PROPERTIES_QUERY = `
-  *[_type == "property" && status == "published" && featured == true]
+  *[_type == "property" && status == "published" && !(_id in path("drafts.**")) && !(_id in path("versions.**")) && featured == true]
     | order(publishedAt desc) [0...3] {
       ${PROPERTY_CARD_FIELDS}
     }
 `
 
 export const PROPERTY_BY_SLUG_QUERY = `
-  *[_type == "property" && slug.current == $slug && status == "published"][0] {
+  *[_type == "property" && slug.current == $slug && status == "published" && !(_id in path("drafts.**")) && !(_id in path("versions.**"))][0] {
     ${PROPERTY_CARD_FIELDS},
     description,
     keyFeatures,
     amenities,
     locationBenefits,
     gallery,
+    floorPlans[]{
+      "src": asset->url,
+      alt,
+      caption,
+      mediaKind
+    },
     videoUrl,
     enquiryEmail
   }
 `
 
 export const PROPERTY_SLUGS_QUERY = `
-  *[_type == "property" && status == "published" && defined(slug.current)] {
+  *[_type == "property" && status == "published" && !(_id in path("drafts.**")) && !(_id in path("versions.**")) && defined(slug.current)] {
     "slug": slug.current
   }
 `

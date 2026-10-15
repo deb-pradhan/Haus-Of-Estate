@@ -2,8 +2,9 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import type { Metadata } from 'next'
+import type { ComponentProps } from 'react'
 import {
-  ArrowLeft,
+  ChevronRight,
   ArrowRight,
   MapPin,
   BedDouble,
@@ -17,6 +18,12 @@ import { PROPERTY_BY_SLUG_QUERY, PROPERTY_SLUGS_QUERY } from '@/sanity/queries'
 import { PortableTextRenderer } from '@/components/blog'
 import { toEmbedUrl } from '@/lib/embed-video'
 import { DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGES } from '@/lib/seo'
+import {
+  isConceptMedia,
+  propertyMediaCaption,
+  type PropertyImageMetadata,
+  type PropertyMediaImage,
+} from '@/lib/property-media'
 
 interface LocationBenefit {
   destination?: string
@@ -32,6 +39,7 @@ interface PropertyDetail {
   city: string
   country?: string
   developer?: string
+  availability?: string[]
   unitType: string
   unitNumber?: string
   bedrooms?: number
@@ -47,8 +55,9 @@ interface PropertyDetail {
   keyFeatures?: string[]
   amenities?: string[]
   locationBenefits?: LocationBenefit[]
-  featuredImage?: { alt?: string } & Record<string, unknown>
-  gallery?: (Record<string, unknown> & { alt?: string })[]
+  featuredImage?: PropertyImageMetadata & { alt?: string } & Record<string, unknown>
+  gallery?: (PropertyImageMetadata & Record<string, unknown> & { alt?: string })[]
+  floorPlans?: PropertyMediaImage[]
   videoUrl?: string
   enquiryEmail?: string
 }
@@ -80,7 +89,8 @@ export async function generateMetadata({
   })
   if (!property) return { title: 'Property' }
 
-  const ogImage = property.featuredImage
+  // Social crops can hide BEFORE/AFTER labels and cannot carry the visible caption.
+  const ogImage = property.featuredImage && !isConceptMedia(property.featuredImage)
     ? urlFor(property.featuredImage)
         .width(1200)
         .height(630)
@@ -124,6 +134,12 @@ export default async function PropertyDetailPage({
 
   if (!property) notFound()
 
+  const conceptHero = isConceptMedia(property.featuredImage)
+  const heroCaption = propertyMediaCaption(property.featuredImage)
+  const floorPlans = property.floorPlans?.filter((plan) => Boolean(plan.src)) ?? []
+  const statusLabel = property.completionStatus
+    ? COMPLETION_LABEL[property.completionStatus] ?? property.completionStatus
+    : property.availability?.includes('ready') ? 'Ready' : undefined
   const enquiryEmail = property.enquiryEmail || 'info@hausofestate.com'
   const enquiryHref = `mailto:${enquiryEmail}?subject=${encodeURIComponent(
     `Enquiry — ${property.title}`,
@@ -146,7 +162,7 @@ export default async function PropertyDetailPage({
   }
   facts.push({
     icon: Maximize2,
-    label: 'Size',
+    label: floorPlans.length > 0 ? 'Floor area' : 'Size',
     value: property.sizeDisplay || 'On application',
   })
   facts.push({
@@ -188,31 +204,46 @@ export default async function PropertyDetailPage({
       {/* Top bar */}
       <div className="border-b border-border bg-surface">
         <div className="mx-auto max-w-6xl px-4 py-4 md:px-6">
-          <Link
-            href="/properties"
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-estate-700"
-          >
-            <ArrowLeft className="h-4 w-4" /> All properties
-          </Link>
+          <nav aria-label="Breadcrumb">
+            <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+              <li><Link href="/" className="py-1 hover:text-estate-700 hover:underline">Home</Link></li>
+              <li className="flex items-center gap-2">
+                <ChevronRight aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+                <Link href="/properties" className="py-1 hover:text-estate-700 hover:underline">Properties</Link>
+              </li>
+              <li className="flex min-w-0 items-center gap-2">
+                <ChevronRight aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+                <span aria-current="page" className="min-w-0 break-words py-1 font-medium text-estate-700">{property.title}</span>
+              </li>
+            </ol>
+          </nav>
         </div>
       </div>
 
       {/* Hero image */}
-      <div className="relative aspect-[16/9] max-h-[460px] w-full overflow-hidden bg-estate-700">
-        {property.featuredImage ? (
-          <Image
-            src={urlFor(property.featuredImage).width(1600).height(900).url()}
-            alt={property.featuredImage.alt || property.title}
-            fill
-            className="object-cover"
-            priority
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-estate-600 to-estate-800">
-            <Building2 className="h-16 w-16 text-white/25" />
-          </div>
+      <figure>
+        <div className="relative aspect-[16/9] max-h-[460px] w-full overflow-hidden bg-estate-700">
+          {property.featuredImage ? (
+            <Image
+              src={conceptHero
+                ? urlFor(property.featuredImage).ignoreImageParams().width(1600).fit('max').url()
+                : urlFor(property.featuredImage).width(1600).height(900).url()}
+              alt={property.featuredImage.alt || property.title}
+              fill
+              sizes="100vw"
+              className={conceptHero ? 'object-contain' : 'object-cover'}
+              preload
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-estate-600 to-estate-800">
+              <Building2 className="h-16 w-16 text-white/25" />
+            </div>
+          )}
+        </div>
+        {heroCaption && (
+          <figcaption className="mx-auto max-w-6xl px-4 py-4 text-sm leading-relaxed text-muted-foreground md:px-6">{heroCaption}</figcaption>
         )}
-      </div>
+      </figure>
 
       <div className="mx-auto max-w-6xl px-4 py-12 md:px-6 md:py-16">
         <div className="grid gap-12 lg:grid-cols-[1fr_340px]">
@@ -220,9 +251,7 @@ export default async function PropertyDetailPage({
           <div>
             <p className="font-serif text-xs font-medium uppercase tracking-[0.22em] text-gold-500">
               {property.unitType}
-              {property.completionStatus
-                ? ` · ${COMPLETION_LABEL[property.completionStatus] ?? property.completionStatus}`
-                : ''}
+              {statusLabel ? ` · ${statusLabel}` : ''}
             </p>
             <h1 className="mt-2 font-serif text-3xl font-medium text-estate-700 md:text-4xl">
               {property.title}
@@ -261,7 +290,7 @@ export default async function PropertyDetailPage({
             {/* Description */}
             {property.description ? (
               <div className="mt-10">
-                <PortableTextRenderer content={property.description as any} />
+                <PortableTextRenderer content={property.description as ComponentProps<typeof PortableTextRenderer>['content']} />
               </div>
             ) : (
               <p className="mt-10 text-base leading-relaxed text-muted-foreground">
@@ -328,6 +357,30 @@ export default async function PropertyDetailPage({
                 </div>
               )}
 
+            {floorPlans.length > 0 && (
+              <section id="floor-plans" className="mt-10 scroll-mt-24" aria-labelledby="property-floor-plans-heading">
+                <h2 id="property-floor-plans-heading" className="font-serif text-xl font-medium text-estate-700">
+                  {floorPlans.length === 1 ? 'Floor plan' : 'Floor plans'}
+                </h2>
+                <p className="mt-2 text-sm text-muted-foreground">Open a plan to view it full size in a new tab.</p>
+                <div className="mt-4 space-y-6">
+                  {floorPlans.map((plan, index) => (
+                    <figure key={`${plan.src}-${index}`} className="overflow-hidden rounded-2xl border border-border bg-white">
+                      <a href={plan.src} target="_blank" rel="noopener noreferrer"
+                        aria-label={`Open floor plan ${index + 1} in a new tab`}
+                        className="block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-estate-700">
+                        <span className="relative block h-[32rem] sm:h-[44rem]">
+                          <Image src={plan.src} alt={plan.alt || `${property.title} — floor plan ${index + 1}`} fill sizes="(max-width: 1024px) 100vw, 700px" className="object-contain" />
+                        </span>
+                        <span className="block border-t border-border px-4 py-3 text-sm font-medium text-estate-700">Open full-size floor plan</span>
+                      </a>
+                      {plan.caption && <figcaption className="border-t border-border px-4 py-3 text-sm leading-relaxed text-muted-foreground">{plan.caption}</figcaption>}
+                    </figure>
+                  ))}
+                </div>
+              </section>
+            )}
+
             {/* Gallery */}
             {property.videoUrl && (() => {
               const embed = toEmbedUrl(property.videoUrl)
@@ -354,21 +407,29 @@ export default async function PropertyDetailPage({
             {property.gallery && property.gallery.length > 0 && (
               <div className="mt-10">
                 <h2 className="font-serif text-xl font-medium text-estate-700">
-                  Gallery
+                  {property.gallery.every(isConceptMedia) ? 'Proposed interiors' : 'Gallery'}
                 </h2>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   {property.gallery.map((img, i) => (
-                    <div
+                    <figure
                       key={i}
-                      className="relative aspect-[4/3] overflow-hidden rounded-xl border border-border"
+                      className="overflow-hidden rounded-xl border border-border"
                     >
-                      <Image
-                        src={urlFor(img).width(800).height(600).url()}
-                        alt={img.alt || `${property.title} — image ${i + 1}`}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
+                      <div className="relative aspect-[4/3] bg-estate-700/5">
+                        <Image
+                          src={isConceptMedia(img)
+                            ? urlFor(img).ignoreImageParams().width(1200).fit('max').url()
+                            : urlFor(img).width(800).height(600).url()}
+                          alt={img.alt || `${property.title} — image ${i + 1}`}
+                          fill
+                          sizes="(max-width: 640px) 100vw, 50vw"
+                          className={isConceptMedia(img) ? 'object-contain' : 'object-cover'}
+                        />
+                      </div>
+                      {propertyMediaCaption(img) && (
+                        <figcaption className="px-3 py-3 text-sm leading-relaxed text-muted-foreground">{propertyMediaCaption(img)}</figcaption>
+                      )}
+                    </figure>
                   ))}
                 </div>
               </div>
