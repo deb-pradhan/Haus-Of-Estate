@@ -1,7 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
-/node_modules
+# dependencies (any depth: the Sanity Studio has its own)
+node_modules/
+**/node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -14,6 +15,8 @@
 /coverage
 /test-results/
 /playwright-report/
+/blob-report/
+/playwright/.cache/
 
 # next.js
 /.next/
@@ -34,6 +37,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -43,3 +47,7 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+
+# Sanity Studio build output
+/studio-haus-of-estate/dist/
+/studio-haus-of-estate/.sanity/

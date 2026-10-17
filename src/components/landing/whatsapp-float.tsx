@@ -1,24 +1,34 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { MessageCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const WHATSAPP_URL =
   "https://wa.me/971585607033?utm_source=site&utm_medium=float&utm_campaign=whatsapp";
 
+/**
+ * Quiet, always-reachable WhatsApp entry point. No pulsing rings (deference:
+ * the page content leads). On property detail pages it lifts above the sticky
+ * enquiry bar so the two never overlap.
+ */
 export function WhatsAppFloat() {
+  const pathname = usePathname();
+  const onPropertyDetail = /^\/properties\/[^/]+\/?$/.test(pathname) &&
+    !/^\/properties\/(residential|commercial)\/?$/.test(pathname);
+
   return (
     <a
       href={WHATSAPP_URL}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="Chat on WhatsApp"
-      className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg shadow-[#25D366]/30 transition-transform duration-200 hover:scale-110 hover:shadow-xl hover:shadow-[#25D366]/40"
+      aria-label="Chat with us on WhatsApp"
+      className={cn(
+        "pressable fixed right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[#128C7E] text-white shadow-e3 hover:scale-105 md:right-6 md:bottom-6",
+        onPropertyDetail ? "bottom-24" : "bottom-4",
+      )}
     >
-      {/* Pulse rings */}
-      <span className="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-30" />
-      <span className="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-20" style={{ animationDelay: "0.5s" }} />
-
-      <MessageCircle className="relative h-7 w-7 fill-white stroke-[#25D366]" strokeWidth={1.5} />
+      <MessageCircle className="h-6 w-6" strokeWidth={1.75} aria-hidden />
     </a>
   );
 }

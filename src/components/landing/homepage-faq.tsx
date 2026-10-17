@@ -17,9 +17,7 @@ export async function HomepageFaq() {
     <section className="bg-background px-4 py-16 md:px-6 md:py-24">
       <div className="mx-auto max-w-4xl">
         <div className="mb-10 text-center">
-          <p className="font-serif text-xs font-medium uppercase tracking-[0.3em] text-gold-500">
-            Common questions
-          </p>
+          <p className="eyebrow">Common questions</p>
           <h2 className="mt-3 font-serif text-3xl font-medium text-estate-700 md:text-4xl">
             Straight answers, no jargon.
           </h2>

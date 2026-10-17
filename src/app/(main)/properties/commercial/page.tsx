@@ -36,10 +36,10 @@ export default async function CommercialLandingPage({
       heading={
         <>
           Commercial property{' '}
-          <span className="text-gold-400">with proof.</span>
+          <span className="text-gold-700">with proof.</span>
         </>
       }
-      intro="Offices, retail units, shopping malls and commercial plots — ready and off-plan. We don't have commercial listings published yet, so tell us your brief and an advisor will source the right opportunity."
+      intro="Offices, retail units, shopping malls and commercial plots — ready and off-plan. We don't have commercial listings published yet, so tell us what you need and an adviser will look for suitable options."
     />
   )
 }

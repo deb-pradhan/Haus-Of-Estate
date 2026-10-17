@@ -19,13 +19,11 @@ import {
   Lock,
   Share2,
   SlidersHorizontal,
-  BadgeCheck,
   Landmark,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -48,7 +46,7 @@ interface QuizState {
   phone: string;
   isSubmitting: boolean;
   isSubmitted: boolean;
-  matchCount: number;
+  submitError: string | null;
 }
 
 type QuizAction =
@@ -62,7 +60,8 @@ type QuizAction =
   | { type: "NEXT" }
   | { type: "BACK" }
   | { type: "SUBMIT_START" }
-  | { type: "SUBMIT_SUCCESS"; payload: number }
+  | { type: "SUBMIT_SUCCESS" }
+  | { type: "SUBMIT_FAIL"; payload: string }
   | { type: "UPDATE_FIELD"; payload: { field: "firstName" | "whatsapp" | "email" | "phone"; value: string } };
 
 function reducer(state: QuizState, action: QuizAction): QuizState {
@@ -100,9 +99,11 @@ function reducer(state: QuizState, action: QuizAction): QuizState {
     case "BACK":
       return { ...state, step: Math.max(1, state.step - 1) };
     case "SUBMIT_START":
-      return { ...state, isSubmitting: true };
+      return { ...state, isSubmitting: true, submitError: null };
     case "SUBMIT_SUCCESS":
-      return { ...state, isSubmitting: false, isSubmitted: true, step: 8, matchCount: action.payload };
+      return { ...state, isSubmitting: false, isSubmitted: true, step: 8, submitError: null };
+    case "SUBMIT_FAIL":
+      return { ...state, isSubmitting: false, submitError: action.payload };
     case "UPDATE_FIELD":
       return { ...state, [action.payload.field]: action.payload.value };
     default:
@@ -124,7 +125,7 @@ const initialState: QuizState = {
   phone: "",
   isSubmitting: false,
   isSubmitted: false,
-  matchCount: 0,
+  submitError: null,
 };
 
 // ─── Market Data ────────────────────────────────────────────────────────────────
@@ -269,24 +270,6 @@ const BUDGET_RANGES: Record<
   },
 };
 
-// ─── Trust Signals per Market ──────────────────────────────────────────────────
-
-const TRUST_SIGNALS: Record<Market, string[]> = {
-  dubai: [
-    "240+ Verified Listings",
-    "Zero Spam, Zero Obligation",
-  ],
-  uk: [
-    "500+ Verified Listings",
-    "Zero Spam, Zero Obligation",
-  ],
-  bali: [
-    "180+ Verified Listings",
-    "Licensed Indonesian Agents",
-    "Zero Spam, Zero Obligation",
-  ],
-};
-
 // ─── Market Flag SVGs (inline) ─────────────────────────────────────────────────
 
 function MarketIcon({ market }: { market: Market }) {
@@ -421,9 +404,9 @@ function QuizCard({
 // ─── Step 0: Hero ─────────────────────────────────────────────────────────────
 
 const TRUST_ITEMS_GLOBAL = [
-  "Verified Listings Across 3 Markets",
-  "Licensed Agents in Each Region",
-  "Zero Spam, Zero Obligation",
+  "Dubai, the UK and Bali",
+  "A local advisor, not a call centre",
+  "No obligation",
 ];
 
 function HeroSection({ onStart }: { onStart: () => void }) {
@@ -456,7 +439,7 @@ function HeroSection({ onStart }: { onStart: () => void }) {
           Find Your Perfect Property in 90 Seconds
         </h1>
         <p className="mt-4 text-base leading-relaxed text-white/80 md:text-lg">
-          Answer 5 quick questions across Dubai, the UK, and Bali. We'll match you with verified properties curated by our local team — not an algorithm.
+          Answer 5 quick questions across Dubai, the UK, and Bali. We&apos;ll pass your brief to a local advisor who prepares a shortlist — a person, not an algorithm.
         </p>
         <button
           onClick={onStart}
@@ -703,7 +686,7 @@ function BudgetStep({
     <div className="mx-auto w-full max-w-md px-4 pt-12">
       <p className="mb-1 text-sm font-medium text-muted-foreground">Step 5 of 5</p>
       <h2 className="font-serif text-2xl font-medium text-foreground md:text-3xl">
-        What's your {isRent ? "monthly rent" : "purchase"} budget?
+        What&apos;s your {isRent ? "monthly rent" : "purchase"} budget?
       </h2>
       <div className="mt-6 flex flex-wrap gap-2">
         {options.map((opt) => (
@@ -783,58 +766,11 @@ function TimelineStep({
 
 // ─── Lead Gate ────────────────────────────────────────────────────────────────
 
-function LoadingScreen({ market }: { market: Market }) {
-  const [done, setDone] = useReducer((v) => v + 1, 0);
-  const signals = [
-    `Checking ${TRUST_SIGNALS[market][0].replace(/\d+ /, "")}...`,
-    "Filtering by your budget",
-    "Curating your personalised shortlist",
-  ];
-
-  useEffect(() => {
-    const timers = signals.map((_, i) => setTimeout(() => setDone(), 700 * (i + 1)));
-    return () => timers.forEach(clearTimeout);
-  }, []);
-
-  return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="mb-8">
-        <div className="mb-3 flex items-center gap-3 justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-estate-700 border-t-transparent" />
-          <span className="font-serif text-xl font-medium text-estate-700">
-            Matching your preferences...
-          </span>
-        </div>
-        <div className="mt-6 space-y-3">
-          {signals.slice(0, done).map((step, i) => (
-            <div
-              key={i}
-              className="flex items-center justify-center gap-2 text-sm text-muted-foreground"
-            >
-              <Check className="h-4 w-4 shrink-0 text-trust-teal" />
-              {step}
-            </div>
-          ))}
-          {signals.slice(done).map((step, i) => (
-            <div
-              key={`pending-${i}`}
-              className="flex items-center justify-center gap-2 text-sm text-muted-foreground/40"
-            >
-              <div className="h-4 w-4 rounded-full border border-current" />
-              {step}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function LeadGateForm({
   market,
   onSubmit,
   onBack,
-  matchCount,
+  error,
   isSubmitting,
   firstName,
   whatsapp,
@@ -845,7 +781,7 @@ function LeadGateForm({
   market: Market;
   onSubmit: () => void;
   onBack: () => void;
-  matchCount: number;
+  error: string | null;
   isSubmitting: boolean;
   firstName: string;
   whatsapp: string;
@@ -867,12 +803,11 @@ function LeadGateForm({
           <SlidersHorizontal className="h-6 w-6 text-estate-700" />
         </div>
         <h2 className="font-serif text-2xl font-medium md:text-3xl">
-          Your matches are ready.
+          Where should we send your shortlist?
         </h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          {matchCount > 0
-            ? `We found ${matchCount} properties that match your criteria in ${market === "dubai" ? "Dubai" : market === "uk" ? "the UK" : "Bali"}.`
-            : "Enter your details to see your personalised shortlist."}
+          Leave your details and a {market === "dubai" ? "Dubai" : market === "uk" ? "UK" : "Bali"} advisor
+          will prepare a shortlist to fit your brief. No obligation.
         </p>
       </div>
 
@@ -961,16 +896,27 @@ function LeadGateForm({
             </div>
           ) : (
             <>
-              See My Properties
+              Request my shortlist
               <ArrowRight className="h-4 w-4" />
             </>
           )}
         </Button>
+        {error && (
+          <p role="alert" className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            {error}
+          </p>
+        )}
       </div>
 
       <div className="mt-4 flex items-start gap-2 text-left text-xs text-muted-foreground">
         <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-        <p>Your details are private. No spam — our agents will reach out once with your personalised list.</p>
+        <p>
+          We use your details only to prepare your shortlist and contact you about it. See our{" "}
+          <Link href="/legal/privacy-policy" className="underline underline-offset-2 hover:text-foreground">
+            Privacy Policy
+          </Link>
+          .
+        </p>
       </div>
 
       <button
@@ -986,44 +932,11 @@ function LeadGateForm({
 
 // ─── Thank You ─────────────────────────────────────────────────────────────────
 
-const MARKET_PREVIEW: Record<
-  Market,
-  { name: string; area: string; price: string }[]
-> = {
-  dubai: [
-    { name: "Marina Gate Residences", area: "Dubai Marina", price: "AED 2,450,000" },
-    { name: "Downtown Views Apartment", area: "Downtown Dubai", price: "AED 3,850,000" },
-    { name: "Palm Jumeirah Villa", area: "Palm Jumeirah", price: "AED 18,500,000" },
-  ],
-  uk: [
-    { name: "Canary Wharf Penthouse", area: "London", price: "£1,850,000" },
-    { name: "Manchester City Apartment", area: "Manchester", price: "£485,000" },
-    { name: "Edinburgh New Town Flat", area: "Edinburgh", price: "£725,000" },
-  ],
-  bali: [
-    { name: "Canggu Modern Villa", area: "Canggu", price: "$380,000" },
-    { name: "Ubud Ricefield Estate", area: "Ubud", price: "$650,000" },
-    { name: "Uluwatu Cliff Villa", area: "Uluwatu", price: "$1,200,000" },
-  ],
-};
-
-const MARKET_IMAGES: Record<Market, string[]> = {
-  dubai: [
-    "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&q=70",
-    "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=70",
-    "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600&q=70",
-  ],
-  uk: [
-    "https://images.unsplash.com/photo-1555636222-cae831e670b3?w=600&q=70",
-    "https://images.unsplash.com/photo-1592595896551-12b371d546d5?w=600&q=70",
-    "https://images.unsplash.com/photo-1449158743715-0a90ebb6d2d8?w=600&q=70",
-  ],
-  bali: [
-    "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600&q=70",
-    "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=70",
-    "https://images.unsplash.com/photo-1540541338287-41700207dee6?w=600&q=70",
-  ],
-};
+const NEXT_STEPS = [
+  "An advisor reviews your brief.",
+  "They contact you to confirm what matters most.",
+  "You receive a shortlist of real properties — no obligation.",
+];
 
 function ThankYouSection({
   firstName,
@@ -1032,27 +945,25 @@ function ThankYouSection({
   firstName: string;
   market: Market;
 }) {
+  const marketName = market === "dubai" ? "Dubai" : market === "uk" ? "UK" : "Bali";
   const shareText = encodeURIComponent(
-    `I just found my perfect property ${market === "dubai" ? "in Dubai" : market === "uk" ? "in the UK" : "in Bali"} — try this tool: https://haus.ae/match`,
+    "A calmer way to start an overseas property search — Haus of Estate: https://hausofestate.com/match",
   );
-  const preview = MARKET_PREVIEW[market];
-  const images = MARKET_IMAGES[market];
 
   return (
     <div className="mx-auto w-full max-w-md px-4 pt-12 text-center">
-      <div className="mb-6">
+      <div className="mb-8">
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-trust-teal/10">
           <Check className="h-7 w-7 text-trust-teal" />
         </div>
         <h2 className="font-serif text-2xl font-medium md:text-3xl">
-          You're in, {firstName}. 🎉
+          Thank you, {firstName}.
         </h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Your personalised shortlist is being prepared by our {market === "dubai" ? "Dubai" : market === "uk" ? "UK" : "Bali"} team. Expect a message within 2 hours.
+          We&apos;ve passed your brief to our {marketName} team.
         </p>
       </div>
 
-      {/* Market badge */}
       <div className="mb-4 flex items-center justify-center gap-2">
         <MarketIcon market={market} />
         <span className="text-sm font-medium text-foreground">
@@ -1060,69 +971,33 @@ function ThankYouSection({
         </span>
       </div>
 
-      {/* Preview cards */}
-      <div className="space-y-3">
-        <p className="text-left text-sm font-medium text-foreground">
-          Here's a preview of what we found:
-        </p>
-        {preview.map((p, i) => (
-          <div
-            key={i}
-            className={cn(
-              "relative overflow-hidden rounded-xl border border-border bg-white text-left",
-              i > 0 && "blur-sm",
-            )}
-          >
-            <div className="relative h-36 w-full">
-              <Image src={images[i]} alt={p.name} fill className="object-cover" />
-              <Badge className="absolute left-2 top-2 bg-trust-teal/90 text-white backdrop-blur-sm border-0">
-                <BadgeCheck className="mr-0.5 h-3 w-3" />
-                Verified
-              </Badge>
-            </div>
-            <div className="p-3">
-              <p className="font-medium text-foreground">{p.name}</p>
-              <p className="text-xs text-muted-foreground">{p.area}</p>
-              <div className="mt-2 flex items-center justify-between">
-                <span className="font-serif text-base font-semibold text-estate-700">
-                  {p.price}
-                </span>
-              </div>
-            </div>
-            {i > 0 && (
-              <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-sm">
-                <p className="px-4 text-sm font-medium text-foreground/60">
-                  Unlock your full shortlist — check your {market === "dubai" ? "WhatsApp" : "messages"}.
-                </p>
-              </div>
-            )}
-          </div>
+      <ol className="space-y-3 rounded-2xl bg-white p-5 text-left shadow-e1">
+        <li className="eyebrow">What happens next</li>
+        {NEXT_STEPS.map((step, i) => (
+          <li key={step} className="flex items-start gap-3 text-sm text-foreground">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-estate-700/10 text-xs font-semibold text-estate-700">
+              {i + 1}
+            </span>
+            {step}
+          </li>
         ))}
-      </div>
+      </ol>
 
       <div className="mt-6 space-y-3">
-        <Button
-          asChild
-          variant="outline"
-          className="h-11 w-full border-estate-700 bg-transparent text-estate-700 hover:bg-estate-700/5"
-        >
-          <Link href="/search">
-            Browse all properties while you wait
+        <Button asChild variant="outline" className="w-full">
+          <Link href="/properties">
+            Browse properties while you wait
             <ArrowRight className="ml-2 h-4 w-4" />
           </Link>
         </Button>
-        <Button
-          asChild
-          variant="ghost"
-          className="h-11 w-full text-muted-foreground"
-        >
+        <Button asChild variant="ghost" className="w-full text-muted-foreground">
           <Link
             href={`https://wa.me/?text=${shareText}`}
             target="_blank"
             rel="noopener noreferrer"
           >
             <Share2 className="mr-2 h-4 w-4" />
-            Share with someone who's also looking
+            Share with someone who&apos;s also looking
           </Link>
         </Button>
       </div>
@@ -1147,7 +1022,7 @@ export default function MatchPage() {
   const handleSubmit = async () => {
     dispatch({ type: "SUBMIT_START" });
     try {
-      await fetch("/api/funnel", {
+      const response = await fetch("/api/funnel", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1161,13 +1036,21 @@ export default function MatchPage() {
           whatsapp: state.whatsapp,
           phone: state.phone,
           email: state.email,
+          // The lead gate shows the privacy notice and link above the button.
+          consentNotice: true,
+          sourcePage: "/match",
         }),
       });
-    } catch (_) {
-      // graceful failure — still show thank you
+      if (!response.ok) throw new Error(`Funnel request failed: ${response.status}`);
+      dispatch({ type: "SUBMIT_SUCCESS" });
+    } catch {
+      // Never tell someone their request was received when it was not.
+      dispatch({
+        type: "SUBMIT_FAIL",
+        payload:
+          "We couldn't send your request just now. Please check your connection and try again, or message us on WhatsApp.",
+      });
     }
-    const count = Math.floor(Math.random() * 8) + 4;
-    dispatch({ type: "SUBMIT_SUCCESS", payload: count });
   };
 
   // Transition copy after each step
@@ -1287,13 +1170,12 @@ export default function MatchPage() {
         const mkt = state.market;
         return (
           <div className="min-h-screen pt-16 pb-8">
-            <LoadingScreen market={mkt} />
-            <div className="mt-6">
+            <div>
               <LeadGateForm
                 market={mkt}
                 onSubmit={handleSubmit}
                 onBack={() => dispatch({ type: "BACK" })}
-                matchCount={0}
+                error={state.submitError}
                 isSubmitting={state.isSubmitting}
                 firstName={state.firstName}
                 whatsapp={state.whatsapp}

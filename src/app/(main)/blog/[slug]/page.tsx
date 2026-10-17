@@ -3,9 +3,9 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Suspense } from 'react'
 import { ChevronRight, Clock, CalendarDays } from 'lucide-react'
-import { sanityFetch } from '@/sanity'
+import { sanityFetch, urlFor } from '@/sanity'
 import { BLOG_AUTHOR_NAME, BLOG_AUTHOR_JSON_LD } from '@/lib/blog-author'
-import { POST_BY_SLUG_QUERY, RELATED_POSTS_QUERY, SEO_QUERY } from '@/sanity/queries'
+import { POST_FIELDS, RELATED_POSTS_QUERY } from '@/sanity/queries'
 import {
   PortableTextRenderer,
   AuthorCard,
@@ -17,7 +17,16 @@ import { FALLBACK_IMAGES, FALLBACK_ALTS } from '@/sanity/fallbackImages'
 import { readingTimeFromBlocks } from '@/lib/reading-time'
 import type { Post, PostSummary } from '@/sanity/types'
 import type { Metadata } from 'next'
-import { DEFAULT_OG_IMAGE } from '@/lib/seo'
+import { JsonLd } from '@/components/seo/json-ld'
+import {
+  DEFAULT_OG_IMAGES,
+  ORGANIZATION_ID,
+  SITE_URL,
+  blogDescription,
+  blogTitle,
+  breadcrumbJsonLd,
+  isThinPost,
+} from '@/lib/seo'
 
 // Revalidate every 60s so edits in Sanity (e.g. a replaced cover image)
 // propagate to the statically-generated post pages without a full rebuild.
@@ -27,33 +36,89 @@ interface PostPageProps {
   params: Promise<{ slug: string }>
 }
 
+// Local SEO query: adds `_updatedAt` (real dateModified), the full featured
+// image (for a 1200x630 social crop) and a word count (thin-content rule).
+const POST_SEO_QUERY = `
+  *[_type == "post" && slug.current == $slug && status == "published"][0] {
+    title,
+    subtitle,
+    seo,
+    publishedAt,
+    _updatedAt,
+    featuredImage,
+    "wordCount": length(string::split(pt::text(body), " "))
+  }
+`
+
+// Same as POST_BY_SLUG_QUERY plus `_updatedAt` for an honest dateModified.
+const POST_PAGE_QUERY = `
+  *[_type == "post" && slug.current == $slug && status == "published"][0] {
+    ${POST_FIELDS},
+    _updatedAt,
+    body[]{
+      ...,
+      _type == "image" => { ..., "url": asset->url }
+    }
+  }
+`
+
+interface PostSeoData {
+  title: string
+  subtitle?: string
+  seo?: { seoTitle?: string; seoDesc?: string }
+  publishedAt?: string
+  _updatedAt?: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  featuredImage?: any
+  wordCount?: number
+}
+
 export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
   const { slug } = await params
-  const { data } = await sanityFetch<{ title: string; subtitle?: string; publishedAt?: string; image?: string; seo?: { seoTitle?: string; seoDesc?: string } }>({ query: SEO_QUERY, params: { slug } })
+  const { data } = await sanityFetch<PostSeoData>({ query: POST_SEO_QUERY, params: { slug } })
 
-  if (!data) return { title: 'Post Not Found' }
+  if (!data) return { title: 'Post not found', robots: { index: false, follow: false } }
 
-  const title = data.seo?.seoTitle || data.title
-  const description = data.seo?.seoDesc || data.subtitle || ''
-  const images = [data.image || DEFAULT_OG_IMAGE]
+  const title = blogTitle(data.seo?.seoTitle, data.title)
+  const description = blogDescription(data.seo?.seoDesc, data.subtitle)
+  const path = `/blog/${slug}`
+
+  // 1200x630 crop of the cover image; fall back to the curated fallback, then the brand image.
+  let imageUrl: string | undefined
+  try {
+    imageUrl = data.featuredImage?.asset
+      ? urlFor(data.featuredImage).width(1200).height(630).fit('crop').url()
+      : FALLBACK_IMAGES[slug]
+  } catch {
+    imageUrl = FALLBACK_IMAGES[slug]
+  }
+  const images = imageUrl
+    ? [{ url: imageUrl, width: 1200, height: 630, alt: data.title }]
+    : DEFAULT_OG_IMAGES
 
   return {
-    title,
+    // `absolute` so the root template never re-appends the brand.
+    title: { absolute: title },
     description,
-    alternates: { canonical: `/blog/${slug}` },
+    alternates: { canonical: path },
+    // Thin posts (see THIN_POST_WORDS) stay reachable but out of the index.
+    ...(isThinPost(data.wordCount) ? { robots: { index: false, follow: true } } : {}),
     openGraph: {
       title,
       description,
-      url: `/blog/${slug}`,
+      url: path,
       type: 'article',
+      siteName: 'Haus of Estate',
+      locale: 'en_GB',
       publishedTime: data.publishedAt,
+      modifiedTime: data._updatedAt,
       images,
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images,
+      images: images.map((image) => image.url),
     },
   }
 }
@@ -81,8 +146,8 @@ function formatDate(iso?: string): string {
 }
 
 async function PostContent({ slug }: { slug: string }) {
-  const { data: post } = await sanityFetch<Post>({
-    query: POST_BY_SLUG_QUERY,
+  const { data: post } = await sanityFetch<Post & { _updatedAt?: string }>({
+    query: POST_PAGE_QUERY,
     params: { slug },
   })
 
@@ -99,6 +164,7 @@ async function PostContent({ slug }: { slug: string }) {
   const primaryCategory = post.categories?.[0]
   const tags = (post.categories || []).map((c) => ({ title: c.title, slug: c.slug }))
 
+  const postUrl = `${SITE_URL}/blog/${post.slug}`
   const blogPostingJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
@@ -106,27 +172,29 @@ async function PostContent({ slug }: { slug: string }) {
     ...(post.subtitle ? { description: post.subtitle } : {}),
     ...(imageUrl ? { image: [imageUrl] } : {}),
     ...(post.publishedAt
-      ? { datePublished: post.publishedAt, dateModified: post.publishedAt }
+      ? {
+          datePublished: post.publishedAt,
+          // Real last-edit time from Sanity; never earlier than publication.
+          dateModified:
+            post._updatedAt && post._updatedAt > post.publishedAt ? post._updatedAt : post.publishedAt,
+        }
       : {}),
+    inLanguage: 'en-GB',
+    ...(primaryCategory ? { articleSection: primaryCategory.title } : {}),
     author: BLOG_AUTHOR_JSON_LD,
-    publisher: {
-      '@type': 'Organization',
-      name: 'Haus of Estate',
-      url: 'https://hausofestate.com',
-    },
-    mainEntityOfPage: {
-      '@type': 'WebPage',
-      '@id': `https://hausofestate.com/blog/${post.slug}`,
-    },
+    publisher: { '@type': 'Organization', '@id': ORGANIZATION_ID, name: 'Haus of Estate', url: SITE_URL },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': postUrl },
   }
+  const breadcrumbs = breadcrumbJsonLd([
+    { name: 'Home', path: '/' },
+    { name: 'Insights', path: '/blog' },
+    { name: post.title, path: `/blog/${post.slug}` },
+  ])
 
   return (
     <>
       <ReadingProgress />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostingJsonLd) }}
-      />
+      <JsonLd data={[blogPostingJsonLd, breadcrumbs]} />
 
       <div className="mx-auto max-w-6xl px-5 sm:px-6">
         {/* Breadcrumb */}
@@ -223,8 +291,8 @@ async function PostContent({ slug }: { slug: string }) {
 
 export default async function PostPage({ params }: PostPageProps) {
   const { slug } = await params
-  const { data: post } = await sanityFetch<Post>({
-    query: POST_BY_SLUG_QUERY,
+  const { data: post } = await sanityFetch<Post & { _updatedAt?: string }>({
+    query: POST_PAGE_QUERY,
     params: { slug },
   })
 

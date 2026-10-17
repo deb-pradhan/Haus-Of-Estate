@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -17,10 +17,12 @@ import {
   ArrowLeft,
   Check,
   Loader2,
-  Upload,
   AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LeadConsent } from "@/components/legal/lead-consent";
+import { submitLead } from "@/lib/submit-lead";
+import { ENQUIRY_RECEIVED_COPY, RESPONSE_TIME_COPY } from "@/lib/site-claims";
 
 interface SellerModalProps {
   open: boolean;
@@ -46,22 +48,19 @@ export function SellerModal({ open, onOpenChange }: SellerModalProps) {
   const [size, setSize] = useState("");
   const [viewType, setViewType] = useState("");
   const [urgency, setUrgency] = useState<string | null>(null);
-  const [titleDeed, setTitleDeed] = useState<File | null>(null);
-  const [passport, setPassport] = useState<File | null>(null);
   const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
-  const [consent, setConsent] = useState(false);
+  const [marketing, setMarketing] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const titleRef = useRef<HTMLInputElement>(null);
-  const passportRef = useRef<HTMLInputElement>(null);
 
   const reset = () => {
     setStep(1); setSellOrRent(null); setPropertyType("");
     setBedrooms(""); setLocation(""); setSize(""); setViewType("");
-    setUrgency(null); setTitleDeed(null); setPassport(null);
-    setFirstName(""); setEmail(""); setMobile(""); setConsent(false);
+    setUrgency(null);
+    setFirstName(""); setEmail(""); setMobile(""); setMarketing(false); setSubmitError("");
     setIsSubmitting(false); setErrors({});
   };
 
@@ -75,7 +74,6 @@ export function SellerModal({ open, onOpenChange }: SellerModalProps) {
     if (!firstName.trim()) errs.firstName = "Required";
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = "Valid email required";
     if (!isValidMobile(mobile)) errs.mobile = "Valid mobile required";
-    if (!consent) errs.consent = "Consent required";
     return errs;
   };
 
@@ -84,40 +82,38 @@ export function SellerModal({ open, onOpenChange }: SellerModalProps) {
     const errs = validateLead();
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setErrors({});
+    setSubmitError("");
     setIsSubmitting(true);
-    const formData = new FormData();
-    if (titleDeed) formData.append("titleDeed", titleDeed);
-    if (passport) formData.append("passport", passport);
-    try {
-      await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          intent: "seller",
-          sellOrRent,
-          propertyType,
-          bedrooms,
-          location,
-          size,
-          viewType,
-          urgency,
-          firstName,
-          email,
-          mobile,
-          consentGiven: consent,
-        }),
-      });
-    } catch (_) {}
+    const result = await submitLead({
+      marketingConsent: marketing,
+      fields: {
+        intent: "seller",
+        sellOrRent,
+        propertyType,
+        bedrooms,
+        location,
+        size,
+        viewType,
+        urgency,
+        firstName,
+        email,
+        mobile,
+      },
+    });
     setIsSubmitting(false);
-    setStep(6);
+    if (!result.ok) {
+      setSubmitError(result.error);
+      return;
+    }
+    setStep(5);
   };
 
-  const totalSteps = 5;
+  const totalSteps = 4;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-md rounded-xl p-0 sm:max-w-md">
-        {step <= 5 && (
+        {step <= 4 && (
           <div className="h-1 bg-muted">
             <div
               className="h-full bg-estate-700 transition-all duration-300"
@@ -127,7 +123,7 @@ export function SellerModal({ open, onOpenChange }: SellerModalProps) {
         )}
         <div className="p-6">
 
-          {step < 5 && (
+          {step < 4 && (
             <DialogHeader className="text-left mb-5">
               <p className="text-xs font-medium text-muted-foreground mb-1">
                 Step {step} of {totalSteps}
@@ -136,7 +132,6 @@ export function SellerModal({ open, onOpenChange }: SellerModalProps) {
                 {step === 1 && "Are you looking to sell or rent your property?"}
                 {step === 2 && "Tell us about your property"}
                 {step === 3 && "Is this urgent?"}
-                {step === 4 && "Upload documents"}
               </DialogTitle>
             </DialogHeader>
           )}
@@ -281,91 +276,15 @@ export function SellerModal({ open, onOpenChange }: SellerModalProps) {
             </div>
           )}
 
-          {/* Step 4: File upload */}
+          {/* Step 4: Lead capture */}
           {step === 4 && (
-            <div className="space-y-4">
-              <p className="text-xs text-muted-foreground">
-                Upload your title deed and passport copy to help us verify your property quickly.
-              </p>
-
-              {/* Title deed */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-foreground">Title Deed</Label>
-                <input
-                  ref={titleRef}
-                  type="file"
-                  accept="image/*,.pdf"
-                  onChange={(e) => setTitleDeed(e.target.files?.[0] ?? null)}
-                  className="hidden"
-                />
-                <button
-                  onClick={() => titleRef.current?.click()}
-                  className="flex w-full items-center gap-3 rounded-xl border-2 border-dashed border-border p-4 text-left transition-colors hover:border-estate-700/40"
-                >
-                  <Upload className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium text-foreground">
-                      {titleDeed ? titleDeed.name : "Click to upload"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">PDF or image</p>
-                  </div>
-                  {titleDeed && <Check className="ml-auto h-4 w-4 text-trust-teal" />}
-                </button>
-              </div>
-
-              {/* Passport */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-foreground">Passport Copy</Label>
-                <input
-                  ref={passportRef}
-                  type="file"
-                  accept="image/*,.pdf"
-                  onChange={(e) => setPassport(e.target.files?.[0] ?? null)}
-                  className="hidden"
-                />
-                <button
-                  onClick={() => passportRef.current?.click()}
-                  className="flex w-full items-center gap-3 rounded-xl border-2 border-dashed border-border p-4 text-left transition-colors hover:border-estate-700/40"
-                >
-                  <Upload className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium text-foreground">
-                      {passport ? passport.name : "Click to upload"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">PDF or image</p>
-                  </div>
-                  {passport && <Check className="ml-auto h-4 w-4 text-trust-teal" />}
-                </button>
-              </div>
-
-              <p className="text-xs text-muted-foreground">
-                Your documents are encrypted and only accessible to our authorised agents.
-              </p>
-
-              <div className="flex gap-2 pt-2">
-                <Button variant="outline" size="sm" onClick={() => setStep(3)} className="h-9">
-                  <ArrowLeft className="mr-1 h-3 w-3" /> Back
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => setStep(5)}
-                  className="h-9 flex-1 bg-estate-700 text-white hover:bg-estate-600"
-                >
-                  Next <ArrowRight className="ml-1 h-3 w-3" />
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Step 5: Lead capture */}
-          {step === 5 && (
             <div className="space-y-4">
               <DialogHeader className="text-left mb-3">
                 <DialogTitle className="font-serif text-xl font-medium text-estate-700">
                   Almost there{firstName ? `, ${firstName}` : ""}.
                 </DialogTitle>
                 <DialogDescription className="text-sm text-muted-foreground">
-                  We'll review your property and be in touch within 2 hours.
+                  We will review your property details and reply {RESPONSE_TIME_COPY}.
                 </DialogDescription>
               </DialogHeader>
 
@@ -385,34 +304,34 @@ export function SellerModal({ open, onOpenChange }: SellerModalProps) {
                   <PhoneInput id="sm-mobile" value={mobile} onChange={setMobile} invalid={!!errors.mobile} />
                   {errors.mobile && <p className="text-xs text-destructive">{errors.mobile}</p>}
                 </div>
-                <div className="space-y-1.5">
-                  <label className="flex items-start gap-2 cursor-pointer">
-                    <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-4 w-4 rounded border-border accent-estate-700" />
-                    <span className="text-xs leading-relaxed text-muted-foreground">I consent to Haus of Estate contacting me about my property enquiry. <span className="text-destructive">*</span></span>
-                  </label>
-                  {errors.consent && <p className="text-xs text-destructive">{errors.consent}</p>}
-                </div>
+                <LeadConsent
+                  idPrefix="sm"
+                  marketing={marketing}
+                  onMarketingChange={setMarketing}
+                  purpose="reply to this enquiry and introduce you to a suitable agent"
+                />
+                {submitError && <p role="alert" className="text-xs text-destructive">{submitError}</p>}
                 <Button type="submit" disabled={isSubmitting} className="h-11 w-full bg-estate-700 text-white hover:bg-estate-600 disabled:opacity-50">
                   {isSubmitting ? <div className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Submitting...</div> : <><ArrowRight className="mr-1.5 h-4 w-4" /> Submit enquiry</>}
                 </Button>
               </form>
-              <Button variant="outline" size="sm" onClick={() => setStep(4)} className="h-9">
+              <Button variant="outline" size="sm" onClick={() => setStep(3)} className="h-9">
                 <ArrowLeft className="mr-1 h-3 w-3" /> Back
               </Button>
             </div>
           )}
 
-          {/* Step 6: Success */}
-          {step === 6 && (
+          {/* Step 5: Success */}
+          {step === 5 && (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-estate-700/10">
                 <Check className="h-7 w-7 text-estate-700" />
               </div>
               <DialogTitle className="font-serif text-2xl font-medium text-estate-700">
-                You're all set{firstName ? `, ${firstName}` : ""}. 🎉
+                Thank you{firstName ? `, ${firstName}` : ""}.
               </DialogTitle>
               <DialogDescription className="mt-2 text-sm text-muted-foreground">
-                Our team will review your property details and be in touch within 2 hours.
+                {ENQUIRY_RECEIVED_COPY}
               </DialogDescription>
               <Button onClick={() => handleOpenChange(false)} className="mt-6 h-11 bg-estate-700 text-white hover:bg-estate-600">
                 Done

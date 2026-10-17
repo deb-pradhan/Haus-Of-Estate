@@ -5,12 +5,14 @@ import "@/app/globals.css";
 export const metadata: Metadata = {
   title: "Find Your Match",
   description:
-    "Answer 5 quick questions. We'll match you with verified Dubai properties that fit your lifestyle, budget, and goals.",
+    "Answer five quick questions about your budget and goals. A local Haus of Estate advisor will prepare a shortlist for Dubai, the UK or Bali.",
   alternates: { canonical: "/match" },
+  // A lead-capture tool, not content: keep it out of the index.
+  robots: { index: false, follow: true },
   openGraph: {
     title: "Find Your Match — Haus of Estate",
     description:
-      "Answer 5 quick questions. We'll match you with verified Dubai properties that fit your lifestyle, budget, and goals.",
+      "Answer five quick questions about your budget and goals. A local Haus of Estate advisor will prepare a shortlist for Dubai, the UK or Bali.",
     url: "/match",
     type: "website",
     images: DEFAULT_OG_IMAGES,

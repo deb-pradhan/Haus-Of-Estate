@@ -8,7 +8,7 @@ import { DEFAULT_OG_IMAGES } from '@/lib/seo'
 export const metadata: Metadata = {
   title: 'Properties',
   description:
-    'Explore homes across our partner communities — starting with Al Furjan, Dubai. Enquire and we will connect you with a vetted agent.',
+    'Search the homes Haus of Estate currently has published in Dubai and the UK, then enquire and an adviser will reply to you directly.',
   alternates: { canonical: '/properties' },
   openGraph: {
     title: 'Properties — Haus of Estate',

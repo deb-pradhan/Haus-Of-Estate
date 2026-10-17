@@ -7,13 +7,15 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PhoneInput, isValidMobile } from "@/components/ui/phone-input";
 import { Check, ArrowRight, Loader2 } from "lucide-react";
+import { LeadConsent } from "@/components/legal/lead-consent";
+import { submitLead } from "@/lib/submit-lead";
+import { ENQUIRY_RECEIVED_COPY, FEE_DISCLOSURE_COPY } from "@/lib/site-claims";
 
 interface AccountModalProps {
   open: boolean;
@@ -27,7 +29,8 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
   const [surname, setSurname] = useState("");
   const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
-  const [consent, setConsent] = useState(false);
+  const [marketing, setMarketing] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const reset = () => {
@@ -37,7 +40,8 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
     setSurname("");
     setEmail("");
     setMobile("");
-    setConsent(false);
+    setMarketing(false);
+    setSubmitError("");
     setErrors({});
   };
 
@@ -54,7 +58,6 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
       errs.email = "Valid email required";
     if (!isValidMobile(mobile))
       errs.mobile = "Valid mobile number required";
-    if (!consent) errs.consent = "Consent required to proceed";
     return errs;
   };
 
@@ -66,22 +69,23 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
       return;
     }
     setErrors({});
+    setSubmitError("");
     setIsSubmitting(true);
-    try {
-      await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          intent: "account",
-          firstName,
-          surname,
-          email,
-          mobile,
-          consentGiven: consent,
-        }),
-      });
-    } catch (_) {}
+    const result = await submitLead({
+      marketingConsent: marketing,
+      fields: {
+        intent: "account",
+        firstName,
+        surname,
+        email,
+        mobile,
+      },
+    });
     setIsSubmitting(false);
+    if (!result.ok) {
+      setSubmitError(result.error);
+      return;
+    }
     setStep("success");
   };
 
@@ -95,7 +99,7 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
                 Get in touch
               </DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground">
-                Tell us where you&apos;re looking and we&apos;ll match you with a vetted specialist for your market.
+                Tell us where you&apos;re looking and we&apos;ll introduce you to a suitable specialist for your market.
               </DialogDescription>
             </DialogHeader>
 
@@ -168,23 +172,11 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
                 )}
               </div>
 
-              <div className="space-y-1.5">
-                <label className="flex items-start gap-2.5 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={consent}
-                    onChange={(e) => setConsent(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 rounded border-border accent-estate-700"
-                  />
-                  <span className="text-xs leading-relaxed text-muted-foreground">
-                    I consent to Haus of Estate contacting me about my enquiry by WhatsApp, SMS, email or phone.{" "}
-                    <span className="text-destructive">*</span>
-                  </span>
-                </label>
-                {errors.consent && (
-                  <p className="text-xs text-destructive">{errors.consent}</p>
-                )}
-              </div>
+              <LeadConsent idPrefix="am" marketing={marketing} onMarketingChange={setMarketing} />
+
+              {submitError && (
+                <p role="alert" className="text-xs text-destructive">{submitError}</p>
+              )}
 
               <Button
                 type="submit"
@@ -206,7 +198,7 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
             </form>
 
             <p className="mt-3 text-center text-xs text-muted-foreground">
-              No spam. Our team will be in touch within 2 hours.
+              {FEE_DISCLOSURE_COPY}
             </p>
           </div>
         ) : (
@@ -218,7 +210,7 @@ export function AccountModal({ open, onOpenChange }: AccountModalProps) {
               Thanks, {firstName}.
             </DialogTitle>
             <DialogDescription className="mt-2 text-sm text-muted-foreground">
-              A specialist will be in touch within 2 hours to discuss your enquiry.
+              {ENQUIRY_RECEIVED_COPY}
             </DialogDescription>
             <Button
               onClick={() => handleOpenChange(false)}

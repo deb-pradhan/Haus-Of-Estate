@@ -3,6 +3,9 @@ import { Inter, Cormorant_Garamond } from "next/font/google";
 import { Suspense } from "react";
 import { draftMode } from "next/headers";
 import { ConsentManager } from "@/components/analytics/consent-manager";
+import { JsonLd } from "@/components/seo/json-ld";
+import { COMPANY_IDENTITY } from "@/lib/company-identity";
+import { DEFAULT_DESCRIPTION, DEFAULT_TITLE, SITE_NAME, SITE_URL, siteJsonLd } from "@/lib/seo";
 import "./globals.css";
 
 const inter = Inter({
@@ -18,37 +21,27 @@ const cormorant = Cormorant_Garamond({
   display: "swap",
 });
 
-const SITE_URL = "https://hausofestate.com";
-const SITE_NAME = "Haus of Estate";
-const DEFAULT_TITLE = "Haus of Estate — international property, with proof.";
-const DEFAULT_DESCRIPTION =
-  "International property service for buyers and investors in Dubai, UK, Bali and Cyprus. Vetted agents, no hidden fees. Free enquiry replied to within 2 hours.";
-
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   // `default` is used by the home page (and any page without its own title);
   // `template` appends the brand to bare page titles, e.g. "Properties" →
-  // "Properties — Haus of Estate". Pages therefore set only their page name.
+  // "Properties | Haus of Estate". Pages therefore set only their page name
+  // (keep it under 43 characters so the whole title fits in 60).
   title: {
     default: DEFAULT_TITLE,
-    template: "%s — Haus of Estate",
+    template: `%s | ${SITE_NAME}`,
   },
   description: DEFAULT_DESCRIPTION,
   applicationName: SITE_NAME,
-  keywords: [
-    "international property",
-    "overseas property UK",
-    "Dubai property",
-    "estate agents UAE",
-    "buy property abroad",
-  ],
   authors: [{ name: SITE_NAME, url: SITE_URL }],
   creator: SITE_NAME,
   publisher: SITE_NAME,
   formatDetection: { telephone: false, address: false, email: false },
-  alternates: {
-    canonical: "/",
-  },
+  // Deliberately NO global `alternates.canonical`: a canonical set here is
+  // inherited by every page that does not override it (it used to point
+  // /list-property and /auth/* at the homepage). Every indexable route
+  // declares its own self-referencing canonical; see pageMetadata() in
+  // src/lib/seo.ts.
   robots: {
     index: true,
     follow: true,
@@ -62,18 +55,16 @@ export const metadata: Metadata = {
   },
   // og:image / twitter:image are supplied automatically by the
   // src/app/opengraph-image.png and twitter-image.png file conventions.
+  // No og:url / title / description here for the same reason as the canonical
+  // above: they would be inherited by pages that define no social block of
+  // their own. Next fills og:title/description from the page's own metadata.
   openGraph: {
     type: "website",
     siteName: SITE_NAME,
-    title: DEFAULT_TITLE,
-    description: DEFAULT_DESCRIPTION,
-    url: "/",
     locale: "en_GB",
   },
   twitter: {
     card: "summary_large_image",
-    title: DEFAULT_TITLE,
-    description: DEFAULT_DESCRIPTION,
   },
   appleWebApp: {
     capable: true,
@@ -90,61 +81,9 @@ export const viewport: Viewport = {
   colorScheme: "light",
 };
 
-// Site-wide structured data (JSON-LD) for SEO rich results.
-const officeAddress = {
-  "@type": "PostalAddress",
-  streetAddress: "115 City Road, Unit A",
-  addressLocality: "Cardiff",
-  addressRegion: "Wales",
-  postalCode: "CF24 3BP",
-  addressCountry: "GB",
-};
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Organization",
-      "@id": `${SITE_URL}/#organization`,
-      name: SITE_NAME,
-      url: SITE_URL,
-      logo: `${SITE_URL}/Vector-1.svg`,
-      address: officeAddress,
-      sameAs: [
-        "https://www.instagram.com/haus_of_estate/",
-        "https://www.linkedin.com/company/115804984/",
-        "https://www.facebook.com/profile.php?id=61560983191278",
-        "https://in.pinterest.com/hausofestate/",
-        "https://www.youtube.com/@Hausofestate",
-        "https://x.com/hausofestate",
-      ],
-      contactPoint: {
-        "@type": "ContactPoint",
-        contactType: "customer service",
-        telephone: "+447496033321",
-        email: "info@hausofestate.com",
-        areaServed: ["GB", "AE"],
-        availableLanguage: ["en"],
-      },
-    },
-    {
-      "@type": "RealEstateAgent",
-      "@id": `${SITE_URL}/#realestateagent`,
-      name: SITE_NAME,
-      url: SITE_URL,
-      telephone: "+447496033321",
-      email: "info@hausofestate.com",
-      areaServed: ["GB", "AE", "ID", "CY"],
-      priceRange: "$$$",
-      address: officeAddress,
-    },
-    {
-      "@type": "WebSite",
-      "@id": `${SITE_URL}/#website`,
-      name: SITE_NAME,
-      url: SITE_URL,
-    },
-  ],
-};
+// Site-wide structured data: one Organization/RealEstateAgent node + WebSite.
+// Address, phone and email come from COMPANY_IDENTITY / src/lib/seo.ts only.
+const jsonLd = siteJsonLd(COMPANY_IDENTITY);
 
 // Optional public IDs, embedded at build time. A valid GTM container takes
 // precedence; otherwise a GA4 measurement ID loads gtag.js directly. Either
@@ -161,12 +100,9 @@ export default async function RootLayout({
   const { isEnabled: isDraftModeEnabled } = await draftMode();
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en-GB" suppressHydrationWarning>
       <head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
+        <JsonLd data={jsonLd} />
       </head>
       <body className={`${inter.variable} ${cormorant.variable}`}>
         <Suspense fallback={null}>

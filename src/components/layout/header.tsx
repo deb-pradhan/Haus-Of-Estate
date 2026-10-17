@@ -173,13 +173,15 @@ const ABOUT_ITEMS: NavItem[] = [
 
 export function Header() {
   const pathname = usePathname();
+  const { openAccount } = useLeadModals();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="sticky top-0 z-50">
+    <>
+      {/* The utility bar scrolls away; only the slim glass header stays pinned. */}
       <TopUtilityBar />
-      <header className="border-b border-[#DDE1E6] bg-surface/95 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
+      <header className="glass sticky top-0 z-50 border-x-0 border-t-0 border-b-hairline">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:h-[4.25rem] md:px-6">
           {/* Logo */}
           <Link href="/" className="flex shrink-0 items-center gap-3" aria-label="Haus of Estate — home">
             <Image
@@ -211,6 +213,13 @@ export function Header() {
 
           {/* Right-side actions */}
           <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              onClick={openAccount}
+              className="hidden lg:inline-flex"
+            >
+              Speak to an advisor
+            </Button>
             {/* Mobile / tablet trigger */}
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
@@ -233,7 +242,7 @@ export function Header() {
           </div>
         </div>
       </header>
-    </div>
+    </>
   );
 }
 

@@ -130,3 +130,20 @@ test("GA4 direct: accepted consent stays off private routes and unlisted hosts",
   await expect(page.locator("#haus-gtag")).toHaveCount(0);
   expect(requests).toHaveLength(1);
 });
+
+test("GA4 direct: UTMs and the referrer origin reach GA4, other query params and referrer paths do not", async ({ context, page }) => {
+  const requests = await interceptGoogle(context);
+  await context.addInitScript(() => localStorage.setItem("haus.analytics-consent.v1",
+    JSON.stringify({ version: 1, analytics: "granted", expiresAt: Date.now() + 86_400_000 })));
+  await page.goto("/?utm_source=newsletter&utm_medium=email&utm_campaign=launch&email=private@example.com&q=secret", {
+    referer: "https://www.example.org/some/path?token=abc",
+  });
+  await expect.poll(() => requests.length).toBe(1);
+  await expect.poll(async () => (await gaEvents(page, "page_view")).length).toBe(1);
+  const view = (await gaEvents(page, "page_view"))[0][2];
+  expect(view.page_referrer).toBe("https://www.example.org");
+  const location = new URL(String(view.page_location));
+  expect(location.pathname).toBe("/");
+  expect(Object.fromEntries(location.searchParams)).toEqual({ utm_source: "newsletter", utm_medium: "email", utm_campaign: "launch" });
+  expect(JSON.stringify(await commands(page))).not.toMatch(/private@example|secret|token=abc|some\/path/);
+});

@@ -1,30 +1,24 @@
+import { RESPONSE_TIME_COPY } from '@/lib/site-claims'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { sanityFetch } from '@/sanity'
 import { FAQS_QUERY } from '@/sanity/queries'
 import { FaqAccordion, type FaqItem } from '@/components/faq/faq-accordion'
-import { DEFAULT_OG_IMAGES } from '@/lib/seo'
+import { JsonLd } from '@/components/seo/json-ld'
+import { faqJsonLd as faqJsonLdFromEntries, pageMetadata } from '@/lib/seo'
 
 interface FaqDoc extends FaqItem {
   category?: string
   featured?: boolean
 }
 
-export const metadata: Metadata = {
-  title: 'FAQs',
+export const metadata: Metadata = pageMetadata({
+  title: 'Overseas Property FAQs',
   description:
-    'Plain-English answers to the questions buyers, renters, sellers and landlords ask us most often.',
-  alternates: { canonical: '/faq' },
-  openGraph: {
-    title: 'FAQs — Haus of Estate',
-    description:
-      'Plain-English answers to the questions buyers, renters, sellers and landlords ask us most often.',
-    url: '/faq',
-    type: 'website',
-    images: DEFAULT_OG_IMAGES,
-  },
-}
+    'Plain-English answers to the questions buyers, renters, sellers and landlords ask us most often about buying and letting property overseas.',
+  path: '/faq',
+})
 
 export const revalidate = 60
 
@@ -54,27 +48,9 @@ export default async function FaqPage() {
   const { data } = await sanityFetch<FaqDoc[]>({ query: FAQS_QUERY })
   const items = data ?? []
 
-  const faqJsonLd =
-    items.length > 0
-      ? {
-          '@context': 'https://schema.org',
-          '@type': 'FAQPage',
-          mainEntity: items
-            .map((f) => ({
-              question: f.question,
-              answer: portableTextToPlainText(f.answer),
-            }))
-            .filter((f) => f.question && f.answer)
-            .map((f) => ({
-              '@type': 'Question',
-              name: f.question,
-              acceptedAnswer: {
-                '@type': 'Answer',
-                text: f.answer,
-              },
-            })),
-        }
-      : null
+  const faqJsonLd = faqJsonLdFromEntries(
+    items.map((f) => ({ question: f.question, answer: portableTextToPlainText(f.answer) })),
+  )
 
   // Group by category, preserving GROQ order.
   const byCategory = new Map<string, FaqDoc[]>()
@@ -87,12 +63,7 @@ export default async function FaqPage() {
 
   return (
     <div className="min-h-screen">
-      {faqJsonLd && faqJsonLd.mainEntity.length > 0 && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-        />
-      )}
+      <JsonLd data={faqJsonLd} />
       {/* Hero */}
       <section className="bg-estate-700 px-4 py-20 md:px-6 md:py-24">
         <div className="mx-auto max-w-4xl text-center">
@@ -105,8 +76,7 @@ export default async function FaqPage() {
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/80 md:text-lg">
             The questions buyers, renters, sellers and landlords ask us most often.
-            If yours isn&apos;t here, ask us directly — we&apos;ll reply within
-            two working hours.
+            If yours isn&apos;t here, ask us directly — we&apos;ll reply {RESPONSE_TIME_COPY}.
           </p>
         </div>
       </section>
@@ -142,7 +112,7 @@ export default async function FaqPage() {
             </h2>
             <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
               Send a quick enquiry — a member of our team will get back to you
-              within two working hours.
+              {RESPONSE_TIME_COPY}.
             </p>
             <Link
               href="/#services"

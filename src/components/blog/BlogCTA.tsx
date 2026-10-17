@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { ArrowRight, ArrowUpRight } from 'lucide-react'
 import { useLeadModals } from '@/components/lead-modal'
+import { RESPONSE_TIME_COPY } from '@/lib/site-claims'
 
 interface BlogCTAProps {
   articleCount: number
@@ -27,7 +28,7 @@ export function BlogCTA({ articleCount }: BlogCTAProps) {
           </h2>
           <p className="mt-3 max-w-md text-[0.95rem] leading-relaxed text-white/70">
             Speak with a specialist for advice tailored to your goals across the UK, Dubai and
-            beyond — no obligation, replied to within two hours.
+            beyond — no obligation, and we will reply {RESPONSE_TIME_COPY}.
           </p>
 
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">

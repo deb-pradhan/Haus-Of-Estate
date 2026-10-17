@@ -10,18 +10,18 @@ import {
   Mail,
   MapPin,
   Phone,
-  Star,
   Youtube,
 } from "lucide-react";
 import { useLeadModals } from "@/components/lead-modal/modal-context";
 import { CookieSettingsButton } from "@/components/analytics/consent-manager";
 import { COMPANY_IDENTITY } from "@/lib/company-identity";
+import { RegulationBlock } from "@/components/legal/regulation-block";
 
 const COMPANY_PHONE_DISPLAY = "+44 7496 033321";
 const COMPANY_PHONE_HREF = "tel:+447496033321";
 const WHATSAPP_URL =
   "https://wa.me/971585607033?utm_source=site&utm_medium=footer&utm_campaign=whatsapp";
-const COMPANY_EMAIL = "info@hausofestate.com";
+const COMPANY_EMAIL = COMPANY_IDENTITY.generalEmail;
 
 const SOCIAL_LINK_CLASS = "h-4 w-4";
 
@@ -87,7 +87,7 @@ export function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="bg-estate-700 text-white/70">
+    <footer className="bg-estate-900 text-white/75">
       {/* Main columns */}
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 md:grid-cols-2 md:px-6 lg:grid-cols-5">
         {/* Brand */}
@@ -99,23 +99,15 @@ export function Footer() {
           >
             Haus of Estate
           </Link>
-          <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/60">
-            The international property service you can rely on. We connect
-            buyers, landlords and investors with vetted agents across the UK,
-            UAE and selected international markets.
+          <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/70">
+            We introduce buyers, landlords and investors to estate agents and
+            developers across the UK, the UAE and selected international markets.
           </p>
 
-          <div className="mt-5 flex items-center gap-2">
-            <div className="flex">
-              {[1, 2, 3, 4, 5].map((s) => (
-                <Star key={s} className="h-3.5 w-3.5 fill-gold-400 text-gold-400" />
-              ))}
-            </div>
-            <span className="text-xs text-white/60">Rated 4.8 · Excellent</span>
-          </div>
-
-          <div className="mt-4 max-w-sm space-y-2 text-xs leading-relaxed text-white/60">
-            <p className="font-semibold text-white/80">{COMPANY_IDENTITY.legalName}</p>
+          <div className="mt-5 max-w-sm space-y-2 text-xs leading-relaxed text-white/70">
+            <p className="font-semibold text-white/85">
+              {COMPANY_IDENTITY.name} is a trading name of {COMPANY_IDENTITY.legalName}
+            </p>
             <p>
               Registered in {COMPANY_IDENTITY.registeredJurisdiction}.{" "}
               <a
@@ -140,27 +132,33 @@ export function Footer() {
             </p>
           </div>
 
-          <Image
-            src="/badges/policybee-insured-white.png"
-            alt="Insured through PolicyBee"
-            width={80}
-            height={80}
-            sizes="80px"
-            className="mt-5 h-20 w-20 object-contain"
-          />
+          <RegulationBlock tone="dark" className="mt-5 max-w-sm" />
+
+          {/* The insurance badge makes a claim, so it shows only when the
+              founder has supplied a plain-English description of the cover. */}
+          {COMPANY_IDENTITY.piInsuranceNote.trim() && (
+            <Image
+              src="/badges/policybee-insured-white.png"
+              alt="Professional indemnity insurance held. See Regulation and complaints."
+              width={80}
+              height={80}
+              sizes="80px"
+              className="mt-5 h-20 w-20 object-contain"
+            />
+          )}
 
           {/* Quick actions */}
           <div className="mt-5 flex flex-wrap gap-2">
             <button
               type="button"
               onClick={openSeller}
-              className="inline-flex items-center gap-1.5 rounded-full bg-gold-500 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-gold-400"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-gold-400 px-4 py-2 text-xs font-semibold text-ink-900 transition-colors hover:bg-gold-300"
             >
-              Book Valuation <ArrowRight className="h-3.5 w-3.5" />
+              Request a valuation <ArrowRight className="h-3.5 w-3.5" />
             </button>
             <Link
               href="/properties"
-              className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-white/10"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-white/10"
             >
               Browse properties <ArrowRight className="h-3.5 w-3.5" />
             </Link>
@@ -203,6 +201,8 @@ export function Footer() {
           <FooterLink href="/legal/privacy-policy">Privacy policy</FooterLink>
           <FooterLink href="/legal/terms-of-service">Terms of service</FooterLink>
           <FooterLink href="/legal/cookie-policy">Cookie policy</FooterLink>
+          <FooterLink href="/legal/complaints">Complaints</FooterLink>
+          <FooterLink href="/legal/accessibility">Accessibility</FooterLink>
         </FooterCol>
 
         {/* Contact */}
@@ -222,7 +222,7 @@ export function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Chat with us on WhatsApp"
-              className="flex items-center gap-2.5 text-sm text-white/60 transition-colors hover:text-white"
+              className="flex items-center gap-2.5 text-sm text-white/70 transition-colors hover:text-white"
             >
               <WhatsAppGlyph />
               WhatsApp us
@@ -231,7 +231,7 @@ export function Footer() {
           <li>
             <a
               href={`mailto:${COMPANY_EMAIL}`}
-              className="flex items-center gap-2.5 text-sm text-white/60 transition-colors hover:text-white"
+              className="flex items-center gap-2.5 text-sm text-white/70 transition-colors hover:text-white"
             >
               <Mail className="h-4 w-4 shrink-0 text-gold-400" />
               {COMPANY_EMAIL}
@@ -240,13 +240,13 @@ export function Footer() {
           <li>
             <a
               href="mailto:hr@hausofestate.com"
-              className="flex items-center gap-2.5 text-sm text-white/60 transition-colors hover:text-white"
+              className="flex items-center gap-2.5 text-sm text-white/70 transition-colors hover:text-white"
             >
               <Mail className="h-4 w-4 shrink-0 text-gold-400" />
               hr@hausofestate.com
             </a>
           </li>
-          <li className="flex items-start gap-2.5 text-sm text-white/60">
+          <li className="flex items-start gap-2.5 text-sm text-white/70">
             <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-gold-400" />
             <address className="not-italic">
               <span className="block font-medium text-white/80">Trading address</span>
@@ -258,10 +258,10 @@ export function Footer() {
 
       {/* Legal bar */}
       <div className="border-t border-white/10">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-white/45 md:flex-row md:px-6">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-white/70 md:flex-row md:px-6">
           <span>&copy; {year} {COMPANY_IDENTITY.legalName}. All rights reserved.</span>
           <CookieSettingsButton />
-          <span>UK English · Prices indicative · Subject to availability</span>
+          <span>Prices indicative · Subject to availability</span>
         </div>
       </div>
     </footer>
@@ -277,7 +277,7 @@ function FooterCol({
 }) {
   return (
     <div>
-      <h4 className="mb-4 font-serif text-xs font-semibold uppercase tracking-[0.18em] text-gold-400">
+      <h4 className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-gold-300">
         {title}
       </h4>
       <ul className="space-y-2.5">{children}</ul>
@@ -290,7 +290,7 @@ function FooterLink({ href, children }: { href: string; children: React.ReactNod
     <li>
       <Link
         href={href}
-        className="text-sm text-white/60 transition-colors hover:text-white"
+        className="text-sm text-white/70 transition-colors hover:text-white"
       >
         {children}
       </Link>
@@ -310,7 +310,7 @@ function FooterButton({
       <button
         type="button"
         onClick={onClick}
-        className="text-left text-sm text-white/60 transition-colors hover:text-white"
+        className="text-left text-sm text-white/70 transition-colors hover:text-white"
       >
         {children}
       </button>

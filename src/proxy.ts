@@ -8,6 +8,18 @@ import {
 
 const GUEST_ONLY = ["/auth/login", "/auth/register"];
 
+// Auth.js v5 session cookie: `authjs.session-token` (http/dev) or
+// `__Secure-authjs.session-token` (https). Large JWTs are chunked as `.0`, `.1`…
+// A cookie's presence is only a UX hint (guests-only pages bounce signed-in
+// users); it is NOT an authorisation check. Real checks must call `auth()`.
+function hasSessionCookie(request: NextRequest): boolean {
+  return request.cookies
+    .getAll()
+    .some(({ name }) =>
+      /^(?:__Secure-)?authjs\.session-token(?:\.\d+)?$/.test(name)
+    );
+}
+
 export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -16,11 +28,8 @@ export default function proxy(request: NextRequest) {
     return careersUnavailableResponse();
   }
 
-  if (GUEST_ONLY.some((p) => pathname.startsWith(p))) {
-    const sessionCookie =
-      request.cookies.get("next-auth.session-token") ||
-      request.cookies.get("__Secure-authjs.session-token");
-    if (sessionCookie) {
+  if (GUEST_ONLY.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+    if (hasSessionCookie(request)) {
       return NextResponse.redirect(new URL("/", request.url));
     }
   }

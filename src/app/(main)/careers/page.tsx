@@ -59,7 +59,7 @@ const VALUES = [
   {
     icon: Heart,
     title: 'Caregiver first, salesperson never.',
-    body: "We don't chase commission. We protect clients from costly mistakes and route them to the right vetted agent, even when it isn't us closing the deal.",
+    body: "We don't chase commission. We protect clients from costly mistakes and introduce them to the right local agent, even when it isn't us closing the deal.",
   },
   {
     icon: Users,

@@ -98,7 +98,7 @@ export function SearchFiltersBar({
     onFiltersChange({ query: filters.query, sortBy: filters.sortBy });
   };
 
-  const FilterContent = () => (
+  const filterContent = (
     <div className="flex flex-col gap-4">
       <div>
         <Label className="mb-1.5 text-xs">Area</Label>
@@ -270,7 +270,7 @@ export function SearchFiltersBar({
               <SheetTitle>Filters</SheetTitle>
             </SheetHeader>
             <div className="mt-4">
-              <FilterContent />
+              {filterContent}
               <Button
                 className="mt-6 w-full"
                 onClick={() => setMobileOpen(false)}

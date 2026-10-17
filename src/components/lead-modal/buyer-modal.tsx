@@ -21,6 +21,9 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LeadConsent } from "@/components/legal/lead-consent";
+import { submitLead } from "@/lib/submit-lead";
+import { ENQUIRY_RECEIVED_COPY, RESPONSE_TIME_COPY } from "@/lib/site-claims";
 
 interface BuyerModalProps {
   open: boolean;
@@ -68,7 +71,8 @@ export function BuyerModal({ open, onOpenChange }: BuyerModalProps) {
   const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
-  const [consent, setConsent] = useState(false);
+  const [marketing, setMarketing] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -82,7 +86,8 @@ export function BuyerModal({ open, onOpenChange }: BuyerModalProps) {
     setFirstName("");
     setEmail("");
     setMobile("");
-    setConsent(false);
+    setMarketing(false);
+    setSubmitError("");
     setIsSubmitting(false);
     setErrors({});
   };
@@ -99,7 +104,6 @@ export function BuyerModal({ open, onOpenChange }: BuyerModalProps) {
       errs.email = "Valid email required";
     if (!isValidMobile(mobile))
       errs.mobile = "Valid mobile required";
-    if (!consent) errs.consent = "Consent required";
     return errs;
   };
 
@@ -111,26 +115,27 @@ export function BuyerModal({ open, onOpenChange }: BuyerModalProps) {
       return;
     }
     setErrors({});
+    setSubmitError("");
     setIsSubmitting(true);
-    try {
-      await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          intent: "buyer",
-          buyOrRent: intent,
-          useType,
-          bedrooms,
-          area,
-          market,
-          firstName,
-          email,
-          mobile,
-          consentGiven: consent,
-        }),
-      });
-    } catch (_) {}
+    const result = await submitLead({
+      marketingConsent: marketing,
+      fields: {
+        intent: "buyer",
+        buyOrRent: intent,
+        useType,
+        bedrooms,
+        area,
+        market,
+        firstName,
+        email,
+        mobile,
+      },
+    });
     setIsSubmitting(false);
+    if (!result.ok) {
+      setSubmitError(result.error);
+      return;
+    }
     setStep(6);
   };
 
@@ -330,7 +335,7 @@ export function BuyerModal({ open, onOpenChange }: BuyerModalProps) {
                   Almost there, {firstName || "friend"}.
                 </DialogTitle>
                 <DialogDescription className="text-sm text-muted-foreground">
-                  Enter your details and an agent will be in touch within 2 hours.
+                  Enter your details and we will reply {RESPONSE_TIME_COPY}.
                 </DialogDescription>
               </DialogHeader>
 
@@ -350,13 +355,8 @@ export function BuyerModal({ open, onOpenChange }: BuyerModalProps) {
                   <PhoneInput id="bm-mobile" value={mobile} onChange={setMobile} invalid={!!errors.mobile} />
                   {errors.mobile && <p className="text-xs text-destructive">{errors.mobile}</p>}
                 </div>
-                <div className="space-y-1.5">
-                  <label className="flex items-start gap-2 cursor-pointer">
-                    <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-4 w-4 rounded border-border accent-estate-700" />
-                    <span className="text-xs leading-relaxed text-muted-foreground">I consent to Haus of Estate contacting me about my enquiry by WhatsApp, SMS, email or phone. <span className="text-destructive">*</span></span>
-                  </label>
-                  {errors.consent && <p className="text-xs text-destructive">{errors.consent}</p>}
-                </div>
+                <LeadConsent idPrefix="bm" marketing={marketing} onMarketingChange={setMarketing} />
+                {submitError && <p role="alert" className="text-xs text-destructive">{submitError}</p>}
                 <Button type="submit" disabled={isSubmitting} className="h-11 w-full bg-estate-700 text-white hover:bg-estate-600 disabled:opacity-50">
                   {isSubmitting ? <div className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Submitting...</div> : <><ArrowRight className="mr-1.5 h-4 w-4" /> Submit</>}
                 </Button>
@@ -374,10 +374,10 @@ export function BuyerModal({ open, onOpenChange }: BuyerModalProps) {
                 <Check className="h-7 w-7 text-estate-700" />
               </div>
               <DialogTitle className="font-serif text-2xl font-medium text-estate-700">
-                You're all set{firstName ? `, ${firstName}` : ""}. 🎉
+                Thank you{firstName ? `, ${firstName}` : ""}.
               </DialogTitle>
               <DialogDescription className="mt-2 text-sm text-muted-foreground">
-                One of our agents will be in touch within 2 hours with properties matching your criteria.
+                {ENQUIRY_RECEIVED_COPY}
               </DialogDescription>
               <Button onClick={() => handleOpenChange(false)} className="mt-6 h-11 bg-estate-700 text-white hover:bg-estate-600">
                 Done

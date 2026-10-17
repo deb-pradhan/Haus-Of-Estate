@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLeadModals } from "@/components/lead-modal/modal-context";
+import { FEE_DISCLOSURE_COPY, RESPONSE_TIME_COPY } from "@/lib/site-claims";
 
 interface ServiceSection {
   id: string;
@@ -31,16 +32,15 @@ const SECTIONS: ServiceSection[] = [
     eyebrow: "Property Management",
     title: "Property Management",
     icon: ClipboardList,
-    lead: "Tenancies, maintenance and compliance — handled properly, with you in the loop.",
+    lead: "Introductions to managing agents for landlords with one property or a portfolio.",
     body:
-      "For landlords with one property or a portfolio. We coordinate everyday management — referencing, check-ins and check-outs, maintenance, inspections, statutory compliance and arrears — and report clearly on what’s happening across your homes.",
+      "A managing agent can handle everyday management for you, such as referencing, check-ins and check-outs, maintenance and inspections. Letting and managing property carries legal requirements that vary by country; your managing agent is responsible for meeting them. We introduce you and are not a party to the management agreement.",
     bullets: [
-      "Tenancy administration end to end",
-      "Gas Safe, EICR, EPC and Right to Rent kept current",
-      "Maintenance triaged and contractors managed",
-      "Transparent monthly reporting",
+      "Introductions to managing agents",
+      "Ask your agent which safety and compliance checks they carry out",
+      "Reporting arrangements agreed directly with your agent",
     ],
-    cta: { label: "Speak to a property manager", action: "account" },
+    cta: { label: "Enquire about management", action: "account" },
   },
   {
     id: "staging",
@@ -49,11 +49,11 @@ const SECTIONS: ServiceSection[] = [
     icon: Sparkles,
     lead: "Present a home at its best for viewings, photography and marketing.",
     body:
-      "Staging is where styling meets logistics. We prepare a property so prospective buyers and tenants can picture themselves living there — quickly, on schedule, and ready for the marketing campaign. Suitable for vacant homes and lived-in ones being prepared for sale.",
+      "Staging helps prospective buyers and tenants picture themselves living in a property. We can introduce you to staging providers for vacant homes and lived-in ones being prepared for sale. Your agreement is with the provider you choose.",
     bullets: [
-      "Concept, source, install and de-rig",
+      "Concept, install and removal",
       "Furniture, soft furnishings and accessories",
-      "Photography and viewing-day attendance",
+      "Preparation for photography and viewings",
     ],
     cta: { label: "Enquire about staging", action: "account" },
   },
@@ -64,11 +64,10 @@ const SECTIONS: ServiceSection[] = [
     icon: Sofa,
     lead: "Move-in ready interiors for new builds and let properties.",
     body:
-      "From a one-bedroom apartment fit-out to a full villa furnishing package, we plan to a brief and a budget. We specify the right pieces, manage delivery and installation, and hand back a finished home ready for occupation, marketing or photography.",
+      "From a one-bedroom apartment fit-out to a full villa furnishing package, we can introduce you to furnishing providers who work to a brief and a budget. Your agreement is with the provider you choose.",
     bullets: [
       "Tailored to brief: lettings spec, owner-occupied or showhome",
-      "Procurement and supplier management",
-      "Delivery, install and snagging",
+      "Procurement, delivery and installation by the provider",
     ],
     cta: { label: "Enquire about furnishing", action: "account" },
   },
@@ -77,13 +76,13 @@ const SECTIONS: ServiceSection[] = [
     eyebrow: "Renovations",
     title: "Renovations",
     icon: PaintRoller,
-    lead: "Vetted trades for painting, plumbing, decorating, electrical and flooring.",
+    lead: "Introductions to trades for painting, plumbing, decorating, electrical and flooring.",
     body:
-      "Whether you’re preparing a home to let or sell, or settling into a new one, we connect you to trusted trades and manage scope, scheduling and snagging. Single trades or a coordinated package — your choice.",
+      "Whether you’re preparing a home to let or sell, or settling into a new one, we introduce you to trades for single jobs or a coordinated package. Your contract is with the trade you choose.",
     bullets: [
       "Painting and decorating",
       "Plumbing and bathroom upgrades",
-      "Electrical, lighting and EICR-compliant installs",
+      "Electrical and lighting",
       "Carpet, laminate, LVT and hardwood flooring",
     ],
     cta: { label: "See our Renovations page", href: "/renovations" },
@@ -98,17 +97,14 @@ export default function ServicesPage() {
       {/* Hero */}
       <section className="bg-estate-700 px-4 py-20 md:px-6 md:py-28">
         <div className="mx-auto max-w-4xl text-center">
-          <p className="font-serif text-xs font-medium uppercase tracking-[0.3em] text-gold-400">
-            Services
-          </p>
+          <p className="eyebrow eyebrow-dark">Services</p>
           <h1 className="mt-4 font-serif text-4xl font-medium leading-[1.05] text-white md:text-6xl md:leading-[1.04]">
             Beyond the deal —{" "}
             <span className="text-gold-400">the services that make a home work.</span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/80 md:text-lg">
-            Management, staging, furnishing and renovations — the specialist
-            services we offer alongside our buy, rent and sell advisory, with
-            vetted partners in every market we serve.
+            Management, staging, furnishing and renovations. We introduce you to
+            specialist providers alongside our buy, rent and sell introductions.
           </p>
         </div>
       </section>
@@ -145,8 +141,8 @@ export default function ServicesPage() {
             Not sure which one?
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-white/80">
-            Send a short enquiry and an advisor will reply within two working
-            hours with the right next step for your situation.
+            Send a short enquiry and we will reply {RESPONSE_TIME_COPY} with the
+            right next step for your situation.
           </p>
           <SpeakToAdvisor />
         </div>
@@ -176,9 +172,7 @@ function ServiceBlock({
             <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-estate-700/10 text-estate-700">
               <Icon className="h-7 w-7" strokeWidth={1.6} />
             </span>
-            <p className="mt-5 font-serif text-xs font-medium uppercase tracking-[0.3em] text-gold-500">
-              {section.eyebrow}
-            </p>
+            <p className="eyebrow mt-5">{section.eyebrow}</p>
             <h2 className="mt-2 font-serif text-3xl font-medium leading-tight text-estate-700 md:text-4xl">
               {section.title}
             </h2>
@@ -204,8 +198,8 @@ function ServiceBlock({
             </div>
 
             <p className="mt-5 flex items-center gap-2 text-xs text-muted-foreground">
-              <ShieldCheck className="h-3.5 w-3.5 text-estate-700" />
-              No hidden fees
+              <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-estate-700" />
+              {FEE_DISCLOSURE_COPY}
             </p>
           </div>
         </div>
@@ -252,9 +246,9 @@ function SpeakToAdvisor() {
     <button
       type="button"
       onClick={openAccount}
-      className="mt-7 inline-flex h-12 items-center justify-center gap-1.5 rounded-md bg-gold-500 px-7 text-sm font-semibold text-white shadow-lg shadow-gold-500/20 transition-colors hover:bg-gold-400"
+      className="mt-7 inline-flex h-12 items-center justify-center gap-1.5 rounded-full bg-gold-400 px-7 text-sm font-semibold text-ink-900 shadow-e1 transition-colors hover:bg-gold-300"
     >
-      Speak to an advisor <ArrowRight className="ml-1 h-4 w-4" />
+      Send an enquiry <ArrowRight className="ml-1 h-4 w-4" />
     </button>
   );
 }

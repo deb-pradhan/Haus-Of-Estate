@@ -1,15 +1,6 @@
 import type { MetadataRoute } from 'next'
-
-const SITE_URL = 'https://hausofestate.com'
+import { buildRobots } from '@/lib/seo'
 
 export default function robots(): MetadataRoute.Robots {
-  return {
-    rules: {
-      userAgent: '*',
-      allow: '/',
-      disallow: ['/api/', '/studio/'],
-    },
-    sitemap: `${SITE_URL}/sitemap.xml`,
-    host: SITE_URL,
-  }
+  return buildRobots()
 }

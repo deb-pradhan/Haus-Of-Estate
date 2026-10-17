@@ -10,36 +10,41 @@ import {
 } from '@/components/blog'
 import type { PostSummary } from '@/sanity/types'
 import type { Metadata } from 'next'
-import { DEFAULT_OG_IMAGES } from '@/lib/seo'
+import { pageMetadata } from '@/lib/seo'
 
 const POSTS_PER_PAGE = 9
 
 // Keep the listing fresh with Sanity edits (new posts, replaced images).
 export const revalidate = 60
 
-export const metadata: Metadata = {
-  title: 'Insights',
-  description:
-    'Property market intelligence, investment guides and buying & renting tips across the UK, Dubai and international markets — from Haus of Estate.',
-  alternates: { canonical: '/blog' },
-  openGraph: {
-    title: 'Insights — Haus of Estate',
-    description:
-      'Property market intelligence, investment guides and buying & renting tips across the UK, Dubai and beyond.',
-    url: '/blog',
-    type: 'website',
-    images: DEFAULT_OG_IMAGES,
-  },
+const BLOG_TITLE = 'Overseas Property Insights & Guides'
+const BLOG_DESCRIPTION =
+  'Property market intelligence, investment guides and buying and renting tips across Dubai, the UK and other international markets, from Haus of Estate.'
+
+interface BlogPageProps {
+  searchParams: Promise<{ page?: string; category?: string; q?: string; sort?: string }>
+}
+
+// /blog is the canonical listing. Page 2+ self-canonicalise (they list
+// different posts); category, search and sort views are thin variants of the
+// same list, so they are noindex,follow and point back at /blog.
+export async function generateMetadata({ searchParams }: BlogPageProps): Promise<Metadata> {
+  const { page, category, q, sort } = await searchParams
+  const pageNumber = Math.max(1, parseInt(page || '1', 10) || 1)
+  const isVariant = Boolean(category || q || sort)
+  const path = !isVariant && pageNumber > 1 ? `/blog?page=${pageNumber}` : '/blog'
+  return pageMetadata({
+    title: pageNumber > 1 && !isVariant ? `${BLOG_TITLE} (page ${pageNumber})` : BLOG_TITLE,
+    description: BLOG_DESCRIPTION,
+    path,
+    noindex: isVariant,
+  })
 }
 
 interface Category {
   _id: string
   title: string
   slug: string
-}
-
-interface BlogPageProps {
-  searchParams: Promise<{ page?: string; category?: string; q?: string; sort?: string }>
 }
 
 async function BlogContent({

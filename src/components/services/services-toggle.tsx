@@ -17,13 +17,22 @@ import {
   Phone,
   Mail,
   MessageSquare,
-  Clock,
   BadgeCheck,
   Sparkles,
+  Loader2,
 } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import type { Country } from "react-phone-number-input";
 import { cn } from "@/lib/utils";
+import { LeadConsent } from "@/components/legal/lead-consent";
+import { RiskWarning } from "@/components/legal/risk-warning";
+import { submitLead } from "@/lib/submit-lead";
+import {
+  ENQUIRY_RECEIVED_COPY,
+  FEE_DISCLOSURE_COPY,
+  RESPONSE_TIME_COPY,
+} from "@/lib/site-claims";
 
 const PhoneInput = dynamic(
   () => import("@/components/ui/phone-input").then((module) => module.PhoneInput),
@@ -117,6 +126,47 @@ function inferDefaultCountry(locations: string[]): Country {
   if (first.startsWith("uae-")) return "AE";
   if (first.startsWith("id-")) return "ID";
   return "GB";
+}
+
+/** Map the first selected location onto the market codes /api/leads understands. */
+function marketFromLocations(locations: string[]): string | undefined {
+  const first = locations[0] ?? "";
+  if (first.startsWith("uk-")) return "uk";
+  if (first.startsWith("uae-")) return "dubai";
+  if (first.startsWith("id-")) return "bali";
+  return undefined;
+}
+
+function areaFromLocations(locations: string[]): string | undefined {
+  const first = locations[0];
+  if (!first || first === "other") return undefined;
+  return first.split("-").pop();
+}
+
+function locationLabels(locations: string[]): string {
+  return locations
+    .map((value) => LOCATIONS.find((l) => l.value === value)?.label ?? value)
+    .join(", ");
+}
+
+function splitName(full: string): { firstName: string; surname?: string } {
+  const parts = full.trim().split(/\s+/);
+  return {
+    firstName: parts[0] ?? "",
+    surname: parts.length > 1 ? parts.slice(1).join(" ") : undefined,
+  };
+}
+
+/** Returns an error message, or null when the contact details look valid. */
+function validateContact(name: string, email: string, mobile: string): string | null {
+  if (!name.trim()) return "Please enter your name.";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+    return "Please enter a valid email address.";
+  }
+  if (!/^\+\d{7,15}$/.test(mobile)) {
+    return "Please enter a valid mobile number, including the country code.";
+  }
+  return null;
 }
 
 const PROPERTY_TYPES = [
@@ -438,33 +488,30 @@ function SuccessState({
   intent: "buy" | "rent" | "sell" | "list";
   name: string;
 }) {
+  const first = name.trim().split(/\s+/)[0] ?? "";
   const messages = {
     buy: {
-      title: `Thank you, ${name.split(" ")[0]}. Your enquiry is in.`,
-      subtitle:
-        "One of our specialist advisors will review your brief and introduce you to vetted estate agents who match your criteria — no spam, no obligation.",
-      cta: "Speak to an Advisor",
+      title: `Thank you, ${first}.`,
+      detail:
+        "We will review your brief and, where you ask us to, introduce you to a suitable estate agent. There is no obligation.",
       icon: <Home className="h-8 w-8 text-estate-700" />,
     },
     rent: {
-      title: `You're all set, ${name.split(" ")[0]}.`,
-      subtitle:
-        "Our team will introduce you to letting agents in your chosen areas and arrange viewings at your convenience.",
-      cta: "Speak to an Advisor",
+      title: `Thank you, ${first}.`,
+      detail:
+        "We will review your brief and, where you ask us to, introduce you to a letting agent in your chosen areas.",
       icon: <Key className="h-8 w-8 text-estate-700" />,
     },
     sell: {
-      title: `Thank you, ${name.split(" ")[0]}. Your valuation request is in.`,
-      subtitle:
-        "Our network of vetted estate agents will prepare a comparative market analysis and reach out within 2 working hours.",
-      cta: "Speak to an Advisor",
+      title: `Thank you, ${first}.`,
+      detail:
+        "We will review your details and, where you ask us to, introduce you to an agent who can discuss a valuation with you.",
       icon: <Tag className="h-8 w-8 text-estate-700" />,
     },
     list: {
-      title: `Received, ${name.split(" ")[0]}. Your letting brief is on its way.`,
-      subtitle:
-        "We'll match you with vetted letting agents in your area — expect to hear from a partner agent within 48 hours.",
-      cta: "Speak to an Advisor",
+      title: `Thank you, ${first}.`,
+      detail:
+        "We will review your details and, where you ask us to, introduce you to a letting agent in your area.",
       icon: <Calendar className="h-8 w-8 text-estate-700" />,
     },
   };
@@ -472,15 +519,15 @@ function SuccessState({
   const msg = messages[intent];
 
   return (
-    <div className="mx-auto max-w-lg text-center">
+    <div className="mx-auto max-w-lg text-center" role="status">
       <div className="relative mx-auto mb-6 flex h-20 w-20 items-center justify-center">
-        <div className="absolute inset-0 animate-ping rounded-full bg-estate-700/20" />
         <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-estate-700/10">
           {msg.icon}
         </div>
       </div>
       <h3 className="font-serif text-2xl font-medium text-estate-700">{msg.title}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{msg.subtitle}</p>
+      <p className="mt-2 text-sm leading-relaxed text-foreground">{ENQUIRY_RECEIVED_COPY}</p>
+      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{msg.detail}</p>
 
       <div className="mt-6 rounded-xl border border-border bg-surface p-4 text-left">
         <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -488,14 +535,11 @@ function SuccessState({
         </p>
         <ul className="space-y-2">
           {[
-            "Advisor reviews your enquiry within 2 working hours",
+            `We review your enquiry and reply ${RESPONSE_TIME_COPY}.`,
             intent === "buy" || intent === "rent"
-              ? "Vetted estate agents introduced for your shortlist"
-              : "Comparative market analysis emailed to you",
-            "Personalised video call arranged at your convenience",
-            intent === "sell" || intent === "list"
-              ? "Letting / sales brief sent to partner agents"
-              : "Property viewings arranged with your chosen agent",
+              ? "With your agreement, we introduce you to a suitable agent."
+              : "With your agreement, we pass your details to a suitable agent.",
+            "You decide whether to go ahead.",
           ].map((step, i) => (
             <li key={i} className="flex items-start gap-2 text-sm text-foreground">
               <Check className="mt-0.5 h-4 w-4 shrink-0 text-trust-teal" />
@@ -505,16 +549,21 @@ function SuccessState({
         </ul>
       </div>
 
-      <div className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-        <BadgeCheck className="h-4 w-4 text-trust-teal" />
-        Your data is secure and never shared without consent.
-      </div>
+      <p className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+        <BadgeCheck className="h-4 w-4 shrink-0 text-trust-teal" />
+        <span>
+          We share your details only with the agent or partner we introduce you to.{" "}
+          <Link href="/legal/privacy-policy" className="underline underline-offset-2">
+            Privacy Policy
+          </Link>
+        </span>
+      </p>
 
       <Button
         onClick={() => (window.location.href = "/")}
         className="mt-6 bg-estate-700 text-white hover:bg-estate-600"
       >
-        {msg.cta} <ArrowRight className="ml-1.5 h-4 w-4" />
+        Back to home <ArrowRight className="ml-1.5 h-4 w-4" />
       </Button>
     </div>
   );
@@ -524,17 +573,9 @@ function SuccessState({
 
 function TrustBadges() {
   return (
-    <div className="mt-4 flex flex-wrap items-center justify-center gap-4">
-      {[
-        { icon: BadgeCheck, text: "15+ Years Experience" },
-        { icon: Clock, text: "24/7 Support" },
-      ].map(({ icon: Icon, text }) => (
-        <div key={text} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Icon className="h-4 w-4 text-estate-700" />
-          {text}
-        </div>
-      ))}
-    </div>
+    <p className="mt-4 text-center text-xs leading-relaxed text-muted-foreground">
+      {FEE_DISCLOSURE_COPY}
+    </p>
   );
 }
 
@@ -550,9 +591,8 @@ function IntentSelector({
       id: "buy" as Intent,
       icon: Home,
       title: "Looking to Buy",
-      desc: "Find your perfect property investment",
+      desc: "Tell us what you are looking for",
       color: "estate-700",
-      badge: "Most popular",
     },
     {
       id: "rent" as Intent,
@@ -565,14 +605,14 @@ function IntentSelector({
       id: "sell" as Intent,
       icon: Tag,
       title: "Looking to Sell",
-      desc: "Get the best price for your property",
+      desc: "Speak to an agent about selling",
       color: "action-amber",
     },
     {
       id: "list" as Intent,
       icon: Calendar,
       title: "Looking to Let",
-      desc: "Match with a vetted letting agent",
+      desc: "Be introduced to a letting agent",
       color: "copper-clay",
     },
   ];
@@ -580,21 +620,12 @@ function IntentSelector({
   return (
     <div className="mx-auto max-w-3xl">
       <div className="mb-2 text-center">
-        <p className="mb-1 font-serif text-sm font-medium uppercase tracking-widest text-gold-500">
-          What we offer
-        </p>
+        <p className="eyebrow mb-1">What we offer</p>
         <h2 className="font-serif text-3xl font-medium text-estate-700 md:text-4xl">
           How can we help you today?
         </h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Choose your goal and we&apos;ll guide you through the rest — takes less than 2 minutes.
-        </p>
-        <p className="mt-2 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-estate-700 opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-estate-700" />
-          </span>
-          Join 1,200+ people we&apos;ve matched with vetted agents since 2022
+          Choose your goal and we&apos;ll guide you through the rest. It takes a couple of minutes.
         </p>
       </div>
 
@@ -635,11 +666,6 @@ function IntentSelector({
             <div>
               <div className="mb-1 flex flex-wrap items-center gap-2">
                 <p className="font-serif text-sm font-semibold text-estate-700 leading-tight">{item.title}</p>
-                {item.badge && (
-                  <span className="rounded-full bg-gold-500/10 px-2 py-0.5 text-xs font-semibold text-gold-600">
-                    {item.badge}
-                  </span>
-                )}
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
             </div>
@@ -701,19 +727,63 @@ function BuyRentForm({ intent, onComplete, onBack }: { intent: "buy" | "rent"; o
     (step === 3 && hasBudget && form.timeline && form.contactMethod) ||
     (step === 4 && form.name && form.email && form.mobile);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [marketing, setMarketing] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
+    const problem = validateContact(form.name, form.email, form.mobile);
+    if (problem) {
+      setSubmitError(problem);
+      return;
+    }
+    setSubmitError("");
+    setSubmitting(true);
+    const { firstName, surname } = splitName(form.name);
+    const budget = [form.budgetMin, form.budgetMax].filter(Boolean).join(" to ");
+    const result = await submitLead({
+      marketingConsent: marketing,
+      fields: {
+        intent: "buyer",
+        buyOrRent: form.buyRent,
+        useType:
+          form.buyRent === "rent" && form.useType === "investment"
+            ? "corporate"
+            : form.useType,
+        bedrooms: form.bedrooms || undefined,
+        propertyType: form.propertyType || undefined,
+        market: marketFromLocations(form.locations),
+        area: areaFromLocations(form.locations),
+        location: locationLabels(form.locations),
+        budget: budget ? `${currency} ${budget}` : undefined,
+        timeline: form.timeline || undefined,
+        contactMethod: form.contactMethod || undefined,
+        bestTime: form.bestTime || undefined,
+        notes: form.notes.trim() || undefined,
+        firstName,
+        surname,
+        email: form.email.trim(),
+        mobile: form.mobile,
+      },
+    });
+    setSubmitting(false);
+    if (!result.ok) {
+      setSubmitError(result.error);
+      return;
+    }
     onComplete(form.name);
   };
 
   const submitLabel =
     intent === "rent"
       ? form.useType === "investment"
-        ? "Get My Corporate Let Brief"
-        : "Find My Rental"
+        ? "Send my corporate let enquiry"
+        : "Send my rental enquiry"
       : form.useType === "investment"
-      ? "Get My Investment Brief"
-      : "Find My Property";
+      ? "Send my investment enquiry"
+      : "Send my property enquiry";
 
   return (
     <div className="mx-auto max-w-2xl rounded-2xl border border-border bg-surface p-6 shadow-sm md:p-8">
@@ -766,25 +836,28 @@ function BuyRentForm({ intent, onComplete, onBack }: { intent: "buy" | "rent"; o
                 </p>
                 <p className="mt-0.5 text-xs text-muted-foreground">
                   {intent === "rent"
-                    ? "Managed lets &amp; relocations"
-                    : "Rental yield &amp; appreciation"}
+                    ? "Corporate lets and relocation"
+                    : "Buying to let or to hold"}
                 </p>
               </button>
             </div>
           </div>
 
           {form.useType && (
-            <div className="rounded-xl bg-estate-700/5 border border-estate-700/20 p-4">
-              <p className="flex items-center gap-2 text-sm text-estate-700 font-medium">
-                <Sparkles className="h-4 w-4" />
-                {intent === "rent"
-                  ? form.useType === "investment"
-                    ? "We manage corporate lets and relocations across London, Manchester and Dubai with vetted partner agents."
-                    : "Our advisors curate fully-vetted rentals across the UK, UAE and Bali — no hidden fees to renters."
-                  : form.useType === "investment"
-                  ? "Investment clients typically see 4–6% net yields in prime UK cities and 6–10% in Dubai's growth corridors."
-                  : "Personal buyers get curated off-market introductions in London, Cardiff, Manchester and prime Dubai districts."}
-              </p>
+            <div className="space-y-3">
+              <div className="rounded-xl bg-estate-700/5 border border-estate-700/20 p-4">
+                <p className="flex items-start gap-2 text-sm text-estate-700 font-medium">
+                  <Sparkles className="mt-0.5 h-4 w-4 shrink-0" />
+                  {intent === "rent"
+                    ? form.useType === "investment"
+                      ? "Tell us what your company or relocation needs and we can introduce you to a letting agent who handles corporate lets."
+                      : "Tell us where you want to live and we can introduce you to a suitable letting agent."
+                    : form.useType === "investment"
+                    ? "Tell us your goals and we can introduce you to an agent who can show you what is on the market. Returns are not guaranteed."
+                    : "Tell us where you want to buy and we can introduce you to a suitable estate agent."}
+                </p>
+              </div>
+              {form.useType === "investment" && <RiskWarning />}
             </div>
           )}
         </div>
@@ -883,7 +956,7 @@ function BuyRentForm({ intent, onComplete, onBack }: { intent: "buy" | "rent"; o
               ))}
             </div>
             <p className="mt-1.5 text-xs text-muted-foreground">
-              Currency derived from your selected locations. Final pricing confirmed by your advisor.
+              Currency is based on your selected locations. Final prices are confirmed by the agent.
             </p>
           </div>
 
@@ -947,7 +1020,7 @@ function BuyRentForm({ intent, onComplete, onBack }: { intent: "buy" | "rent"; o
           <div className="rounded-xl bg-estate-700/5 border border-estate-700/20 p-4">
             <p className="flex items-center gap-2 text-sm text-estate-700 font-medium">
               <BadgeCheck className="h-4 w-4" />
-              Your enquiry is 100% free and without obligation
+              Your enquiry is free and carries no obligation
             </p>
           </div>
 
@@ -991,12 +1064,29 @@ function BuyRentForm({ intent, onComplete, onBack }: { intent: "buy" | "rent"; o
             />
           </div>
 
+          <LeadConsent idPrefix="brf" marketing={marketing} onMarketingChange={setMarketing} />
+
+          {submitError && (
+            <p role="alert" className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">
+              {submitError}
+            </p>
+          )}
+
           <Button
             type="submit"
+            disabled={submitting}
             className="h-12 w-full bg-estate-700 text-white hover:bg-estate-600 shadow-md shadow-estate-700/20"
           >
-            {submitLabel}
-            <ArrowRight className="ml-1.5 h-4 w-4" />
+            {submitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" /> Sending...
+              </>
+            ) : (
+              <>
+                {submitLabel}
+                <ArrowRight className="ml-1.5 h-4 w-4" />
+              </>
+            )}
           </Button>
 
           <TrustBadges />
@@ -1075,8 +1165,52 @@ function SellRentForm({ intent, onComplete, onBack }: { intent: "sell" | "list";
     (step === 3 && form.timeline && form.status && form.ownership) ||
     (step === 4 && form.name && form.email && form.mobile);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [marketing, setMarketing] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
+    const problem = validateContact(form.name, form.email, form.mobile);
+    if (problem) {
+      setSubmitError(problem);
+      return;
+    }
+    setSubmitError("");
+    setSubmitting(true);
+    const { firstName, surname } = splitName(form.name);
+    const result = await submitLead({
+      marketingConsent: marketing,
+      fields: {
+        intent: "seller",
+        // /api/leads routes "rent" to leasing; the form calls letting "list".
+        sellOrRent: form.sellRent === "list" ? "rent" : "sell",
+        bedrooms: form.bedrooms || undefined,
+        propertyType: form.propertyType || undefined,
+        market: marketFromLocations(form.locations),
+        area: areaFromLocations(form.locations),
+        location: locationLabels(form.locations),
+        size: form.size || undefined,
+        currentValue: form.currentValue
+          ? `${currency} ${form.currentValue}`
+          : undefined,
+        ownership: form.ownership || undefined,
+        propertyStatus: form.status || undefined,
+        timeline: form.timeline || undefined,
+        contactMethod: form.contactMethod || undefined,
+        notes: form.notes.trim() || undefined,
+        firstName,
+        surname,
+        email: form.email.trim(),
+        mobile: form.mobile,
+      },
+    });
+    setSubmitting(false);
+    if (!result.ok) {
+      setSubmitError(result.error);
+      return;
+    }
     onComplete(form.name);
   };
 
@@ -1195,11 +1329,11 @@ function SellRentForm({ intent, onComplete, onBack }: { intent: "sell" | "list";
           </div>
 
           {form.currentValue && (
-            <div className="rounded-xl bg-action-amber/10 border border-action-amber/20 p-4">
-              <p className="text-sm text-action-amber font-medium">
-                Based on your estimate of {valueSymbol}{parseInt(form.currentValue).toLocaleString()}, our average time to secure a buyer is <strong>21 days</strong>.
-              </p>
-            </div>
+            <p className="text-xs text-muted-foreground">
+              Your estimate of {valueSymbol}
+              {parseInt(form.currentValue).toLocaleString()} is shared with the agent as a starting
+              point only. It is not a valuation.
+            </p>
           )}
         </div>
       )}
@@ -1284,7 +1418,7 @@ function SellRentForm({ intent, onComplete, onBack }: { intent: "sell" | "list";
           <div className="rounded-xl bg-estate-700/5 border border-estate-700/20 p-4">
             <p className="flex items-center gap-2 text-sm text-estate-700 font-medium">
               <BadgeCheck className="h-4 w-4" />
-              Free valuation — no obligation, no spam
+              Free to request, with no obligation
             </p>
           </div>
 
@@ -1328,12 +1462,34 @@ function SellRentForm({ intent, onComplete, onBack }: { intent: "sell" | "list";
             />
           </div>
 
+          <LeadConsent
+            idPrefix="srf"
+            marketing={marketing}
+            onMarketingChange={setMarketing}
+            purpose="reply to this enquiry and introduce you to a suitable agent"
+          />
+
+          {submitError && (
+            <p role="alert" className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">
+              {submitError}
+            </p>
+          )}
+
           <Button
             type="submit"
+            disabled={submitting}
             className="h-12 w-full bg-estate-700 text-white hover:bg-estate-600 shadow-md shadow-estate-700/20"
           >
-            {form.sellRent === "sell" ? "Get My Free Valuation" : "List My Property"}
-            <ArrowRight className="ml-1.5 h-4 w-4" />
+            {submitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" /> Sending...
+              </>
+            ) : (
+              <>
+                {form.sellRent === "sell" ? "Request a valuation" : "Send my letting enquiry"}
+                <ArrowRight className="ml-1.5 h-4 w-4" />
+              </>
+            )}
           </Button>
 
           <TrustBadges />
@@ -1395,16 +1551,14 @@ export function ServicesToggle() {
         ) : (
           <>
             <div className="mb-8 text-center">
-              <p className="mb-1 font-serif text-sm font-medium uppercase tracking-widest text-gold-500">
-                What we offer
-              </p>
+              <p className="eyebrow mb-1">What we offer</p>
               <h2 className="font-serif text-3xl font-medium text-estate-700 md:text-4xl">
                 {intentLabel}
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
                 {isBuyRent
-                  ? "Tell us what you're looking for and we'll find the perfect match."
-                  : "Share your property details and we'll provide a free market valuation."}
+                  ? "Tell us what you are looking for and we will introduce you to a suitable agent."
+                  : "Share your property details and we will introduce you to an agent who can discuss a valuation."}
               </p>
             </div>
 

@@ -148,6 +148,7 @@ export interface PropertyQuery {
   type?: string
   location?: string
   beds?: string | number
+  sort?: string
 }
 
 /**
@@ -171,6 +172,7 @@ export function buildPropertiesHref(query: PropertyQuery = {}): string {
   if (query.beds !== undefined && query.beds !== null && query.beds !== '') {
     params.set('beds', String(query.beds))
   }
+  if (query.sort && query.sort !== 'featured') params.set('sort', String(query.sort))
 
   const qs = params.toString()
   return qs ? `/properties?${qs}` : '/properties'

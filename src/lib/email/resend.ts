@@ -1,4 +1,6 @@
 import { Resend } from "resend";
+import { COMPANY_IDENTITY } from "@/lib/company-identity";
+import { RESPONSE_TIME_COPY } from "@/lib/site-claims";
 
 let resend: Resend | null = null;
 
@@ -27,6 +29,14 @@ function escapeHtml(text: string): string {
     .replace(/'/g, "&#039;");
 }
 
+/** Companies Act s82: business emails carry name, number and registered office. */
+const EMAIL_FOOTER = `<p style="font-family:system-ui,sans-serif;font-size:12px;color:#5b5f66;margin-top:24px">${escapeHtml(COMPANY_IDENTITY.name)} is a trading name of ${escapeHtml(COMPANY_IDENTITY.legalName)}, registered in ${escapeHtml(COMPANY_IDENTITY.registeredJurisdiction)} (company number ${escapeHtml(COMPANY_IDENTITY.number)}). Registered office: ${escapeHtml(COMPANY_IDENTITY.registeredOffice)}.</p>`;
+
+/** Strip line breaks so user text can never inject extra email headers. */
+function singleLine(text: string): string {
+  return text.replace(/[\r\n]+/g, " ").trim();
+}
+
 export async function sendWelcomeEmail(to: string, name: string) {
   const client = getResend();
   if (!client) return { success: true, mock: true };
@@ -34,9 +44,10 @@ export async function sendWelcomeEmail(to: string, name: string) {
     from: FROM,
     to,
     subject: "Welcome to Haus of Estate",
-    html: `<h1>Welcome, ${name}</h1>
-<p>Thank you for joining Haus of Estate. Your account has been created successfully.</p>
-<p>We'll be in touch within 2 hours with property opportunities tailored to your needs.</p>`,
+    html: `<h1>Welcome, ${escapeHtml(name)}</h1>
+<p>Thank you for joining Haus of Estate. Your account has been created.</p>
+<p>If you have sent us an enquiry, we will reply ${escapeHtml(RESPONSE_TIME_COPY)}.</p>
+${EMAIL_FOOTER}`,
   });
 }
 
@@ -51,10 +62,11 @@ export async function sendLoginAlertEmail(
     from: FROM,
     to,
     subject: "New login to your Haus of Estate account",
-    html: `<p>Hi ${name},</p>
+    html: `<p>Hi ${escapeHtml(name)},</p>
 <p>We noticed a new sign-in to your account.</p>
-<p><strong>Device/Browser:</strong> ${device}</p>
-<p>If this wasn't you, please contact us immediately at ${ADMIN}.</p>`,
+<p><strong>Device/Browser:</strong> ${escapeHtml(device)}</p>
+<p>If this wasn't you, please contact us immediately at ${escapeHtml(ADMIN)}.</p>
+${EMAIL_FOOTER}`,
   });
 }
 
@@ -161,30 +173,88 @@ export async function sendApplicationConfirmationToApplicant(app: ApplicationPay
   });
 }
 
-export async function sendLeadNotificationToAdmin(lead: {
+export interface LeadNotification {
   email: string;
   firstName: string;
+  surname?: string | null;
   intent: string;
   tier: string | null;
   score: number;
   phone?: string | null;
-}) {
-  const tierEmoji =
-    lead.tier === "hot" ? "🔥" : lead.tier === "warm" ? "📈" : "🌱";
+  /** Enquiry details (market, area, budget, ...). Escaped before rendering. */
+  details?: Record<string, string | null | undefined>;
+  /**
+   * Consent evidence. The database has no marketing-consent columns yet, so
+   * this email is currently the only record of the marketing opt-in.
+   */
+  consent?: {
+    notice: boolean;
+    marketing: boolean;
+    channels: string[];
+    textVersion?: string;
+    at: string;
+    sourcePage?: string;
+  };
+}
+
+export interface DeliveryResult {
+  /** True only when the email provider accepted the message. */
+  delivered: boolean;
+  /** True when no email provider is configured (nothing was sent). */
+  mock?: boolean;
+}
+
+export async function sendLeadNotificationToAdmin(
+  lead: LeadNotification,
+): Promise<DeliveryResult> {
   const client = getResend();
-  if (!client) return { success: true, mock: true };
-  return client.emails.send({
+  if (!client) return { delivered: false, mock: true };
+
+  const cell = "padding:8px;border:1px solid #ddd";
+  const row = (label: string, value: string) =>
+    `<tr><td style="${cell}"><strong>${escapeHtml(label)}</strong></td><td style="${cell}">${value}</td></tr>`;
+
+  const fullName = [lead.firstName, lead.surname].filter(Boolean).join(" ");
+  const rows = [
+    row("Name", escapeHtml(fullName)),
+    row(
+      "Email",
+      `<a href="mailto:${escapeHtml(lead.email)}">${escapeHtml(lead.email)}</a>`,
+    ),
+    row("Phone", escapeHtml(lead.phone ?? "—")),
+    row("Intent", escapeHtml(lead.intent)),
+    row("Tier", escapeHtml((lead.tier ?? "unknown").toUpperCase())),
+    row("Score", String(lead.score)),
+  ];
+  for (const [label, value] of Object.entries(lead.details ?? {})) {
+    if (value) rows.push(row(label, escapeHtml(value)));
+  }
+  if (lead.consent) {
+    const c = lead.consent;
+    rows.push(
+      row("Privacy notice shown", c.notice ? "Yes" : "No"),
+      row(
+        "Marketing opt-in",
+        c.marketing ? `Yes (${escapeHtml(c.channels.join(", "))})` : "No. Do not send marketing.",
+      ),
+      row("Wording version", escapeHtml(c.textVersion ?? "unknown")),
+      row("Recorded at (UTC)", escapeHtml(c.at)),
+      row("Source page", escapeHtml(c.sourcePage ?? "unknown")),
+    );
+  }
+
+  const tierLabel = (lead.tier ?? "unknown").toUpperCase();
+  const result = await client.emails.send({
     from: FROM,
     to: ADMIN,
-    subject: `${tierEmoji} New ${(lead.tier ?? "unknown").toUpperCase()} Lead: ${lead.firstName} (${lead.intent}) — Score: ${lead.score}`,
-    html: `<h2>New Lead Notification</h2>
-<table style="border-collapse:collapse">
-<tr><td style="padding:8px;border:1px solid #ddd"><strong>Name</strong></td><td style="padding:8px;border:1px solid #ddd">${lead.firstName}</td></tr>
-<tr><td style="padding:8px;border:1px solid #ddd"><strong>Email</strong></td><td style="padding:8px;border:1px solid #ddd"><a href="mailto:${lead.email}">${lead.email}</a></td></tr>
-<tr><td style="padding:8px;border:1px solid #ddd"><strong>Phone</strong></td><td style="padding:8px;border:1px solid #ddd">${lead.phone ?? "—"}</td></tr>
-<tr><td style="padding:8px;border:1px solid #ddd"><strong>Intent</strong></td><td style="padding:8px;border:1px solid #ddd">${lead.intent}</td></tr>
-<tr><td style="padding:8px;border:1px solid #ddd"><strong>Tier</strong></td><td style="padding:8px;border:1px solid #ddd">${(lead.tier ?? "unknown").toUpperCase()}</td></tr>
-<tr><td style="padding:8px;border:1px solid #ddd"><strong>Score</strong></td><td style="padding:8px;border:1px solid #ddd">${lead.score}</td></tr>
-</table>`,
+    replyTo: lead.email,
+    subject: singleLine(
+      `New ${tierLabel} lead: ${fullName} (${lead.intent}), score ${lead.score}`,
+    ),
+    html: `<h2>New lead notification</h2>
+<table style="border-collapse:collapse;font-family:system-ui,sans-serif;font-size:14px">${rows.join("")}</table>`,
   });
+  // The Resend SDK resolves with { error } rather than throwing.
+  const error = (result as { error?: unknown } | undefined)?.error;
+  return { delivered: !error };
 }

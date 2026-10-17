@@ -3,7 +3,7 @@ export const CONSENT_KEY = "haus.analytics-consent.v1";
 export const CONSENT_EVENT = "haus:analytics-consent";
 export const SETTINGS_EVENT = "haus:cookie-settings";
 export type AnalyticsConsent = "granted" | "denied" | "unknown";
-export type AnalyticsEvent = "haus_page_view" | "haus_property_click" | "haus_article_click" | "haus_contact_click" | "haus_property_search";
+export type AnalyticsEvent = "haus_page_view" | "haus_property_click" | "haus_article_click" | "haus_contact_click" | "haus_property_search" | "haus_generate_lead";
 
 const PUBLIC_PAGES = new Set([
   "/", "/about", "/team", "/services", "/renovations", "/faq", "/contact",
@@ -17,6 +17,68 @@ export function publicPath(pathname: string): string | null {
     ? path : null;
 }
 
+// Static, public page labels. page_title is never read from document.title:
+// auth/errors or arbitrary search text may appear there.
+const PAGE_TITLES: Record<string, string> = {
+  "/": "Home", "/about": "About", "/team": "Team", "/services": "Services", "/renovations": "Renovations",
+  "/faq": "FAQs", "/contact": "Contact", "/list-property": "Sell or let your property", "/blog": "Insights",
+  "/properties": "Properties", "/properties/residential": "Residential properties", "/properties/commercial": "Commercial properties",
+  "/legal/privacy-policy": "Privacy policy", "/legal/cookie-policy": "Cookie policy", "/legal/terms-of-service": "Terms of service",
+};
+export function publicPageTitle(path: string): string {
+  return PAGE_TITLES[path] ?? (path.startsWith("/properties/") ? "Property" : path.startsWith("/blog/") ? "Article" : "Page");
+}
+
+// Attribution allow-list. Everything else in the query string (email, phone,
+// tokens, search text, preview/draft flags) is dropped from page_location.
+const CAMPAIGN_PARAMS = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "utm_id"] as const;
+const CLICK_ID_PARAMS = ["gclid", "gbraid", "wbraid", "dclid", "msclkid"] as const;
+
+// Campaign values are short labels. Anything that looks like contact data
+// (an address, a long digit run such as a phone number) is discarded.
+function safeCampaignValue(value: string): string | null {
+  const v = value.trim();
+  if (!v || v.length > 100 || !/^[\w.~+\- ]+$/.test(v) || /\d{7,}/.test(v)) return null;
+  return v;
+}
+function safeClickId(value: string): string | null {
+  return /^[A-Za-z0-9_-]{8,200}$/.test(value) ? value : null;
+}
+
+/** Sanitised attribution params present on a URL: allow-listed UTMs and ad click IDs only. */
+export function campaignParams(search: URLSearchParams): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const key of CAMPAIGN_PARAMS) {
+    const raw = search.get(key);
+    const value = raw === null ? null : safeCampaignValue(raw);
+    if (value) out[key] = value;
+  }
+  for (const key of CLICK_ID_PARAMS) {
+    const raw = search.get(key);
+    const value = raw === null ? null : safeClickId(raw);
+    if (value) out[key] = value;
+  }
+  return out;
+}
+
+/**
+ * page_referrer for GA4: a cross-site referrer is reduced to its origin (never
+ * the path or query); a referrer on one of our own hosts is reduced to its
+ * public page path; anything else is blank.
+ */
+export function sanitizeReferrer(referrer: string | undefined | null, hosts: string[]): string {
+  if (!referrer) return "";
+  try {
+    const url = new URL(referrer);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return "";
+    if (hosts.includes(url.hostname)) {
+      const path = publicPath(url.pathname);
+      return path ? `https://hausofestate.com${path}` : "";
+    }
+    return url.origin;
+  } catch { return ""; }
+}
+
 export function analyticsHosts(configured?: string): string[] {
   if (!configured?.trim()) return ["hausofestate.com", "www.hausofestate.com"];
   // Exact hostnames only: no wildcard, URL, path or port. An invalid explicit
@@ -25,18 +87,22 @@ export function analyticsHosts(configured?: string): string[] {
     .filter((host) => /^[a-z0-9]+(?:[.-][a-z0-9]+)*$/.test(host));
 }
 
-export function analyticsPage(href: string, draft = false, production = true, allowedHosts?: string) {
+export function analyticsPage(href: string, draft = false, production = true, allowedHosts?: string, referrer?: string) {
   const url = new URL(href);
-  if (!production || draft || !analyticsHosts(allowedHosts).includes(url.hostname)) return null;
+  const hosts = analyticsHosts(allowedHosts);
+  if (!production || draft || !hosts.includes(url.hostname)) return null;
   if ([...url.searchParams.keys()].some((key) => /preview|draft|token|secret/i.test(key))) return null;
   const path = publicPath(url.pathname);
   if (!path) return null;
+  const campaign = new URLSearchParams(campaignParams(url.searchParams));
+  const query = campaign.toString();
   return {
     page_path: path,
-    page_location: `https://hausofestate.com${path}`,
-    page_referrer: "",
-    // Never read document.title: auth/errors or arbitrary search text may appear there.
-    page_title: path === "/" ? "Home" : path.split("/")[1],
+    // Clean host + path, plus only the allow-listed campaign/click-ID params so
+    // GA4 can attribute the session. No other query string or hash survives.
+    page_location: `https://hausofestate.com${path}${query ? `?${query}` : ""}`,
+    page_referrer: sanitizeReferrer(referrer, hosts),
+    page_title: publicPageTitle(path),
   };
 }
 
@@ -88,6 +154,15 @@ let allowedHosts: string | undefined;
 let lastPath: string | null = null;
 let activeTag: AnalyticsTag | null = null;
 let configuredGa4: string | undefined;
+// page_referrer: the first view of a document uses document.referrer (reduced
+// to an origin); later single-page navigations use the previous page, as GA4
+// does for SPAs. Events on the same page reuse that view's referrer.
+let viewedHref: string | null = null;
+let viewReferrer: string | undefined;
+function referrerFor(href: string): string | undefined {
+  if (viewedHref !== null && new URL(viewedHref).pathname === new URL(href).pathname) return viewReferrer;
+  return viewedHref ?? (typeof document !== "undefined" ? document.referrer : undefined);
+}
 
 export type AnalyticsTag = { mode: "gtm" | "ga4"; id: string };
 // A valid GTM container takes precedence; direct gtag.js is the fallback when
@@ -101,6 +176,8 @@ export function analyticsMode(gtmId?: string, ga4Id?: string): AnalyticsTag | nu
 const GA4_EVENTS: Record<AnalyticsEvent, string> = {
   haus_page_view: "page_view", haus_property_click: "property_click", haus_article_click: "article_click",
   haus_contact_click: "contact_click", haus_property_search: "property_search",
+  // GA4 recommended event; mark it as a key event in GA4 admin.
+  haus_generate_lead: "generate_lead",
 };
 export function ga4EventName(event: AnalyticsEvent): string { return GA4_EVENTS[event]; }
 
@@ -115,12 +192,14 @@ const deniedAds = { ad_storage: "denied", ad_user_data: "denied", ad_personaliza
 
 export function trackAnalytics(event: AnalyticsEvent, values: Record<string, unknown> = {}) {
   if (typeof window === "undefined" || !running || getAnalyticsConsent() !== "granted") return;
-  const page = analyticsPage(window.location.href, draftMode, production, allowedHosts);
+  const page = analyticsPage(window.location.href, draftMode, production, allowedHosts, referrerFor(window.location.href));
   if (!page) return;
   const payload: Record<string, unknown> = { event, ...page };
   if (event === "haus_page_view") {
     if (lastPath === page.page_path) return;
     lastPath = page.page_path;
+    viewReferrer = referrerFor(window.location.href);
+    viewedHref = window.location.href;
   } else if (event === "haus_property_click" || event === "haus_article_click") {
     const path = typeof values.content_path === "string" ? publicPath(values.content_path) : null;
     const prefix = event === "haus_property_click" ? "/properties/" : "/blog/";
@@ -129,6 +208,14 @@ export function trackAnalytics(event: AnalyticsEvent, values: Record<string, unk
   } else if (event === "haus_contact_click") {
     if (!["phone", "email", "whatsapp", "contact", "enquiry"].includes(String(values.contact_method))) return;
     payload.contact_method = values.contact_method;
+  } else if (event === "haus_generate_lead") {
+    // Only coarse, whitelisted labels. No names, emails, phones, free text or IDs.
+    const formId = typeof values.form_id === "string" ? values.form_id.trim().toLowerCase() : "";
+    if (/^[a-z][a-z0-9_]{1,39}$/.test(formId)) payload.form_id = formId;
+    const market = String(values.market ?? "").trim().toLowerCase();
+    if (LEAD_MARKETS.includes(market)) payload.market = market;
+    const intent = String(values.intent ?? "").trim().toLowerCase();
+    if (LEAD_INTENTS.includes(intent)) payload.intent = intent;
   } else if (event === "haus_property_search") {
     // No search strings, location labels, budgets, user IDs, or form answers.
     payload.form_location = "homepage_hero";
@@ -142,6 +229,23 @@ export function trackAnalytics(event: AnalyticsEvent, values: Record<string, unk
     void name;
     gtag("event", ga4EventName(event), params);
   } else window.dataLayer?.push(payload);
+}
+
+const LEAD_MARKETS = ["dubai", "uk", "bali", "cyprus", "other", "unknown"];
+const LEAD_INTENTS = ["buy", "rent", "sell", "let", "invest", "buyer", "seller", "list_property", "match", "contact", "account", "general"];
+
+export type LeadEventInput = { formId: string; market?: string; intent?: string };
+
+/**
+ * GA4 `generate_lead` (recommended event). Call it ONLY after the server has
+ * accepted the enquiry (HTTP 2xx), once per submission. Consent-gated like every
+ * other event; fires nothing without analytics consent or off public pages.
+ * Pass labels only: formId is a lowercase identifier such as "buyer_modal",
+ * market one of dubai|uk|bali|cyprus|other, intent a coarse label such as
+ * buy|rent|sell|let|invest. Anything else is dropped. Never pass PII.
+ */
+export function trackLead({ formId, market, intent }: LeadEventInput) {
+  trackAnalytics("haus_generate_lead", { form_id: formId, market, intent });
 }
 
 function clearAnalyticsCookies() {
@@ -158,6 +262,8 @@ export function stopAnalytics(reload = true) {
   const wasRunning = running;
   running = false;
   lastPath = null;
+  viewedHref = null;
+  viewReferrer = undefined;
   activeTag = null;
   if (!wasRunning) return;
   // Stop known Google tags before unloading their timers/listeners. Removing a
@@ -182,7 +288,7 @@ export function syncAnalytics(options: AnalyticsOptions) {
   allowedHosts = options.allowedHosts;
   const tag = analyticsMode(options.gtmId, options.ga4Id);
   if (/^G-[A-Z0-9]+$/.test(options.ga4Id || "")) configuredGa4 = options.ga4Id;
-  const page = analyticsPage(window.location.href, draftMode, production, allowedHosts);
+  const page = analyticsPage(window.location.href, draftMode, production, allowedHosts, referrerFor(window.location.href));
   // A changed tag/ID cannot be swapped in place: unload via reload, then start clean.
   if (getAnalyticsConsent() !== "granted" || !page || !tag || (running && (activeTag?.mode !== tag.mode || activeTag.id !== tag.id))) {
     stopAnalytics();

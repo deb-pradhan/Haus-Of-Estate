@@ -1,232 +1,365 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
 import { COMPANY_IDENTITY } from "@/lib/company-identity";
+import { PRIVACY_CONTACT_EMAIL } from "@/lib/site-claims";
+import {
+  LegalPage,
+  LegalSection,
+  LegalList,
+  LegalTable,
+  legalLinkClass,
+} from "@/components/legal/legal-page";
+
+/*
+ * DRAFT for solicitor review.
+ *
+ * Rewritten 18 October 2026 against docs/mega-upgrade/audits/legal.md (P0-4).
+ * Facts the founder must confirm before this is treated as final:
+ *  - each processor's data processing agreement and the region it uses
+ *    (Railway, Sanity, Resend, Google, Meta/WhatsApp) and the transfer
+ *    safeguard named in the recipients table;
+ *  - that the privacy mailbox below exists and is monitored;
+ *  - that enquiry records are actually reviewed and deleted on the stated
+ *    schedule (no automated retention job exists in the codebase yet);
+ *  - whether an EU Article 27 representative is needed for Cyprus/EU marketing;
+ *  - the ICO/DUAA complaints-handling commencement position.
+ */
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
-    "How Haus of Estate collects, uses and protects your personal data.",
+    "How Haus of Estate collects, uses, shares and protects your personal data, and how to exercise your rights.",
   alternates: { canonical: "/legal/privacy-policy" },
 };
 
+const mail = (
+  <a href={`mailto:${PRIVACY_CONTACT_EMAIL}`} className={legalLinkClass}>
+    {PRIVACY_CONTACT_EMAIL}
+  </a>
+);
+
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen">
-      {/* Header */}
-      <div className="border-b border-border bg-surface">
-        <div className="mx-auto max-w-3xl px-4 py-6 md:px-6">
-          <Link href="/" className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeft className="h-4 w-4" />
-            Back to home
+    <LegalPage title="Privacy Policy" updated="18 October 2026">
+      <LegalSection title="1. Who we are">
+        <p>
+          {COMPANY_IDENTITY.name} is a trading name of {COMPANY_IDENTITY.legalName}{" "}
+          (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;). We are the controller of the personal data described in this
+          policy. We introduce buyers, sellers, landlords, tenants and investors to estate agents,
+          brokers and developers in the United Kingdom, the United Arab Emirates and selected
+          international markets.
+        </p>
+        <p>
+          {COMPANY_IDENTITY.legalName}, registered in {COMPANY_IDENTITY.registeredJurisdiction},
+          company number {COMPANY_IDENTITY.number}. Registered office:{" "}
+          {COMPANY_IDENTITY.registeredOffice}. ICO registration:{" "}
+          <a
+            href={COMPANY_IDENTITY.icoRegisterUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={legalLinkClass}
+          >
+            {COMPANY_IDENTITY.icoRegistrationNumber}
+          </a>
+          .
+        </p>
+        <p>
+          We have not appointed a Data Protection Officer. Our privacy contact is {mail}. We handle
+          data in line with the UK GDPR and the Data Protection Act 2018, and the EU GDPR where it
+          applies to you.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="2. What personal data we collect">
+        <LegalList>
+          <li>
+            <strong>Enquiry details</strong> you give us in our forms: name, email address, mobile
+            number, the market and area you are interested in, buy, rent, sell or let intent, property
+            type, bedrooms, size, budget, timeline, and any notes you write.
+          </li>
+          <li>
+            <strong>Account details</strong> if you register: name, email address and a hashed
+            password, or your Google profile name and email if you sign in with Google.
+          </li>
+          <li>
+            <strong>Messages</strong> you send us by email, phone or WhatsApp, including your phone
+            number and the content of the conversation.
+          </li>
+          <li>
+            <strong>Website usage data</strong>, only if you accept analytics cookies: pages visited,
+            approximate location, device and browser type, and a random identifier. See our{" "}
+            <Link href="/legal/cookie-policy" className={legalLinkClass}>
+              Cookie Policy
+            </Link>
+            .
+          </li>
+          <li>
+            <strong>Technical data</strong> that our hosting and security tools record when you
+            visit, such as your IP address and request details.
+          </li>
+        </LegalList>
+        <p>
+          We do not ask you to upload passports, bank details or title deeds through this website. If
+          an agent or we later need identity documents, for example for anti-money-laundering checks
+          after you have chosen to proceed, we will ask separately and explain how to send them
+          securely. We do not knowingly collect data about children.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="3. How and why we use your data">
+        <LegalTable
+          caption="Purposes and lawful bases"
+          head={["Purpose", "Lawful basis (UK GDPR)"]}
+          rows={[
+            [
+              "Reply to your enquiry and introduce you to a suitable agent, broker or developer",
+              "Taking steps at your request before a contract (Art 6(1)(b)) and our legitimate interest in running our service (Art 6(1)(f))",
+            ],
+            ["Create and run your account", "Contract (Art 6(1)(b))"],
+            [
+              "Send property alerts and market updates by email, only if you ticked the optional box",
+              "Consent (Art 6(1)(a)) and PECR. You can withdraw it at any time",
+            ],
+            [
+              "Prioritise and route enquiries (see section 7)",
+              "Legitimate interests (Art 6(1)(f))",
+            ],
+            [
+              "Measure how the website is used, only if you accept analytics cookies",
+              "Consent (PECR regulation 6 and Art 6(1)(a))",
+            ],
+            [
+              "Keep the website secure and prevent fraud and abuse",
+              "Legitimate interests (Art 6(1)(f))",
+            ],
+            [
+              "Meet legal duties, such as anti-money-laundering checks where they apply to us, tax and company records",
+              "Legal obligation (Art 6(1)(c))",
+            ],
+            [
+              "Handle complaints and defend legal claims",
+              "Legitimate interests (Art 6(1)(f)) and legal obligation",
+            ],
+          ]}
+        />
+        <p>
+          Replying to your enquiry is not conditional on marketing. You can use our forms without
+          opting in to marketing.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="4. Marketing">
+        <p>
+          We send marketing only if you tick the separate, optional marketing box on a form, or
+          otherwise tell us you want it. Each form states the channel (currently email). Withdraw
+          consent at any time by using the unsubscribe link or emailing {mail}. We keep a minimal
+          record of your opt-out so that we honour it. We do not sell your data.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="5. Who receives your data">
+        <p>
+          <strong>Who receives your enquiry.</strong> We pass your enquiry to the licensed agent,
+          developer or partner you ask us to introduce. They then act as a separate controller of the
+          data you share with them and will have their own privacy notice. We do not control how they
+          use it after the introduction.
+        </p>
+        <LegalTable
+          caption="Service providers and recipients"
+          head={["Recipient", "Purpose", "Where", "Safeguard"]}
+          rows={[
+            [
+              "Railway",
+              "Website hosting and database",
+              "Provider is US-based; data may be processed outside the UK",
+              "Provider data processing terms with international transfer safeguards (UK-US Data Bridge, or the UK Addendum to the EU Standard Contractual Clauses)",
+            ],
+            [
+              "Sanity",
+              "Content management for pages, articles and published testimonials",
+              "Provider is US-based; data may be processed outside the UK",
+              "As above",
+            ],
+            [
+              "Resend",
+              "Sending our emails, including enquiry notifications and account emails",
+              "Provider is US-based; data may be processed outside the UK",
+              "As above",
+            ],
+            [
+              "Google (Analytics 4, Tag Manager, Sign-in)",
+              "Website analytics, only after you accept analytics cookies; Google sign-in if you choose it",
+              "Provider is US-based; data may be processed outside the UK",
+              "As above. Google Signals and ad personalisation are switched off",
+            ],
+            [
+              "WhatsApp (Meta)",
+              "Messages you send us through WhatsApp or the click-to-chat button",
+              "Provider is US-based; data may be processed outside the UK",
+              "Governed by WhatsApp's own terms and privacy policy once you start a chat",
+            ],
+            [
+              "Agents, brokers and developers you ask us to introduce",
+              "Dealing with your enquiry, viewings and transaction",
+              "In the country of the property, for example the United Kingdom, the United Arab Emirates or Indonesia",
+              "See section 6",
+            ],
+            [
+              "Professional advisers, regulators and law enforcement",
+              "Legal advice, and meeting legal duties such as tax or anti-money-laundering reporting",
+              "United Kingdom, and elsewhere where the law requires",
+              "Disclosed only where required or permitted by law",
+            ],
+          ]}
+        />
+        <p>
+          If we sell or restructure the business, your data may pass to the new owner, who must
+          continue to protect it.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="6. International transfers">
+        <p>
+          Where an agent you ask us to introduce is in the United Arab Emirates, your data is
+          transferred to a country without a UK adequacy decision. We use the ICO International Data
+          Transfer Agreement or the UK Addendum to the EU Standard Contractual Clauses, and assess the
+          risks first. The same approach applies to other countries without an adequacy decision, such
+          as Indonesia. Cyprus and other EU countries benefit from UK adequacy regulations. You can
+          ask us for a copy of these safeguards by emailing {mail}.
+        </p>
+        <p>
+          Our US-based service providers are listed in section 5. If you choose to contact an agent
+          directly or through WhatsApp, that exchange is between you and them.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="7. Scoring enquiries (profiling)">
+        <p>
+          We score enquiries to prioritise follow-up, for example by the type of enquiry and how
+          urgent it is, and assign each a tier and a routing team. The score is used internally by our
+          team. No decision with a legal or similarly significant effect on you is made solely by
+          automated means. You can ask us to review how your enquiry was handled, and you can object
+          at any time.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="8. How long we keep your data">
+        <LegalTable
+          caption="Retention periods"
+          head={["Record", "How long"]}
+          rows={[
+            [
+              "Enquiry records",
+              "Up to 3 years after our last contact with you, then deleted or anonymised",
+            ],
+            [
+              "Marketing preferences",
+              "Until you withdraw consent or after 2 years of inactivity. We keep a minimal opt-out record so that we honour it",
+            ],
+            [
+              "Account data",
+              "While your account is open. Ask us to close it and we will delete it, unless the law requires us to keep something",
+            ],
+            [
+              "Anti-money-laundering records, where those rules apply to us",
+              "Five years after the end of the relationship or the transaction",
+            ],
+            [
+              "Accounting and tax records",
+              "Up to six years, to meet tax and company law",
+            ],
+            [
+              "Analytics data",
+              "For the retention period set in our Google Analytics account, which cannot exceed 14 months",
+            ],
+            [
+              "Complaint records",
+              "Up to 6 years after the complaint is closed",
+            ],
+          ]}
+        />
+      </LegalSection>
+
+      <LegalSection title="9. Your rights">
+        <p>You have the right to:</p>
+        <LegalList>
+          <li>be told what data we hold about you and get a copy (subject access)</li>
+          <li>have inaccurate data corrected</li>
+          <li>have your data erased, where we have no good reason to keep it</li>
+          <li>restrict how we use your data in some circumstances</li>
+          <li>receive your data in a portable format, where the basis is consent or contract</li>
+          <li>object to processing based on legitimate interests, and to direct marketing at any time</li>
+          <li>withdraw consent at any time, without affecting earlier processing</li>
+        </LegalList>
+        <p>
+          Email {mail}. We may ask you to confirm your identity first. We will respond without undue
+          delay and within one month, and tell you if we need longer for a complex request.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="10. Complaints">
+        <p>
+          If you are unhappy with how we have handled your data, please tell us first at {mail}. We
+          will acknowledge your complaint within 30 days and tell you the outcome without undue
+          delay. You can also complain to the Information Commissioner&apos;s Office at{" "}
+          <a
+            href="https://ico.org.uk/make-a-complaint/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={legalLinkClass}
+          >
+            ico.org.uk/make-a-complaint
+          </a>{" "}
+          (helpline 0303 123 1113). If you are in the EU, you can complain to your local data
+          protection authority. For complaints about our service rather than your data, see{" "}
+          <Link href="/legal/complaints" className={legalLinkClass}>
+            how to make a complaint
           </Link>
-          <div className="flex items-center gap-3">
-            <Image src="/Frame 16-1.svg" alt="Haus of Estate" width={100} height={54} className="h-6 w-auto" />
-          </div>
-        </div>
+          .
+        </p>
+      </LegalSection>
+
+      <LegalSection title="11. Cookies">
+        <p>
+          We use strictly necessary cookies to run sign-in and security. We use analytics cookies
+          only if you accept them. See our{" "}
+          <Link href="/legal/cookie-policy" className={legalLinkClass}>
+            Cookie Policy
+          </Link>{" "}
+          for the full list and how to change your choice.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="12. Changes to this policy">
+        <p>
+          We will update this policy when our practices or the law change and show the date at the
+          top. Version history:
+        </p>
+        <LegalList>
+          <li>18 October 2026: rewritten to name recipients and transfer safeguards, separate service contact from marketing, disclose scoring, and restate retention.</li>
+          <li>25 September 2026: previous version.</li>
+        </LegalList>
+      </LegalSection>
+
+      <LegalSection title="13. Contact us">
+        <p>
+          Privacy contact: {mail}. Post: {COMPANY_IDENTITY.legalName}, {COMPANY_IDENTITY.registeredOffice}.
+        </p>
+      </LegalSection>
+
+      <div className="rounded-xl border border-border bg-surface p-6">
+        <h3 className="mb-2 font-serif text-lg font-medium text-estate-700">
+          Need help with a data request?
+        </h3>
+        <p className="mb-4 text-sm text-muted-foreground">
+          Email us to ask for a copy of your data, a correction or deletion. We will respond without
+          undue delay and within one month.
+        </p>
+        <Button asChild className="bg-estate-700 text-white hover:bg-estate-600">
+          <a href={`mailto:${PRIVACY_CONTACT_EMAIL}`}>Email our privacy contact</a>
+        </Button>
       </div>
-
-      {/* Content */}
-      <div className="mx-auto max-w-3xl px-4 py-10 md:px-6 md:py-16">
-        <div className="mb-8">
-          <p className="font-serif text-sm font-medium uppercase tracking-widest text-gold-500 mb-2">Legal</p>
-          <h1 className="font-serif text-4xl font-medium text-estate-700">Privacy Policy</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Last updated: 25 September 2026</p>
-        </div>
-
-        <div className="space-y-8 text-sm leading-relaxed text-foreground">
-
-          <section>
-            <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">1. Who We Are</h2>
-            <p>
-              Haus of Estate ("we", "our", "us") is an international property advisory firm operating across the United Kingdom, United Arab Emirates, and Indonesia. We are committed to protecting your personal data in accordance with the UK General Data Protection Regulation (UK GDPR), the Data Protection Act 2018, and the EU General Data Protection Regulation (GDPR) where applicable.
-            </p>
-            <p className="mt-2">
-              <strong>Company details:</strong><br />
-              {COMPANY_IDENTITY.legalName}<br />
-              Registered in {COMPANY_IDENTITY.registeredJurisdiction}<br />
-              Company number: {COMPANY_IDENTITY.number}<br />
-              Registered office: {COMPANY_IDENTITY.registeredOffice}<br />
-              ICO registration:{" "}
-              <a
-                href={COMPANY_IDENTITY.icoRegisterUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-trust-teal hover:underline"
-              >
-                {COMPANY_IDENTITY.icoRegistrationNumber}
-              </a>
-              <br />
-              Email:{" "}
-              <a href="mailto:privacy@hausofestate.com" className="text-trust-teal hover:underline">
-                privacy@hausofestate.com
-              </a>
-            </p>
-          </section>
-
-          <section>
-            <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">2. What Personal Data We Collect</h2>
-            <p>We collect the following categories of personal data:</p>
-            <ul className="mt-2 space-y-1 list-disc pl-5">
-              <li><strong>Identity data:</strong> first name, surname, passport number (for property transactions)</li>
-              <li><strong>Contact data:</strong> email address, mobile number, postal address</li>
-              <li><strong>Financial data:</strong> bank details (only where required for transactions), budget range, investment preferences</li>
-              <li><strong>Property data:</strong> property requirements, location preferences, bedrooms, size, urgency indicators, title deed documents</li>
-              <li><strong>Usage data:</strong> how you interact with our website, including pages visited and time spent</li>
-              <li><strong>Marketing preferences:</strong> your consent to receive marketing communications via WhatsApp, SMS, email, and phone</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">3. How We Use Your Data</h2>
-            <p>We use your personal data for the following purposes:</p>
-            <ul className="mt-2 space-y-1 list-disc pl-5">
-              <li>To respond to your property enquiries and provide personalised property recommendations</li>
-              <li>To match you with properties based on your stated requirements (buy/rent/invest)</li>
-              <li>To list your property for sale or rent and facilitate transactions</li>
-              <li>To send you market insights, investment guides, and property opportunities where you have given consent</li>
-              <li>To comply with our legal obligations under UK and EU anti-money laundering regulations</li>
-              <li>To improve our website and services through analytics</li>
-            </ul>
-            <p className="mt-3">
-              <strong>Legal basis for processing:</strong> We rely on <strong>consent</strong> (Article 6(1)(a) UK GDPR) for marketing communications, <strong>contractual necessity</strong> (Article 6(1)(b)) for property services, and <strong>legitimate interests</strong> (Article 6(1)(f)) for fraud prevention and service improvement.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">4. Marketing Communications</h2>
-            <p>
-              Where you have provided explicit consent, we may contact you via:
-            </p>
-            <ul className="mt-2 space-y-1 list-disc pl-5">
-              <li><strong>WhatsApp:</strong> Property matches, market updates, investment opportunities</li>
-              <li><strong>SMS:</strong> Property alerts and viewing confirmations</li>
-              <li><strong>Email:</strong> Newsletter, property shortlists, market reports</li>
-              <li><strong>Phone:</strong> Agent consultations and follow-up calls</li>
-            </ul>
-            <p className="mt-3">
-              Under UK and EU law ( PECR 2003 and GDPR), we require your <strong>explicit opt-in consent</strong> before sending marketing messages. You have the right to withdraw this consent at any time by contacting us at{" "}
-              <a href="mailto:privacy@hausofestate.com" className="text-trust-teal hover:underline">
-                privacy@hausofestate.com
-              </a>{" "}
-              or clicking the unsubscribe link in any marketing email.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">5. Data Sharing</h2>
-            <p>
-              We do not sell your personal data. We may share your data with:
-            </p>
-            <ul className="mt-2 space-y-1 list-disc pl-5">
-              <li><strong>Property developers</strong> (Emaar, Damac, etc.) where you have expressed interest in specific projects</li>
-              <li><strong>Legal representatives</strong> and conveyancing agents to complete property transactions</li>
-              <li><strong>HM Revenue & Customs</strong> (HMRC) to comply with UK tax and anti-money laundering regulations</li>
-              <li><strong>Technology providers</strong> (hosting, email delivery) under strict data processing agreements</li>
-            </ul>
-            <p className="mt-3">
-              All third parties are required to process your data only in accordance with our instructions and applicable data protection law.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">6. International Data Transfers</h2>
-            <p>
-              As an international firm operating across the UK, UAE, and Indonesia, your data may be transferred outside the United Kingdom and European Economic Area (EEA). Where we transfer data to countries without an adequacy decision from the UK government or European Commission, we implement appropriate safeguards including:
-            </p>
-            <ul className="mt-2 space-y-1 list-disc pl-5">
-              <li>Standard Contractual Clauses (SCCs) approved by the relevant supervisory authority</li>
-              <li>Binding Corporate Rules where applicable</li>
-              <li>Data processing agreements with all third-party service providers</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">7. Data Retention</h2>
-            <p>
-              We retain your personal data only for as long as necessary to fulfil the purposes described in this policy:
-            </p>
-            <ul className="mt-2 space-y-1 list-disc pl-5">
-              <li><strong>Enquiry data:</strong> 3 years from last contact</li>
-              <li><strong>Marketing consent:</strong> Until you withdraw consent or 2 years of inactivity</li>
-              <li><strong>Property transaction data:</strong> 7 years (required by HMRC for tax purposes)</li>
-              <li><strong>Document copies (title deed, passport):</strong> 7 years post-transaction completion</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">8. Your Rights Under UK GDPR</h2>
-            <p>You have the following rights regarding your personal data:</p>
-            <ul className="mt-2 space-y-1 list-disc pl-5">
-              <li><strong>Right of access:</strong> Request a copy of your personal data (Subject Access Request)</li>
-              <li><strong>Right to rectification:</strong> Correct any inaccurate or incomplete data</li>
-              <li><strong>Right to erasure:</strong> Request deletion of your data (subject to legal retention requirements)</li>
-              <li><strong>Right to restrict processing:</strong> Request we limit how we use your data</li>
-              <li><strong>Right to data portability:</strong> Receive your data in a structured, commonly used format</li>
-              <li><strong>Right to object:</strong> Object to processing based on legitimate interests</li>
-              <li><strong>Rights related to automated decision-making:</strong> Not subject to purely automated decisions with significant effects</li>
-            </ul>
-            <p className="mt-3">
-              To exercise any of these rights, contact us at{" "}
-              <a href="mailto:privacy@hausofestate.com" className="text-trust-teal hover:underline">
-                privacy@hausofestate.com
-              </a>
-              . We will respond within <strong>30 days</strong>.
-            </p>
-            <p className="mt-2">
-              You also have the right to lodge a complaint with the{" "}
-              <strong>Information Commissioner's Office (ICO)</strong> if you believe we have not handled your data correctly.
-              Website:{" "}
-              <a href="https://ico.org.uk" target="_blank" rel="noopener noreferrer" className="text-trust-teal hover:underline">
-                ico.org.uk
-              </a>
-            </p>
-          </section>
-
-          <section>
-            <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">9. Cookies and Tracking</h2>
-            <p>
-              Our website uses cookies to improve your browsing experience. For detailed information about the cookies we use and how to manage them, please see our{" "}
-              <Link href="/cookie-policy" className="text-trust-teal hover:underline">Cookie Policy</Link>.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">10. Changes to This Policy</h2>
-            <p>
-              We may update this Privacy Policy from time to time to reflect changes in our practices or legal requirements. The latest version will always be available on our website with the date of the last update displayed at the top.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">11. Contact Us</h2>
-            <p>
-              If you have any questions about this Privacy Policy or how we handle your personal data, please contact our Data Protection Officer:
-            </p>
-            <p className="mt-2">
-              <strong>Email:</strong>{" "}
-              <a href="mailto:privacy@hausofestate.com" className="text-trust-teal hover:underline">
-                privacy@hausofestate.com
-              </a>
-              <br />
-              <strong>Post:</strong> {COMPANY_IDENTITY.legalName}, {COMPANY_IDENTITY.registeredOffice}
-            </p>
-          </section>
-
-        </div>
-
-        <div className="mt-12 rounded-xl border border-border bg-surface p-6">
-          <h3 className="font-serif text-lg font-medium text-estate-700 mb-2">Need help with a data request?</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Our team can assist with subject access requests, corrections, or deletion requests within 30 days.
-          </p>
-          <Button asChild className="bg-estate-700 text-white hover:bg-estate-600">
-            <Link href="mailto:privacy@hausofestate.com">Contact our Data Protection Team</Link>
-          </Button>
-        </div>
-      </div>
-    </div>
+    </LegalPage>
   );
 }
