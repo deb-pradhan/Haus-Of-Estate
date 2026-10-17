@@ -1,57 +1,72 @@
 import { HomepagePropertySearch } from "@/components/landing/homepage-property-search";
 
-const STATS = [
-  { value: "1,200+", label: "Clients matched since 2022" },
-  { value: "15+", label: "Years' experience" },
-  { value: "3", label: "Continents" },
-  { value: "4.8★", label: "Average rating" },
-];
-
+/**
+ * Homepage hero — "Quiet Confidence" (docs/mega-upgrade/DESIGN-PRINCIPLES.md).
+ * One headline, one sentence, one search. Proof sits below the fold.
+ */
 export function BuyRentSell() {
   return (
-    <section aria-label="Hero" className="relative overflow-hidden bg-estate-700">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.06]"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 20% 20%, #c4a87a 0, transparent 45%), radial-gradient(circle at 85% 80%, #c4a87a 0, transparent 40%)",
-        }}
-      />
+    <section
+      aria-label="Hero"
+      className="relative isolate overflow-hidden bg-estate-900 text-white"
+    >
+      {/* Depth: layered gradients + a faint architectural grid, no stock imagery */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "radial-gradient(120% 80% at 50% -10%, #2c6a43 0%, #1f4f2f 38%, #0f2a19 100%)",
+          }}
+        />
+        <div
+          className="absolute inset-0 opacity-[0.07]"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px)",
+            backgroundSize: "96px 96px",
+            maskImage:
+              "radial-gradient(ellipse at 50% 30%, black 0%, transparent 70%)",
+            WebkitMaskImage:
+              "radial-gradient(ellipse at 50% 30%, black 0%, transparent 70%)",
+          }}
+        />
+        <div
+          className="absolute -top-40 left-1/2 h-[28rem] w-[56rem] -translate-x-1/2 rounded-full opacity-30 blur-3xl"
+          style={{
+            background:
+              "radial-gradient(closest-side, rgba(196,168,122,0.55), transparent)",
+          }}
+        />
+      </div>
 
-      <div className="relative z-10 mx-auto max-w-5xl px-4 py-20 text-center md:px-6 md:py-28">
-        <p className="font-serif text-xs font-medium uppercase tracking-[0.3em] text-gold-400">
-          UK · UAE · International
+      <div className="mx-auto flex min-h-[min(46rem,calc(100svh-7rem))] max-w-5xl flex-col items-center justify-center px-5 py-20 text-center md:px-8 md:py-28">
+        <p className="eyebrow eyebrow-dark animate-fade-up opacity-0-init">
+          Dubai · United Kingdom · International
         </p>
 
-        <p className="mx-auto mt-5 text-sm text-white/70 md:text-base">
-          Welcome to Haus of Estate.
-        </p>
-
-        <h1 className="mx-auto mt-3 max-w-3xl font-serif text-[2.75rem] font-medium leading-[1.06] text-white md:text-[4rem] md:leading-[1.04]">
-          Property in Dubai, the UK &amp; beyond —{" "}
-          <span className="text-gold-400">with proof.</span>
+        <h1
+          className="animate-fade-up opacity-0-init mt-6 max-w-4xl font-serif text-display font-medium leading-[0.98] text-white"
+          style={{ animationDelay: "80ms" }}
+        >
+          Property,{" "}
+          <span className="text-gold-300">with proof.</span>
         </h1>
 
-        <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-white/75 md:text-lg">
-          One enquiry connects you to the right vetted agent — transparent
-          advice, no hidden fees, wherever you&apos;re moving capital.
+        <p
+          className="animate-fade-up opacity-0-init mx-auto mt-6 max-w-2xl text-lede text-white/80"
+          style={{ animationDelay: "160ms", lineHeight: 1.5 }}
+        >
+          International property in Dubai, the UK and beyond. One enquiry
+          connects you to a vetted agent — clear advice, no hidden fees.
         </p>
 
-        <HomepagePropertySearch />
-
-        <dl className="mx-auto mt-14 grid max-w-3xl grid-cols-2 gap-x-6 gap-y-8 border-t border-white/10 pt-10 md:grid-cols-4">
-          {STATS.map((stat) => (
-            <div key={stat.label} className="text-center">
-              <dt className="font-serif text-3xl font-medium text-gold-400 md:text-4xl">
-                {stat.value}
-              </dt>
-              <dd className="mt-1 text-xs uppercase tracking-[0.15em] text-white/60">
-                {stat.label}
-              </dd>
-            </div>
-          ))}
-        </dl>
+        <div
+          className="animate-fade-up opacity-0-init w-full"
+          style={{ animationDelay: "240ms" }}
+        >
+          <HomepagePropertySearch />
+        </div>
       </div>
     </section>
   );
