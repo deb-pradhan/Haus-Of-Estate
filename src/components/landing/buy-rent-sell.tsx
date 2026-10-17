@@ -41,21 +41,18 @@ export function BuyRentSell() {
       </div>
 
       <div className="mx-auto flex min-h-[min(46rem,calc(100svh-7rem))] max-w-5xl flex-col items-center justify-center px-5 py-20 text-center md:px-8 md:py-28">
-        <p className="eyebrow eyebrow-dark animate-fade-up opacity-0-init">
+        <p className="eyebrow eyebrow-dark">
           Dubai · United Kingdom · International
         </p>
 
-        <h1
-          className="animate-fade-up opacity-0-init mt-6 max-w-4xl font-serif text-display font-medium leading-[0.98] text-white"
-          style={{ animationDelay: "80ms" }}
-        >
+        <h1 className="mt-6 max-w-4xl font-serif text-display font-medium leading-[0.98] text-white">
           Property,{" "}
           <span className="text-gold-300">with proof.</span>
         </h1>
 
         <p
-          className="animate-fade-up opacity-0-init mx-auto mt-6 max-w-2xl text-lede text-white/80"
-          style={{ animationDelay: "160ms", lineHeight: 1.5 }}
+          className="mx-auto mt-6 max-w-2xl text-lede text-white/80"
+          style={{ lineHeight: 1.5 }}
         >
           International property in Dubai, the UK and beyond. One enquiry
           connects you with a local advisor — clear guidance from first
@@ -64,7 +61,7 @@ export function BuyRentSell() {
 
         <div
           className="animate-fade-up opacity-0-init w-full"
-          style={{ animationDelay: "240ms" }}
+          style={{ animationDelay: "120ms" }}
         >
           <HomepagePropertySearch />
         </div>

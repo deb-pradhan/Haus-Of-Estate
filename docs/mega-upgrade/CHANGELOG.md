@@ -45,6 +45,13 @@ Roadmap: `ROADMAP.md`. Audits: `audits/`.
 - **PM fixes**: `Reveal` lint fix; FAQ/BlogCTA/careers claim wording → shared `RESPONSE_TIME_COPY`; footer deepened to `estate-900` with accessible headings.
 - Lint: 0 errors outside others' files at hand-off; `tsc` clean.
 
+### Release verification (PM)
+- Dependencies: `next` + `eslint-config-next` 16.1.6 → **16.4.2** (security advisories incl. proxy bypass that affected the careers block); `next-auth` → 5.0.0-beta.32, `@auth/prisma-adapter` → 2.11.3 (clears the 3 critical advisories; `npm audit --omit=dev`: critical 0, remaining highs are transitive in the Sanity/Prisma dev toolchain).
+- Production build passes (66 static pages); production-server checks: security headers present, `/properties/[bad-slug]` and `/blog/[bad-slug]` return 404, `/careers` 404, `/studio` works, `/api/health` 200.
+- Tests: unit 26/26, SEO+analytics 31/31, content 15/15 (property-media tests rebuilt to exercise the redesigned components; concept-image, caption, Ready/Off-plan and breadcrumb guarantees preserved and mutation-checked).
+- Hero headline/lede made static (LCP) — only the search animates in.
+- Observation for wave 2: carousel shows only the current slide's caption.
+
 ### Design system ("Quiet Confidence")
 - **Principles & tokens** (`DESIGN-PRINCIPLES.md`): fluid type scale, e1–e3 tinted elevation, glass materials, motion easing, `estate-900/800`, `gold-700` (accessible gold text, 4.9:1), softened paper. Files: `src/app/globals.css`.
 - **Primitives**: Button → pill, 44/52 px targets, press feedback, new `gold` variant (ink text, 5.2:1); Input → 48 px/12 px radius; new `Reveal` scroll-reveal; global `:focus-visible` ring, `text-wrap: balance/pretty`, smooth scroll. Files: `src/components/ui/button.tsx`, `input.tsx`, `reveal.tsx`.

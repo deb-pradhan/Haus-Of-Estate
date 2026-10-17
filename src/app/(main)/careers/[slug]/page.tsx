@@ -141,7 +141,7 @@ export default async function RolePage({ params }: RolePageProps) {
           <div className="space-y-10">
             {role.description ? (
               <div className="prose prose-neutral max-w-none">
-                <PortableTextRenderer content={role.description as any} />
+                <PortableTextRenderer content={role.description as React.ComponentProps<typeof PortableTextRenderer>["content"]} />
               </div>
             ) : null}
 
