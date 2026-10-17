@@ -19,6 +19,13 @@ Roadmap: `ROADMAP.md`. Audits: `audits/`.
 - Report-only (Sanity-side, not changed): escrow/snagging duplicate post pairs need 301s; most `seoDesc` > 160 chars; five thin posts.
 - Founder flags: registered office "Unit 1" vs trading "Unit A"; Cyprus claimed but no content; two phone numbers (UK mobile, UAE WhatsApp).
 
+### Property experience (WS-D, C-04/C-05/C-06)
+- **Cards v2**: image-first 4:3, one badge, serif tabular price, location, ≤3 facts, whole-card link with `lift`, concept-image caption preserved, skeletons, 1/2/3-column grid; community headings only at 6+ listings. Files: `property-card.tsx`, `property-grid.tsx`, `landing/property-showcase.tsx`, `properties/loading.tsx`.
+- **/properties**: Buy/Rent/Off-plan links + GET filter form (location, type, beds, sort; works without JS), results count, removable chips, clear filters, empty state routing to enquiry, Home-rooted breadcrumbs. Files: `filter-bar.tsx`, `property-listing.tsx`, `empty-state-cta.tsx`, `property-taxonomy.ts` (`sort`).
+- **Property detail**: scroll-snap gallery + lightbox, key facts, inline enquiry form (consent notice + optional unticked marketing box) replacing `mailto:`, WhatsApp link carrying title/URL, mobile sticky bar, desktop sticky card, material-information panel (renders only fields present), overseas risk warning, similar properties, consent-gated video, `propertyMetadata`/BreadcrumbList wiring. Internal `unitNumber` no longer shown. Files: `properties/[slug]/page.tsx`, `enquiry-form.tsx`, `sticky-cta.tsx`, `whatsapp-button.tsx`, `material-info.tsx`, `property-gallery.tsx`, `property-format.ts`, `queries.ts` (optional fields + `SIMILAR_PROPERTIES_QUERY`).
+- Optional data fields the UI reads **if present** (not in Sanity schema; awaiting user approval to add): tenure, completionDate, leaseLength, serviceCharge, groundRent, councilTaxBand, epcRating, escrow, developerRegNo, permitNumber, permitIssuer, listingBrokerName, brokerOrn, agentBrn, brochure.
+- Deferred: currency selector, map view, price-band filter (price is free text), filter-change analytics.
+
 ### Design system ("Quiet Confidence")
 - **Principles & tokens** (`DESIGN-PRINCIPLES.md`): fluid type scale, e1–e3 tinted elevation, glass materials, motion easing, `estate-900/800`, `gold-700` (accessible gold text, 4.9:1), softened paper. Files: `src/app/globals.css`.
 - **Primitives**: Button → pill, 44/52 px targets, press feedback, new `gold` variant (ink text, 5.2:1); Input → 48 px/12 px radius; new `Reveal` scroll-reveal; global `:focus-visible` ring, `text-wrap: balance/pretty`, smooth scroll. Files: `src/components/ui/button.tsx`, `input.tsx`, `reveal.tsx`.
