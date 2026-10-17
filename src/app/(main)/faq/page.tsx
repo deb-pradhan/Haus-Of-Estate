@@ -1,3 +1,4 @@
+import { RESPONSE_TIME_COPY } from '@/lib/site-claims'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
@@ -75,8 +76,7 @@ export default async function FaqPage() {
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/80 md:text-lg">
             The questions buyers, renters, sellers and landlords ask us most often.
-            If yours isn&apos;t here, ask us directly — we&apos;ll reply within
-            two working hours.
+            If yours isn&apos;t here, ask us directly — we&apos;ll reply {RESPONSE_TIME_COPY}.
           </p>
         </div>
       </section>
@@ -112,7 +112,7 @@ export default async function FaqPage() {
             </h2>
             <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
               Send a quick enquiry — a member of our team will get back to you
-              within two working hours.
+              {RESPONSE_TIME_COPY}.
             </p>
             <Link
               href="/#services"

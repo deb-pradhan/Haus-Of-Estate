@@ -164,7 +164,7 @@ export async function POST(request: Request) {
           firstName,
           email: email ?? "",
           phone: contactPhone,
-          intent,
+          intent: intent ?? "funnel",
           market: market ?? null,
           propertyType: propertyTypes.join(", ") || null,
           area: areas.join(", ") || null,

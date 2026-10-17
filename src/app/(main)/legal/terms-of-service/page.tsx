@@ -1,225 +1,206 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
 import { COMPANY_IDENTITY } from "@/lib/company-identity";
+import { PRIVACY_CONTACT_EMAIL, FEE_DISCLOSURE_COPY } from "@/lib/site-claims";
+import {
+  LegalPage,
+  LegalSection,
+  LegalList,
+  legalLinkClass,
+} from "@/components/legal/legal-page";
+
+/*
+ * DRAFT for solicitor review.
+ *
+ * Rewritten 18 October 2026 against docs/mega-upgrade/audits/legal.md (P1-2).
+ * Changes: removed the consumer indemnity, the "any failure to complete a
+ * transaction" and "losses from investments" exclusions, deemed acceptance of
+ * changes, and "investment advisory / recommendations" wording; role stated as
+ * introducer; consumer jurisdiction made non-exclusive; statutory-rights line
+ * added.
+ * Still needed from the founder/solicitor: confirm Haus of Estate acts only as
+ * an introducer in every market; whether a separate service agreement with a
+ * written fee schedule is issued at instruction (Estate Agents Act 1979 s.18);
+ * 14-day cancellation wording for any fee-paying service; redress scheme
+ * details (see /legal/complaints, driven by company-identity.ts).
+ */
 
 export const metadata: Metadata = {
   title: "Terms of Service",
   description:
-    "The terms governing your use of the Haus of Estate website and services.",
+    "The terms for using the Haus of Estate website and our introduction service.",
   alternates: { canonical: "/legal/terms-of-service" },
 };
 
+const generalMail = (
+  <a href={`mailto:${COMPANY_IDENTITY.generalEmail}`} className={legalLinkClass}>
+    {COMPANY_IDENTITY.generalEmail}
+  </a>
+);
+
 export default function TermsOfServicePage() {
   return (
-    <div className="min-h-screen">
-      {/* Header */}
-      <div className="border-b border-border bg-surface">
-        <div className="mx-auto max-w-3xl px-4 py-6 md:px-6">
-          <Link href="/" className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeft className="h-4 w-4" />
-            Back to home
+    <LegalPage title="Terms of Service" updated="18 October 2026">
+      <LegalSection title="1. About these terms">
+        <p>
+          These terms apply when you use the {COMPANY_IDENTITY.name} website and our introduction
+          service. {COMPANY_IDENTITY.name} is a trading name of {COMPANY_IDENTITY.legalName}{" "}
+          (&quot;we&quot;, &quot;us&quot;). Please read them with our{" "}
+          <Link href="/legal/privacy-policy" className={legalLinkClass}>
+            Privacy Policy
+          </Link>{" "}
+          and{" "}
+          <Link href="/legal/cookie-policy" className={legalLinkClass}>
+            Cookie Policy
           </Link>
-          <div className="flex items-center gap-3">
-            <Image src="/Frame 16-1.svg" alt="Haus of Estate" width={100} height={54} className="h-6 w-auto" />
-          </div>
-        </div>
-      </div>
+          . If you use the website as a consumer, nothing in these terms affects your statutory
+          rights.
+        </p>
+        <p>
+          <strong>Company details:</strong> {COMPANY_IDENTITY.legalName}, registered in{" "}
+          {COMPANY_IDENTITY.registeredJurisdiction}, company number {COMPANY_IDENTITY.number}.
+          Registered office: {COMPANY_IDENTITY.registeredOffice}. Contact: {generalMail}.
+        </p>
+      </LegalSection>
 
-      {/* Content */}
-      <div className="mx-auto max-w-3xl px-4 py-10 md:px-6 md:py-16">
-        <div className="mb-8">
-          <p className="font-serif text-sm font-medium uppercase tracking-widest text-gold-500 mb-2">Legal</p>
-          <h1 className="font-serif text-4xl font-medium text-estate-700">Terms of Service</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Last updated: 25 September 2026</p>
-        </div>
+      <LegalSection title="2. What we do, and what we do not">
+        <p>
+          We provide property market information and introductions. When you send us an enquiry we
+          may introduce you to an estate agent, broker, developer or other provider in the market you
+          are interested in.
+        </p>
+        <p>
+          <strong>Our role.</strong> We act as an introducer. We are not your estate agent, mortgage
+          broker, financial adviser, tax adviser or solicitor, and we are not a party to any
+          purchase, sale or tenancy that follows an introduction. Agents, brokers and developers are
+          separate legal entities. Your contract with them is with them, not with us, and they are
+          responsible for their own advice, licences and conduct. If we ever act as an estate agent
+          for you in the United Kingdom, we will give you our written terms of business, including
+          our fee and when it is payable, before you are committed.
+        </p>
+        <p>
+          We do not give legal, tax, financial or investment advice. Property values and rents can
+          fall as well as rise, and overseas property carries extra risks. Take independent regulated
+          advice before you commit.
+        </p>
+      </LegalSection>
 
-        <div className="space-y-8 text-sm leading-relaxed text-foreground">
+      <LegalSection title="3. Fees and referral payments">
+        <p>{FEE_DISCLOSURE_COPY}</p>
+        <p>
+          If we ever charge you a fee for a service, we will tell you the price and what you get
+          before you agree to pay. If you buy a fee-paying service from us at a distance, you will
+          have the right to cancel within 14 days in the way the Consumer Contracts Regulations 2013
+          describe, and we will explain how before you pay.
+        </p>
+      </LegalSection>
 
-          <section>
-            <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">1. About These Terms</h2>
-            <p>
-              These Terms of Service ("Terms") govern your use of the Haus of Estate website, services, and any related communications or property advisory services provided by Haus of Estate Ltd ("we", "our", "us"). By accessing our website or using our services, you agree to be bound by these Terms.
-            </p>
-            <p className="mt-2">
-              If you do not agree to these Terms, please do not use our services. These Terms are written in accordance with English law and the UK Consumer Rights Act 2015.
-            </p>
-          </section>
+      <LegalSection title="4. Using the website">
+        <p>Please:</p>
+        <LegalList>
+          <li>give accurate information when you contact us and tell us if your details change;</li>
+          <li>use the website only for genuine property enquiries and not for fraud, abuse or anything unlawful;</li>
+          <li>not impersonate anyone, or try to disrupt or gain unauthorised access to the website;</li>
+          <li>keep your account sign-in details to yourself.</li>
+        </LegalList>
+        <p>
+          We may suspend or close an account, or stop replying to enquiries, if we reasonably believe
+          these rules have been broken or the law requires it. Where the law requires, we may need to
+          carry out identity and anti-money-laundering checks and cooperate with sanctions and
+          regulatory obligations before an introduction proceeds.
+        </p>
+      </LegalSection>
 
-          <section>
-            <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">2. Who We Are</h2>
-            <p>
-              Haus of Estate Ltd is an international property advisory firm providing property matching, investment advisory, and transaction facilitation services across the United Kingdom, United Arab Emirates, and Indonesia.
-            </p>
-            <p className="mt-2">
-              <strong>Legal name:</strong> {COMPANY_IDENTITY.legalName}<br />
-              <strong>Registered in:</strong> {COMPANY_IDENTITY.registeredJurisdiction}<br />
-              <strong>Company number:</strong> {COMPANY_IDENTITY.number}<br />
-              <strong>Registered office:</strong> {COMPANY_IDENTITY.registeredOffice}<br />
-              <strong>Contact:</strong>{" "}
-              <a href="mailto:info@hausofestate.com" className="text-trust-teal hover:underline">
-                info@hausofestate.com
-              </a>
-            </p>
-          </section>
+      <LegalSection title="5. Property information">
+        <p>
+          We take care with the information shown on the website, but much of it comes from sellers,
+          developers and agents. Prices are asking prices or indicative figures, and availability can
+          change without notice. Images and plans may be illustrative or concept images. Please check
+          details, ownership, legal standing and costs independently before you commit, and ask the
+          agent for anything you need in writing. Links to other websites are provided for
+          convenience and we are not responsible for their content.
+        </p>
+      </LegalSection>
 
-          <section>
-            <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">3. Our Services</h2>
-            <p>Haus of Estate provides the following services:</p>
-            <ul className="mt-2 space-y-1 list-disc pl-5">
-              <li><strong>Property matching:</strong> Matching buyers, renters, and investors with properties based on stated preferences</li>
-              <li><strong>Investment advisory:</strong> Providing market insights, yield analysis, and investment recommendations</li>
-              <li><strong>Property listing:</strong> Listing properties for sale or rent on behalf of owners</li>
-              <li><strong>Viewing coordination:</strong> Arranging and confirming property viewings with agents</li>
-              <li><strong>Transaction facilitation:</strong> Assisting with paperwork, documentation, and communication between parties</li>
-            </ul>
-            <p className="mt-3">
-              <strong>Important:</strong> Haus of Estate acts as an intermediary and advisor, not a solicitor or licensed conveyancer. We do not provide legal advice. For legal matters, you should seek independent legal counsel.
-            </p>
-          </section>
+      <LegalSection title="6. Marketing">
+        <p>
+          We send marketing only if you tick the optional marketing box on a form or otherwise ask us
+          to. You can stop it at any time using the unsubscribe link or by emailing{" "}
+          <a href={`mailto:${PRIVACY_CONTACT_EMAIL}`} className={legalLinkClass}>
+            {PRIVACY_CONTACT_EMAIL}
+          </a>
+          . Service replies to your enquiry are not marketing.
+        </p>
+      </LegalSection>
 
-          <section>
-            <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">4. Your Obligations</h2>
-            <p>When using our services, you agree to:</p>
-            <ul className="mt-2 space-y-1 list-disc pl-5">
-              <li>Provide accurate and complete information about your property requirements and contact details</li>
-              <li>Only use our services for legitimate property enquiries — not for speculative, fraudulent, or illegal purposes</li>
-              <li>Not impersonate any other person or entity</li>
-              <li>Comply with all applicable laws, including UK and international anti-money laundering regulations</li>
-              <li>Notify us promptly if your contact details change</li>
-              <li>Not share account access credentials or allow third parties to act on your behalf without written authorisation</li>
-            </ul>
-          </section>
+      <LegalSection title="7. Our responsibility to you">
+        <p>
+          We are responsible for loss or damage you suffer that is a foreseeable result of our
+          breaking these terms or failing to use reasonable care and skill. We are not responsible
+          for loss that was not foreseeable, for the acts, advice or failures of agents, brokers,
+          developers or other third parties, or for a property transaction not completing for reasons
+          outside our control. If you use our service for business purposes we do not accept
+          liability for lost profit, revenue or business.
+        </p>
+        <p>
+          Nothing in these terms excludes or limits our liability for death or personal injury caused
+          by our negligence, for fraud or fraudulent misrepresentation, or for anything else that
+          cannot lawfully be excluded or limited. Nothing in these terms affects your statutory
+          rights as a consumer.
+        </p>
+      </LegalSection>
 
-          <section>
-            <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">5. Property Information and Accuracy</h2>
-            <p>
-              While we strive to ensure that all property information, pricing, and availability details displayed on our website are accurate and up to date, we do not guarantee that the information is complete, accurate, or free from errors.
-            </p>
-            <p className="mt-2">
-              Property details, prices, and availability are subject to change without notice. Haus of Estate is not liable for any discrepancies between information displayed on our website and information provided by third parties, including property developers, agents, or listing platforms.
-            </p>
-            <p className="mt-2">
-              <strong>Verification:</strong> We strongly recommend that you independently verify all property details, ownership status, legal standing, and financial information before committing to any purchase, rental, or investment. Nothing on our website constitutes legal, financial, or investment advice.
-            </p>
-          </section>
+      <LegalSection title="8. Intellectual property">
+        <p>
+          The website content, including text, graphics, logos and software, belongs to us or our
+          licensors and is protected by copyright. You may view it and print it for your own use. You
+          may not copy, distribute or adapt it for other purposes without our written permission.
+        </p>
+      </LegalSection>
 
-          <section>
-            <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">6. Marketing and Communications</h2>
-            <p>
-              By providing your contact details and opting in to our communications, you consent to receiving property alerts, market insights, investment opportunities, and service updates from Haus of Estate.
-            </p>
-            <p className="mt-2">
-              You can withdraw this consent at any time by:
-            </p>
-            <ul className="mt-2 space-y-1 list-disc pl-5">
-              <li>Replying "STOP" to any WhatsApp or SMS message</li>
-              <li>Clicking the unsubscribe link in any marketing email</li>
-              <li>Contacting us at{" "}
-                <a href="mailto:unsubscribe@hausofestate.com" className="text-trust-teal hover:underline">
-                  unsubscribe@hausofestate.com
-                </a>
-              </li>
-            </ul>
-            <p className="mt-2">
-              We comply with UK and EU marketing laws including the Privacy and Electronic Communications Regulations (PECR) 2003 and will only send marketing communications where explicit consent has been given.
-            </p>
-          </section>
+      <LegalSection title="9. Closing your account">
+        <p>
+          You can ask us to close your account and delete your data at any time by emailing{" "}
+          {generalMail}. We will deal with the request as our Privacy Policy describes.
+        </p>
+      </LegalSection>
 
-          <section>
-            <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">7. Fees and Charges</h2>
-            <p>
-              Consultation services, where charged, will be clearly communicated before any commitment is made. Haus of Estate may receive commissions or referral fees from property developers, agents, or third parties where a transaction is completed through our introduction.
-            </p>
-            <p className="mt-2">
-              <strong>Free services:</strong> Property matching, viewing coordination, and general enquiry responses are provided without charge unless otherwise stated.
-            </p>
-            <p className="mt-2">
-              <strong>Transaction fees:</strong> If Haus of Estate charges a fee for transaction facilitation, this will be agreed in writing before services are provided. All fees will be disclosed in a separate engagement letter or service agreement.
-            </p>
-          </section>
+      <LegalSection title="10. Complaints">
+        <p>
+          If something goes wrong, please tell us. Our process, timescales and what to do if you are
+          still unhappy are on the{" "}
+          <Link href="/legal/complaints" className={legalLinkClass}>
+            complaints page
+          </Link>
+          .
+        </p>
+      </LegalSection>
 
-          <section>
-            <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">8. Limitation of Liability</h2>
-            <p>
-              Haus of Estate Ltd, its directors, employees, and agents shall not be liable for:
-            </p>
-            <ul className="mt-2 space-y-1 list-disc pl-5">
-              <li>Any loss of profit, revenue, business, or data arising from your use of our services</li>
-              <li>Any decisions made based on information provided through our website or communications</li>
-              <li>Any discrepancies, inaccuracies, or omissions in property information provided by third parties</li>
-              <li>Any failure to complete a property transaction for any reason</li>
-              <li>Any losses arising from investments made in properties recommended through our services</li>
-            </ul>
-            <p className="mt-3">
-              Nothing in these Terms excludes or limits our liability for death or personal injury caused by our negligence, fraud, or any other liability that cannot be limited by English law.
-            </p>
-          </section>
+      <LegalSection title="11. Changes to these terms">
+        <p>
+          We may update these terms, for example if the law or our service changes. We will show the
+          new date at the top and, where we hold your email address and the change materially affects
+          you, tell you before it applies. A change does not apply to an enquiry you made before it
+          took effect.
+        </p>
+      </LegalSection>
 
-          <section>
-            <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">9. Intellectual Property</h2>
-            <p>
-              All content on our website, including text, graphics, logos, images, and software, is the property of Haus of Estate Ltd or its licensors and is protected by UK and international copyright laws.
-            </p>
-            <p className="mt-2">
-              You may not reproduce, distribute, modify, or create derivative works from any content on our website without our prior written consent.
-            </p>
-          </section>
+      <LegalSection title="12. Governing law and courts">
+        <p>
+          These terms are governed by the law of England and Wales. If you are a consumer, you can
+          bring a claim in the courts of the part of the United Kingdom where you live and, if you
+          live elsewhere, in the courts of your home country where the law gives you that right.
+          Nothing here removes any right you have under the mandatory consumer law of the country
+          where you live. If you are not a consumer, the courts of England and Wales have
+          non-exclusive jurisdiction.
+        </p>
+      </LegalSection>
 
-          <section>
-            <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">10. Indemnity</h2>
-            <p>
-              You agree to indemnify Haus of Estate Ltd, its directors, employees, and agents against any claims, damages, losses, or expenses (including legal fees) arising from your use of our services, your violation of these Terms, or your violation of any third-party rights.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">11. Termination</h2>
-            <p>
-              We may terminate or suspend access to our services at any time if we believe you have violated these Terms or engaged in fraudulent, unlawful, or harmful activity.
-            </p>
-            <p className="mt-2">
-              You may request termination of your account and deletion of your personal data at any time by contacting us at{" "}
-              <a href="mailto:info@hausofestate.com" className="text-trust-teal hover:underline">
-                info@hausofestate.com
-              </a>
-              . We will process such requests in accordance with our Privacy Policy and UK GDPR obligations.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">12. Governing Law</h2>
-            <p>
-              These Terms are governed by and construed in accordance with the laws of England and Wales. Any disputes arising from these Terms shall be subject to the exclusive jurisdiction of the courts of England and Wales.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">13. Changes to These Terms</h2>
-            <p>
-              We may update these Terms from time to time. The latest version will be posted on our website with the date of the last update displayed at the top. Continued use of our services after any changes constitutes acceptance of the updated Terms.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="font-serif text-xl font-medium text-estate-700 mb-3">14. Contact</h2>
-            <p>
-              If you have any questions about these Terms of Service, please contact us:
-            </p>
-            <p className="mt-2">
-              <strong>Email:</strong>{" "}
-              <a href="mailto:info@hausofestate.com" className="text-trust-teal hover:underline">
-                info@hausofestate.com
-              </a>
-              <br />
-              <strong>Post:</strong> {COMPANY_IDENTITY.legalName}, {COMPANY_IDENTITY.registeredOffice}
-            </p>
-          </section>
-
-        </div>
-      </div>
-    </div>
+      <LegalSection title="13. Contact">
+        <p>
+          Email {generalMail}. Post: {COMPANY_IDENTITY.legalName}, {COMPANY_IDENTITY.registeredOffice}.
+        </p>
+      </LegalSection>
+    </LegalPage>
   );
 }

@@ -10,24 +10,34 @@ export function PropertyGrid({
   properties,
   rentContext = false,
   headingLevel,
+  revealFrom = 0,
   className,
 }: {
   properties: PropertyCardData[]
   rentContext?: boolean
   headingLevel?: 'h2' | 'h3'
+  /** Cards before this index render immediately (above the fold); later ones fade in. */
+  revealFrom?: number
   className?: string
 }) {
   return (
     <ul className={cn(GRID, className)}>
-      {properties.map((p, i) => (
-        <Reveal as="li" key={p._id} delay={Math.min(i, 5) * 60}>
+      {properties.map((p, i) => {
+        const card = (
           <PropertyCard
             property={p}
             rentContext={rentContext}
             headingLevel={headingLevel}
           />
-        </Reveal>
-      ))}
+        )
+        return i < revealFrom ? (
+          <li key={p._id}>{card}</li>
+        ) : (
+          <Reveal as="li" key={p._id} delay={Math.min(i - revealFrom, 5) * 60}>
+            {card}
+          </Reveal>
+        )
+      })}
     </ul>
   )
 }

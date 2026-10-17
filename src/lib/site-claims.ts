@@ -43,3 +43,10 @@ export const PRIVACY_CONTACT_EMAIL = "privacy@hausofestate.com";
 
 /** Current version of the notice / marketing wording shown on forms. Bump on any wording change. */
 export const CONSENT_TEXT_VERSION = "2026-10-18";
+
+/**
+ * Longest period, in weeks, before we send a final response to a complaint.
+ * Eight weeks is the point at which UK property redress schemes let a
+ * complainant escalate. FOUNDER: confirm the team can honour this.
+ */
+export const COMPLAINT_FINAL_RESPONSE_WEEKS = 8;

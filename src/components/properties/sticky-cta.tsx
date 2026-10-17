@@ -52,7 +52,9 @@ export function StickyCta({
           <span className="block truncate font-serif text-lg font-semibold leading-tight tabular-nums text-estate-900">
             {price}
           </span>
-          <span className="block text-xs text-muted-foreground">Asking price</span>
+          {/\d/.test(price) && (
+            <span className="block text-xs text-muted-foreground">Asking price</span>
+          )}
         </p>
         <Button asChild size="default" className="shrink-0">
           <a href="#request-viewing">

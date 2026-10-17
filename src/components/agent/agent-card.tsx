@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Star, BadgeCheck, Clock, MessageSquare } from "lucide-react";
 import { Badge } from "@/components/ui/badge";

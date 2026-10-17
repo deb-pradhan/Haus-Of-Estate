@@ -101,7 +101,7 @@ export function FilterBar(props: FilterBarProps) {
             scroll={false}
             aria-current={s.active ? 'true' : undefined}
             className={cn(
-              'inline-flex min-h-11 flex-1 items-center justify-center rounded-full px-5 text-sm font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-estate-700/60 sm:flex-none',
+              'inline-flex min-h-11 flex-1 items-center justify-center rounded-full px-3 text-sm font-medium transition-colors sm:px-5 duration-200 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-estate-700/60 sm:flex-none',
               s.active
                 ? 'bg-estate-700 text-white shadow-e1'
                 : 'text-estate-900 hover:bg-white',

@@ -235,7 +235,7 @@ export async function PropertyListing({
             intent={intent || undefined}
             type={type || undefined}
           />
-          <Reveal className="max-w-3xl pb-8 pt-4 md:pb-10 md:pt-6">
+          <div className="max-w-3xl pb-8 pt-4 md:pb-10 md:pt-6">
             <p className="eyebrow">{eyebrow}</p>
             <h1 className="mt-3 font-serif text-[length:var(--text-title-1)] font-medium leading-[1.05] tracking-[-0.015em] text-estate-900">
               {heading ?? (
@@ -249,7 +249,7 @@ export async function PropertyListing({
               {intro ??
                 'The homes we currently have published, across Dubai and the UK. Tell us what you are looking for and an adviser will reply to you directly, with no obligation.'}
             </p>
-          </Reveal>
+          </div>
         </div>
       </section>
 
@@ -334,12 +334,18 @@ export async function PropertyListing({
                     properties={items}
                     rentContext={rentContext}
                     headingLevel="h3"
+                    revealFrom={3}
                   />
                 </div>
               ))}
             </div>
           ) : (
-            <PropertyGrid properties={list} rentContext={rentContext} headingLevel="h3" />
+            <PropertyGrid
+              properties={list}
+              rentContext={rentContext}
+              headingLevel="h3"
+              revealFrom={3}
+            />
           )}
 
           {count > 0 && (

@@ -1036,6 +1036,9 @@ export default function MatchPage() {
           whatsapp: state.whatsapp,
           phone: state.phone,
           email: state.email,
+          // The lead gate shows the privacy notice and link above the button.
+          consentNotice: true,
+          sourcePage: "/match",
         }),
       });
       if (!response.ok) throw new Error(`Funnel request failed: ${response.status}`);

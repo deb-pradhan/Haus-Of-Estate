@@ -58,6 +58,9 @@ export async function POST(request: Request) {
     const timeline = text(body.timeline, 40);
     // Email-only context (no database column for these).
     const notes = text(body.notes, 1000);
+    const message = text(body.message, 1000);
+    const propertyTitle = text(body.propertyTitle, 200);
+    const propertySlug = text(body.propertySlug, 120);
     const contactMethod = text(body.contactMethod, 20);
     const bestTime = text(body.bestTime, 20);
     const currentValue = text(body.currentValue, 40);
@@ -160,6 +163,9 @@ export async function POST(request: Request) {
         "Property status": propertyStatus,
         "Preferred contact method": contactMethod,
         "Best time": bestTime,
+        "Enquiring about": propertyTitle,
+        "Property page": propertySlug ? `/properties/${propertySlug}` : undefined,
+        Message: message,
         Notes: notes,
       },
       consent: {
