@@ -10,11 +10,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { CONSENT_TEXT_VERSION } from "@/lib/site-claims";
 
 export default function RegisterPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  // Explicit acknowledgement of the Terms and Privacy Policy. Not pre-ticked,
+  // and not implied by pressing the button.
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [marketing, setMarketing] = useState(false);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -29,6 +34,10 @@ export default function RegisterPage() {
     e.preventDefault();
     setError("");
 
+    if (!acceptedTerms) {
+      setError("Please confirm you have read the Terms of Service and Privacy Policy");
+      return;
+    }
     if (form.password !== form.confirmPassword) {
       setError("Passwords do not match");
       return;
@@ -48,7 +57,10 @@ export default function RegisterPage() {
           email: form.email,
           password: form.password,
           intent: "buyer",
-          consentGiven: true,
+          consentNotice: acceptedTerms,
+          marketingConsent: marketing,
+          marketingChannels: marketing ? ["email"] : [],
+          consentTextVersion: CONSENT_TEXT_VERSION,
         }),
       });
 
@@ -163,6 +175,49 @@ export default function RegisterPage() {
             </div>
           </div>
 
+          <div className="space-y-1">
+            <label
+              htmlFor="accept-terms"
+              className="flex min-h-11 cursor-pointer items-start gap-2.5 py-2"
+            >
+              <input
+                id="accept-terms"
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border-border accent-estate-700"
+                required
+              />
+              <span className="text-xs leading-relaxed text-muted-foreground">
+                I have read the{" "}
+                <Link href="/legal/terms-of-service" className="underline underline-offset-2">
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link href="/legal/privacy-policy" className="underline underline-offset-2">
+                  Privacy Policy
+                </Link>
+                . <span className="text-destructive">*</span>
+              </span>
+            </label>
+            <label
+              htmlFor="marketing-optin"
+              className="flex min-h-11 cursor-pointer items-start gap-2.5 py-2"
+            >
+              <input
+                id="marketing-optin"
+                type="checkbox"
+                checked={marketing}
+                onChange={(e) => setMarketing(e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border-border accent-estate-700"
+              />
+              <span className="text-xs leading-relaxed text-muted-foreground">
+                Optional: send me property alerts and market updates by email. You can
+                unsubscribe at any time.
+              </span>
+            </label>
+          </div>
+
           <Button type="submit" className="w-full" size="lg" disabled={loading}>
             {loading ? (
               <div className="flex items-center gap-2">
@@ -212,11 +267,6 @@ export default function RegisterPage() {
           </Link>
         </p>
 
-        <p className="mt-4 text-center text-[10px] text-muted-foreground">
-          By creating an account, you agree to our{" "}
-          <Link href="/legal/terms-of-service" className="underline">Terms of Service</Link> and{" "}
-          <Link href="/legal/privacy-policy" className="underline">Privacy Policy</Link>.
-        </p>
       </CardContent>
     </Card>
   );

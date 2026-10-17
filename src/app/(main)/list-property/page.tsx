@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import {
   ArrowRight,
-  Upload,
   Check,
   Loader2,
   ArrowLeft,
@@ -13,6 +12,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PhoneInput, isValidMobile } from "@/components/ui/phone-input";
+import { LeadConsent } from "@/components/legal/lead-consent";
+import { submitLead } from "@/lib/submit-lead";
+import { ENQUIRY_RECEIVED_COPY, RESPONSE_TIME_COPY } from "@/lib/site-claims";
 
 const PROPERTY_TYPES = [
   "Flat", "Villa", "Townhouse", "Penthouse", "House", "Cottage", "Land", "Commercial",
@@ -33,17 +35,14 @@ export default function ListPropertyPage() {
   const [size, setSize] = useState("");
   const [viewType, setViewType] = useState("");
   const [urgency, setUrgency] = useState<string | null>(null);
-  const [titleDeed, setTitleDeed] = useState<File | null>(null);
-  const [passport, setPassport] = useState<File | null>(null);
   const [firstName, setFirstName] = useState("");
   const [surname, setSurname] = useState("");
   const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
-  const [consent, setConsent] = useState(false);
+  const [marketing, setMarketing] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const titleRef = useRef<HTMLInputElement>(null);
-  const passportRef = useRef<HTMLInputElement>(null);
 
   const validateLead = () => {
     const errs: Record<string, string> = {};
@@ -51,7 +50,6 @@ export default function ListPropertyPage() {
     if (!surname.trim()) errs.surname = "Required";
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = "Valid email required";
     if (!isValidMobile(mobile)) errs.mobile = "Valid mobile required";
-    if (!consent) errs.consent = "Consent required";
     return errs;
   };
 
@@ -60,30 +58,31 @@ export default function ListPropertyPage() {
     const errs = validateLead();
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setErrors({});
+    setSubmitError("");
     setIsSubmitting(true);
-    try {
-      await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          intent: "seller",
-          sellOrRent,
-          propertyType,
-          bedrooms,
-          location,
-          size,
-          viewType,
-          urgency,
-          firstName,
-          surname,
-          email,
-          mobile,
-          consentGiven: consent,
-        }),
-      });
-    } catch (_) {}
+    const result = await submitLead({
+      marketingConsent: marketing,
+      fields: {
+        intent: "seller",
+        sellOrRent,
+        propertyType,
+        bedrooms,
+        location,
+        size,
+        viewType,
+        urgency,
+        firstName,
+        surname,
+        email,
+        mobile,
+      },
+    });
     setIsSubmitting(false);
-    setStep(6);
+    if (!result.ok) {
+      setSubmitError(result.error);
+      return;
+    }
+    setStep(5);
   };
 
   return (
@@ -101,8 +100,8 @@ export default function ListPropertyPage() {
                 ? "Rent your property with Haus of Estate"
                 : "List your property with Haus of Estate"}
           </h1>
-          <p className="mt-2 text-base text-white/60">
-            Fill in the details below and our team will be in touch within 2 hours.
+          <p className="mt-2 text-base text-white/75">
+            Fill in the details below and we will reply {RESPONSE_TIME_COPY}.
           </p>
         </div>
       </div>
@@ -110,7 +109,7 @@ export default function ListPropertyPage() {
       {/* Progress */}
       <div className="mx-auto max-w-2xl px-4 pt-8 md:px-6">
         <div className="flex items-center gap-2">
-          {[1, 2, 3, 4, 5].map((s) => (
+          {[1, 2, 3, 4].map((s) => (
             <div key={s} className="flex items-center gap-2 flex-1">
               <div
                 className={`h-1 flex-1 rounded-full transition-colors ${
@@ -120,7 +119,7 @@ export default function ListPropertyPage() {
             </div>
           ))}
         </div>
-        <p className="mt-2 text-xs text-muted-foreground">Step {step} of 5</p>
+        <p className="mt-2 text-xs text-muted-foreground">Step {step} of 4</p>
       </div>
 
       <div className="mx-auto max-w-2xl px-4 py-8 md:px-6">
@@ -274,67 +273,12 @@ export default function ListPropertyPage() {
           </div>
         )}
 
-        {/* Step 4: Documents */}
+        {/* Step 4: Contact + submit */}
         {step === 4 && (
           <div className="space-y-4">
             <div className="rounded-2xl border border-border bg-surface p-6">
               <div className="flex items-center gap-2 mb-4">
                 <button onClick={() => setStep(3)} className="text-muted-foreground hover:text-foreground">
-                  <ArrowLeft className="h-4 w-4" />
-                </button>
-                <p className="font-serif text-lg font-medium text-estate-700">Upload documents (optional)</p>
-              </div>
-              <p className="mb-4 text-sm text-muted-foreground">
-                Upload your title deed and passport copy to help us verify your property quickly. This speeds up the process significantly.
-              </p>
-              <div className="space-y-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">Title Deed</Label>
-                  <input ref={titleRef} type="file" accept="image/*,.pdf" onChange={(e) => setTitleDeed(e.target.files?.[0] ?? null)} className="hidden" />
-                  <button
-                    onClick={() => titleRef.current?.click()}
-                    className="flex w-full items-center gap-3 rounded-xl border-2 border-dashed border-border p-4 text-left hover:border-estate-700/40"
-                  >
-                    <Upload className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-medium">{titleDeed ? titleDeed.name : "Click to upload"}</p>
-                      <p className="text-xs text-muted-foreground">PDF or image</p>
-                    </div>
-                    {titleDeed && <Check className="ml-auto h-4 w-4 text-trust-teal" />}
-                  </button>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">Passport Copy</Label>
-                  <input ref={passportRef} type="file" accept="image/*,.pdf" onChange={(e) => setPassport(e.target.files?.[0] ?? null)} className="hidden" />
-                  <button
-                    onClick={() => passportRef.current?.click()}
-                    className="flex w-full items-center gap-3 rounded-xl border-2 border-dashed border-border p-4 text-left hover:border-estate-700/40"
-                  >
-                    <Upload className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-medium">{passport ? passport.name : "Click to upload"}</p>
-                      <p className="text-xs text-muted-foreground">PDF or image</p>
-                    </div>
-                    {passport && <Check className="ml-auto h-4 w-4 text-trust-teal" />}
-                  </button>
-                </div>
-              </div>
-              <p className="mt-3 text-xs text-muted-foreground">
-                Your documents are encrypted and only accessible to authorised Haus of Estate agents.
-              </p>
-              <Button onClick={() => setStep(5)} className="mt-6 w-full bg-estate-700 text-white hover:bg-estate-600">
-                Next <ArrowRight className="ml-1.5 h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Step 5: Contact + submit */}
-        {step === 5 && (
-          <div className="space-y-4">
-            <div className="rounded-2xl border border-border bg-surface p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <button onClick={() => setStep(4)} className="text-muted-foreground hover:text-foreground">
                   <ArrowLeft className="h-4 w-4" />
                 </button>
                 <p className="font-serif text-lg font-medium text-estate-700">Your contact details</p>
@@ -363,20 +307,13 @@ export default function ListPropertyPage() {
                   <PhoneInput value={mobile} onChange={setMobile} invalid={!!errors.mobile} />
                   {errors.mobile && <p className="text-xs text-destructive">{errors.mobile}</p>}
                 </div>
-                <div className="space-y-1.5">
-                  <label className="flex items-start gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={consent}
-                      onChange={(e) => setConsent(e.target.checked)}
-                      className="mt-0.5 h-4 w-4 rounded border-border accent-estate-700"
-                    />
-                    <span className="text-xs leading-relaxed text-muted-foreground">
-                      I consent to Haus of Estate contacting me about my property enquiry by WhatsApp, SMS, email or phone. <span className="text-destructive">*</span>
-                    </span>
-                  </label>
-                  {errors.consent && <p className="text-xs text-destructive">{errors.consent}</p>}
-                </div>
+                <LeadConsent
+                  idPrefix="lp"
+                  marketing={marketing}
+                  onMarketingChange={setMarketing}
+                  purpose="reply to this enquiry and introduce you to a suitable agent"
+                />
+                {submitError && <p role="alert" className="text-xs text-destructive">{submitError}</p>}
                 <Button type="submit" disabled={isSubmitting} className="w-full h-11 bg-estate-700 text-white hover:bg-estate-600 disabled:opacity-50">
                   {isSubmitting ? (
                     <div className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Submitting...</div>
@@ -389,17 +326,17 @@ export default function ListPropertyPage() {
           </div>
         )}
 
-        {/* Step 6: Success */}
-        {step === 6 && (
+        {/* Step 5: Success */}
+        {step === 5 && (
           <div className="rounded-2xl border border-border bg-surface p-10 text-center">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-estate-700/10">
               <Check className="h-7 w-7 text-estate-700" />
             </div>
             <h2 className="font-serif text-2xl font-medium text-estate-700">
-              You're all set{firstName ? `, ${firstName}` : ""}. 🎉
+              Thank you{firstName ? `, ${firstName}` : ""}.
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Our team will review your property details and be in touch within 2 hours with a personalised offer.
+              {ENQUIRY_RECEIVED_COPY}
             </p>
             <Button
               onClick={() => window.location.href = "/"}

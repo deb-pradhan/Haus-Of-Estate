@@ -144,7 +144,9 @@ const PROPERTY_CARD_FIELDS = `
   summary,
   featured,
   publishedAt,
-  featuredImage
+  featuredImage,
+  tenure,
+  completionDate
 `
 
 export const PROPERTIES_QUERY = `
@@ -189,8 +191,30 @@ export const PROPERTY_BY_SLUG_QUERY = `
       mediaKind
     },
     videoUrl,
-    enquiryEmail
+    enquiryEmail,
+    leaseLength,
+    serviceCharge,
+    groundRent,
+    councilTaxBand,
+    epcRating,
+    escrow,
+    developerRegNo,
+    permitNumber,
+    permitIssuer,
+    listingBrokerName,
+    brokerOrn,
+    agentBrn,
+    "brochureUrl": brochure.asset->url
   }
+`
+
+// Candidates for the "Similar properties" block (ranked in JS by place/type).
+export const SIMILAR_PROPERTIES_QUERY = `
+  *[_type == "property" && status == "published" && !(_id in path("drafts.**")) && !(_id in path("versions.**"))
+    && _id != $id && defined(slug.current)]
+    | order(featured desc, publishedAt desc) [0...12] {
+      ${PROPERTY_CARD_FIELDS}
+    }
 `
 
 export const PROPERTY_SLUGS_QUERY = `

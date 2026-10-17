@@ -1,11 +1,18 @@
 import Link from 'next/link'
-import Image from 'next/image'
-import { MapPin, BedDouble, Building2, X } from 'lucide-react'
-import { sanityFetch, urlFor } from '@/sanity'
-import { PROPERTIES_FILTERED_QUERY } from '@/sanity/queries'
+import { ArrowRight, X } from 'lucide-react'
+import { sanityFetch } from '@/sanity'
+import { PROPERTIES_QUERY } from '@/sanity/queries'
 import { EmptyStateCTA } from '@/components/properties/empty-state-cta'
 import { Breadcrumbs } from '@/components/properties/breadcrumbs'
-import { isConceptMedia, propertyMediaCaption, type PropertyImageMetadata } from '@/lib/property-media'
+import {
+  FilterBar,
+  type FilterOption,
+  type FilterSegment,
+} from '@/components/properties/filter-bar'
+import { PropertyGrid } from '@/components/property/property-grid'
+import { OpenBuyerButton } from '@/components/lead-modal/open-buyer-button'
+import { Reveal } from '@/components/ui/reveal'
+import type { PropertyCardData } from '@/lib/property-format'
 import {
   type Category,
   type Availability,
@@ -17,32 +24,8 @@ import {
   isCategory,
   isAvailability,
   isIntent,
-  bedroomsHidden,
   buildPropertiesHref,
 } from '@/lib/property-taxonomy'
-
-interface PropertyCard {
-  _id: string
-  title: string
-  slug: string
-  community: string
-  masterDevelopment?: string
-  city: string
-  country?: string
-  developer?: string
-  category?: string
-  availability?: string[]
-  listingType?: string[]
-  unitType: string
-  bedrooms?: number
-  priceDisplay?: string
-  rentPriceDisplay?: string
-  sizeDisplay?: string
-  completionStatus?: string
-  summary: string
-  featured?: boolean
-  featuredImage?: PropertyImageMetadata & { alt?: string } & Record<string, unknown>
-}
 
 export interface PropertyListingSearchParams {
   category?: string
@@ -51,31 +34,25 @@ export interface PropertyListingSearchParams {
   type?: string
   location?: string
   beds?: string
+  sort?: string
 }
 
-const COMPLETION_LABEL: Record<string, string> = {
-  completed: 'Completed',
-  'off-plan': 'Off-plan',
-  'completed-offplan': 'Completed & off-plan',
-}
+type FilterKey = 'category' | 'availability' | 'intent' | 'type' | 'location' | 'beds'
+type SortKey = 'featured' | 'newest'
 
-function saleRentLabel(listingType?: string[]): string | null {
-  if (!listingType || listingType.length === 0) return null
-  const sale = listingType.includes('sale')
-  const rent = listingType.includes('rent')
-  if (sale && rent) return 'Sale · Rent'
-  if (rent) return 'For rent'
-  if (sale) return 'For sale'
-  return null
-}
+const SORT_OPTIONS: FilterOption[] = [
+  { value: 'featured', label: 'Featured' },
+  { value: 'newest', label: 'Newest' },
+]
 
-type FilterKey =
-  | 'category'
-  | 'availability'
-  | 'intent'
-  | 'type'
-  | 'location'
-  | 'beds'
+function distinctCI(values: (string | undefined)[]): string[] {
+  const seen = new Map<string, string>()
+  for (const v of values) {
+    const t = v?.trim()
+    if (t && !seen.has(t.toLowerCase())) seen.set(t.toLowerCase(), t)
+  }
+  return [...seen.values()]
+}
 
 export async function PropertyListing({
   params,
@@ -90,7 +67,7 @@ export async function PropertyListing({
   heading?: React.ReactNode
   intro?: string
 }) {
-  // ── Normalise the taxonomy selection ──────────────────────────────────
+  // ── Normalise the selection from the URL ──────────────────────────────
   const category: '' | Category =
     forceCategory ?? (isCategory(params.category) ? params.category : '')
   const availability: '' | Availability = isAvailability(params.availability)
@@ -102,27 +79,23 @@ export async function PropertyListing({
 
   const type = params.type?.trim() || ''
   const location = params.location?.trim() || ''
+  const sort: SortKey = params.sort === 'newest' ? 'newest' : 'featured'
   const bedsRaw = params.beds ? parseInt(params.beds, 10) : NaN
 
   const hideBeds =
     category === 'commercial' || (type !== '' && LAND_TYPES.includes(type))
   const minBeds = !hideBeds && Number.isFinite(bedsRaw) ? bedsRaw : null
 
-  // ── Fetch (server-side GROQ filtering) ────────────────────────────────
-  const { data: properties } = await sanityFetch<PropertyCard[]>({
-    query: PROPERTIES_FILTERED_QUERY,
-    params: {
-      category: category || '',
-      availability: availability || '',
-      intent: intent || '',
-      type: type || '',
-    },
-  })
-  const fetched = properties ?? []
+  // ── Fetch once, then filter in the server component ───────────────────
+  const { data } = await sanityFetch<PropertyCardData[]>({ query: PROPERTIES_QUERY })
+  const all = data ?? []
+  const scope = category ? all.filter((p) => p.category === category) : all
 
-  // ── Remaining JS filters (location + beds) ────────────────────────────
   const locLC = location.toLowerCase()
-  const list = fetched.filter((p) => {
+  let list = scope.filter((p) => {
+    if (availability && !p.availability?.includes(availability)) return false
+    if (intent && !p.listingType?.includes(intent)) return false
+    if (type && p.unitType !== type) return false
     if (locLC) {
       const hay = [p.community, p.city, p.country, p.masterDevelopment]
         .filter(Boolean)
@@ -131,22 +104,91 @@ export async function PropertyListing({
       if (!hay.includes(locLC)) return false
     }
     if (minBeds !== null) {
-      if (typeof p.bedrooms !== 'number') return false
-      if (p.bedrooms < minBeds) return false
+      if (typeof p.bedrooms !== 'number' || p.bedrooms < minBeds) return false
     }
     return true
   })
 
+  if (sort === 'newest') {
+    list = [...list].sort(
+      (a, b) =>
+        (Date.parse(b.publishedAt ?? '') || 0) - (Date.parse(a.publishedAt ?? '') || 0),
+    )
+  }
+
+  // ── Filter options come from real inventory only ──────────────────────
+  const cities = distinctCI(scope.map((p) => p.city))
+  const communities = distinctCI(scope.map((p) => p.community)).filter(
+    (c) => !cities.some((city) => city.toLowerCase() === c.toLowerCase()),
+  )
+  const locationOptions: FilterOption[] = [
+    ...cities.map((c) => ({ value: c, label: c })),
+    ...communities.map((c) => {
+      const city = scope.find((p) => p.community?.trim().toLowerCase() === c.toLowerCase())?.city
+      return { value: c, label: city ? `${c}, ${city}` : c }
+    }),
+  ]
+  if (location && !locationOptions.some((o) => o.value.toLowerCase() === locLC)) {
+    locationOptions.push({ value: location, label: location })
+  }
+  const typeOptions: FilterOption[] = distinctCI(scope.map((p) => p.unitType)).map((t) => ({
+    value: t,
+    label: t,
+  }))
+  if (type && !typeOptions.some((o) => o.value === type)) {
+    typeOptions.push({ value: type, label: type })
+  }
+  const bedsOptions: FilterOption[] | null = hideBeds
+    ? null
+    : [1, 2, 3, 4, 5].map((n) => ({ value: String(n), label: `${n}+` }))
+
+  // ── URLs ──────────────────────────────────────────────────────────────
+  const current = {
+    category: category || undefined,
+    availability: availability || undefined,
+    intent: intent || undefined,
+    type: type || undefined,
+    location: location || undefined,
+    beds: minBeds === null ? undefined : minBeds,
+    sort,
+  }
+  const hrefFor = (override: Partial<typeof current>) =>
+    buildPropertiesHref({ ...current, ...override })
+
+  const segments: FilterSegment[] = [
+    {
+      label: 'All',
+      href: hrefFor({ availability: undefined, intent: undefined }),
+      active: !availability && !intent,
+    },
+    {
+      label: 'Buy',
+      href: hrefFor({ availability: undefined, intent: 'sale' }),
+      active: availability !== 'off-plan' && intent === 'sale',
+    },
+    {
+      label: 'Rent',
+      href: hrefFor({ availability: undefined, intent: 'rent' }),
+      active: intent === 'rent',
+    },
+    {
+      label: 'Off-plan',
+      href: hrefFor({ availability: 'off-plan', intent: undefined }),
+      active: availability === 'off-plan',
+    },
+  ]
+
+  const carry: Record<string, string> = {}
+  if (category) carry.category = category
+  if (availability) carry.availability = availability
+  if (intent && availability !== 'off-plan') carry.intent = intent
+
   // ── Active-filter chips ───────────────────────────────────────────────
   const activeFilters: { label: string; key: FilterKey }[] = []
-  // The forced category (landing route) is a fixed scope, not a removable chip.
   if (category && !forceCategory)
     activeFilters.push({ label: CATEGORY_LABELS[category], key: 'category' })
   if (availability)
-    activeFilters.push({
-      label: AVAILABILITY_LABELS[availability],
-      key: 'availability',
-    })
+    activeFilters.push({ label: AVAILABILITY_LABELS[availability], key: 'availability' })
   if (intent && availability !== 'off-plan')
     activeFilters.push({ label: INTENT_LABELS[intent], key: 'intent' })
   if (type) activeFilters.push({ label: type, key: 'type' })
@@ -158,225 +200,168 @@ export async function PropertyListing({
     })
 
   const hasFilters = activeFilters.length > 0
-  const showBreadcrumbs = Boolean(category || availability || intent || type)
+  const clearAllHref = buildPropertiesHref({
+    category: forceCategory,
+    sort: sort === 'newest' ? sort : undefined,
+  })
+  const rentContext = intent === 'rent'
 
-  function hrefWithout(remove: FilterKey) {
-    const keepCategory = forceCategory ?? (remove === 'category' ? undefined : category || undefined)
-    return buildPropertiesHref({
-      category: keepCategory || undefined,
-      availability: remove === 'availability' ? undefined : availability || undefined,
-      intent: remove === 'intent' ? undefined : intent || undefined,
-      type: remove === 'type' ? undefined : type || undefined,
-      location: remove === 'location' ? undefined : location || undefined,
-      beds: remove === 'beds' || minBeds === null ? undefined : minBeds,
-    })
-  }
-
-  const clearAllHref = forceCategory
-    ? buildPropertiesHref({ category: forceCategory })
-    : '/properties'
-
-  // ── Group by community ────────────────────────────────────────────────
-  const byCommunity = new Map<string, PropertyCard[]>()
+  // Community headings only when they genuinely help scanning.
+  const byCommunity = new Map<string, PropertyCardData[]>()
   for (const p of list) {
-    const c = p.community || 'Other'
-    if (!byCommunity.has(c)) byCommunity.set(c, [])
-    byCommunity.get(c)!.push(p)
+    const c = p.community?.trim() || 'Other'
+    byCommunity.set(c, [...(byCommunity.get(c) ?? []), p])
   }
-  const communities = [...byCommunity.entries()]
+  const groupByCommunity =
+    sort === 'featured' &&
+    list.length >= 6 &&
+    byCommunity.size > 1 &&
+    [...byCommunity.values()].some((items) => items.length > 1)
 
-  const rentContextGlobal = intent === 'rent'
+  const count = list.length
+  const countText =
+    count === 0
+      ? 'No properties match'
+      : `${count} ${count === 1 ? 'property' : 'properties'}${rentContext ? ' to rent' : ''}`
 
   return (
-    <div className="min-h-screen">
-      {/* Hero */}
-      <section className="bg-estate-700 px-4 py-20 md:px-6 md:py-24">
-        <div className="mx-auto max-w-4xl text-center">
-          <p className="font-serif text-xs font-medium uppercase tracking-[0.3em] text-gold-400">
-            {eyebrow}
-          </p>
-          <h1 className="mt-4 font-serif text-4xl font-medium leading-[1.05] text-white md:text-5xl">
-            {heading ?? (
-              <>
-                Homes in communities{' '}
-                <span className="text-gold-400">worth living in.</span>
-              </>
-            )}
-          </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/80 md:text-lg">
-            {intro ??
-              "A considered selection across our partner communities. Tell us what you're after and we'll connect you with a vetted agent — no hard sell, no obligation."}
-          </p>
+    <div className="pb-20 md:pb-28">
+      {/* Intro */}
+      <section className="px-4 pt-3 md:px-6">
+        <div className="mx-auto max-w-7xl">
+          <Breadcrumbs
+            category={category || undefined}
+            availability={availability || undefined}
+            intent={intent || undefined}
+            type={type || undefined}
+          />
+          <Reveal className="max-w-3xl pb-8 pt-4 md:pb-10 md:pt-6">
+            <p className="eyebrow">{eyebrow}</p>
+            <h1 className="mt-3 font-serif text-[length:var(--text-title-1)] font-medium leading-[1.05] tracking-[-0.015em] text-estate-900">
+              {heading ?? (
+                <>
+                  Homes in communities{' '}
+                  <span className="text-gold-700">worth living in.</span>
+                </>
+              )}
+            </h1>
+            <p className="lede mt-4">
+              {intro ??
+                'The homes we currently have published, across Dubai and the UK. Tell us what you are looking for and an adviser will reply to you directly, with no obligation.'}
+            </p>
+          </Reveal>
         </div>
       </section>
 
-      {/* Listings */}
-      <section className="bg-background px-4 py-16 md:px-6 md:py-24">
-        <div className="mx-auto max-w-6xl">
-          {showBreadcrumbs && (
-            <Breadcrumbs
-              className="mb-8"
-              category={category || undefined}
-              availability={availability || undefined}
-              intent={intent || undefined}
-              type={type || undefined}
-            />
-          )}
+      {/* Search and filters */}
+      <section className="px-4 md:px-6" aria-label="Search and filter properties">
+        <div className="mx-auto max-w-7xl">
+          <FilterBar
+            segments={segments}
+            carry={carry}
+            location={location}
+            locationOptions={locationOptions}
+            type={type}
+            typeOptions={typeOptions}
+            beds={minBeds === null ? '' : String(minBeds)}
+            bedsOptions={bedsOptions}
+            sort={sort}
+            sortOptions={SORT_OPTIONS}
+          />
+        </div>
+      </section>
 
-          {/* Result summary + active filters */}
-          {hasFilters && (
-            <div className="mb-10 flex flex-wrap items-center gap-3">
-              <p className="text-sm font-medium text-estate-700">
-                {list.length === 0
-                  ? `No ${rentContextGlobal ? 'rentals' : 'listings'} match your filters`
-                  : `Showing ${list.length} ${list.length === 1 ? 'listing' : 'listings'}${rentContextGlobal ? ' to rent' : ''}`}
-              </p>
-              <div className="flex flex-wrap items-center gap-2">
+      {/* Results */}
+      <section className="px-4 pt-8 md:px-6 md:pt-10" aria-labelledby="results-heading">
+        <div className="mx-auto max-w-7xl">
+          <h2 id="results-heading" className="sr-only">
+            Results
+          </h2>
+          <div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-2">
+            <p role="status" className="text-base font-semibold text-estate-900 tabular-nums">
+              {countText}
+            </p>
+            {hasFilters && (
+              <ul className="flex flex-wrap items-center gap-2" aria-label="Active filters">
                 {activeFilters.map((f) => (
-                  <Link
-                    key={f.key}
-                    href={hrefWithout(f.key)}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-estate-700/30 hover:text-estate-700"
-                  >
-                    {f.label}
-                    <X className="h-3 w-3" />
-                  </Link>
+                  <li key={f.key}>
+                    <Link
+                      href={hrefFor(
+                        f.key === 'beds' ? { beds: undefined } : { [f.key]: undefined },
+                      )}
+                      scroll={false}
+                      aria-label={`Remove filter: ${f.label}`}
+                      className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-surface px-4 text-sm text-estate-900 shadow-e1 transition-shadow hover:shadow-e2 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-estate-700/60"
+                    >
+                      {f.label}
+                      <X aria-hidden="true" className="h-3.5 w-3.5" />
+                    </Link>
+                  </li>
                 ))}
-                <Link
-                  href={clearAllHref}
-                  className="text-xs text-muted-foreground underline-offset-2 hover:text-estate-700 hover:underline"
-                >
-                  Clear all
-                </Link>
-              </div>
-            </div>
-          )}
+                <li>
+                  <Link
+                    href={clearAllHref}
+                    scroll={false}
+                    className="inline-flex min-h-11 items-center rounded-full px-3 text-sm font-medium text-estate-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-estate-700/60"
+                  >
+                    Clear filters
+                  </Link>
+                </li>
+              </ul>
+            )}
+          </div>
 
-          {communities.length === 0 ? (
-            hasFilters || forceCategory ? (
-              <EmptyStateCTA
-                category={category || undefined}
-                intent={intent || undefined}
-              />
-            ) : (
-              <div className="rounded-2xl border border-dashed border-border bg-surface p-10 text-center">
-                <h2 className="font-serif text-xl font-medium text-estate-700">
-                  No properties live just yet.
-                </h2>
-                <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-                  Our latest community listings are being prepared. In the
-                  meantime, tell us what you&apos;re looking for and an advisor
-                  will be in touch.
-                </p>
-              </div>
-            )
-          ) : (
-            <div className="space-y-16">
-              {communities.map(([community, items]) => (
+          {count === 0 ? (
+            <EmptyStateCTA
+              category={category || undefined}
+              intent={intent || undefined}
+              clearHref={hasFilters ? clearAllHref : undefined}
+            />
+          ) : groupByCommunity ? (
+            <div className="space-y-14">
+              {[...byCommunity.entries()].map(([community, items]) => (
                 <div key={community}>
-                  <div className="mb-6 flex flex-wrap items-baseline justify-between gap-2">
-                    <h2 className="font-serif text-2xl font-medium text-estate-700 md:text-3xl">
+                  <div className="mb-5 flex flex-wrap items-baseline justify-between gap-2">
+                    <h3 className="font-serif text-[length:var(--text-title-3)] font-medium text-estate-900">
                       {community}
-                    </h2>
+                    </h3>
                     <p className="text-sm text-muted-foreground">
                       {items[0]?.city}
                       {items[0]?.developer ? ` · ${items[0].developer}` : ''}
                     </p>
                   </div>
-                  <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                    {items.map((p) => {
-                      const badge = saleRentLabel(p.listingType)
-                      const conceptImage = isConceptMedia(p.featuredImage)
-                      const mediaCaption = propertyMediaCaption(p.featuredImage)
-                      const statusLabel = p.completionStatus
-                        ? COMPLETION_LABEL[p.completionStatus] ?? p.completionStatus
-                        : p.availability?.includes('ready') ? 'Ready' : undefined
-                      const cardRentContext =
-                        rentContextGlobal ||
-                        (p.listingType?.includes('rent') &&
-                          !p.listingType?.includes('sale'))
-                      const price =
-                        cardRentContext && p.rentPriceDisplay
-                          ? p.rentPriceDisplay
-                          : p.priceDisplay || 'Price on application'
-                      const showBeds =
-                        typeof p.bedrooms === 'number' &&
-                        !bedroomsHidden(p.category, p.unitType)
-                      return (
-                        <Link
-                          key={p._id}
-                          href={`/properties/${p.slug}`}
-                          className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-estate-700/40 hover:shadow-xl hover:shadow-estate-700/5"
-                        >
-                          <figure className="relative">
-                            <div className="relative aspect-[4/3] overflow-hidden bg-estate-700">
-                              {p.featuredImage ? (
-                                <Image
-                                  src={conceptImage
-                                    ? urlFor(p.featuredImage).ignoreImageParams().width(800).fit('max').url()
-                                    : urlFor(p.featuredImage).width(800).height(600).url()}
-                                  alt={p.featuredImage.alt || p.title}
-                                  fill
-                                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
-                                  className={conceptImage ? 'object-contain' : 'object-cover transition-transform duration-500 group-hover:scale-105'}
-                                />
-                              ) : (
-                                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-estate-600 to-estate-800">
-                                  <Building2 className="h-10 w-10 text-white/30" />
-                                </div>
-                              )}
-                            </div>
-                            <div className={conceptImage ? 'flex flex-wrap items-center gap-1.5 px-5 pt-3' : 'absolute left-3 top-3 flex flex-wrap items-center gap-1.5'}>
-                              {statusLabel && (
-                                <span className="rounded-full bg-surface/95 px-3 py-1 text-[11px] font-semibold text-estate-700 shadow-sm">
-                                  {statusLabel}
-                                </span>
-                              )}
-                              {badge && (
-                                <span className="rounded-full bg-estate-700/90 px-3 py-1 text-[11px] font-semibold text-white shadow-sm">
-                                  {badge}
-                                </span>
-                              )}
-                            </div>
-                            {mediaCaption && (
-                              <figcaption className="border-b border-border px-5 py-3 text-xs leading-relaxed text-muted-foreground">{mediaCaption}</figcaption>
-                            )}
-                          </figure>
-                          <div className="flex flex-1 flex-col p-5">
-                            <p className="font-serif text-[11px] font-semibold uppercase tracking-widest text-gold-500">
-                              {p.unitType}
-                            </p>
-                            <h3 className="mt-1 font-serif text-lg font-medium text-estate-700">
-                              {p.title}
-                            </h3>
-                            <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
-                              {p.summary}
-                            </p>
-                            <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
-                              <span className="font-serif text-base font-semibold text-estate-700">
-                                {price}
-                              </span>
-                              <span className="flex items-center gap-3 text-xs text-muted-foreground">
-                                {showBeds && (
-                                  <span className="flex items-center gap-1">
-                                    <BedDouble className="h-3.5 w-3.5" />
-                                    {p.bedrooms === 0 ? 'Studio' : p.bedrooms}
-                                  </span>
-                                )}
-                                <span className="flex items-center gap-1">
-                                  <MapPin className="h-3.5 w-3.5" />
-                                  {p.city}
-                                </span>
-                              </span>
-                            </div>
-                          </div>
-                        </Link>
-                      )
-                    })}
-                  </div>
+                  <PropertyGrid
+                    properties={items}
+                    rentContext={rentContext}
+                    headingLevel="h3"
+                  />
                 </div>
               ))}
             </div>
+          ) : (
+            <PropertyGrid properties={list} rentContext={rentContext} headingLevel="h3" />
+          )}
+
+          {count > 0 && (
+            <>
+              <Reveal className="mt-14 rounded-[28px] bg-estate-900 px-6 py-10 text-center text-white md:px-12 md:py-14">
+                <h2 className="font-serif text-[length:var(--text-title-3)] font-medium">
+                  Can&apos;t see the right property?
+                </h2>
+                <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-white/80">
+                  Tell us where, what and roughly when, and an adviser will reply to you
+                  directly with suitable options.
+                </p>
+                <OpenBuyerButton size="lg" variant="gold" className="mt-6">
+                  Tell us what you&apos;re looking for
+                  <ArrowRight aria-hidden="true" />
+                </OpenBuyerButton>
+              </Reveal>
+              <p className="mt-6 max-w-3xl text-xs leading-relaxed text-muted-foreground">
+                Prices are asking prices as supplied by the seller or developer; indicative;
+                subject to availability.
+              </p>
+            </>
           )}
         </div>
       </section>

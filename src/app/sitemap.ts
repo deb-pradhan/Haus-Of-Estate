@@ -1,79 +1,41 @@
 import type { MetadataRoute } from 'next'
 import { sanityFetch } from '@/sanity'
-import { POST_SLUGS_QUERY, PROPERTY_SLUGS_QUERY } from '@/sanity/queries'
+import { buildSitemapEntries, type SitemapSource } from '@/lib/seo'
 
-const SITE_URL = 'https://hausofestate.com'
+// Read-only Sanity queries. `_updatedAt` gives each URL a real <lastmod>, and
+// the word count lets the sitemap leave out thin posts that are noindexed.
+// The thin-post threshold lives in src/lib/seo.ts (THIN_POST_WORDS).
+const SITEMAP_POSTS_QUERY = `
+  *[_type == "post" && status == "published" && defined(slug.current) && !(_id in path("drafts.**"))] {
+    "slug": slug.current,
+    "updatedAt": _updatedAt,
+    publishedAt,
+    "wordCount": length(string::split(pt::text(body), " "))
+  }
+`
 
-// Static routes with sensible SEO weighting.
-const STATIC_ROUTES: Array<{
-  path: string
-  changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency']
-  priority: number
-}> = [
-  { path: '/', changeFrequency: 'daily', priority: 1.0 },
-  { path: '/properties', changeFrequency: 'daily', priority: 0.9 },
-  { path: '/about', changeFrequency: 'monthly', priority: 0.7 },
-  { path: '/services', changeFrequency: 'monthly', priority: 0.7 },
-  { path: '/renovations', changeFrequency: 'monthly', priority: 0.6 },
-  { path: '/team', changeFrequency: 'monthly', priority: 0.6 },
-  { path: '/faq', changeFrequency: 'monthly', priority: 0.6 },
-  { path: '/blog', changeFrequency: 'weekly', priority: 0.7 },
-  { path: '/list-property', changeFrequency: 'monthly', priority: 0.6 },
-  { path: '/contact', changeFrequency: 'monthly', priority: 0.7 },
-  { path: '/legal/privacy-policy', changeFrequency: 'yearly', priority: 0.3 },
-  { path: '/legal/terms-of-service', changeFrequency: 'yearly', priority: 0.3 },
-  { path: '/legal/cookie-policy', changeFrequency: 'yearly', priority: 0.3 },
-]
+const SITEMAP_PROPERTIES_QUERY = `
+  *[_type == "property" && status == "published" && !(_id in path("drafts.**")) && !(_id in path("versions.**")) && defined(slug.current)] {
+    "slug": slug.current,
+    "updatedAt": _updatedAt
+  }
+`
 
+const SITEMAP_FAQ_QUERY = `
+  *[_type == "faq" && status == "published"] | order(_updatedAt desc)[0]._updatedAt
+`
+
+// Never let the sitemap throw: fall back to the static routes if Sanity is down.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const now = new Date()
+  const [posts, properties, faqUpdatedAt] = await Promise.all([
+    sanityFetch<SitemapSource['posts']>({ query: SITEMAP_POSTS_QUERY }),
+    sanityFetch<SitemapSource['properties']>({ query: SITEMAP_PROPERTIES_QUERY }),
+    sanityFetch<string>({ query: SITEMAP_FAQ_QUERY }),
+  ]).catch(() => [{ data: null }, { data: null }, { data: null }] as const)
 
-  const staticEntries: MetadataRoute.Sitemap = STATIC_ROUTES.map((route) => ({
-    url: `${SITE_URL}${route.path}`,
-    lastModified: now,
-    changeFrequency: route.changeFrequency,
-    priority: route.priority,
-  }))
-
-  const dynamicEntries: MetadataRoute.Sitemap = []
-
-  // Pull dynamic blog post + property slugs from Sanity. Never let the
-  // sitemap throw — fall back to static routes if anything goes wrong.
-  try {
-    const { data: posts } = await sanityFetch<Array<{ slug: string }>>({
-      query: POST_SLUGS_QUERY,
-    })
-    for (const post of posts ?? []) {
-      if (post?.slug) {
-        dynamicEntries.push({
-          url: `${SITE_URL}/blog/${post.slug}`,
-          lastModified: now,
-          changeFrequency: 'monthly',
-          priority: 0.6,
-        })
-      }
-    }
-  } catch {
-    // ignore — static routes still ship
-  }
-
-  try {
-    const { data: properties } = await sanityFetch<Array<{ slug: string }>>({
-      query: PROPERTY_SLUGS_QUERY,
-    })
-    for (const property of properties ?? []) {
-      if (property?.slug) {
-        dynamicEntries.push({
-          url: `${SITE_URL}/properties/${property.slug}`,
-          lastModified: now,
-          changeFrequency: 'weekly',
-          priority: 0.7,
-        })
-      }
-    }
-  } catch {
-    // ignore — static routes still ship
-  }
-
-  return [...staticEntries, ...dynamicEntries]
+  return buildSitemapEntries({
+    posts: posts.data ?? [],
+    properties: properties.data ?? [],
+    faqUpdatedAt: faqUpdatedAt.data,
+  })
 }

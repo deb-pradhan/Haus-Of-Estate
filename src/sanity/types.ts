@@ -1,8 +1,25 @@
+/** Image as projected by our GROQ queries (asset URL and/or reference). */
+export interface SanityImageValue {
+  url?: string
+  alt?: string
+  asset?: { url?: string; _ref?: string; _id?: string }
+}
+
+/** A Portable Text block or inline node, loosely typed for traversal. */
+export interface PortableTextNode {
+  _type: string
+  _key?: string
+  style?: string
+  text?: string
+  children?: PortableTextNode[]
+  [key: string]: unknown
+}
+
 export interface Author {
   _id: string
   name: string
   slug?: string
-  avatar?: any
+  avatar?: SanityImageValue
   role?: string
   bio?: string
   social?: {
@@ -25,13 +42,13 @@ export interface Post {
   title: string
   subtitle?: string
   slug: string
-  featuredImage?: any
+  featuredImage?: SanityImageValue
   author?: Author
   categories?: Category[]
   publishedAt: string
   featured?: boolean
   readMins?: number
-  body?: any[]
+  body?: PortableTextNode[]
   seo?: {
     seoTitle?: string
     seoDesc?: string
@@ -43,11 +60,11 @@ export interface PostSummary {
   title: string
   subtitle?: string
   slug: string
-  featuredImage?: any
+  featuredImage?: SanityImageValue
   author?: {
     name: string
     slug?: string
-    avatar?: any
+    avatar?: SanityImageValue
     role?: string
   }
   categories?: Array<{

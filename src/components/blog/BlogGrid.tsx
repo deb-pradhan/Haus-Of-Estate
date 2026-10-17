@@ -1,14 +1,15 @@
 import { BlogCard } from './BlogCard'
+import type { SanityImageValue } from '@/sanity/types'
 
 interface Post {
   _id: string
   title: string
   subtitle?: string
   slug: string
-  featuredImage?: any
+  featuredImage?: SanityImageValue
   author?: {
     name: string
-    avatar?: any
+    avatar?: SanityImageValue
     role?: string
   }
   categories?: Array<{

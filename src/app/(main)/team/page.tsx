@@ -4,22 +4,14 @@ import { ArrowRight, Users } from 'lucide-react'
 import { sanityFetch } from '@/sanity'
 import { TEAM_MEMBERS_QUERY } from '@/sanity/queries'
 import { TeamGrid, type TeamMember } from '@/components/team/team-grid'
-import { DEFAULT_OG_IMAGES } from '@/lib/seo'
+import { pageMetadata } from '@/lib/seo'
 
-export const metadata: Metadata = {
-  title: 'Team',
+export const metadata: Metadata = pageMetadata({
+  title: 'Meet the Team',
   description:
-    'Meet the advisors, lettings specialists and operations team behind Haus of Estate.',
-  alternates: { canonical: '/team' },
-  openGraph: {
-    title: 'Team — Haus of Estate',
-    description:
-      'Meet the advisors, lettings specialists and operations team behind Haus of Estate.',
-    url: '/team',
-    type: 'website',
-    images: DEFAULT_OG_IMAGES,
-  },
-}
+    'Meet the advisers, lettings specialists and operations team behind Haus of Estate, an overseas property introduction service for buyers and investors.',
+  path: '/team',
+})
 
 export const revalidate = 60
 

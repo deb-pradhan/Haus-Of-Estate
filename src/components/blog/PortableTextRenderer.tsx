@@ -4,15 +4,19 @@ import { PortableText, PortableTextComponents } from '@portabletext/react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { headingId } from '@/lib/reading-time'
+import type { PortableTextNode } from '@/sanity/types'
 
 interface PortableTextRendererProps {
-  content: any[]
+  content: PortableTextNode[]
 }
 
 /** Flatten a block's spans to plain text for anchor ids. */
-function blockText(value: any): string {
+function blockText(value: { children?: readonly unknown[] } | undefined): string {
   return (value?.children || [])
-    .map((c: any) => (typeof c?.text === 'string' ? c.text : ''))
+    .map((c) => {
+      const text = (c as { text?: unknown } | null)?.text
+      return typeof text === 'string' ? text : ''
+    })
     .join('')
     .trim()
 }

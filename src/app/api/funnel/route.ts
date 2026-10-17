@@ -1,25 +1,76 @@
 import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { sendLeadNotificationToAdmin } from "@/lib/email/resend";
+import { parseConsent } from "@/lib/consent";
+
+/**
+ * POST /api/funnel (the /match brief)
+ *
+ * Consent contract (see src/lib/consent.ts): `consentNotice: true` is required
+ * (legacy alias `consentGiven: true`); `marketingConsent` is optional and
+ * defaults to false. This route never logs personal data. It stores the lead
+ * and emails the team; if neither succeeds it returns a non-OK status so the UI
+ * never tells someone their request was received when it was not.
+ */
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function text(value: unknown, max = 200): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return trimmed ? trimmed.slice(0, max) : undefined;
+}
+
+function list(value: unknown, maxItems = 10): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((v): v is string => typeof v === "string")
+    .map((v) => v.trim().slice(0, 60))
+    .filter(Boolean)
+    .slice(0, maxItems);
+}
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const {
-      intent,
-      market,
-      propertyTypes,
-      areas,
-      budget,
-      timeline,
-      firstName,
-      whatsapp,
-      phone,
-      email,
-    } = body;
+    let body: Record<string, unknown>;
+    try {
+      const parsed = await request.json();
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        throw new Error("not an object");
+      }
+      body = parsed as Record<string, unknown>;
+    } catch {
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+    }
+
+    const intent = text(body.intent, 20);
+    const market = text(body.market, 20);
+    const propertyTypes = list(body.propertyTypes);
+    const areas = list(body.areas);
+    const budget = text(body.budget, 60);
+    const timeline = text(body.timeline, 40);
+    const firstName = text(body.firstName, 100);
+    const whatsapp = text(body.whatsapp, 32);
+    const phone = text(body.phone, 32);
+    const email = text(body.email, 254)?.toLowerCase();
+    const consentTextVersion = text(body.consentTextVersion, 20);
+    const sourcePage = text(body.sourcePage, 200);
 
     if (!firstName || (!whatsapp && !phone)) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
+      );
+    }
+    if (email && !EMAIL_RE.test(email)) {
+      return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
+    }
+
+    const consent = parseConsent(body);
+    if (!consent.notice) {
+      return NextResponse.json(
+        { error: "Privacy notice acknowledgement required" },
+        { status: 400 },
       );
     }
 
@@ -100,37 +151,84 @@ export async function POST(request: Request) {
       }
     }
 
-    const contactPhone = whatsapp || phone;
+    const contactPhone = (whatsapp || phone) as string;
 
-    console.log("Funnel lead received:", {
-      intent,
-      market,
-      propertyTypes,
-      areas,
-      budget,
-      timeline,
+    // ── Persist (best effort) and notify the team ─────────────────────────────
+    // The Lead table requires an email; the funnel makes it optional, so an
+    // empty string is stored when none was given. The phone number is the
+    // contact route in that case.
+    let stored = false;
+    try {
+      await db.lead.create({
+        data: {
+          firstName,
+          email: email ?? "",
+          phone: contactPhone,
+          intent,
+          market: market ?? null,
+          propertyType: propertyTypes.join(", ") || null,
+          area: areas.join(", ") || null,
+          budget: budget ?? null,
+          timeline: timeline ?? null,
+          score,
+          tier,
+          routing,
+          consentGiven: true,
+          source: "funnel",
+        },
+      });
+      stored = true;
+    } catch (err) {
+      console.error(
+        "Funnel lead store failed:",
+        err instanceof Error ? err.name : "unknown error",
+      );
+    }
+
+    const notification = await sendLeadNotificationToAdmin({
+      email: email ?? "",
       firstName,
-      contactPhone,
-      email,
-      score,
+      intent: intent ?? "funnel",
       tier,
-      routing,
-    });
+      score,
+      phone: contactPhone,
+      details: {
+        Market: market,
+        "Property types": propertyTypes.join(", "),
+        Areas: areas.join(", "),
+        Budget: budget,
+        Timeline: timeline,
+        Routing: routing,
+        "Preferred contact": whatsapp ? "WhatsApp" : "Phone",
+      },
+      consent: {
+        notice: consent.notice,
+        marketing: consent.marketing,
+        channels: consent.marketingChannels,
+        textVersion: consentTextVersion,
+        at: new Date().toISOString(),
+        sourcePage: sourcePage ?? "/match",
+      },
+    }).catch(() => ({ delivered: false }));
 
-    // TODO: Persist via Prisma
-    // TODO: Push to CRM webhook
-    // TODO: Trigger WhatsApp / email automation
+    if (!stored && !notification.delivered) {
+      // Neither route worked: do not claim the enquiry was received.
+      return NextResponse.json(
+        { error: "We could not record your request" },
+        { status: 503 },
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      score,
-      tier,
-      routing,
       market,
       message: "Lead captured successfully",
     });
   } catch (error) {
-    console.error("Funnel API error:", error);
+    console.error(
+      "Funnel API error:",
+      error instanceof Error ? error.name : "unknown error",
+    );
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

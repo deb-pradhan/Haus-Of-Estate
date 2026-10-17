@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Haus of Estate",
     short_name: "Haus of Estate",
     description:
-      "International property service for buyers and investors in Dubai, the UK, Bali and Cyprus. Vetted agents, no hidden fees, property with proof.",
+      "We introduce overseas buyers and investors to local estate agents in Dubai, the UK, Bali and Cyprus.",
     start_url: "/",
     scope: "/",
     display: "standalone",

@@ -13,8 +13,14 @@ import {
   OPPORTUNITY_TYPE_OPTIONS,
   YEARS_OF_EXPERIENCE_OPTIONS,
 } from "@/lib/careers";
+import { createRateLimiter, enforceRateLimit, isHoneypotTripped } from "@/lib/rate-limit";
+import { clampString, isEmail } from "@/lib/security";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// 3 applications per hour per IP (each carries a CV of up to 5 MB).
+const limiter = createRateLimiter({ id: "applications", limit: 3, windowMs: 60 * 60_000 });
+// CV cap + room for the other multipart fields and boundaries.
+const MAX_BODY_BYTES = CV_MAX_BYTES + 512 * 1024;
+
 const URL_RE = /^https?:\/\/[^\s]+$/i;
 
 export async function POST(request: Request) {
@@ -23,6 +29,18 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: "Applications are currently closed." },
       { status: 404, headers: CAREERS_CLOSED_HEADERS },
+    );
+  }
+
+  const limited = await enforceRateLimit(request, limiter);
+  if (limited) return limited;
+
+  // Refuse oversized bodies before buffering them into memory.
+  const declaredLength = Number(request.headers.get("content-length") ?? "0");
+  if (Number.isFinite(declaredLength) && declaredLength > MAX_BODY_BYTES) {
+    return NextResponse.json(
+      { error: "Your application is too large. Your CV must be 5MB or smaller." },
+      { status: 413 },
     );
   }
 
@@ -36,13 +54,11 @@ export async function POST(request: Request) {
     );
   }
 
-  const str = (k: string) => {
-    const v = form.get(k);
-    return typeof v === "string" ? v.trim() : "";
-  };
+  // Trimmed, control characters stripped, bounded (cover note gets its own cap).
+  const str = (k: string, max = 300) => clampString(form.get(k), max);
 
   // Honeypot — silently accept and drop.
-  if (str("website").length > 0) {
+  if (isHoneypotTripped(str("website"))) {
     return NextResponse.json({ ok: true });
   }
 
@@ -54,14 +70,15 @@ export async function POST(request: Request) {
   const location = str("location");
   const yearsOfExperience = str("yearsOfExperience");
   const opportunityType = str("opportunityType");
-  const linkedinUrl = str("linkedinUrl");
-  const portfolioUrl = str("portfolioUrl");
-  const coverNote = str("coverNote");
+  const linkedinUrl = str("linkedinUrl", 500);
+  const portfolioUrl = str("portfolioUrl", 500);
+  const coverNote = clampString(form.get("coverNote"), 4001);
   const consent = form.get("consent") === "true" || form.get("consent") === "on";
   const experienceAreas = form
     .getAll("experienceAreas")
     .filter((v): v is string => typeof v === "string" && v.trim().length > 0)
-    .map((v) => v.trim());
+    .slice(0, 20)
+    .map((v) => clampString(v, 100));
 
   const errors: Record<string, string> = {};
 
@@ -69,7 +86,7 @@ export async function POST(request: Request) {
   if (!roleSlug) errors.roleSlug = "Role slug is required";
   if (!fullName) errors.fullName = "Full name is required";
   if (!email) errors.email = "Email is required";
-  else if (!EMAIL_RE.test(email)) errors.email = "Enter a valid email address";
+  else if (!isEmail(email)) errors.email = "Enter a valid email address";
   if (!phone) errors.phone = "Phone is required";
 
   if (!yearsOfExperience) {
@@ -159,7 +176,7 @@ export async function POST(request: Request) {
   try {
     await sendApplicationToTeam(payload);
   } catch (e) {
-    console.error("[applications] sendApplicationToTeam failed:", e);
+    console.error("[applications] sendApplicationToTeam failed:", (e as Error)?.message);
     return NextResponse.json(
       {
         error:
@@ -170,7 +187,7 @@ export async function POST(request: Request) {
   }
 
   sendApplicationConfirmationToApplicant(payload).catch((e) => {
-    console.error("[applications] confirmation email failed:", e);
+    console.error("[applications] confirmation email failed:", (e as Error)?.message);
   });
 
   return NextResponse.json({ ok: true });

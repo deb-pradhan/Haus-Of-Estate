@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { headingId } from '@/lib/reading-time'
+import type { PortableTextNode } from '@/sanity/types'
 
 interface Heading {
   id: string
@@ -9,44 +11,33 @@ interface Heading {
 }
 
 interface TableOfContentsProps {
-  content: any[]
+  content: PortableTextNode[]
+}
+
+function extractHeadings(nodes: PortableTextNode[], out: Heading[] = []): Heading[] {
+  for (const node of nodes) {
+    if (node._type === 'block' && node.style && ['h2', 'h3', 'h4'].includes(node.style)) {
+      const text = (node.children ?? [])
+        .map((child) => child.text || '')
+        .join('')
+        .trim()
+      if (text) {
+        out.push({
+          id: headingId(text),
+          text,
+          level: parseInt(node.style.replace('h', ''), 10),
+        })
+      }
+    }
+    if (node.children) extractHeadings(node.children, out)
+  }
+  return out
 }
 
 export function TableOfContents({ content }: TableOfContentsProps) {
-  const [headings, setHeadings] = useState<Heading[]>([])
+  // Derived during render (no effect + setState): the list only depends on `content`.
+  const headings = useMemo(() => extractHeadings(content), [content])
   const [activeId, setActiveId] = useState<string>('')
-
-  useEffect(() => {
-    const extractedHeadings: Heading[] = []
-
-    function extractHeadings(nodes: any[]) {
-      for (const node of nodes) {
-        if (node._type === 'block' && ['h2', 'h3', 'h4'].includes(node.style)) {
-          const text = node.children
-            ?.map((child: any) => child.text || '')
-            .join('')
-            .trim()
-          if (text) {
-            const id = text
-              .toLowerCase()
-              .replace(/[^a-z0-9]+/g, '-')
-              .replace(/(^-|-$)/g, '')
-            extractedHeadings.push({
-              id,
-              text,
-              level: parseInt(node.style.replace('h', '')),
-            })
-          }
-        }
-        if (node.children) {
-          extractHeadings(node.children)
-        }
-      }
-    }
-
-    extractHeadings(content)
-    setHeadings(extractedHeadings)
-  }, [content])
 
   useEffect(() => {
     const observer = new IntersectionObserver(

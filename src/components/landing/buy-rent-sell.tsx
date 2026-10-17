@@ -58,7 +58,8 @@ export function BuyRentSell() {
           style={{ animationDelay: "160ms", lineHeight: 1.5 }}
         >
           International property in Dubai, the UK and beyond. One enquiry
-          connects you to a vetted agent — clear advice, no hidden fees.
+          connects you with a local advisor — clear guidance from first
+          conversation to completion.
         </p>
 
         <div

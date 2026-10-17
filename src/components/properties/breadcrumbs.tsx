@@ -9,8 +9,7 @@ import {
 } from '@/lib/property-taxonomy'
 
 /**
- * Breadcrumb strip built from the active taxonomy selection, e.g.
- * Properties / Residential / Ready / To buy / Apartment.
+ * Breadcrumb strip: Home / Properties / Residential / Ready / To buy / Apartment.
  * Every segment links to the progressively-widened URL; the last is current.
  */
 export function Breadcrumbs({
@@ -26,30 +25,35 @@ export function Breadcrumbs({
   type?: string
   className?: string
 }) {
-  const crumbs = buildBreadcrumbs({ category, availability, intent, type })
-  if (crumbs.length <= 1) return null
+  const crumbs = [
+    { label: 'Home', href: '/' },
+    ...buildBreadcrumbs({ category, availability, intent, type }),
+  ]
 
   return (
     <nav aria-label="Breadcrumb" className={className}>
-      <ol className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+      <ol className="flex flex-wrap items-center gap-x-1.5 text-sm text-muted-foreground">
         {crumbs.map((crumb, i) => {
           const isLast = i === crumbs.length - 1
           return (
             <li key={crumb.href} className="flex items-center gap-1.5">
               {i > 0 && (
-                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+                <ChevronRight
+                  aria-hidden="true"
+                  className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60"
+                />
               )}
               {isLast ? (
                 <span
                   aria-current="page"
-                  className={cn('font-medium text-estate-700')}
+                  className={cn('py-3 font-medium text-estate-900')}
                 >
                   {crumb.label}
                 </span>
               ) : (
                 <Link
                   href={crumb.href}
-                  className="transition-colors hover:text-estate-700 hover:underline"
+                  className="rounded py-3 transition-colors hover:text-estate-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-estate-700/60"
                 >
                   {crumb.label}
                 </Link>

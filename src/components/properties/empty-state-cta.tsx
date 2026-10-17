@@ -1,61 +1,66 @@
 "use client";
 
-import { ArrowRight, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useLeadModals } from "@/components/lead-modal/modal-context";
 
+/**
+ * Helpful empty state: says plainly there is no match, offers a way to widen
+ * the search, and routes to the enquiry flow.
+ */
 export function EmptyStateCTA({
   category,
   intent,
+  clearHref,
 }: {
   category?: string;
   intent?: string;
+  /** When filters are active, a link that clears them. */
+  clearHref?: string;
 }) {
   const { openBuyer } = useLeadModals();
   const isRent = intent === "rent";
   const isCommercial = category === "commercial";
 
-  const verb = isRent ? "rental" : "match";
-
-  // Tailored heading + body per branch.
   let heading: string;
   let body: string;
   if (isCommercial) {
-    heading = "We don't have commercial listings published yet.";
+    heading = "No commercial properties are published yet.";
     body =
-      "Our commercial pipeline is sourced to brief. Tell an advisor what you're after — office, retail, a plot or a whole building — and we'll come back within two working hours with options that fit.";
+      "Tell us what you need, whether that is an office, retail unit, plot or building, and an adviser will come back to you with suitable options.";
   } else if (isRent) {
-    heading = "No rentals on our live list — yet.";
+    heading = "No rentals are published at the moment.";
     body =
-      "Our published rentals are a small slice of what we have access to. Tell an advisor your brief and we'll come back within two working hours with options that fit.";
+      "Tell us where and when you need to move, and an adviser will come back to you with suitable options.";
   } else {
-    heading = "No exact match on our live list — yet.";
+    heading = "Nothing published matches that search.";
     body =
-      "Our published listings are a small slice of what we have access to. Tell an advisor what you're after and we'll come back within two working hours with off-market options that fit your brief.";
+      "Try widening your search, or tell us what you are looking for and an adviser will come back to you with suitable options.";
   }
 
-  const ctaLabel = isCommercial
-    ? "Tell us your commercial brief"
-    : `Let an advisor find your ${verb}`;
-
   return (
-    <div className="rounded-2xl border border-dashed border-border bg-surface p-8 text-center md:p-12">
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-estate-700/8 text-estate-700">
-        <Sparkles className="h-5 w-5" />
+    <div className="rounded-[28px] bg-surface p-8 text-center shadow-e1 md:p-14">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-estate-700/10 text-estate-700">
+        <Search aria-hidden="true" className="h-5 w-5" />
       </div>
-      <h2 className="mt-5 font-serif text-2xl font-medium text-estate-700 md:text-3xl">
+      <h2 className="mt-5 font-serif text-[length:var(--text-title-3)] font-medium text-estate-900">
         {heading}
       </h2>
-      <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground md:text-base">
+      <p className="mx-auto mt-3 max-w-md text-base leading-relaxed text-muted-foreground">
         {body}
       </p>
-      <button
-        type="button"
-        onClick={openBuyer}
-        className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-md bg-estate-700 px-6 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-estate-600"
-      >
-        {ctaLabel}
-        <ArrowRight className="h-4 w-4" />
-      </button>
+      <div className="mt-7 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+        <Button type="button" size="lg" onClick={openBuyer}>
+          Tell us what you&apos;re looking for
+          <ArrowRight aria-hidden="true" />
+        </Button>
+        {clearHref && (
+          <Button asChild size="lg" variant="outline">
+            <Link href={clearHref}>Clear filters</Link>
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

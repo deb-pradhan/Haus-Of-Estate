@@ -1,4 +1,11 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
+
+// One robots directive (a 404 must never be indexed); no inherited canonical.
+export const metadata: Metadata = {
+  title: 'Page not found',
+  robots: { index: false, follow: true },
+}
 
 const WHATSAPP_URL =
   'https://wa.me/971585607033?utm_source=site&utm_medium=404&utm_campaign=whatsapp'
