@@ -36,6 +36,15 @@ Roadmap: `ROADMAP.md`. Audits: `audits/`.
 - **Regulatory display**: `company-identity.ts` placeholders (HMRC AML, redress scheme, CMP, Rent Smart Wales, Dubai ORN, PI note, VAT, complaints/accessibility mailboxes) — empty by default, render nothing; footer contrast raised; `(auth)` noindex.
 - Not done / needs follow-up: marketing consent stored only in admin email (needs DB columns — migration requires user approval); rate limiting on leads/funnel/register (pending E); founder to confirm privacy mailbox, transfer safeguards, retention; "Unit 1" vs "Unit A".
 
+### Engineering, security & QA (WS-E, E-01…E-05)
+- **Security headers** (`next.config.ts`): enforced CSP (GA4/GTM, Sanity, YouTube/Vimeo, Google sign-in), HSTS, nosniff, Referrer-Policy, Permissions-Policy, X-Frame-Options DENY, COOP; `/studio` exempt; `poweredByHeader` off; avif/webp images.
+- **Rate limiting & bot protection** (`src/lib/rate-limit.ts`, `security.ts`): sliding-window limiter with pluggable store, safe client-IP, honeypot, `escapeHtml`, constant-time compare, safe redirects. Applied to applications, login, Auth.js credentials, revalidate (WS-E) and to `/api/leads`, `/api/funnel`, `/api/auth/register` (PM; register also normalises email case).
+- **Auth hardening**: dummy bcrypt compare, input clamps, 14-day session, redirect guard, `trustHost`; revalidate fails closed on short secret.
+- **Resilience**: `error.tsx`, `(main)/error.tsx`, `global-error.tsx`; `sanityFetch` returns `{data, error}` and logs sanitised errors; `/api/health` (+ `railway.json` healthcheck). `loading.tsx` intentionally omitted at app level (soft-404 risk on `/blog/[slug]`) — **verify `/properties/loading.tsx` on a production build**.
+- **Hygiene & CI**: `studio-haus-of-estate/node_modules` untracked from git index; `.github/workflows/ci.yml` + dependabot; ESLint config; unit tests (26) + SEO tests (31); Playwright a11y and lead-funnel specs (need browsers/axe installed to run).
+- **PM fixes**: `Reveal` lint fix; FAQ/BlogCTA/careers claim wording → shared `RESPONSE_TIME_COPY`; footer deepened to `estate-900` with accessible headings.
+- Lint: 0 errors outside others' files at hand-off; `tsc` clean.
+
 ### Design system ("Quiet Confidence")
 - **Principles & tokens** (`DESIGN-PRINCIPLES.md`): fluid type scale, e1–e3 tinted elevation, glass materials, motion easing, `estate-900/800`, `gold-700` (accessible gold text, 4.9:1), softened paper. Files: `src/app/globals.css`.
 - **Primitives**: Button → pill, 44/52 px targets, press feedback, new `gold` variant (ink text, 5.2:1); Input → 48 px/12 px radius; new `Reveal` scroll-reveal; global `:focus-visible` ring, `text-wrap: balance/pretty`, smooth scroll. Files: `src/components/ui/button.tsx`, `input.tsx`, `reveal.tsx`.

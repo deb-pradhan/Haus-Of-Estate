@@ -1,0 +1,20 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      next:
+        patterns: ["next", "eslint-config-next"]
+      auth:
+        patterns: ["next-auth", "@auth/*"]
+      prisma:
+        patterns: ["prisma", "@prisma/*"]
+      sanity:
+        patterns: ["sanity", "@sanity/*", "next-sanity", "groq"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

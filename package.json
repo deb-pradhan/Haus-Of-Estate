@@ -7,10 +7,17 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "typecheck": "tsc --noEmit",
     "test:seo": "node --experimental-strip-types --test tests/technical-seo.test.mjs tests/analytics.test.mjs",
     "test:analytics:browser": "playwright test --config playwright.analytics.config.ts",
     "test:careers-offline": "node --experimental-strip-types --test tests/careers-offline.test.mjs",
-    "test:analytics:browser:ga4": "playwright test --config playwright.analytics-ga4.config.ts"
+    "test:analytics:browser:ga4": "playwright test --config playwright.analytics-ga4.config.ts",
+    "test": "npm run test:unit && npm run test:seo",
+    "test:unit": "node --experimental-strip-types --test 'tests/unit/*.test.mjs'",
+    "test:content": "node --experimental-strip-types --test tests/blog-publication.test.mjs tests/property-media.test.mjs tests/property-publication.test.mjs",
+    "test:e2e": "playwright test",
+    "test:a11y": "playwright test a11y.spec.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",

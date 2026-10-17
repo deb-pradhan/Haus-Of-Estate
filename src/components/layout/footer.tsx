@@ -87,7 +87,7 @@ export function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="bg-estate-700 text-white/70">
+    <footer className="bg-estate-900 text-white/75">
       {/* Main columns */}
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 md:grid-cols-2 md:px-6 lg:grid-cols-5">
         {/* Brand */}
@@ -277,7 +277,7 @@ function FooterCol({
 }) {
   return (
     <div>
-      <h4 className="mb-4 font-serif text-xs font-semibold uppercase tracking-[0.18em] text-gold-400">
+      <h4 className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-gold-300">
         {title}
       </h4>
       <ul className="space-y-2.5">{children}</ul>

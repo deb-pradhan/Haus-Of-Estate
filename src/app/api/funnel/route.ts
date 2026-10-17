@@ -1,3 +1,4 @@
+import { createRateLimiter, enforceRateLimit, isHoneypotTripped } from "@/lib/rate-limit";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { sendLeadNotificationToAdmin } from "@/lib/email/resend";
@@ -30,7 +31,12 @@ function list(value: unknown, maxItems = 10): string[] {
     .slice(0, maxItems);
 }
 
+const limiter = createRateLimiter({ id: "funnel", limit: 5, windowMs: 10 * 60_000 });
 export async function POST(request: Request) {
+  {
+    const limited = await enforceRateLimit(request, limiter);
+    if (limited) return limited;
+  }
   try {
     let body: Record<string, unknown>;
     try {
@@ -42,6 +48,9 @@ export async function POST(request: Request) {
     } catch {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
+
+    // Bots fill hidden fields; pretend success so they learn nothing.
+    if (isHoneypotTripped(body.website)) return NextResponse.json({ success: true });
 
     const intent = text(body.intent, 20);
     const market = text(body.market, 20);

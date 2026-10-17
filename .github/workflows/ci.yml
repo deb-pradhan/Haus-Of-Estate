@@ -1,0 +1,102 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Dummy values: nothing in CI talks to a real database, mailbox or OAuth app.
+  DATABASE_URL: postgresql://postgres:ci@localhost:5432/hoe
+  AUTH_SECRET: ci-only-secret-not-used-in-production
+  AUTH_URL: http://localhost:3000
+  # Sanity is read-only public content; override per repo with Actions variables.
+  NEXT_PUBLIC_SANITY_PROJECT_ID: ${{ vars.SANITY_PROJECT_ID || 'jdxbkry4' }}
+  NEXT_PUBLIC_SANITY_DATASET: ${{ vars.SANITY_DATASET || 'production' }}
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  static:
+    name: typecheck, lint, tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm run typecheck
+      - run: npm run lint
+      - name: Unit + technical SEO tests
+        run: npm test
+      - name: Content tests (non-blocking until the property/blog redesign settles)
+        run: npm run test:content
+        continue-on-error: true
+      - name: Dependency audit (non-blocking)
+        run: npm audit --omit=dev --audit-level=high
+        continue-on-error: true
+
+  build:
+    name: production build
+    needs: static
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('src/**') }}
+          restore-keys: |
+            next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
+      - run: npm run build
+      - name: Smoke-test the standalone server and health endpoint
+        run: |
+          npm run start -- --hostname 127.0.0.1 --port 3000 &
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:3000/api/health && break || sleep 2; done
+          curl -fsS http://127.0.0.1:3000/api/health | grep '"status":"ok"'
+          curl -sI http://127.0.0.1:3000/ | grep -i '^content-security-policy'
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/careers)" = "404"
+
+  e2e:
+    name: playwright (lead funnel + a11y)
+    needs: build
+    # Opt in with the repository variable RUN_E2E=true (needs reachable Sanity content).
+    if: ${{ vars.RUN_E2E == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7

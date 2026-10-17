@@ -1,13 +1,22 @@
+import { createRateLimiter, enforceRateLimit } from "@/lib/rate-limit";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { sendWelcomeEmail, sendLeadNotificationToAdmin } from "@/lib/email/resend";
 import { parseConsent } from "@/lib/consent";
 
+const limiter = createRateLimiter({ id: "register", limit: 5, windowMs: 60 * 60_000 });
 export async function POST(request: Request) {
+  {
+    const limited = await enforceRateLimit(request, limiter);
+    if (limited) return limited;
+  }
   try {
     const body = await request.json();
-    const { name, email, password, phone, intent } = body ?? {};
+    const { name, password, phone, intent } = body ?? {};
+    // Normalise so "A@x.com" and "a@x.com" are one account.
+    const email =
+      typeof body?.email === "string" ? body.email.trim().toLowerCase() : body?.email;
 
     // ── Validation ─────────────────────────────────────────────────────────────
     if (!name || !email || !password) {
