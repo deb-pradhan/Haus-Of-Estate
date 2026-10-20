@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
+import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import test from 'node:test'
 import { createElement } from 'react'
@@ -9,6 +10,8 @@ import ts from 'typescript'
 import * as media from '../src/lib/property-media.ts'
 import * as taxonomy from '../src/lib/property-taxonomy.ts'
 import * as seo from '../src/lib/seo.ts'
+import * as designs from '../src/lib/property-designs.ts'
+import * as developments from '../src/lib/property-developments.ts'
 
 const require = createRequire(import.meta.url)
 const imageBuilder = createImageUrlBuilder({ projectId: 'jdxbkry4', dataset: 'production' })
@@ -61,6 +64,8 @@ async function loadComponent(relativePath, property = london) {
     },
     '@/sanity/queries': { PROPERTY_BY_SLUG_QUERY: 'detail' },
     '@/lib/property-media': media,
+    '@/lib/property-designs': designs,
+    '@/lib/property-developments': developments,
     '@/lib/property-taxonomy': taxonomy,
     '@/lib/seo': seo,
     '@/lib/embed-video': { toEmbedUrl: () => null },
@@ -70,8 +75,24 @@ async function loadComponent(relativePath, property = london) {
     '@/components/ui/button': { Button: element('button') },
     '@/components/lead-modal/open-buyer-button': { OpenBuyerButton: element('button') },
   }
+  const components = {
+    '@/components/properties/PropertyDetailView': '../src/components/properties/PropertyDetailView.tsx',
+    './PropertyDesignExplorer': '../src/components/properties/PropertyDesignExplorer.tsx',
+    './property-development': '../src/components/properties/property-development.tsx',
+  }
+  function componentRequire(id) {
+    if (stubs[id]) return stubs[id]
+    if (!components[id]) return require(id)
+    const nestedSource = readFileSync(new URL(components[id], import.meta.url), 'utf8')
+    const nested = ts.transpileModule(nestedSource, {
+      compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, target: ts.ScriptTarget.ES2022 },
+    })
+    const nestedExports = {}
+    new Function('require', 'exports', nested.outputText)(componentRequire, nestedExports)
+    return nestedExports
+  }
   const exports = {}
-  new Function('require', 'exports', outputText)((id) => stubs[id] ?? require(id), exports)
+  new Function('require', 'exports', outputText)(componentRequire, exports)
   return exports
 }
 
