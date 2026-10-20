@@ -118,6 +118,13 @@ export const ROLE_SLUGS_QUERY = `
 
 // ── Properties ────────────────────────────────────────────────────────
 
+// Never expose drafts through a perspective that rewrites _id to the published ID.
+const PUBLISHED_PROPERTY = `
+  status == "published" && !(_id in path("drafts.**")) && !(_id in path("versions.**"))
+  && !(coalesce(_originalId, _id) in path("drafts.**"))
+  && !(coalesce(_originalId, _id) in path("versions.**"))
+`
+
 const PROPERTY_CARD_FIELDS = `
   _id,
   title,
@@ -137,6 +144,8 @@ const PROPERTY_CARD_FIELDS = `
   sizeDisplay,
   plotSizeDisplay,
   priceDisplay,
+  priceAmount,
+  priceCurrency,
   rentPriceDisplay,
   paymentPlan,
   view,
@@ -147,8 +156,24 @@ const PROPERTY_CARD_FIELDS = `
   featuredImage
 `
 
+export const PROPERTY_DEVELOPMENTS_QUERY = `
+  *[_type == "property" && ${PUBLISHED_PROPERTY} && unitType == "Development"
+    && defined(slug.current) && defined(title) && defined(community) && defined(city) && defined(country)] {
+    ${PROPERTY_CARD_FIELDS},
+    amenities,
+    "collections": *[_type == "property" && ${PUBLISHED_PROPERTY}
+      && defined(slug.current) && masterDevelopment == ^.title
+      && community == ^.community && city == ^.city && country == ^.country
+      && unitType in ["Villa", "Townhouse"]] | order(bedrooms asc, title asc) {
+      ${PROPERTY_CARD_FIELDS},
+      "designCount": count(designVariants),
+      "designImage": designVariants[0].images[0]{"src": asset->url, alt, label}
+    }
+  }
+`
+
 export const PROPERTIES_QUERY = `
-  *[_type == "property" && status == "published" && !(_id in path("drafts.**")) && !(_id in path("versions.**"))]
+  *[_type == "property" && ${PUBLISHED_PROPERTY}]
     | order(featured desc, publishedAt desc) {
       ${PROPERTY_CARD_FIELDS}
     }
@@ -157,7 +182,7 @@ export const PROPERTIES_QUERY = `
 // Server-side filtered listing. Pass empty-string params to skip a filter.
 // $availability / $intent match against the array fields (membership).
 export const PROPERTIES_FILTERED_QUERY = `
-  *[_type == "property" && status == "published" && !(_id in path("drafts.**")) && !(_id in path("versions.**"))
+  *[_type == "property" && ${PUBLISHED_PROPERTY}
     && ($category == "" || category == $category)
     && ($availability == "" || $availability in availability)
     && ($intent == "" || $intent in listingType)
@@ -168,14 +193,14 @@ export const PROPERTIES_FILTERED_QUERY = `
 `
 
 export const FEATURED_PROPERTIES_QUERY = `
-  *[_type == "property" && status == "published" && !(_id in path("drafts.**")) && !(_id in path("versions.**")) && featured == true]
+  *[_type == "property" && ${PUBLISHED_PROPERTY} && featured == true]
     | order(publishedAt desc) [0...3] {
       ${PROPERTY_CARD_FIELDS}
     }
 `
 
 export const PROPERTY_BY_SLUG_QUERY = `
-  *[_type == "property" && slug.current == $slug && status == "published" && !(_id in path("drafts.**")) && !(_id in path("versions.**"))][0] {
+  *[_type == "property" && slug.current == $slug && ${PUBLISHED_PROPERTY}][0] {
     ${PROPERTY_CARD_FIELDS},
     description,
     keyFeatures,
@@ -188,13 +213,31 @@ export const PROPERTY_BY_SLUG_QUERY = `
       caption,
       mediaKind
     },
+    designVariants[]{
+      _key,
+      label,
+      family,
+      rowHomes,
+      position,
+      "plotAreaSqFt": select(plotAreaStatus == "conflict" => null, plotAreaSqFt),
+      sellableAreaSqFt,
+      plotAreaStatus,
+      summary,
+      images[]{"src": asset->url, alt, label},
+      floorPlans[]{"src": asset->url, alt, label}
+    },
+    interiorSchemes[]{
+      _key,
+      label,
+      images[]{"src": asset->url, alt, label}
+    },
     videoUrl,
     enquiryEmail
   }
 `
 
 export const PROPERTY_SLUGS_QUERY = `
-  *[_type == "property" && status == "published" && !(_id in path("drafts.**")) && !(_id in path("versions.**")) && defined(slug.current)] {
+  *[_type == "property" && ${PUBLISHED_PROPERTY} && defined(slug.current)] {
     "slug": slug.current
   }
 `
