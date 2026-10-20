@@ -25,6 +25,9 @@ const STATIC_ROUTES: Array<{
   { path: '/legal/cookie-policy', changeFrequency: 'yearly', priority: 0.3 },
 ]
 
+// New Sanity publications should enter the sitemap without a new deployment.
+export const revalidate = 60
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date()
 
