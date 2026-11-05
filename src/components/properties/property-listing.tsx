@@ -2,10 +2,14 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { MapPin, BedDouble, Building2, X } from 'lucide-react'
 import { sanityFetch, urlFor } from '@/sanity'
-import { PROPERTIES_FILTERED_QUERY } from '@/sanity/queries'
+import { groupDevelopmentResults, type PropertyDevelopment } from '@/lib/property-developments'
+import { PropertyDevelopmentCard } from './property-development'
+import { PROPERTIES_FILTERED_QUERY, PROPERTY_DEVELOPMENTS_QUERY } from '@/sanity/queries'
 import { EmptyStateCTA } from '@/components/properties/empty-state-cta'
 import { Breadcrumbs } from '@/components/properties/breadcrumbs'
 import { isConceptMedia, propertyMediaCaption, type PropertyImageMetadata } from '@/lib/property-media'
+import { matchesPropertyBedrooms, type PropertyHomeType } from '@/lib/property-home-types'
+import { PropertyPriceText } from './PropertyPriceText'
 import {
   type Category,
   type Availability,
@@ -35,6 +39,9 @@ interface PropertyCard {
   listingType?: string[]
   unitType: string
   bedrooms?: number
+  homeTypes?: PropertyHomeType[]
+  priceAmount?: number
+  priceCurrency?: string
   priceDisplay?: string
   rentPriceDisplay?: string
   sizeDisplay?: string
@@ -109,7 +116,7 @@ export async function PropertyListing({
   const minBeds = !hideBeds && Number.isFinite(bedsRaw) ? bedsRaw : null
 
   // ── Fetch (server-side GROQ filtering) ────────────────────────────────
-  const { data: properties } = await sanityFetch<PropertyCard[]>({
+  const [{ data: properties }, { data: publishedDevelopments }] = await Promise.all([sanityFetch<PropertyCard[]>({
     query: PROPERTIES_FILTERED_QUERY,
     params: {
       category: category || '',
@@ -117,7 +124,7 @@ export async function PropertyListing({
       intent: intent || '',
       type: type || '',
     },
-  })
+  }), sanityFetch<PropertyDevelopment[]>({ query: PROPERTY_DEVELOPMENTS_QUERY })])
   const fetched = properties ?? []
 
   // ── Remaining JS filters (location + beds) ────────────────────────────
@@ -131,8 +138,7 @@ export async function PropertyListing({
       if (!hay.includes(locLC)) return false
     }
     if (minBeds !== null) {
-      if (typeof p.bedrooms !== 'number') return false
-      if (p.bedrooms < minBeds) return false
+      if (!matchesPropertyBedrooms(p, minBeds)) return false
     }
     return true
   })
@@ -177,8 +183,10 @@ export async function PropertyListing({
     : '/properties'
 
   // ── Group by community ────────────────────────────────────────────────
+  const { groups: developments, properties: individualProperties } = groupDevelopmentResults(list, publishedDevelopments ?? [])
+  const resultCount = developments.length + individualProperties.length
   const byCommunity = new Map<string, PropertyCard[]>()
-  for (const p of list) {
+  for (const p of individualProperties) {
     const c = p.community || 'Other'
     if (!byCommunity.has(c)) byCommunity.set(c, [])
     byCommunity.get(c)!.push(p)
@@ -227,9 +235,9 @@ export async function PropertyListing({
           {hasFilters && (
             <div className="mb-10 flex flex-wrap items-center gap-3">
               <p className="text-sm font-medium text-estate-700">
-                {list.length === 0
+                {resultCount === 0
                   ? `No ${rentContextGlobal ? 'rentals' : 'listings'} match your filters`
-                  : `Showing ${list.length} ${list.length === 1 ? 'listing' : 'listings'}${rentContextGlobal ? ' to rent' : ''}`}
+                  : `Showing ${resultCount} ${resultCount === 1 ? 'listing' : 'listings'}${rentContextGlobal ? ' to rent' : ''}`}
               </p>
               <div className="flex flex-wrap items-center gap-2">
                 {activeFilters.map((f) => (
@@ -252,7 +260,7 @@ export async function PropertyListing({
             </div>
           )}
 
-          {communities.length === 0 ? (
+          {resultCount === 0 ? (
             hasFilters || forceCategory ? (
               <EmptyStateCTA
                 category={category || undefined}
@@ -272,6 +280,12 @@ export async function PropertyListing({
             )
           ) : (
             <div className="space-y-16">
+              {developments.length > 0 && <div>
+                <h2 className="mb-6 font-serif text-2xl font-medium text-estate-700 md:text-3xl">Explore communities</h2>
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {developments.map((development) => <PropertyDevelopmentCard key={development._id} development={development} />)}
+                </div>
+              </div>}
               {communities.map(([community, items]) => (
                 <div key={community}>
                   <div className="mb-6 flex flex-wrap items-baseline justify-between gap-2">
@@ -354,7 +368,7 @@ export async function PropertyListing({
                             </p>
                             <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
                               <span className="font-serif text-base font-semibold text-estate-700">
-                                {price}
+                                <PropertyPriceText text={price} />
                               </span>
                               <span className="flex items-center gap-3 text-xs text-muted-foreground">
                                 {showBeds && (
