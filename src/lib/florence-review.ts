@@ -44,6 +44,7 @@ export async function readFlorenceReview() {
     const property: PropertyDetail & { priceAmount?: number; priceCurrency?: string } = {
       _id: doc._id, title: doc.title, slug: doc.slug.current, community: doc.community,
       city: doc.city, country: doc.country, developer: doc.developer,
+      availability: doc.availability,
       masterDevelopment: doc.masterDevelopment, unitType: doc.unitType, bedrooms: doc.bedrooms,
       priceDisplay: doc.priceDisplay, priceAmount: doc.priceAmount, priceCurrency: doc.priceCurrency,
       summary: doc.summary, description: doc.description, keyFeatures: doc.keyFeatures,

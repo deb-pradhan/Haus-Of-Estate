@@ -8,6 +8,7 @@ import { createImageUrlBuilder } from '@sanity/image-url'
 import ts from 'typescript'
 import * as media from '../src/lib/property-media.ts'
 import * as designs from '../src/lib/property-designs.ts'
+import * as homeTypes from '../src/lib/property-home-types.ts'
 import * as developments from '../src/lib/property-developments.ts'
 import * as seo from '../src/lib/seo.ts'
 
@@ -90,6 +91,7 @@ function loadComponent(relativePath, { property = collection, publishedDevelopme
     },
     '@/lib/property-media': media,
     '@/lib/property-designs': designs,
+    '@/lib/property-home-types': homeTypes,
     '@/lib/property-developments': developments,
     '@/lib/seo': seo,
     '@/lib/embed-video': { toEmbedUrl: () => null },
@@ -98,6 +100,7 @@ function loadComponent(relativePath, { property = collection, publishedDevelopme
   const paths = {
     '@/components/properties/PropertyDetailView': '../src/components/properties/PropertyDetailView.tsx',
     './PropertyDesignExplorer': '../src/components/properties/PropertyDesignExplorer.tsx',
+    './PropertyHomeTypes': '../src/components/properties/PropertyHomeTypes.tsx',
     './property-development': '../src/components/properties/property-development.tsx',
   }
   function load(path) {
@@ -126,6 +129,31 @@ function loadComponent(relativePath, { property = collection, publishedDevelopme
 }
 const detailPath = '../src/components/properties/PropertyDetailView.tsx'
 const routePath = '../src/app/(main)/properties/[slug]/page.tsx'
+
+test('Kore renders a whole source-currency schedule, qualified plan and target date without invented imagery or main bedroom count', async () => {
+  const draft = JSON.parse(readFileSync(new URL('../scripts/kore-wellness-residence.staging-draft.ndjson', import.meta.url), 'utf8'))
+  const property = { ...draft, slug: draft.slug.current }
+  const { PropertyDetailView } = loadComponent(detailPath)
+  const html = renderToStaticMarkup(createElement(PropertyDetailView, { property }))
+  assert.match(html, /<table[^>]*table-fixed/)
+  assert.match(html, /Starting size/)
+  assert.match(html, /Starting price/)
+  for (const figure of ['406', '669', '1,406', '679,000', '1,100,000', '1,550,000']) assert.ok(html.includes(figure), figure)
+  assert.match(html, /Q4 2028/)
+  assert.match(html, /10% price increase/)
+  assert.match(html, /three years after handover/)
+  assert.match(html, /Project imagery unavailable/)
+  assert.doesNotMatch(html, /<img|>Bedrooms<|>Size<|>Floor plan<|Built-up area|sellable|On application|CurrencySelector/)
+  assert.match(html, /href="mailto:info@hausofestate.com\?subject=/)
+  const preview = renderToStaticMarkup(createElement(PropertyDetailView, { property, preview: true, previewBasePath: '/properties' }))
+  assert.doesNotMatch(preview, /mailto:/)
+  const route = loadComponent(routePath, { property })
+  const metadata = await route.generateMetadata({ params: Promise.resolve({ slug: property.slug }) })
+  assert.equal(metadata.title, property.title)
+  assert.equal(metadata.description, property.summary)
+  assert.equal(metadata.alternates.canonical, '/properties/kore-wellness-residence')
+  assert.deepEqual(metadata.openGraph.images, seo.DEFAULT_OG_IMAGES)
+})
 
 test('community shows one title, a wide hero and separate Villas and Townhouses with source AED prices', () => {
   const { PropertyDetailView } = loadComponent(detailPath)
@@ -199,6 +227,17 @@ test('preview renderer disables mailto enquiries while preserving plan inspectio
   assert.match(html, /href="\/dev\/florence-preview\/azizi-florence"/)
   const communityHtml = renderToStaticMarkup(createElement(PropertyDetailView, { property: overview, development: community, preview: true }))
   assert.match(communityHtml, /href="\/dev\/florence-preview\/azizi-florence-4-bedroom-villas"/)
+})
+
+test('off-plan Florence preview identifies proposed development and planned amenities', () => {
+  const { PropertyDetailView } = loadComponent(detailPath)
+  const property = { ...collection, availability: ['off-plan'], amenities: ['Planned swimming pool', 'Clubhouse'] }
+  const html = renderToStaticMarkup(createElement(PropertyDetailView, { property, parentDevelopment: community, preview: true }))
+  assert.match(html, /Plans and images describe a proposed development/)
+  assert.match(html, /Planned community amenities/)
+  assert.doesNotMatch(html, /Planned swimming pool|mailto:/)
+  const mixed = renderToStaticMarkup(createElement(PropertyDetailView, { property: { ...property, availability: ['ready', 'off-plan'] } }))
+  assert.doesNotMatch(mixed, /Plans and images describe a proposed development|Planned community amenities/)
 })
 
 test('detail route has no parent link when the strict public development query returns no parent', async () => {

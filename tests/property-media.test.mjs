@@ -11,6 +11,7 @@ import * as media from '../src/lib/property-media.ts'
 import * as taxonomy from '../src/lib/property-taxonomy.ts'
 import * as seo from '../src/lib/seo.ts'
 import * as designs from '../src/lib/property-designs.ts'
+import * as homeTypes from '../src/lib/property-home-types.ts'
 import * as developments from '../src/lib/property-developments.ts'
 
 const require = createRequire(import.meta.url)
@@ -65,6 +66,7 @@ async function loadComponent(relativePath, property = london) {
     '@/sanity/queries': { PROPERTY_BY_SLUG_QUERY: 'detail' },
     '@/lib/property-media': media,
     '@/lib/property-designs': designs,
+    '@/lib/property-home-types': homeTypes,
     '@/lib/property-developments': developments,
     '@/lib/property-taxonomy': taxonomy,
     '@/lib/seo': seo,
@@ -78,6 +80,7 @@ async function loadComponent(relativePath, property = london) {
   const components = {
     '@/components/properties/PropertyDetailView': '../src/components/properties/PropertyDetailView.tsx',
     './PropertyDesignExplorer': '../src/components/properties/PropertyDesignExplorer.tsx',
+    './PropertyHomeTypes': '../src/components/properties/PropertyHomeTypes.tsx',
     './property-development': '../src/components/properties/property-development.tsx',
   }
   function componentRequire(id) {
@@ -136,6 +139,7 @@ test('London detail preserves boards, separate plan, approximate GIA, price and 
   assert.match(html, /aria-current="page"/)
   assert.match(html, /href="mailto:info@hausofestate.com\?subject=/)
   assert.doesNotMatch(html, />Bathrooms<|>Plot<|>Unit<|>Completed<|>EPC<|>Tenure</)
+  assert.doesNotMatch(html, /Plans and images describe a proposed development|Planned community amenities/)
 })
 
 for (const [name, path, exportName, props] of cards) {

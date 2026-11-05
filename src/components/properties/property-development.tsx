@@ -74,7 +74,7 @@ export function PropertyDevelopmentShowcase({ development, hero, preview = false
     <section className="mx-auto max-w-6xl px-4 pt-8 md:px-6 md:pt-12" aria-labelledby="development-title">
       <div className="overflow-hidden rounded-2xl border border-border bg-surface">
         <div>
-          <div className="relative aspect-[16/9] max-h-[520px] bg-estate-700">
+          <div className="relative aspect-[16/9] max-h-[520px] w-full bg-estate-700">
             {image ? <Image src={image.src} alt={image.alt || development.title} fill preload sizes="(min-width: 1280px) 1152px, 100vw" className="object-cover" unoptimized={preview} />
               : <Building2 aria-hidden className="absolute inset-0 m-auto h-16 w-16 text-white/40" />}
           </div>

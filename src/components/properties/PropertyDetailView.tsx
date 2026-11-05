@@ -22,6 +22,8 @@ import {
 } from '@/lib/property-media'
 
 import { PropertyDesignExplorer } from './PropertyDesignExplorer'
+import { PropertyHomeTypes } from './PropertyHomeTypes'
+import { preparePublicHomeTypes, type PropertyHomeType } from '@/lib/property-home-types'
 import { PropertyDevelopmentShowcase } from './property-development'
 import type { PropertyDevelopment } from '@/lib/property-developments'
 import { preparePublicDesigns, preparePublicInteriorSchemes, type PropertyDesign, type PropertyInteriorScheme } from '@/lib/property-designs'
@@ -49,6 +51,8 @@ export interface PropertyDetail {
   plotSizeDisplay?: string
   priceDisplay?: string
   paymentPlan?: string
+  targetCompletion?: string
+  homeTypes?: PropertyHomeType[]
   view?: string
   completionStatus?: string
   summary: string
@@ -71,16 +75,19 @@ const COMPLETION_LABEL: Record<string, string> = {
   'completed-offplan': 'Completed & off-plan',
 }
 
-export function PropertyDetailView({ property, development, parentDevelopment, preview = false }: {
+export function PropertyDetailView({ property, development, parentDevelopment, preview = false, previewBasePath }: {
   property: PropertyDetail
   development?: PropertyDevelopment
   parentDevelopment?: PropertyDevelopment
   preview?: boolean
+  previewBasePath?: string
 }) {
   // Sanitise on the server before any design data crosses the client boundary.
   const designs = preparePublicDesigns(property.designVariants)
+  const homeTypes = preparePublicHomeTypes(property.homeTypes)
+  const plannedOnly = property.availability?.includes('off-plan') && !property.availability.includes('ready')
   const interiorSchemes = preparePublicInteriorSchemes(property.interiorSchemes)
-  const basePath = preview ? '/dev/florence-preview' : '/properties'
+  const basePath = preview ? previewBasePath || '/dev/florence-preview' : '/properties'
   const collection = Boolean(property.designVariants?.length || parentDevelopment)
   const conceptHero = isConceptMedia(property.featuredImage)
   const heroCaption = propertyMediaCaption(property.featuredImage)
@@ -108,7 +115,7 @@ export function PropertyDetailView({ property, development, parentDevelopment, p
       value: String(property.bathrooms),
     })
   }
-  if (property.sizeDisplay || (!development && !collection)) {
+  if (property.sizeDisplay || (!development && !collection && homeTypes.length === 0)) {
     facts.push({
       icon: Maximize2,
       label: floorPlans.length > 0 ? 'Floor area' : 'Size',
@@ -141,7 +148,7 @@ export function PropertyDetailView({ property, development, parentDevelopment, p
       value: property.unitNumber,
     })
   }
-  if (property.paymentPlan) {
+  if (property.paymentPlan && homeTypes.length === 0) {
     facts.push({
       icon: Check,
       label: 'Payment',
@@ -187,7 +194,7 @@ export function PropertyDetailView({ property, development, parentDevelopment, p
         />
       ) : (
       <figure>
-        <div className="relative aspect-[16/9] max-h-[460px] w-full overflow-hidden bg-estate-700">
+        <div className={`relative w-full overflow-hidden bg-estate-700 ${property.featuredImage ? 'aspect-[16/9] max-h-[460px]' : 'h-36 sm:h-44'}`}>
           {property.featuredImage ? (
             <Image
               src={conceptHero
@@ -201,8 +208,9 @@ export function PropertyDetailView({ property, development, parentDevelopment, p
               unoptimized={preview}
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-estate-600 to-estate-800">
-              <Building2 className="h-16 w-16 text-white/25" />
+            <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-estate-700/5 px-4 text-white/80">
+              <Building2 aria-hidden="true" className="h-10 w-10" />
+              <p className="text-sm">Project imagery unavailable</p>
             </div>
           )}
         </div>
@@ -256,6 +264,10 @@ export function PropertyDetailView({ property, development, parentDevelopment, p
               ))}
             </div>}
 
+            {plannedOnly && <p className="mt-8 rounded-xl border border-border bg-surface px-4 py-3 text-sm leading-relaxed text-muted-foreground">
+              Plans and images describe a proposed development. Completion and included facilities should be confirmed for the chosen home.
+            </p>}
+
             {/* Description */}
             {property.description ? (
               <div className="mt-10">
@@ -274,6 +286,22 @@ export function PropertyDetailView({ property, development, parentDevelopment, p
               enquiryEmail={enquiryEmail}
               preview={preview}
             />}
+
+            <PropertyHomeTypes rows={homeTypes} />
+
+            {(property.targetCompletion || (homeTypes.length > 0 && property.paymentPlan)) && <section className="mt-10" aria-labelledby="property-purchase-information-heading">
+              <h2 id="property-purchase-information-heading" className="font-serif text-xl font-medium text-estate-700">Purchase information</h2>
+              <dl className="mt-4 space-y-5 rounded-2xl border border-border bg-surface p-4 sm:p-5">
+                {property.targetCompletion && <div>
+                  <dt className="text-sm font-medium text-estate-700">Target completion</dt>
+                  <dd className="mt-1 text-sm leading-relaxed text-muted-foreground">{property.targetCompletion}</dd>
+                </div>}
+                {homeTypes.length > 0 && property.paymentPlan && <div>
+                  <dt className="text-sm font-medium text-estate-700">Payment plans</dt>
+                  <dd className="mt-1 text-sm leading-relaxed text-muted-foreground">{property.paymentPlan}</dd>
+                </div>}
+              </dl>
+            </section>}
 
             {/* Key features */}
             {property.keyFeatures && property.keyFeatures.length > 0 && (
@@ -296,13 +324,13 @@ export function PropertyDetailView({ property, development, parentDevelopment, p
             {property.amenities && property.amenities.length > 0 && (
               <div className="mt-10">
                 <h2 className="font-serif text-xl font-medium text-estate-700">
-                  Community amenities
+                  {plannedOnly ? 'Planned community amenities' : 'Community amenities'}
                 </h2>
                 <ul className="mt-4 grid gap-2 sm:grid-cols-2">
                   {property.amenities.map((a) => (
                     <li key={a} className="flex items-start gap-2 text-sm text-foreground">
                       <Check className="mt-0.5 h-4 w-4 shrink-0 text-estate-700" />
-                      {a}
+                      {plannedOnly ? a.replace(/^Planned /, '') : a}
                     </li>
                   ))}
                 </ul>

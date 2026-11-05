@@ -148,6 +148,8 @@ const PROPERTY_CARD_FIELDS = `
   priceCurrency,
   rentPriceDisplay,
   paymentPlan,
+  targetCompletion,
+  homeTypes[]{_key, label, bedrooms, startingSizeSqFt, startingPrice, priceCurrency},
   view,
   completionStatus,
   summary,

@@ -8,6 +8,7 @@ import { PROPERTIES_FILTERED_QUERY, PROPERTY_DEVELOPMENTS_QUERY } from '@/sanity
 import { EmptyStateCTA } from '@/components/properties/empty-state-cta'
 import { Breadcrumbs } from '@/components/properties/breadcrumbs'
 import { isConceptMedia, propertyMediaCaption, type PropertyImageMetadata } from '@/lib/property-media'
+import { matchesPropertyBedrooms, type PropertyHomeType } from '@/lib/property-home-types'
 import {
   type Category,
   type Availability,
@@ -37,6 +38,7 @@ interface PropertyCard {
   listingType?: string[]
   unitType: string
   bedrooms?: number
+  homeTypes?: PropertyHomeType[]
   priceAmount?: number
   priceCurrency?: string
   priceDisplay?: string
@@ -135,8 +137,7 @@ export async function PropertyListing({
       if (!hay.includes(locLC)) return false
     }
     if (minBeds !== null) {
-      if (typeof p.bedrooms !== 'number') return false
-      if (p.bedrooms < minBeds) return false
+      if (!matchesPropertyBedrooms(p, minBeds)) return false
     }
     return true
   })

@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { BLOG_AUTHOR_NAME } from '@/lib/blog-author'
+import { resolveBlogCover, blogCoverQuality } from '@/lib/blog-cover'
 import { blogThumbnailPosition } from '@/lib/blog-thumbnail'
 import { FALLBACK_IMAGES, FALLBACK_ALTS } from '@/sanity/fallbackImages'
 
@@ -27,7 +28,7 @@ interface BlogCardProps {
 function getImageUrl(post: Post): { url: string; alt: string } {
   if (post.featuredImage) {
     const sanityUrl = post.featuredImage?.url || post.featuredImage?.asset?.url
-    if (sanityUrl) return { url: sanityUrl, alt: post.featuredImage.alt || post.title }
+    if (sanityUrl) return resolveBlogCover(post.slug, sanityUrl, post.featuredImage.alt || post.title)
   }
   const fallbackUrl = FALLBACK_IMAGES[post.slug]
   if (fallbackUrl) return { url: fallbackUrl, alt: FALLBACK_ALTS[post.slug] || post.title }
@@ -49,7 +50,7 @@ export function BlogCard({ post, variant = 'default', index = 0 }: BlogCardProps
       <Link href={`/blog/${post.slug}`} className="group flex items-start gap-3">
         {imageUrl && (
           <div className="relative aspect-video w-24 flex-shrink-0 overflow-hidden rounded-lg bg-stone-100">
-            <Image src={imageUrl} alt={alt} fill sizes="96px" className="object-cover" style={{ objectPosition: blogThumbnailPosition(imageUrl) }} />
+            <Image src={imageUrl} alt={alt} quality={blogCoverQuality(imageUrl)} fill sizes="96px" className="object-cover" style={{ objectPosition: blogThumbnailPosition(imageUrl) }} />
           </div>
         )}
         <div className="min-w-0">
@@ -73,6 +74,7 @@ export function BlogCard({ post, variant = 'default', index = 0 }: BlogCardProps
         {imageUrl && (
           <Image
             src={imageUrl}
+            quality={blogCoverQuality(imageUrl)}
             alt={alt}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 380px"
