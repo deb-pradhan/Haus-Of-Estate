@@ -26,6 +26,10 @@ Sonia supplied the title Kore — Wellness Residence and DLRC location with [thi
 
 ## Missing media and remaining checks
 
+### Public-reference review, 5 November evening
+
+Surya requested the public name **Kore by Imtiaz** and supplied [PropertyAE's Kore page](https://www.propertyae.ae/projects/kore-by-imtiaz#units) as guidance. Keep the existing native ID and slug. Use the reference's overview/home-types/payment/completion/amenity structure, not its unverified inventory or conflicting commercial details: it lists starting sizes of 675/1,409 sq ft instead of Sonia's 669/1,406, a precise 15 December 2028 handover instead of Q4, and no post-handover period rather than Sonia's qualified 60/40 alternative. Sonia's supplied figures remain unchanged. Imtiaz's own Kore page corroborates the name and wellness positioning and now shows interior/exterior imagery; it is not an approved Haus media package. Missing media does not technically block a text-first listing.
+
 Named Kore/Wellness/DLRC assets were not found in Downloads, `OneDrive/Documents/hausofestate files` or relevant repository sources. Gmail searches found no Kore project email/attachment. A Florence image named Wellness is not Kore imagery. Use the neutral image-unavailable treatment; do not substitute Florence, stock or AI renders. No floor plans or brochure have been supplied for this project. The official website gallery is not treated as a Haus-approved media package.
 
 Before native Sanity publication, review the draft and current marketed offering with Haus, confirm current starting-price applicability and stock, and supply approved imagery when available. Do not invent CMS approval receipts or approver timestamps. Public enquiries use the existing `info@hausofestate.com` mail link; no form acceptance, brochure delivery or Resend sending is enabled here.

@@ -10,6 +10,7 @@ const draft = JSON.parse(await readFile(new URL('../scripts/kore-wellness-reside
 test('Kore draft preserves the supplied figures and does not invent missing specifications or publication', () => {
   assert.equal(draft._id, 'drafts.kore-wellness-residence')
   assert.equal(draft.slug.current, 'kore-wellness-residence')
+  assert.equal(draft.title, 'Kore by Imtiaz')
   assert.equal(draft.status, 'draft')
   assert.equal(draft.featured, false)
   assert.equal(draft.unitType, 'Apartment')

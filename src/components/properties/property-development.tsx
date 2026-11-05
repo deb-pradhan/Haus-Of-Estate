@@ -4,6 +4,7 @@ import { ArrowRight, Building2, MapPin } from 'lucide-react'
 import { urlFor } from '@/sanity'
 import { developmentHomeGroups, developmentStartingPrice, type DevelopmentProperty, type PropertyDevelopment } from '@/lib/property-developments'
 import type { PropertyMediaImage } from '@/lib/property-media'
+import { PropertyPriceText } from './PropertyPriceText'
 
 function developmentImage(property: DevelopmentProperty, design = false) {
   if (design && property.designImage?.src) return {
@@ -20,12 +21,12 @@ function StartingPrice({ homes }: { homes: DevelopmentProperty[] }) {
   // Retain the collection's supplied AED text, including any cluster scope.
   if (homes.length === 1) {
     return homes[0].priceDisplay
-      ? <span className="font-serif text-estate-700">{homes[0].priceDisplay}</span>
+      ? <span className="font-serif text-estate-700"><PropertyPriceText text={homes[0].priceDisplay} /></span>
       : null
   }
   const price = developmentStartingPrice(homes)
   return price ? (
-    <span className="font-serif text-estate-700">From {price.currency} {new Intl.NumberFormat('en-GB').format(price.amount)}
+    <span className="font-serif text-estate-700"><PropertyPriceText text={`From ${price.currency} ${new Intl.NumberFormat('en-GB').format(price.amount)}`} />
       {price.scope && <span className="mt-1 block text-xs text-muted-foreground">{price.scope}</span>}
     </span>
   ) : null

@@ -101,6 +101,7 @@ function loadComponent(relativePath, { property = collection, publishedDevelopme
     '@/components/properties/PropertyDetailView': '../src/components/properties/PropertyDetailView.tsx',
     './PropertyDesignExplorer': '../src/components/properties/PropertyDesignExplorer.tsx',
     './PropertyHomeTypes': '../src/components/properties/PropertyHomeTypes.tsx',
+    './PropertyPriceText': '../src/components/properties/PropertyPriceText.tsx',
     './property-development': '../src/components/properties/property-development.tsx',
   }
   function load(path) {
@@ -164,7 +165,8 @@ test('community shows one title, a wide hero and separate Villas and Townhouses 
   assert.match(html, /id="townhouses"/)
   assert.match(html, /href="\/properties\/azizi-florence-4-bedroom-villas"/)
   assert.match(html, /href="\/properties\/azizi-florence-3-bedroom-townhouses"/)
-  assert.match(html, /font-serif text-estate-700">From AED 3,000,000 — Clusters 1 &amp; 2/)
+  assert.match(html, /3,000,000 — Clusters 1 &amp; 2/)
+  assert.match(html, /href="\/currency\/uae-dirham.png"/)
   assert.match(html, /Shown: Villa A/)
   assert.doesNotMatch(html, /Price on application|Pricing on enquiry|On application/)
 })

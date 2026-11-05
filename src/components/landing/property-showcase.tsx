@@ -6,6 +6,7 @@ import { OpenBuyerButton } from "@/components/lead-modal/open-buyer-button";
 import { sanityFetch, urlFor } from "@/sanity";
 import { FEATURED_PROPERTIES_QUERY } from "@/sanity/queries";
 import { isConceptMedia, propertyMediaCaption, type PropertyImageMetadata } from "@/lib/property-media";
+import { PropertyPriceText } from "@/components/properties/PropertyPriceText";
 
 interface FeaturedProperty {
   _id: string;
@@ -119,7 +120,7 @@ function PropertyCard({
         </p>
         <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
           <span className="font-serif text-base font-semibold text-estate-700">
-            {property.priceDisplay || "Price on application"}
+            <PropertyPriceText text={property.priceDisplay || "Price on application"} />
           </span>
           <span className="flex items-center gap-3 text-xs text-muted-foreground">
             {typeof property.bedrooms === "number" && (

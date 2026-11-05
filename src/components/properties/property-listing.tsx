@@ -9,6 +9,7 @@ import { EmptyStateCTA } from '@/components/properties/empty-state-cta'
 import { Breadcrumbs } from '@/components/properties/breadcrumbs'
 import { isConceptMedia, propertyMediaCaption, type PropertyImageMetadata } from '@/lib/property-media'
 import { matchesPropertyBedrooms, type PropertyHomeType } from '@/lib/property-home-types'
+import { PropertyPriceText } from './PropertyPriceText'
 import {
   type Category,
   type Availability,
@@ -367,7 +368,7 @@ export async function PropertyListing({
                             </p>
                             <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
                               <span className="font-serif text-base font-semibold text-estate-700">
-                                {price}
+                                <PropertyPriceText text={price} />
                               </span>
                               <span className="flex items-center gap-3 text-xs text-muted-foreground">
                                 {showBeds && (

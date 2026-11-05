@@ -23,6 +23,7 @@ import {
 
 import { PropertyDesignExplorer } from './PropertyDesignExplorer'
 import { PropertyHomeTypes } from './PropertyHomeTypes'
+import { PropertyPriceText } from './PropertyPriceText'
 import { preparePublicHomeTypes, type PropertyHomeType } from '@/lib/property-home-types'
 import { PropertyDevelopmentShowcase } from './property-development'
 import type { PropertyDevelopment } from '@/lib/property-developments'
@@ -449,7 +450,7 @@ export function PropertyDetailView({ property, development, parentDevelopment, p
                 Enquire
               </p>
               {(property.priceDisplay || (!development && !collection)) && <p className="mt-2 font-serif text-2xl font-semibold text-estate-700">
-                {property.priceDisplay || 'Price on application'}
+                <PropertyPriceText text={property.priceDisplay || 'Price on application'} />
               </p>}
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 Pricing, exact sizes and current availability are confirmed on

@@ -1,4 +1,5 @@
 import type { PropertyHomeType } from '@/lib/property-home-types'
+import { PropertyPriceText } from './PropertyPriceText'
 
 const formatNumber = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 })
 
@@ -24,7 +25,7 @@ export function PropertyHomeTypes({ rows }: { rows: PropertyHomeType[] }) {
           {rows.map((row) => <tr key={row._key} className="border-t border-border align-top">
             <th scope="row" className="break-words px-3 py-4 font-medium text-estate-700 sm:px-4">{row.label}</th>
             <td className="px-3 py-4 tabular-nums sm:px-4">{formatNumber.format(row.startingSizeSqFt)} <span className="whitespace-nowrap">sq ft</span></td>
-            <td className="px-3 py-4 tabular-nums text-estate-700 sm:px-4"><span className="block text-xs sm:inline sm:text-sm">{row.priceCurrency}</span>{' '}<span className="break-words">{formatNumber.format(row.startingPrice)}</span></td>
+            <td className="px-3 py-4 tabular-nums text-estate-700 sm:px-4"><span className="whitespace-nowrap"><PropertyPriceText text={`${row.priceCurrency} ${formatNumber.format(row.startingPrice)}`} /></span></td>
           </tr>)}
         </tbody>
       </table>

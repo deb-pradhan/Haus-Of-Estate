@@ -9,6 +9,7 @@ import ts from 'typescript'
 import { POST_FIELDS } from '../src/sanity/queries.ts'
 import * as author from '../src/lib/blog-author.ts'
 import * as thumbnail from '../src/lib/blog-thumbnail.ts'
+import * as cover from '../src/lib/blog-cover.ts'
 
 const require = createRequire(import.meta.url)
 const legacyAuthor = { name: 'Former individual author', bio: 'Personal biography', avatar: { url: 'https://example.com/private-avatar.jpg' } }
@@ -28,6 +29,7 @@ async function component(name) {
     'next/image': { default: ({ src, alt, className, style }) => createElement('img', { src, alt, className, style }) },
     '@/lib/blog-author': author,
     '@/lib/blog-thumbnail': thumbnail,
+    '@/lib/blog-cover': cover,
     '@/sanity/fallbackImages': { FALLBACK_IMAGES: {}, FALLBACK_ALTS: {} },
   }
   const loaded = { exports: {} }

@@ -76,3 +76,14 @@ The 5 November content receipt is retained outside Git at `C:/Users/surya/Downlo
 - Freshly fetched `origin/main` remained `128715a580882cf22c87a360b3c355e236c443e8` and is an ancestor of this branch. The original Release 2 working copy, unpublished work and source archives were preserved. No direct main push, PR merge or deployment was performed.
 
 Historical PR #19 checks are not a substitute for these combined-release checks. This new PR incorporates its focused Florence implementation; do not merge both independently without reconciling their overlap. PR #16's wider overhaul and Deb's PR #18 remain separate review work.
+
+### Pre-merge update — 5 November evening
+
+Surya explicitly authorized merging PR #20 into main after successful checks. This does not mean the Railway deployment has occurred.
+
+- Renamed Kore to **Kore by Imtiaz**, keeping the existing document ID, slug and commercial figures. The saved Sanity draft was patched narrowly (title, summary and introduction) at 21:13 UTC; receipt `kore-name-receipt.json` is retained outside Git. It remains a draft pending the compatible deployment.
+- Reused the official CBUAE dirham artwork from the existing release work for visible property prices on catalogue cards, homepage cards, community/collection pages, detail pages and Kore's home-type schedule. Screen readers retain AED text; CMS and structured currency codes remain unchanged. No conversion or currency selector was introduced. The amount's existing font, size and colour remain inherited from each surface.
+- Preserved Sonia's figures where PropertyAE's secondary reference differs. The reference is presentation guidance, not a replacement stock/size/payment authority; see the Kore source record.
+- Final production build and scoped lint passed. **All 55 tests passed, none skipped**, including the built-server disabled-careers check. The broader run caught an older blog test loader missing the new cover-module import; its loader now runs the real cover helper and the test passes.
+- Rechecked built-server catalogue, London, Monaco and sitemap (200), preview routes and unpublished Kore (404), draft exclusion, and the static currency asset (200). Mobile visual review confirmed four aligned price symbols and no horizontal page overflow at 375 CSS pixels. An independent code review found no blocker in this follow-up.
+- GitHub had no automated status checks configured for this PR; the results above are local verification. Deployment and actual public rendering after CMS publication still require live checks.

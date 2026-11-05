@@ -81,6 +81,8 @@ async function loadComponent(relativePath, property = london) {
     '@/components/properties/PropertyDetailView': '../src/components/properties/PropertyDetailView.tsx',
     './PropertyDesignExplorer': '../src/components/properties/PropertyDesignExplorer.tsx',
     './PropertyHomeTypes': '../src/components/properties/PropertyHomeTypes.tsx',
+    './PropertyPriceText': '../src/components/properties/PropertyPriceText.tsx',
+    '@/components/properties/PropertyPriceText': '../src/components/properties/PropertyPriceText.tsx',
     './property-development': '../src/components/properties/property-development.tsx',
   }
   function componentRequire(id) {
