@@ -3,7 +3,10 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Keep browser-test builds separate from the local development server.
   distDir: process.env.HAUS_NEXT_DIST_DIR || ".next",
-  output: "standalone",
+  // Railway's Docker image runs the standalone server. Vercel builds its own
+  // output and its post-build step expects the default trace files, so the
+  // standalone mode is skipped there (Vercel sets VERCEL=1 at build time).
+  output: process.env.VERCEL ? undefined : "standalone",
   async headers() {
     return [
       {
