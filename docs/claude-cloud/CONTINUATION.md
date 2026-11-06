@@ -173,6 +173,23 @@ Checks for this checkpoint:
 | Browser audit against that build, including the new no-JS step | **Passed** after the source fixes were pushed: 0 failed steps, 0 overflow steps at 390 px and 1440 px. With JavaScript disabled the submit button is disabled, pressing Enter and force-clicking submit leave the URL unchanged, no contact details appear in it and the form has 0 named fields. (The audit's text probe did not detect the `<noscript>` notice; the server-markup unit test covers it.) The first attempt of this run hit an orphaned `next-server` child process still serving the previous build on port 3500 and reported the old leaking form; that process was stopped and the audit rerun against the rebuilt server. `docs/claude-cloud/showcase-journey-report.json` is from the passing run |
 | Screenshots in `docs/claude-cloud/screenshots/` | Regenerated from the rebuilt default production build after these fixes (serif headings, “Existing home” wording, explicit bedroom lists) |
 
+## Milestone status (closed 6 November 2026)
+
+- Final checkpoint on this branch: `68ab2594` (source fixes in `4f6988e6`).
+- Cloud-side verification is complete, not pending: the browser audit against the
+  rebuilt default production build passed at 390 px and 1440 px, including the
+  no-JavaScript inert-form step; the only probe that did not register was the
+  `<noscript>` text, which the server-markup unit test covers.
+- Surya reported an independent local review of `4f6988e6` as passed on a fresh
+  checkout: 20 unit tests and typecheck, a real no-JS submit with the button
+  disabled and zero named fields, the hydrated Novoli corner flow with marketing
+  off, the withheld-plot, source and row-caption notes on request and summary,
+  the mobile view-selected-design focus behaviour, and headings computed as
+  Cormorant Garamond.
+- This closes the portable handoff and initial review objective. It does not
+  approve production, public deployment, real emails or CMS writes. Further work
+  waits on design feedback and a hosting decision.
+
 ## Open decisions and follow-ups
 
 1. The intermittent Turbopack `next/font/google` failure seen once during a
