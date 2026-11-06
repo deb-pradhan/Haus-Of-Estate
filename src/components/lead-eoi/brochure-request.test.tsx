@@ -80,6 +80,30 @@ describe("property brochure requests", () => {
     expect(html).not.toContain("not required to receive it");
   });
 
+  it("offers an enquiry instead of a brochure for a design without a collection mapping", () => {
+    const trigger = PropertyBrochureRequestTrigger({ project, design, brochureMapped: false });
+    expect(trigger.props.disabled).toBe(false);
+    expect(trigger.props.children).toBe("Enquire about this property");
+    expect(trigger.props.title).toContain("not yet available by email");
+    trigger.props.onClick();
+    expect(context.openLead).toHaveBeenCalledWith(expect.objectContaining({
+      project,
+      brochureRequest: { design, emailUnavailable: true },
+    }));
+    const html = renderToStaticMarkup(
+      <LeadEoiForm surface="manual_cta" project={project} brochureRequest={{ design, emailUnavailable: true }} />,
+    );
+    expect(html).toContain("not yet available by email");
+    expect(html).toContain("Design: Type A");
+    expect(html).not.toContain("not required to receive it");
+    // The enquiry still carries the selected design for staff follow-up.
+    expect(brochureRequestNote(project, { design, emailUnavailable: true })).toContain("Requested design: Type A (type-a)");
+    // A mapped design keeps the brochure request intact.
+    const mapped = PropertyBrochureRequestTrigger({ project, design, brochureMapped: true });
+    expect(mapped.props.children).toBe("Request full brochure");
+    expect(mapped.props.title).toBeUndefined();
+  });
+
   it("does not offer an unconfigured intake or treat a changed interest as a brochure request", () => {
     context.readiness = { intakeReady: false, brochureEmailEnabled: false };
     const trigger = PropertyBrochureRequestTrigger({ project, design });

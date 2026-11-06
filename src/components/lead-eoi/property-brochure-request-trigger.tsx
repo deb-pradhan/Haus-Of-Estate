@@ -8,6 +8,8 @@ import { useLeadReadiness } from "./use-lead-readiness";
 interface PropertyBrochureRequestTriggerProps {
   project: LeadProjectContext;
   design?: LeadBrochureRequest["design"];
+  /** False when the published design carries no collection brochure key; the button then offers an enquiry. */
+  brochureMapped?: boolean;
   disabled?: boolean;
   className?: string;
   children?: ReactNode;
@@ -16,6 +18,7 @@ interface PropertyBrochureRequestTriggerProps {
 export function PropertyBrochureRequestTrigger({
   project,
   design,
+  brochureMapped = true,
   disabled = false,
   className,
   children = "Request full brochure",
@@ -23,7 +26,7 @@ export function PropertyBrochureRequestTrigger({
   const { enabled, openLead } = useLeadEoi();
   const readiness = useLeadReadiness(enabled && !disabled);
   const unavailable = disabled || !enabled || !readiness?.intakeReady;
-  const brochureEnabled = readiness?.brochureEmailEnabled === true;
+  const brochureEnabled = readiness?.brochureEmailEnabled === true && brochureMapped;
 
   return (
     <button
@@ -37,9 +40,11 @@ export function PropertyBrochureRequestTrigger({
             ? "Online brochure requests are currently unavailable."
             : !readiness?.intakeReady
               ? "Online enquiries are currently unavailable."
-              : !brochureEnabled
+              : readiness?.brochureEmailEnabled !== true
                 ? "Brochure email is currently unavailable. You can enquire about this property."
-                : undefined
+                : !brochureMapped
+                  ? "A brochure for this design is not yet available by email. You can enquire about this property."
+                  : undefined
       }
       onClick={() => {
         if (unavailable) return;
@@ -49,8 +54,9 @@ export function PropertyBrochureRequestTrigger({
             ? "rent"
             : "buy",
           // Retain the requested design for staff follow-up even while email is
-          // unavailable. The form checks readiness before requesting delivery.
-          brochureRequest: { design },
+          // unavailable. The form checks readiness before requesting delivery, and
+          // an unmapped design is sent as an enquiry rather than a failing request.
+          brochureRequest: { design, ...(brochureMapped ? {} : { emailUnavailable: true }) },
           surface: "manual_cta",
         });
       }}

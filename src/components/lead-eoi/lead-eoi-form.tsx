@@ -264,7 +264,9 @@ export function LeadEoiForm({
   );
   const [brochureQueued, setBrochureQueued] = useState(false);
   const [brochureDeliveryFailed, setBrochureDeliveryFailed] = useState(false);
-  const [brochureUnavailable, setBrochureUnavailable] = useState(false);
+  const [brochureUnavailable, setBrochureUnavailable] = useState(
+    Boolean(brochureRequest?.emailUnavailable),
+  );
   const remoteReadiness = useLeadReadiness(Boolean(brochureRequest) && !demo);
   const readiness = demo
     ? { intakeReady: true, brochureEmailEnabled: true }
@@ -422,7 +424,7 @@ export function LeadEoiForm({
     setSubmittedValues(null);
     setBrochureQueued(false);
     setBrochureDeliveryFailed(false);
-    setBrochureUnavailable(false);
+    setBrochureUnavailable(Boolean(brochureRequest?.emailUnavailable));
     setStep(1);
     submissionAttempt.current = null;
     hasStarted.current = false;
@@ -699,7 +701,9 @@ export function LeadEoiForm({
                 <p className="mt-1 text-xs text-muted-foreground">
                   {brochureEnabled
                     ? "The PDF covers this collection of home designs. Marketing emails are optional and are not required to receive it."
-                    : "Brochure email is currently unavailable. You can send an enquiry with your selection for the team to follow up. Marketing emails are optional."}
+                    : brochureRequest?.emailUnavailable
+                      ? "A brochure for this design is not yet available by email. You can send an enquiry with your selection for the team to follow up. Marketing emails are optional."
+                      : "Brochure email is currently unavailable. You can send an enquiry with your selection for the team to follow up. Marketing emails are optional."}
                 </p>
               ) : null}
               {project.community || project.city ? (
@@ -818,7 +822,7 @@ export function LeadEoiForm({
               {activeBrochureRequest ? "Review your request" : isNewsletterOnly ? "What interests you?" : "Shape your search"}
             </h2>
             <p className="mt-1.5 text-sm text-muted-foreground">
-              {activeBrochureRequest ? demo ? "Check your details before previewing your brochure email." : "Check your email address, then request the collection brochure." : "All preferences are optional. Share only what is useful today."}
+              {activeBrochureRequest ? demo ? "Check your details before previewing your brochure email." : brochureEnabled ? "Check your email address, then request the collection brochure." : "Check your email address, then send your enquiry with this selection." : "All preferences are optional. Share only what is useful today."}
             </p>
             {activeBrochureRequest ? (
               <div className="mt-5 flex flex-wrap items-start justify-between gap-3 rounded-md border border-estate-700/15 bg-estate-700/[0.04] p-4">

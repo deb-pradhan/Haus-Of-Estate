@@ -21,6 +21,7 @@
     "db:prepare-release": "node scripts/prepare-release-database.mjs",
     "lead-delivery:worker": "tsx scripts/process-lead-deliveries.ts",
     "brochure:check": "node --import tsx scripts/check-brochure-email-setup.mjs",
+    "brochure:mapping": "node --import tsx scripts/check-brochure-mapping.mjs",
     "studio:dev": "npm --prefix ../studio-haus-of-estate run dev",
     "studio:embedded:dev": "sanity dev",
     "studio:validate": "sanity schema validate",

@@ -152,10 +152,11 @@ export function PropertyDesignExplorer({ designs, interiorSchemes = [], project,
           </Link> : <PropertyBrochureRequestTrigger
             project={project}
             design={{ id: selected._key, label: selected.label }}
+            brochureMapped={Boolean(selected.brochureKey)}
             disabled={!interactionsEnabled}
             className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-estate-700 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-estate-600 disabled:cursor-not-allowed disabled:bg-estate-700/15 disabled:text-estate-700/70 sm:w-auto"
           />}
-          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{demoHref ? 'Try the request form with this design selected. Local demonstration only; nothing is saved or emailed.' : interactionsEnabled ? 'Request the collection’s full brochure with this design noted as your interest.' : 'Brochure requests are disabled in preview.'}</p>
+          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{demoHref ? 'Try the request form with this design selected. Local demonstration only; nothing is saved or emailed.' : !interactionsEnabled ? 'Brochure requests are disabled in preview.' : selected.brochureKey ? 'Request the collection’s full brochure with this design noted as your interest.' : 'Enquire with this design noted as your interest. Its collection brochure is not yet available by email.'}</p>
         </div>
 
         <div className="mt-6">

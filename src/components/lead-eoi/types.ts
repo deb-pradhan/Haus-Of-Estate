@@ -34,6 +34,8 @@ export interface LeadInitialPreferences {
 
 export interface LeadBrochureRequest {
   design?: { id: string; label: string };
+  /** The selected design has no collection brochure mapping yet: the form sends an enquiry instead. */
+  emailUnavailable?: boolean;
 }
 
 export interface LeadOpenOptions {
