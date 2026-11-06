@@ -9,6 +9,8 @@ import { LeadConflictError, LeadRateLimitError } from "./errors";
 import { hashNormalizedLead, normalizeLeadRequest } from "./normalize";
 import {
   createPrismaLeadIntakeStore,
+  describeBrochureJob,
+  evaluateExistingSubmission,
   type PersistLeadSubmission,
 } from "./persistence";
 
@@ -146,6 +148,58 @@ describe("Prisma lead intake transaction", () => {
     request.payloadHash = hashNormalizedLead(request.input);
     return request;
   }
+
+  it("returns the durable brochure job identifier with a fresh brochure request", async () => {
+    const request = brochureSubmission();
+    const { client } = database();
+    const store = createPrismaLeadIntakeStore(client as never);
+    const stored = await store.persistSubmission(request);
+    expect(stored).toMatchObject({ created: true, brochureQueued: true, brochureOutboxId: "outbox-id-brochure" });
+    expect(stored).not.toHaveProperty("brochureDeliveryFailed");
+    expect(stored.outboxIds).toContain("outbox-id-brochure");
+  });
+
+  it("describes a replayed brochure job by its stored status instead of mere existence", async () => {
+    const request = brochureSubmission();
+    const { client, transaction } = database();
+    const existing = (status: string) => ({
+      id: "existing-lead",
+      submissionId: request.input.submissionId,
+      payloadHash: request.payloadHash,
+      score: 30,
+      tier: "nurture",
+      deliveryOutbox: [
+        { id: "staff", destination: "notification", status: "DELIVERED" },
+        { id: "brochure", destination: "customer_brochure", status },
+      ],
+    });
+    const store = createPrismaLeadIntakeStore(client as never);
+
+    transaction.lead.findUnique.mockResolvedValueOnce(existing("PENDING") as never);
+    await expect(store.persistSubmission(request)).resolves.toMatchObject({
+      created: false,
+      brochureQueued: true,
+      brochureOutboxId: "brochure",
+    });
+
+    transaction.lead.findUnique.mockResolvedValueOnce(existing("DEAD_LETTER") as never);
+    const failed = await store.persistSubmission(request);
+    expect(failed).toMatchObject({ created: false, brochureDeliveryFailed: true, brochureOutboxId: "brochure" });
+    expect(failed).not.toHaveProperty("brochureQueued");
+    expect(transaction.leadDeliveryOutbox.create).not.toHaveBeenCalled();
+    expect(transaction.lead.findUnique).toHaveBeenCalledWith(expect.objectContaining({
+      select: expect.objectContaining({
+        deliveryOutbox: { select: { id: true, destination: true, status: true } },
+      }),
+    }));
+
+    // The pre-transaction lookup uses the same status-aware description.
+    expect(describeBrochureJob(existing("PROCESSING").deliveryOutbox)).toEqual({ brochureOutboxId: "brochure", brochureQueued: true });
+    expect(describeBrochureJob(existing("DEAD_LETTER").deliveryOutbox)).toEqual({ brochureOutboxId: "brochure", brochureDeliveryFailed: true });
+    expect(describeBrochureJob([{ id: "staff", destination: "notification", status: "DEAD_LETTER" }])).toEqual({});
+    expect(evaluateExistingSubmission(existing("DEAD_LETTER"), request.input.submissionId, request.payloadHash))
+      .toMatchObject({ created: false, brochureDeliveryFailed: true });
+  });
 
   it("queues the selected brochure independently and atomically with the lead", async () => {
     const { client, transaction } = database();

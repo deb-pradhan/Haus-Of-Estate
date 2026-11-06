@@ -124,6 +124,82 @@ describe("POST /api/leads", () => {
     expect(mocks.attemptImmediateLeadDelivery).toHaveBeenCalledWith("brochure-job");
   });
 
+  it("reports a dead-lettered brochure email honestly while keeping the saved-lead receipt", async () => {
+    mocks.submitLeadIntake.mockResolvedValueOnce({
+      created: true,
+      leadId: "lead-id",
+      submissionId: "6bd94ff9-6dc6-4eff-8cb0-1bda245e595a",
+      score: 30,
+      tier: "nurture",
+      outboxId: "staff-job",
+      outboxIds: ["staff-job", "staff-job-sheets", "brochure-job"],
+      brochureOutboxId: "brochure-job",
+      brochureQueued: true,
+    });
+    mocks.attemptImmediateLeadDelivery.mockImplementation(async (id: string) =>
+      id === "brochure-job" ? "deadLettered" : "delivered");
+    const response = await POST(request(v2({
+      project: { slug: "florence-4-bedroom-villas" },
+      brochure: { designId: "type-a" },
+    })));
+    expect(response.status).toBe(201);
+    const body = await response.json();
+    expect(body).toMatchObject({ success: true, status: "created", leadId: "lead-id", brochureDeliveryFailed: true });
+    expect(body).not.toHaveProperty("brochureQueued");
+  });
+
+  it("keeps the brochure queued when only the staff notification dead-letters or the job is retried, leased or disabled", async () => {
+    for (const [staffOutcome, brochureOutcome] of [
+      ["deadLettered", "retried"],
+      ["delivered", "notReady"],
+      ["delivered", "disabled"],
+      ["delivered", "conflict"],
+    ] as const) {
+      mocks.submitLeadIntake.mockResolvedValueOnce({
+        created: true,
+        leadId: "lead-id",
+        submissionId: "6bd94ff9-6dc6-4eff-8cb0-1bda245e595a",
+        score: 30,
+        tier: "nurture",
+        outboxId: "staff-job",
+        outboxIds: ["staff-job", "brochure-job"],
+        brochureOutboxId: "brochure-job",
+        brochureQueued: true,
+      });
+      mocks.attemptImmediateLeadDelivery.mockImplementation(async (id: string) =>
+        id === "brochure-job" ? brochureOutcome : staffOutcome);
+      const body = await (await POST(request(v2({
+        project: { slug: "florence-4-bedroom-villas" },
+        brochure: { designId: "type-a" },
+      })))).json();
+      expect(body).toMatchObject({ brochureQueued: true });
+      expect(body).not.toHaveProperty("brochureDeliveryFailed");
+    }
+  });
+
+  it("replays a stored dead-lettered brochure job as a follow-up receipt without a new delivery attempt", async () => {
+    mocks.submitLeadIntake.mockResolvedValueOnce({
+      created: false,
+      leadId: "lead-id",
+      submissionId: "6bd94ff9-6dc6-4eff-8cb0-1bda245e595a",
+      score: 30,
+      tier: "nurture",
+      outboxId: "staff-job",
+      outboxIds: ["staff-job", "brochure-job"],
+      brochureOutboxId: "brochure-job",
+      brochureDeliveryFailed: true,
+    });
+    const response = await POST(request(v2({
+      project: { slug: "florence-4-bedroom-villas" },
+      brochure: { designId: "type-a" },
+    })));
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body).toMatchObject({ status: "duplicate", leadId: "lead-id", brochureDeliveryFailed: true });
+    expect(body).not.toHaveProperty("brochureQueued");
+    expect(mocks.attemptImmediateLeadDelivery).not.toHaveBeenCalled();
+  });
+
   it("returns a retryable storage failure without telling the form to discard the requested brochure", async () => {
     mocks.submitLeadIntake.mockRejectedValueOnce(new LeadInfrastructureError());
     const response = await POST(request(v2({

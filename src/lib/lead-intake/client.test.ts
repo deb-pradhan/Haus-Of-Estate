@@ -54,6 +54,23 @@ describe("enquiry receipt client", () => {
     }, attempt(), fetcher)).resolves.toMatchObject({ brochureQueued: true, status: "duplicate" });
   });
 
+  it("directs uncertain saves to the sales inbox and accepts the follow-up flag only as a boolean", async () => {
+    const failure = await submitLeadEnquiry(payload, attempt(), vi.fn().mockRejectedValue(new Error("offline"))).catch((error: Error) => error);
+    expect(failure).toBeInstanceOf(Error);
+    expect((failure as Error).message).toContain("sales@hausofestate.com");
+    expect((failure as Error).message).not.toContain("info@hausofestate.com");
+    const receipt = { success: true, status: "created", leadId: "saved-lead", submissionId: "same-request" };
+    expect(isLeadSubmissionReceipt({ ...receipt, brochureDeliveryFailed: true }, "same-request")).toBe(true);
+    expect(isLeadSubmissionReceipt({ ...receipt, brochureDeliveryFailed: "yes" }, "same-request")).toBe(false);
+    const fetcher = vi.fn().mockImplementation((_url, init) => {
+      const request = JSON.parse(String(init?.body));
+      return Response.json({ ...receipt, submissionId: request.submissionId, brochureDeliveryFailed: true }, { status: 201 });
+    });
+    const saved = await submitLeadEnquiry({ project: { slug: "florence-villas" }, brochure: { designId: "type-a" } }, attempt(), fetcher);
+    expect(saved).toMatchObject({ status: "created", brochureDeliveryFailed: true });
+    expect(saved).not.toHaveProperty("brochureQueued");
+  });
+
   it("surfaces actionable validation errors without displaying arbitrary server content", async () => {
     const failure = Response.json({
       error: "internal secret must not be displayed",

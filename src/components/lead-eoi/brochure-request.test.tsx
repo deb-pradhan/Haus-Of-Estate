@@ -4,6 +4,7 @@ import { LEAD_FORM_VERSION, PRIVACY_NOTICE_VERSION } from "@/lib/lead-intake/con
 import { normalizeLeadRequest } from "@/lib/lead-intake/normalize";
 import {
   brochureMessageLimit,
+  brochureReceiptCopy,
   brochureRequestNote,
   brochureRequestPayload,
   leadMessageWithBrochureRequest,
@@ -93,6 +94,24 @@ describe("property brochure requests", () => {
       expect(html).not.toContain("Full brochure request");
       expect(html).not.toContain("Design: Type A");
     }
+  });
+
+  it("words saved and failed brochure receipts without claiming delivery or asking to resubmit", () => {
+    const queued = brochureReceiptCopy("queued", project, { design });
+    expect(queued?.heading).toBe("Brochure request saved");
+    expect(queued?.body).toContain("Florence 4-bedroom villas — Type A");
+    expect(queued?.body).toContain("Email delivery can take a little time");
+    expect(queued?.body).not.toMatch(/delivered|has been sent/i);
+
+    const failed = brochureReceiptCopy("failed", project, { design });
+    expect(failed?.heading).toBe("Brochure request saved for follow-up");
+    expect(failed?.body).toContain("could not be sent automatically");
+    expect(failed?.body).toContain("team will follow up by email");
+    expect(failed?.body).toContain("no need to send this request again");
+    expect(failed?.body).not.toMatch(/try again|resubmit|delivered|take a little time/i);
+
+    expect(brochureReceiptCopy("none", project, { design })).toBeUndefined();
+    expect(brochureReceiptCopy("failed", undefined, undefined)?.body).toContain("the selected property has been saved");
   });
 
   it("passes only the selected design identifier, without a client-provided PDF path or revision", () => {

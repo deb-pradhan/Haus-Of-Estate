@@ -1,6 +1,7 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { db } from "@/lib/db";
 import { buildLeadDeliveryPayload } from "@/lib/lead-delivery";
+import { LEAD_DELIVERY_STATUSES } from "@/lib/lead-delivery/types";
 import type { LeadDeliveryPayload } from "@/lib/lead-delivery/types";
 import {
   PROPERTY_MATCH_CONSENT_WORDING,
@@ -20,7 +21,7 @@ export interface ExistingLeadSubmission {
   payloadHash: string | null;
   score: number;
   tier: string | null;
-  deliveryOutbox?: Array<{ id: string; destination?: string }>;
+  deliveryOutbox?: Array<{ id: string; destination?: string; status?: string }>;
 }
 
 export interface LeadScore {
@@ -49,7 +50,12 @@ export interface StoredLeadSubmission {
   tier: string;
   outboxId?: string;
   outboxIds?: string[];
+  /** Durable customer-brochure job identifier, when the enquiry requested one. */
+  brochureOutboxId?: string;
+  /** A customer-brochure job exists and has not permanently failed. Not proof of delivery. */
   brochureQueued?: true;
+  /** The customer-brochure job is dead-lettered: the team must follow up by hand. */
+  brochureDeliveryFailed?: true;
 }
 
 export interface LeadIntakeStore {
@@ -60,6 +66,30 @@ export interface LeadIntakeStore {
 }
 
 type LeadIntakePrismaClient = Pick<PrismaClient, "lead" | "$transaction">;
+
+const EXISTING_SUBMISSION_SELECT = {
+  id: true,
+  submissionId: true,
+  payloadHash: true,
+  score: true,
+  tier: true,
+  deliveryOutbox: { select: { id: true, destination: true, status: true } },
+} as const;
+
+/**
+ * Replays must describe the brochure job's real state. A dead-lettered job is
+ * still a saved request, but telling the visitor it is queued would hide a
+ * failure that needs staff follow-up.
+ */
+export function describeBrochureJob(
+  outbox: ExistingLeadSubmission["deliveryOutbox"],
+): Pick<StoredLeadSubmission, "brochureOutboxId" | "brochureQueued" | "brochureDeliveryFailed"> {
+  const job = outbox?.find((record) => record.destination === "customer_brochure");
+  if (!job) return {};
+  return job.status === LEAD_DELIVERY_STATUSES.deadLetter
+    ? { brochureOutboxId: job.id, brochureDeliveryFailed: true }
+    : { brochureOutboxId: job.id, brochureQueued: true };
+}
 
 function replayOrConflict(
   existing: ExistingLeadSubmission,
@@ -75,9 +105,7 @@ function replayOrConflict(
     tier: existing.tier ?? "nurture",
     outboxId: existing.deliveryOutbox?.[0]?.id,
     outboxIds: existing.deliveryOutbox?.map((record) => record.id),
-    ...(existing.deliveryOutbox?.some((record) => record.destination === "customer_brochure")
-      ? { brochureQueued: true as const }
-      : {}),
+    ...describeBrochureJob(existing.deliveryOutbox),
   };
 }
 
@@ -125,14 +153,7 @@ export function createPrismaLeadIntakeStore(
     async findSubmission(submissionId) {
       return client.lead.findUnique({
         where: { submissionId },
-        select: {
-          id: true,
-          submissionId: true,
-          payloadHash: true,
-          score: true,
-          tier: true,
-          deliveryOutbox: { select: { id: true, destination: true } },
-        },
+        select: EXISTING_SUBMISSION_SELECT,
       });
     },
 
@@ -145,14 +166,7 @@ export function createPrismaLeadIntakeStore(
 
           const existing = await transaction.lead.findUnique({
             where: { submissionId: submission.input.submissionId },
-            select: {
-              id: true,
-              submissionId: true,
-              payloadHash: true,
-              score: true,
-              tier: true,
-              deliveryOutbox: { select: { id: true, destination: true } },
-            },
+            select: EXISTING_SUBMISSION_SELECT,
           });
           if (existing) {
             return replayOrConflict(
@@ -382,8 +396,8 @@ export function createPrismaLeadIntakeStore(
           });
 
           const outboxIds = [submission.outboxId, sheetsOutboxId];
-          if (submission.brochure) {
-            const brochureOutboxId = `${submission.outboxId}-brochure`;
+          const brochureOutboxId = submission.brochure ? `${submission.outboxId}-brochure` : undefined;
+          if (brochureOutboxId) {
             await transaction.leadDeliveryOutbox.create({
               data: {
                 id: brochureOutboxId,
@@ -404,7 +418,7 @@ export function createPrismaLeadIntakeStore(
             tier: scoring.tier,
             outboxId: submission.outboxId,
             outboxIds,
-            ...(submission.brochure ? { brochureQueued: true as const } : {}),
+            ...(brochureOutboxId ? { brochureOutboxId, brochureQueued: true as const } : {}),
           };
         },
         { isolationLevel: "Serializable" },

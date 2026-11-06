@@ -99,19 +99,31 @@ export async function POST(request: Request) {
     const input = normalizeLeadRequest(body);
     const ipHash = hashClientAddress(extractClientAddress(request));
     const result = await submitLeadIntake(input, ipHash);
+    // A replay reports the brochure job's stored state; a fresh submission learns it
+    // from the immediate attempt below. Neither changes the saved-lead receipt.
+    let brochureDeliveryFailed = result.brochureDeliveryFailed === true;
 
     if (result.created && result.outboxId) {
       try {
+        const outboxIds = result.outboxIds ?? [result.outboxId];
         const outcomes = await Promise.allSettled(
-          (result.outboxIds ?? [result.outboxId]).map((id) => attemptImmediateLeadDelivery(id)),
+          outboxIds.map((id) => attemptImmediateLeadDelivery(id)),
         );
         if (outcomes.some((outcome) => outcome.status === "rejected")) {
           console.error("Immediate lead delivery failed; saved outbox remains available for retry");
         }
+        // Only a dead letter is a known permanent failure. Retries, leases held by
+        // the worker and disabled delivery all leave the job durably queued.
+        brochureDeliveryFailed ||= outcomes.some((outcome, index) =>
+          outcome.status === "fulfilled" &&
+          outcome.value === "deadLettered" &&
+          outboxIds[index] === result.brochureOutboxId);
       } catch {
         console.error("Immediate lead delivery failed");
       }
     }
+
+    const brochureQueued = result.brochureQueued === true && !brochureDeliveryFailed;
 
     return NextResponse.json(
       {
@@ -121,7 +133,8 @@ export async function POST(request: Request) {
         score: result.score,
         leadId: result.leadId,
         submissionId: result.submissionId,
-        ...(result.brochureQueued === true ? { brochureQueued: true } : {}),
+        ...(brochureQueued ? { brochureQueued: true } : {}),
+        ...(brochureDeliveryFailed ? { brochureDeliveryFailed: true } : {}),
       },
       { status: result.created ? 201 : 200, headers: { "Cache-Control": "no-store" } },
     );

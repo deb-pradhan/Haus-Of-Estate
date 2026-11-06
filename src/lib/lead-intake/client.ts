@@ -10,9 +10,11 @@ export interface LeadSubmissionReceipt {
   submissionId: string;
   /** A durable customer-email job exists; this does not confirm email delivery. */
   brochureQueued?: boolean;
+  /** The saved request's brochure email permanently failed; the team follows up by hand. */
+  brochureDeliveryFailed?: boolean;
 }
 
-const SAVE_ERROR = "We couldn’t confirm your enquiry was saved. Your details are still here. Please try again, or email info@hausofestate.com.";
+const SAVE_ERROR = "We couldn’t confirm your enquiry was saved. Your details are still here. Please try again, or email sales@hausofestate.com.";
 
 const FIELD_MESSAGES: Record<string, string> = {
   contact: "Check your name, email address, phone number and message.",
@@ -60,7 +62,8 @@ export function isLeadSubmissionReceipt(value: unknown, submissionId: string): v
   const receipt = value as Partial<LeadSubmissionReceipt>;
   return receipt.success === true && ["created", "duplicate"].includes(receipt.status ?? "") &&
     typeof receipt.leadId === "string" && receipt.leadId.length > 0 && receipt.submissionId === submissionId &&
-    (receipt.brochureQueued === undefined || typeof receipt.brochureQueued === "boolean");
+    (receipt.brochureQueued === undefined || typeof receipt.brochureQueued === "boolean") &&
+    (receipt.brochureDeliveryFailed === undefined || typeof receipt.brochureDeliveryFailed === "boolean");
 }
 
 /** Retain the reference after ambiguous failures, but use a new one if the visitor edits the enquiry. */

@@ -42,6 +42,7 @@ import { getLeadAttribution, primeLeadAttribution } from "./attribution";
 import {
   brochureMessageLimit,
   brochureRequestNote,
+  brochureReceiptCopy,
   brochureRequestPayload,
   leadMessageWithBrochureRequest,
   supportsBrochureRequest,
@@ -262,6 +263,7 @@ export function LeadEoiForm({
     null,
   );
   const [brochureQueued, setBrochureQueued] = useState(false);
+  const [brochureDeliveryFailed, setBrochureDeliveryFailed] = useState(false);
   const [brochureUnavailable, setBrochureUnavailable] = useState(false);
   const remoteReadiness = useLeadReadiness(Boolean(brochureRequest) && !demo);
   const readiness = demo
@@ -419,6 +421,7 @@ export function LeadEoiForm({
     setSubmitState("idle");
     setSubmittedValues(null);
     setBrochureQueued(false);
+    setBrochureDeliveryFailed(false);
     setBrochureUnavailable(false);
     setStep(1);
     submissionAttempt.current = null;
@@ -478,6 +481,7 @@ export function LeadEoiForm({
       }
       const receipt = await submitLeadEnquiry(payload, submissionAttempt);
       setBrochureQueued(Boolean(payload.brochure && receipt.brochureQueued === true));
+      setBrochureDeliveryFailed(Boolean(payload.brochure && receipt.brochureDeliveryFailed === true));
       setSubmitState("success");
       trackLeadEvent("lead_submit_success", {
         form_version: LEAD_FORM_VERSION,
@@ -520,6 +524,11 @@ export function LeadEoiForm({
   };
 
   const successValues = submittedValues ?? values;
+  const brochureReceipt = brochureReceiptCopy(
+    brochureDeliveryFailed ? "failed" : brochureQueued ? "queued" : "none",
+    project,
+    brochureRequest,
+  );
 
   if (submitState === "success" && demo) {
     return (
@@ -562,19 +571,17 @@ export function LeadEoiForm({
           <Check className="h-7 w-7" aria-hidden="true" />
         </div>
         <h2 className="mt-5 font-serif text-3xl font-medium text-estate-700">
-          {brochureQueued
-            ? "Brochure request saved"
+          {brochureReceipt
+            ? brochureReceipt.heading
             : successValues.interest === "newsletter_only"
               ? "Email preferences saved"
               : supportsPropertyMatches(successValues.interest)
                 ? "Brief received"
                 : "Enquiry received"}
         </h2>
-        {brochureQueued ? (
+        {brochureReceipt ? (
           <p className="mt-3 max-w-md text-sm leading-6 text-muted-foreground">
-            Your request for {project?.title ?? "the selected property"}
-            {brochureRequest?.design ? ` — ${brochureRequest.design.label}` : ""} has
-            been saved. Email delivery can take a little time.
+            {brochureReceipt.body}
           </p>
         ) : null}
         <p className="mt-3 max-w-md text-sm leading-6 text-muted-foreground">
