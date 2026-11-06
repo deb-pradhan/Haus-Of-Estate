@@ -1,0 +1,16 @@
+# Vercel CLI uploads for the protected fixture-showcase preview project.
+# Keep the upload to what `npx prisma generate && npm run build` needs.
+# Vercel already skips .git, node_modules, .next, .vercel and .env*.local.
+.env*
+!.env.example
+/.next-*
+/studio-haus-of-estate
+/artifacts
+/tests
+/coverage
+/playwright-report
+/test-results*
+/showcase-journey
+/docs/claude-cloud/screenshots
+/src/generated/prisma
+*.tsbuildinfo
