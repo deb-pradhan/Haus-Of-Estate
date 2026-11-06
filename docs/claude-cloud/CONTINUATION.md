@@ -190,6 +190,19 @@ Checks for this checkpoint:
   approve production, public deployment, real emails or CMS writes. Further work
   waits on design feedback and a hosting decision.
 
+## UI/UX benchmark — 6 November 2026
+
+`ux-benchmark-2026-11-06.md` is the competitive research Surya requested after
+choosing the brighter, image-led direction: patterns and features from Bayut,
+Nest Seekers, Hafren Properties and UK conventions, the global luxury
+brokerages, UAE portals and developers, and the UK/UAE UX, accessibility,
+performance and property-marketing standards, each with a "For Haus"
+recommendation and a now/next/later roadmap. The session network blocked direct
+fetches of the competitor sites, so findings come from indexed page copies,
+help centres, press, app listings and primary standards documents; pixel-level
+observations are recorded as gaps. "100xlab" could not be identified with
+confidence. It is research, not approval of any feature or claim.
+
 ## Open decisions and follow-ups
 
 1. The intermittent Turbopack `next/font/google` failure seen once during a
