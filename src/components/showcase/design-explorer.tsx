@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowRight, Check, Rows3 } from 'lucide-react'
+import { ArrowDown, ArrowRight, Check, Rows3 } from 'lucide-react'
 import { showcasePropertyPath } from '@/lib/showcase/access'
 import type { ShowcaseDesign, ShowcaseDisplay, ShowcaseInteriorScheme } from '@/lib/showcase/fixture'
 import { designMetaLabel, formatArea } from '@/lib/showcase/format'
@@ -54,6 +54,7 @@ export function DesignExplorer({ collection, designs, interiorSchemes, display, 
   const [schemeKey, setSchemeKey] = useState(interiorSchemes[0]?.key)
   const [barHidden, setBarHidden] = useState(false)
   const ctaRef = useRef<HTMLAnchorElement>(null)
+  const selectedHeadingRef = useRef<HTMLHeadingElement>(null)
   const selected = designs.find((design) => design.key === selectedKey) ?? designs[0]
   const scheme = interiorSchemes.find((item) => item.key === schemeKey) ?? interiorSchemes[0]
   const families = [...new Set(designs.map((design) => design.family ?? ''))]
@@ -76,12 +77,22 @@ export function DesignExplorer({ collection, designs, interiorSchemes, display, 
     return () => observer.disconnect()
   }, [selectedKey])
 
+  function revealSelected() {
+    const heading = selectedHeadingRef.current
+    if (!heading) return
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    heading.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' })
+    heading.focus({ preventScroll: true })
+  }
+
   function choose(key: string) {
     setSelectedKey(key)
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href)
       url.searchParams.set('design', key)
       window.history.replaceState(window.history.state, '', url)
+      // On narrow screens the detail panel sits below the list: take the reader there.
+      if (window.matchMedia('(max-width: 1023px)').matches) window.requestAnimationFrame(revealSelected)
     }
   }
 
@@ -96,7 +107,12 @@ export function DesignExplorer({ collection, designs, interiorSchemes, display, 
           <h2 id={`${id}-title`} className="sc-heading mt-2 text-estate-700">Choose a design</h2>
           <p className="mt-3 text-base leading-7 text-muted-foreground">Compare layouts and areas, then open a design to see its views and floor plans. Individual homes, prices and availability are confirmed on enquiry.</p>
         </div>
-        <p className="text-sm text-muted-foreground">{designs.length} brochure designs</p>
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="text-sm text-muted-foreground">{designs.length} brochure designs</p>
+          <button type="button" onClick={revealSelected} className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-estate-700/20 bg-surface px-3.5 text-sm font-medium text-estate-700 lg:hidden">
+            View selected design <ArrowDown aria-hidden className="size-4" />
+          </button>
+        </div>
       </div>
       {designs.some((design) => design.rowHomes) && (
         <p className="mt-4 flex items-start gap-2 text-sm leading-6 text-muted-foreground"><Rows3 aria-hidden className="mt-1 size-4 shrink-0 text-estate-700" />Row views and whole-row plans show several connected homes. Corner and middle layouts can share the same exterior illustration.</p>
@@ -140,7 +156,7 @@ export function DesignExplorer({ collection, designs, interiorSchemes, display, 
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0">
               <p className="sc-eyebrow">Selected design</p>
-              <h3 id="selected-design" className="mt-1 scroll-mt-28 font-serif text-2xl font-medium leading-tight text-estate-700 sm:text-3xl">{selected.label}</h3>
+              <h3 id="selected-design" ref={selectedHeadingRef} tabIndex={-1} className="mt-1 scroll-mt-28 font-serif text-2xl font-medium leading-tight text-estate-700 sm:text-3xl">{selected.label}</h3>
               {designMeta(selected) && <p className="mt-1 text-sm text-muted-foreground">{designMeta(selected)}</p>}
             </div>
             <Link ref={ctaRef} href={requestHref(collection.slug, selected.key)} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-estate-700 px-5 text-sm font-semibold text-white hover:bg-estate-600 sm:w-auto">

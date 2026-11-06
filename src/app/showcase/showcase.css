@@ -9,7 +9,7 @@
 .showcase p { text-wrap: pretty; }
 
 .showcase .sc-eyebrow {
-  font-family: var(--font-sans);
+  font-family: var(--font-inter), Inter, "Helvetica Neue", Arial, sans-serif;
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.18em;
@@ -21,7 +21,8 @@
 .showcase .sc-display,
 .showcase .sc-title,
 .showcase .sc-heading {
-  font-family: var(--font-serif);
+  /* The Tailwind theme variable is inlined into utilities, so name the next/font variable directly. */
+  font-family: var(--font-serif-display), "Cormorant Garamond", Georgia, serif;
   font-weight: 500;
   text-wrap: balance;
   font-variant-ligatures: common-ligatures;

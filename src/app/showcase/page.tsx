@@ -5,6 +5,7 @@ import { CommunityIntro, ReadyHomeCard } from '@/components/showcase/cards'
 import { FixtureImage, SectionHeading } from '@/components/showcase/primitives'
 import { ShowcaseSearchForm } from '@/components/showcase/showcase-search-form'
 import { showcasePath, showcasePropertyPath } from '@/lib/showcase/access'
+import { bedroomList } from '@/lib/showcase/format'
 import {
   getShowcaseCatalogue,
   showcaseBedroomOptions,
@@ -15,7 +16,7 @@ import {
 export const metadata: Metadata = { title: 'Overview' }
 
 const STEPS = [
-  { icon: LayoutGrid, title: 'Choose a collection', text: 'Start with a place, then a bedroom collection: villas or townhouses at Florence, or the ready home in North London.' },
+  { icon: LayoutGrid, title: 'Choose a collection', text: 'Start with a place, then a bedroom collection: villas or townhouses at Florence, or the existing home in North London.' },
   { icon: MousePointerClick, title: 'Study the designs', text: 'Compare brochure designs side by side with uncropped floor plans, built-up areas and clearly labelled illustrations.' },
   { icon: FileText, title: 'Request the brochure', text: 'Ask for the collection brochure with your chosen design noted. Marketing emails stay optional and unticked.' },
 ]
@@ -40,7 +41,7 @@ export default function ShowcaseHomePage() {
             <p className="sc-eyebrow sc-eyebrow--light">Haus of Estate · design showcase</p>
             <h1 id="showcase-hero-title" className="sc-display mt-4 text-white">Find your next home, from the first search to the floor plan.</h1>
             <p className="sc-lede mt-5 max-w-2xl text-white/80">
-              Browse by country, city and community, compare the brochure designs for a collection, and request the brochure for the one that interests you. One community in Sharjah and one ready home in North London are included for review.
+              Browse by country, city and community, compare the brochure designs for a collection, and request the brochure for the one that interests you. One community in Sharjah and one existing home in North London are included for review.
             </p>
           </div>
           <div className="mt-8 max-w-5xl text-estate-700 md:mt-10">
@@ -49,7 +50,7 @@ export default function ShowcaseHomePage() {
           <dl className="mt-8 grid max-w-3xl grid-cols-3 gap-4 text-white/80">
             <div><dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/60">Communities</dt><dd className="mt-1 font-serif text-2xl text-white">{catalogue.communities.length}</dd></div>
             <div><dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/60">Brochure designs</dt><dd className="mt-1 font-serif text-2xl text-white">{designCount}</dd></div>
-            <div><dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/60">Ready homes</dt><dd className="mt-1 font-serif text-2xl text-white">{catalogue.readyHomes.length}</dd></div>
+            <div><dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/60">Existing homes</dt><dd className="mt-1 font-serif text-2xl text-white">{catalogue.readyHomes.length}</dd></div>
           </dl>
         </div>
       </section>
@@ -64,7 +65,7 @@ export default function ShowcaseHomePage() {
                 <Link key={group.id} href={`${showcasePropertyPath(florence.overview.slug)}#${group.id}`} className="sc-lift flex items-center justify-between gap-4 rounded-2xl border border-border bg-surface px-5 py-4 text-estate-700">
                   <span>
                     <span className="block font-serif text-xl font-medium">{group.title}</span>
-                    <span className="mt-0.5 block text-sm text-muted-foreground">{group.collections.length} bedroom {group.collections.length === 1 ? 'collection' : 'collections'} · {group.collections.reduce((count, item) => count + item.designs.length, 0)} brochure designs</span>
+                    <span className="mt-0.5 block text-sm text-muted-foreground">{bedroomList(group.collections)} {group.title.toLowerCase()} · {group.collections.length} {group.collections.length === 1 ? 'collection' : 'collections'} · {group.collections.reduce((count, item) => count + item.designs.length, 0)} brochure designs</span>
                   </span>
                   <ArrowRight aria-hidden className="size-5 shrink-0" />
                 </Link>
@@ -77,7 +78,7 @@ export default function ShowcaseHomePage() {
       {london && (
         <section className="px-4 pb-4 md:px-6" aria-labelledby="showcase-london-title">
           <div className="mx-auto max-w-7xl">
-            <SectionHeading id="showcase-london-title" eyebrow="Prefer a ready home?" title="A three-bedroom house in North London" intro="The ready-home comparison: a public asking price, an approximate internal floor area and clearly labelled existing views beside proposed interior concepts." />
+            <SectionHeading id="showcase-london-title" eyebrow="Prefer an existing home?" title="A three-bedroom house in North London" intro="The existing-home comparison: a public asking price sampled from its listing, an approximate internal floor area and clearly labelled existing views beside proposed interior concepts." />
             <ReadyHomeCard home={london} wide className="mt-8" />
           </div>
         </section>

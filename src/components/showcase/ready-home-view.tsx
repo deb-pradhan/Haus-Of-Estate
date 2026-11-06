@@ -28,7 +28,7 @@ export function ReadyHomeView({ home }: { home: ShowcaseProperty }) {
             {home.display.imageNotice && <Notice className="mt-4">{home.display.imageNotice}</Notice>}
           </div>
           <div>
-            <p className="sc-eyebrow">Ready home · {[home.community, home.city, home.country].join(', ')}</p>
+            <p className="sc-eyebrow">Existing home · {[home.community, home.city, home.country].join(', ')}</p>
             <h1 id="home-title" className="sc-title mt-3 text-estate-700">{home.title}</h1>
             {home.price && (
               <p className="mt-5 flex flex-wrap items-baseline gap-x-3">

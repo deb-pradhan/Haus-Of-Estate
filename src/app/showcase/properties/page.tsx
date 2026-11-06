@@ -28,7 +28,7 @@ export default async function ShowcaseCataloguePage({ searchParams }: { searchPa
   const summaryParts = [
     result.communities.length ? summarise(result.communities.length, 'community', 'communities') : null,
     result.collectionCount ? summarise(result.collectionCount, 'home collection') : null,
-    result.readyHomes.length ? summarise(result.readyHomes.length, 'ready home') : null,
+    result.readyHomes.length ? summarise(result.readyHomes.length, 'existing home') : null,
   ].filter(Boolean)
 
   return (
@@ -73,7 +73,7 @@ export default async function ShowcaseCataloguePage({ searchParams }: { searchPa
               <p className="sc-eyebrow">Nothing to show yet</p>
               <h3 className="sc-heading mt-2 text-estate-700">Try a wider search</h3>
               <p className="mt-3 max-w-xl text-base leading-7 text-muted-foreground">
-                The showcase holds {summarise(catalogue.communities.length, 'community', 'communities')} in Sharjah and {summarise(catalogue.readyHomes.length, 'ready home')} in North London. Remove a filter above, or start again.
+                The showcase holds {summarise(catalogue.communities.length, 'community', 'communities')} in Sharjah and {summarise(catalogue.readyHomes.length, 'existing home')} in North London. Remove a filter above, or start again.
               </p>
               <ul className="mt-6 flex flex-wrap gap-3">
                 {filters.map((filter) => (
@@ -110,7 +110,7 @@ export default async function ShowcaseCataloguePage({ searchParams }: { searchPa
               })}
               {result.readyHomes.length > 0 && (
                 <section aria-labelledby="ready-homes-title">
-                  <SectionHeading id="ready-homes-title" eyebrow="Ready to move" title="Ready homes" intro="Individual homes with a public asking price. Measurements are approximate; confirm current availability with sales." />
+                  <SectionHeading id="ready-homes-title" eyebrow="Existing home" title="Existing homes" intro="An individual home with a public asking price sampled from its listing on 6 November 2026. Measurements are approximate; confirm current availability with sales." />
                   <div className="mt-6 grid gap-5">
                     {result.readyHomes.map((home) => <ReadyHomeCard key={home.id} home={home} wide />)}
                   </div>

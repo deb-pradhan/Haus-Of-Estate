@@ -41,7 +41,7 @@ export function ShowcaseFooter() {
             <li><Link href={showcasePath()} className={linkClass}>Overview</Link></li>
             <li><Link href={showcasePath('/properties')} className={linkClass}>Find a home</Link></li>
             <li><Link href={showcasePropertyPath('azizi-florence')} className={linkClass}>Azizi Florence, Sharjah</Link></li>
-            <li><Link href={showcasePropertyPath('north-london-three-bedroom-property')} className={linkClass}>North London ready home</Link></li>
+            <li><Link href={showcasePropertyPath('north-london-three-bedroom-property')} className={linkClass}>North London home</Link></li>
           </ul>
         </nav>
         <nav aria-label="Legal">

@@ -2,15 +2,12 @@ import Link from 'next/link'
 import { ArrowRight, Check } from 'lucide-react'
 import { showcasePath } from '@/lib/showcase/access'
 import type { ShowcaseCommunity } from '@/lib/showcase/fixture'
+import { bedroomList } from '@/lib/showcase/format'
 import { CollectionCard } from './cards'
 import { Breadcrumbs, FactGrid, FixtureImage, Notice, SectionHeading, TextBlocks } from './primitives'
 
 function bedroomSpan(collections: ShowcaseCommunity['collections']): string {
-  const counts = collections.map((item) => item.bedrooms).filter((count): count is number => typeof count === 'number')
-  if (!counts.length) return ''
-  const min = Math.min(...counts)
-  const max = Math.max(...counts)
-  return min === max ? `${min}-bedroom` : `${min}- to ${max}-bedroom`
+  return bedroomList(collections)
 }
 
 export function CommunityView({ community }: { community: ShowcaseCommunity }) {
@@ -53,7 +50,7 @@ export function CommunityView({ community }: { community: ShowcaseCommunity }) {
             <FactGrid className="sm:grid-cols-2" items={[
               ...(overview.developer ? [{ label: 'Developer', value: overview.developer }] : []),
               { label: 'Home designs', value: `${community.designCount} brochure designs` },
-              ...groups.map((group) => ({ label: group.title, value: `${bedroomSpan(group.collections)} collections`, note: `${group.collections.length} bedroom ${group.collections.length === 1 ? 'collection' : 'collections'}` })),
+              ...groups.map((group) => ({ label: group.title, value: `${bedroomSpan(group.collections)} designs`, note: `${group.collections.length} ${group.collections.length === 1 ? 'collection' : 'collections'}, one per bedroom count` })),
             ]} />
           </div>
         </div>

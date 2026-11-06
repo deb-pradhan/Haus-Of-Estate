@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { ArrowRight, BedDouble, MapPin, Ruler } from 'lucide-react'
 import { showcasePropertyPath } from '@/lib/showcase/access'
 import { builtUpAreaRange, collectionLabel, type ShowcaseCommunity, type ShowcaseProperty } from '@/lib/showcase/fixture'
+import { bedroomList } from '@/lib/showcase/format'
 import { showcaseImageCaption } from '@/lib/showcase/captions'
 import { FixtureImage } from './primitives'
 import { cn } from '@/lib/utils'
@@ -16,13 +17,7 @@ export function CommunityIntro({ community, variant = 'catalogue', className }: 
   const href = showcasePropertyPath(overview.slug)
   const villas = community.groups.find((group) => group.id === 'villas')
   const townhouses = community.groups.find((group) => group.id === 'townhouses')
-  const bedrooms = (collections: ShowcaseProperty[] | undefined) => {
-    const counts = (collections ?? []).map((item) => item.bedrooms).filter((count): count is number => typeof count === 'number')
-    if (!counts.length) return undefined
-    const min = Math.min(...counts)
-    const max = Math.max(...counts)
-    return min === max ? `${min}-bedroom` : `${min}- to ${max}-bedroom`
-  }
+  const bedrooms = (collections: ShowcaseProperty[] | undefined) => bedroomList(collections ?? [])
   return (
     <article className={cn('sc-lift overflow-hidden rounded-3xl border border-border bg-surface shadow-sm', className)}>
       <div className="grid lg:grid-cols-[1.25fr_1fr]">
@@ -97,7 +92,7 @@ export function ReadyHomeCard({ home, className, wide = false }: { home: Showcas
         <figure>
           <div className="relative aspect-[3/2] bg-[#f3efe6]">
             <FixtureImage image={home.media.hero} fit="contain" sizes={wide ? '(min-width: 1024px) 720px, 100vw' : '(min-width: 1024px) 400px, 100vw'} />
-            <span className="absolute left-4 top-4 rounded-full bg-surface/95 px-3 py-1.5 text-xs font-semibold text-estate-700 shadow-sm">Ready home</span>
+            <span className="absolute left-4 top-4 rounded-full bg-surface/95 px-3 py-1.5 text-xs font-semibold text-estate-700 shadow-sm">Existing home</span>
           </div>
           {caption && <figcaption className="border-t border-border px-5 py-3 text-xs leading-5 text-muted-foreground">{caption}</figcaption>}
         </figure>

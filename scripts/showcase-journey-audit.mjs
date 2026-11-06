@@ -184,8 +184,8 @@ for (const viewport of viewports) {
   })
 
   await step('7-success', async () => {
-    await page.fill('input[name="firstName"]', 'Sample')
-    await page.fill('input[name="email"]', 'sample.buyer@example.com')
+    await page.getByLabel('First name').fill('Sample')
+    await page.getByLabel('Email address').fill('sample.buyer@example.com')
     record['6-request-form'].checkboxesBeforeSubmit = await page.evaluate(() => [...document.querySelectorAll('input[type="checkbox"]')].map((el) => ({ id: el.id.slice(-14), required: el.required, checked: el.checked })))
     await page.check('input[type="checkbox"][required]')
     await page.keyboard.press('Tab')
@@ -202,6 +202,35 @@ for (const viewport of viewports) {
     const frame = page.frames().find((f) => f !== page.mainFrame())
     record['7-success'].emailMentionsDesign = frame ? await frame.evaluate(() => document.body.innerText.includes('Spada - 4-home row - corner')).catch((e) => `n/a ${String(e).slice(0, 60)}`) : 'no frame'
     await shot(page, `${vp}-09-request-success-email.png`)
+  })
+
+  // 7b. Without JavaScript the form must stay inert: no navigation, no details in the URL.
+  await step('7b-no-js-inert', async () => {
+    const noJs = await browser.newContext({ viewport: { width: viewport.width, height: viewport.height }, javaScriptEnabled: false })
+    const noJsPage = await noJs.newPage()
+    try {
+      const url = `${base}/showcase/properties/azizi-florence-4-bedroom-townhouses/request?design=spada-4-home-corner`
+      await noJsPage.goto(url, { waitUntil: 'domcontentloaded' })
+      await noJsPage.getByLabel('First name').fill('NoScript')
+      await noJsPage.getByLabel('Email address').fill('noscript@example.com')
+      await noJsPage.getByLabel('Email address').press('Enter')
+      await noJsPage.waitForTimeout(800)
+      const submit = noJsPage.getByRole('button', { name: /preview|Loading/ })
+      const disabled = await submit.isDisabled().catch(() => null)
+      await submit.click({ force: true, timeout: 5000 }).catch(() => {})
+      await noJsPage.waitForTimeout(800)
+      const finalUrl = noJsPage.url()
+      record['7b-no-js-inert'] = {
+        submitDisabled: disabled,
+        urlUnchanged: finalUrl === url,
+        urlLeaksDetails: /NoScript|noscript%40|noscript@/i.test(finalUrl),
+        namedFields: await noJsPage.locator('form input[name], form textarea[name]').count(),
+        noscriptNotice: await noJsPage.getByText('needs JavaScript').count(),
+      }
+      if (!record['7b-no-js-inert'].urlUnchanged || record['7b-no-js-inert'].urlLeaksDetails) throw new Error(`no-JS submission changed the URL: ${finalUrl}`)
+    } finally {
+      await noJs.close()
+    }
   })
 
   await step('8-back', async () => {

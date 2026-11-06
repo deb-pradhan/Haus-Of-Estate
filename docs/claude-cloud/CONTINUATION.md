@@ -120,6 +120,56 @@ when the repository's Playwright version has no downloaded browser.
 - No credentials were added. All intake, delivery, auth, assistant and analytics
   flags remained unset/false.
 
+## Review fixes (checkpoint 3, after Codex review of 3971c24f)
+
+Source changes in this checkpoint, all scoped to the showcase:
+
+- **Privacy, pre-hydration form.** `brochure-request.tsx` now renders an inert
+  form on the server and before hydration: contact fields carry no `name`
+  attributes, the submit button is disabled until React has hydrated
+  (`useSyncExternalStore`), the form has no `action`/`method`, and a `<noscript>`
+  notice explains that nothing is sent. A native no-JS submit therefore cannot put
+  first name, email, phone or message into a URL. Regression coverage:
+  `src/components/showcase/brochure-request.test.tsx` renders the server markup
+  and asserts no field names, a disabled submit, no submission target and
+  unticked checkboxes; `scripts/showcase-journey-audit.mjs` gained a
+  `7b-no-js-inert` step that fills the form with JavaScript disabled, presses
+  Enter, force-clicks submit and fails if the URL changes or leaks details.
+- **Evidence on the request page.** The request page now passes the fixture's
+  built-up area source label and each design's `areaNote`; the design summary
+  (before and after the simulated submit) shows the source label, the withheld or
+  brochure plot explanation, the shared-row caption under the thumbnail and a
+  reminder that row views show every home in the row. The real email template is
+  unchanged.
+- **Mobile design picker.** Choosing a design on screens under 1024 px scrolls
+  the selected-design panel into view and moves focus to its heading
+  (`prefers-reduced-motion` switches smooth scrolling off). A “View selected
+  design” button sits beside the design count on mobile.
+- **Wording.** Catalogue section renamed “Existing home / Existing homes” with the
+  sampled-listing date in the intro; the card badge, London eyebrow, homepage,
+  footer link and not-found copy say “existing home”. The fixture’s own key
+  feature “Ready property” is still displayed as data.
+- **Bedroom counts.** Homepage group links and the community facts now spell out
+  “4-, 5- and 6-bedroom villas · 3 collections · 7 brochure designs” instead of
+  “3 bedroom collections”.
+- **Serif headings.** `showcase.css` referenced `var(--font-serif)`, a Tailwind
+  theme variable that is inlined into utilities and not emitted as a custom
+  property, so showcase display headings fell back to the sans font. The CSS now
+  names the `next/font` variable directly (`--font-serif-display`, then Cormorant
+  Garamond, Georgia, serif) and `--font-inter` for eyebrows. Site-wide styles are
+  untouched.
+
+Checks for this checkpoint:
+
+| Check | Result |
+| --- | --- |
+| `npx tsc --noEmit` | Passed |
+| `npx eslint src/lib/showcase src/components/showcase src/app/showcase scripts/showcase-journey-audit.mjs next.config.ts` | Passed, 0 problems |
+| `npx vitest run src/lib/showcase src/components/showcase` | 5 files, 20 tests passed (3 new pre-hydration tests) |
+| `HAUS_NEXT_DIST_DIR=.next-showcase-tp2 npx next build` (default Turbopack) | Passed: compiled in 30.4 s |
+| Browser audit against that build, including the new no-JS step | **Pending** at the time of this commit. An earlier run of the new audit accidentally hit the previous build still bound to port 3500 and reported the old form leaking fields, which is the behaviour this checkpoint removes; the rerun against the rebuilt server was still in progress when the source fixes were pushed |
+| Screenshots in `docs/claude-cloud/screenshots/` | Still from the previous checkpoint (f14f20bf); not regenerated for these fixes |
+
 ## Open decisions and follow-ups
 
 1. The intermittent Turbopack `next/font/google` failure seen once during a

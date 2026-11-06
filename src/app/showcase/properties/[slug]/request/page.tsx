@@ -32,6 +32,7 @@ export default async function ShowcaseBrochureRequestPage({ params, searchParams
         communityHref: community ? showcasePropertyPath(community.overview.slug) : undefined,
       }}
       areaLabel={property.display.areaLabel}
+      areaSourceLabel={property.display.areaSourceLabel}
       initialDesignId={requested}
       designs={designs.map((design) => ({
         id: design.key,
@@ -43,6 +44,7 @@ export default async function ShowcaseBrochureRequestPage({ params, searchParams
         builtUpAreaSqFt: design.builtUpAreaSqFt,
         plotAreaSqFt: design.plotAreaSqFt,
         plotAreaStatus: design.plotAreaStatus,
+        areaNote: design.areaNote,
         image: design.images[0] ?? property.media.hero,
       }))}
     />

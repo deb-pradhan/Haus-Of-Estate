@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -28,6 +28,8 @@ export interface RequestDesign {
   builtUpAreaSqFt: number
   plotAreaSqFt?: number
   plotAreaStatus: 'brochure' | 'conflict'
+  /** Withheld-plot or brochure-area explanation carried from the fixture. */
+  areaNote?: string
   image: { src: string; alt: string; label?: string }
 }
 
@@ -59,34 +61,66 @@ const EMPTY: FormValues = {
 
 const areaFormatter = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 0 })
 const inputClass = 'mt-1.5 min-h-12 w-full rounded-xl border bg-white px-3.5 text-base text-estate-700 shadow-sm sm:text-sm'
+const subscribeToNothing = () => () => {}
 
-function DesignSummary({ design, areaLabel, compact = false }: { design: RequestDesign; areaLabel: string; compact?: boolean }) {
+function plotNote(design: RequestDesign): string {
+  const withheld = design.plotAreaStatus === 'conflict' || design.plotAreaSqFt === undefined
+  if (withheld) return design.areaNote ?? 'Plot area is withheld while the brochure table and diagram are reconciled.'
+  return design.areaNote ?? 'Plot area is the brochure figure for this design, separate from built-up area.'
+}
+
+function DesignSummary({ design, areaLabel, areaSourceLabel, compact = false }: {
+  design: RequestDesign
+  areaLabel: string
+  areaSourceLabel?: string
+  compact?: boolean
+}) {
   const meta = [design.rowHomes ? `${design.rowHomes}-home row` : undefined, design.position === 'standalone' ? 'Standalone villa' : design.position ? `${design.position === 'corner' ? 'Corner' : 'Middle'} home` : undefined].filter(Boolean).join(' · ')
+  const withheld = design.plotAreaStatus === 'conflict' || design.plotAreaSqFt === undefined
   return (
-    <div className={cn('grid gap-4', compact ? 'grid-cols-[96px_minmax(0,1fr)] items-center' : 'sm:grid-cols-[180px_minmax(0,1fr)]')}>
-      <div className={cn('relative overflow-hidden rounded-xl bg-estate-700/5', compact ? 'aspect-[4/3]' : 'aspect-[5/3] sm:aspect-[4/3]')}>
-        <Image src={design.image.src} alt={design.image.alt} fill unoptimized sizes={compact ? '96px' : '(min-width: 640px) 180px, 100vw'} className="object-cover" />
-      </div>
+    <div className={cn('grid gap-4', compact ? 'grid-cols-[96px_minmax(0,1fr)] items-start' : 'sm:grid-cols-[180px_minmax(0,1fr)]')}>
+      <figure>
+        <div className={cn('relative overflow-hidden rounded-xl bg-estate-700/5', compact ? 'aspect-[4/3]' : 'aspect-[5/3] sm:aspect-[4/3]')}>
+          <Image src={design.image.src} alt={design.image.alt} fill unoptimized sizes={compact ? '96px' : '(min-width: 640px) 180px, 100vw'} className="object-cover" />
+        </div>
+        {design.image.label && <figcaption className="mt-1 text-[11px] leading-4 text-muted-foreground">{design.image.label}</figcaption>}
+      </figure>
       <div className="min-w-0">
         <p className="font-serif text-xl font-medium leading-tight text-estate-700 sm:text-2xl">{design.label}</p>
         {meta && <p className="mt-1 text-xs text-muted-foreground">{meta}</p>}
         <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-          <div><dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{areaLabel}</dt><dd className="font-medium tabular-nums text-estate-700">{areaFormatter.format(design.builtUpAreaSqFt)} sq ft</dd></div>
-          <div><dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Plot area</dt><dd className="font-medium tabular-nums text-estate-700">{design.plotAreaStatus === 'conflict' || design.plotAreaSqFt === undefined ? 'Withheld' : `${areaFormatter.format(design.plotAreaSqFt)} sq ft`}</dd></div>
+          <div>
+            <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{areaLabel}</dt>
+            <dd className="font-medium tabular-nums text-estate-700">{areaFormatter.format(design.builtUpAreaSqFt)} sq ft</dd>
+          </div>
+          <div>
+            <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Plot area</dt>
+            <dd className="font-medium tabular-nums text-estate-700">{withheld ? 'Withheld' : `${areaFormatter.format(design.plotAreaSqFt!)} sq ft`}</dd>
+          </div>
         </dl>
+        <ul className="mt-2 space-y-1 text-xs leading-5 text-muted-foreground">
+          {areaSourceLabel && <li>{areaSourceLabel}</li>}
+          <li>{plotNote(design)}</li>
+          {design.rowHomes && <li>Row views and plans show all {design.rowHomes} homes in the row, not one dwelling.</li>}
+        </ul>
       </div>
     </div>
   )
 }
 
-export function BrochureRequestJourney({ project, designs, initialDesignId, areaLabel }: {
+export function BrochureRequestJourney({ project, designs, initialDesignId, areaLabel, areaSourceLabel }: {
   project: RequestProject
   designs: RequestDesign[]
   initialDesignId?: string
   areaLabel: string
+  areaSourceLabel?: string
 }) {
   const id = useId()
   const pathname = usePathname()
+  // Before hydration (and without JavaScript) the form stays inert: no field
+  // names, a disabled submit button and no submission target, so a native
+  // browser submit can never put contact details into a URL.
+  const hydrated = useSyncExternalStore(subscribeToNothing, () => true, () => false)
   const [designId, setDesignId] = useState<string | null>(() => designs.some((design) => design.id === initialDesignId) ? initialDesignId! : null)
   const [choosing, setChoosing] = useState(() => !designs.some((design) => design.id === initialDesignId))
   const [values, setValues] = useState<FormValues>(EMPTY)
@@ -191,7 +225,7 @@ export function BrochureRequestJourney({ project, designs, initialDesignId, area
                 <Link href={backHref} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-estate-700 px-5 text-sm font-semibold text-white hover:bg-estate-600"><ArrowLeft aria-hidden className="size-4" /> Back to {design.label}</Link>
               </div>
             </div>
-            <div className="rounded-3xl border border-border bg-surface p-5"><DesignSummary design={design} areaLabel={areaLabel} compact /></div>
+            <div className="rounded-3xl border border-border bg-surface p-5"><DesignSummary design={design} areaLabel={areaLabel} areaSourceLabel={areaSourceLabel} compact /></div>
           </div>
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Email preview · links inactive</p>
@@ -216,7 +250,7 @@ export function BrochureRequestJourney({ project, designs, initialDesignId, area
               )}
             </div>
             {design && !choosing ? (
-              <div className="mt-4"><DesignSummary design={design} areaLabel={areaLabel} /></div>
+              <div className="mt-4"><DesignSummary design={design} areaLabel={areaLabel} areaSourceLabel={areaSourceLabel} /></div>
             ) : (
               <fieldset className="mt-4">
                 <legend className="text-sm leading-6 text-muted-foreground">The PDF covers the whole {project.label} collection. Your choice records which design interests you.</legend>
@@ -240,7 +274,7 @@ export function BrochureRequestJourney({ project, designs, initialDesignId, area
             <p className="mt-4 text-xs leading-5 text-muted-foreground">Requesting the brochure does not reserve a home or confirm availability.</p>
           </aside>
 
-          <form ref={formRef} onSubmit={submit} noValidate className="rounded-3xl border border-border bg-surface p-5 sm:p-7" aria-labelledby={`${id}-form-title`}>
+          <form ref={formRef} onSubmit={submit} noValidate autoComplete="on" className="rounded-3xl border border-border bg-surface p-5 sm:p-7" aria-labelledby={`${id}-form-title`}>
             <p className="sc-eyebrow">Your details</p>
             <h2 id={`${id}-form-title`} className="mt-1 font-serif text-2xl font-medium text-estate-700">Where should the brochure go?</h2>
             {errorList.length > 0 && (
@@ -251,25 +285,25 @@ export function BrochureRequestJourney({ project, designs, initialDesignId, area
             )}
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <label className="block text-sm font-semibold text-estate-700" htmlFor={`${id}-first-name`}>First name
-                <input id={`${id}-first-name`} name="firstName" autoComplete="given-name" required maxLength={80} value={values.firstName} onChange={(event) => update('firstName', event.target.value)}
+                <input id={`${id}-first-name`} autoComplete="given-name" required maxLength={80} value={values.firstName} onChange={(event) => update('firstName', event.target.value)}
                   aria-invalid={errors.firstName ? 'true' : undefined} aria-describedby={errors.firstName ? `${id}-first-name-error` : undefined}
                   className={cn(inputClass, errors.firstName ? 'border-red-700' : 'border-estate-700/20')} />
                 {errors.firstName && <span id={`${id}-first-name-error`} className="mt-1 block text-xs font-medium text-red-700">{errors.firstName}</span>}
               </label>
               <label className="block text-sm font-semibold text-estate-700" htmlFor={`${id}-email`}>Email address
-                <input id={`${id}-email`} name="email" type="email" autoComplete="email" inputMode="email" required maxLength={254} value={values.email} onChange={(event) => update('email', event.target.value)}
+                <input id={`${id}-email`} type="email" autoComplete="email" inputMode="email" required maxLength={254} value={values.email} onChange={(event) => update('email', event.target.value)}
                   aria-invalid={errors.email ? 'true' : undefined} aria-describedby={errors.email ? `${id}-email-error` : undefined}
                   className={cn(inputClass, errors.email ? 'border-red-700' : 'border-estate-700/20')} />
                 {errors.email && <span id={`${id}-email-error`} className="mt-1 block text-xs font-medium text-red-700">{errors.email}</span>}
               </label>
               <label className="block text-sm font-semibold text-estate-700" htmlFor={`${id}-phone`}>Phone number <span className="font-normal text-muted-foreground">(optional)</span>
-                <input id={`${id}-phone`} name="phone" type="tel" autoComplete="tel" inputMode="tel" maxLength={40} value={values.phone} onChange={(event) => update('phone', event.target.value)}
+                <input id={`${id}-phone`} type="tel" autoComplete="tel" inputMode="tel" maxLength={40} value={values.phone} onChange={(event) => update('phone', event.target.value)}
                   aria-invalid={errors.phone ? 'true' : undefined} aria-describedby={errors.phone ? `${id}-phone-error` : undefined}
                   className={cn(inputClass, errors.phone ? 'border-red-700' : 'border-estate-700/20')} />
                 {errors.phone && <span id={`${id}-phone-error`} className="mt-1 block text-xs font-medium text-red-700">{errors.phone}</span>}
               </label>
               <label className="block text-sm font-semibold text-estate-700 sm:col-span-2" htmlFor={`${id}-message`}>Anything else? <span className="font-normal text-muted-foreground">(optional)</span>
-                <textarea id={`${id}-message`} name="message" rows={3} maxLength={2000} value={values.message} onChange={(event) => update('message', event.target.value)}
+                <textarea id={`${id}-message`} rows={3} maxLength={2000} value={values.message} onChange={(event) => update('message', event.target.value)}
                   aria-invalid={errors.message ? 'true' : undefined} aria-describedby={errors.message ? `${id}-message-error` : undefined}
                   className={cn(inputClass, 'py-3 leading-6', errors.message ? 'border-red-700' : 'border-estate-700/20')} />
                 {errors.message && <span id={`${id}-message-error`} className="mt-1 block text-xs font-medium text-red-700">{errors.message}</span>}
@@ -305,10 +339,13 @@ export function BrochureRequestJourney({ project, designs, initialDesignId, area
 
             <div className="mt-6 flex flex-col gap-3 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-xs leading-5 text-muted-foreground">Submitting shows the email preview on this page. No message is sent.</p>
-              <button type="submit" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-estate-700 px-6 text-sm font-semibold text-white hover:bg-estate-600">
-                Preview the brochure email <ArrowRight aria-hidden className="size-4" />
+              <button type="submit" disabled={!hydrated} aria-disabled={!hydrated} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-estate-700 px-6 text-sm font-semibold text-white hover:bg-estate-600 disabled:cursor-not-allowed disabled:opacity-60">
+                {hydrated ? 'Preview the brochure email' : 'Loading the preview…'} <ArrowRight aria-hidden className="size-4" />
               </button>
             </div>
+            <noscript>
+              <p className="mt-3 rounded-xl border border-gold-500/35 bg-gold-500/10 px-3.5 py-3 text-sm leading-6 text-estate-700">The simulated email preview needs JavaScript. Without it this form does nothing and sends nothing.</p>
+            </noscript>
           </form>
         </div>
       )}
