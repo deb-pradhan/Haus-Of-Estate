@@ -249,8 +249,10 @@ built and the `/showcase` simulation is untouched.
   id and describes a `DEAD_LETTER` row as failed; `/api/leads` reports
   `brochureDeliveryFailed` instead of `brochureQueued` when the immediate attempt
   or the stored job is a dead letter, keeping the saved-lead receipt, status
-  codes and replay idempotency; the form says saved for team follow-up, no need
-  to resend, never delivered. Failed-save fallback now names
+  codes and replay idempotency; the form says the request was saved, the
+  automatic email failed, no resubmission is needed and `sales@hausofestate.com`
+  can help; it promises neither delivery nor a staff send, since the brochure
+  may have been withdrawn. Failed-save fallback now names
   `sales@hausofestate.com`.
 - `453f98b8` — per-selection availability: unmapped designs open an enquiry that
   keeps the design in the note instead of a brochure request the server would

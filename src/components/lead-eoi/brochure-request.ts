@@ -46,9 +46,10 @@ export function brochureReceiptCopy(
   if (state === "none") return undefined;
   const subject = `${project?.title ?? "the selected property"}${request?.design ? ` — ${request.design.label}` : ""}`;
   if (state === "failed") {
+    // Factual only: the brochure may have been withdrawn, so no delivery is promised.
     return {
-      heading: "Brochure request saved for follow-up",
-      body: `Your request for ${subject} has been saved, but the brochure email could not be sent automatically. The Haus of Estate team will follow up by email with the brochure. There is no need to send this request again.`,
+      heading: "Request saved, automatic email failed",
+      body: `Your request for ${subject} has been saved, but the automatic brochure email failed. There is no need to send this request again. If you need the brochure, email sales@hausofestate.com and quote the property and design.`,
     };
   }
   return {

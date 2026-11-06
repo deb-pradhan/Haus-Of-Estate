@@ -128,11 +128,11 @@ describe("property brochure requests", () => {
     expect(queued?.body).not.toMatch(/delivered|has been sent/i);
 
     const failed = brochureReceiptCopy("failed", project, { design });
-    expect(failed?.heading).toBe("Brochure request saved for follow-up");
-    expect(failed?.body).toContain("could not be sent automatically");
-    expect(failed?.body).toContain("team will follow up by email");
+    expect(failed?.heading).toBe("Request saved, automatic email failed");
+    expect(failed?.body).toContain("automatic brochure email failed");
     expect(failed?.body).toContain("no need to send this request again");
-    expect(failed?.body).not.toMatch(/try again|resubmit|delivered|take a little time/i);
+    expect(failed?.body).toContain("sales@hausofestate.com");
+    expect(failed?.body).not.toMatch(/will follow up|will send|will email|try again|resubmit|delivered|take a little time/i);
 
     expect(brochureReceiptCopy("none", project, { design })).toBeUndefined();
     expect(brochureReceiptCopy("failed", undefined, undefined)?.body).toContain("the selected property has been saved");

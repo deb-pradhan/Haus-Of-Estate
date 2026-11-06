@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
   // Railway's Docker image runs the standalone server. Vercel builds its own
   // output and its post-build step expects the default trace files, so the
   // standalone mode is skipped there (Vercel sets VERCEL=1 at build time).
-  output: process.env.VERCEL ? undefined : "standalone",
+  output: process.env.VERCEL === "1" ? undefined : "standalone",
   async headers() {
     return [
       {
