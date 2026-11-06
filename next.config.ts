@@ -4,6 +4,25 @@ const nextConfig: NextConfig = {
   // Keep browser-test builds separate from the local development server.
   distDir: process.env.HAUS_NEXT_DIST_DIR || ".next",
   output: "standalone",
+  async headers() {
+    return [
+      {
+        // The fixture showcase is a review preview: never indexed, never cached by shared caches.
+        source: "/showcase/:path*",
+        headers: [
+          { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive, noimageindex" },
+          { key: "Cache-Control", value: "private, no-store, max-age=0" },
+        ],
+      },
+      {
+        source: "/showcase",
+        headers: [
+          { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive, noimageindex" },
+          { key: "Cache-Control", value: "private, no-store, max-age=0" },
+        ],
+      },
+    ];
+  },
   async redirects() {
     return [
       {

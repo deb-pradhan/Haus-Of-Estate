@@ -1,0 +1,92 @@
+/* Design language for the fixture showcase. Brand tokens come from globals.css. */
+.showcase {
+  --sc-paper: #fbfaf7;
+  --sc-gold-ink: #76603a;
+  --sc-ring: #1f4f2f;
+  color: var(--foreground);
+}
+
+.showcase p { text-wrap: pretty; }
+
+.showcase .sc-eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--sc-gold-ink);
+}
+.showcase .sc-eyebrow--light { color: #d9c49c; }
+
+.showcase .sc-display,
+.showcase .sc-title,
+.showcase .sc-heading {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  text-wrap: balance;
+  font-variant-ligatures: common-ligatures;
+}
+.showcase .sc-display {
+  font-size: clamp(2.5rem, 1.5rem + 4.2vw, 4.75rem);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+}
+.showcase .sc-title {
+  font-size: clamp(1.9rem, 1.4rem + 2vw, 3.25rem);
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+}
+.showcase .sc-heading {
+  font-size: clamp(1.5rem, 1.25rem + 1vw, 2.125rem);
+  line-height: 1.15;
+}
+.showcase .sc-lede {
+  font-size: clamp(1.05rem, 1rem + 0.3vw, 1.25rem);
+  line-height: 1.55;
+}
+.showcase .sc-section { padding-block: clamp(3rem, 2rem + 4vw, 6rem); }
+
+/* Visible keyboard focus everywhere, including on dark bands. */
+.showcase :focus-visible {
+  outline: 3px solid var(--sc-ring);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+.showcase .sc-on-dark :focus-visible { outline-color: #ffffff; }
+
+/* Quiet motion: a short lift on hover for pointer devices only. */
+.showcase .sc-lift {
+  transition:
+    transform 260ms var(--hoe-ease-standard),
+    box-shadow 260ms var(--hoe-ease-standard);
+}
+@media (hover: hover) {
+  .showcase .sc-lift:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 18px 40px -18px rgba(31, 79, 47, 0.35);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .showcase .sc-lift { transition: none; }
+  .showcase .sc-lift:hover { transform: none; }
+}
+
+/* Floor plans sit on paper with a faint grid and are never cropped. */
+.showcase .sc-plan {
+  background-color: #ffffff;
+  background-image:
+    linear-gradient(rgba(31, 79, 47, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(31, 79, 47, 0.045) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.showcase summary { list-style: none; }
+.showcase summary::-webkit-details-marker { display: none; }
+.showcase details[open] .sc-chevron { transform: rotate(180deg); }
+
+.showcase .sc-scroll-x {
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.showcase .sc-safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
