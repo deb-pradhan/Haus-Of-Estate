@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { useLeadEoi } from "./lead-eoi-controller";
 import type { LeadBrochureRequest, LeadProjectContext } from "./types";
+import { useLeadReadiness } from "./use-lead-readiness";
 
 interface PropertyBrochureRequestTriggerProps {
   project: LeadProjectContext;
@@ -20,7 +21,9 @@ export function PropertyBrochureRequestTrigger({
   children = "Request full brochure",
 }: PropertyBrochureRequestTriggerProps) {
   const { enabled, openLead } = useLeadEoi();
-  const unavailable = disabled || !enabled;
+  const readiness = useLeadReadiness(enabled && !disabled);
+  const unavailable = disabled || !enabled || !readiness?.intakeReady;
+  const brochureEnabled = readiness?.brochureEmailEnabled === true;
 
   return (
     <button
@@ -32,7 +35,11 @@ export function PropertyBrochureRequestTrigger({
           ? "Brochure requests are unavailable in this preview."
           : !enabled
             ? "Online brochure requests are currently unavailable."
-            : undefined
+            : !readiness?.intakeReady
+              ? "Online enquiries are currently unavailable."
+              : !brochureEnabled
+                ? "Brochure email is currently unavailable. You can enquire about this property."
+                : undefined
       }
       onClick={() => {
         if (unavailable) return;
@@ -41,12 +48,14 @@ export function PropertyBrochureRequestTrigger({
           interest: project.listingType?.length === 1 && project.listingType[0] === "rent"
             ? "rent"
             : "buy",
+          // Retain the requested design for staff follow-up even while email is
+          // unavailable. The form checks readiness before requesting delivery.
           brochureRequest: { design },
           surface: "manual_cta",
         });
       }}
     >
-      {children}
+      {readiness?.intakeReady && !brochureEnabled ? "Enquire about this property" : children}
     </button>
   );
 }

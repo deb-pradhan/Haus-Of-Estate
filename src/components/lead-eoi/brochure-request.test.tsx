@@ -5,19 +5,26 @@ import { normalizeLeadRequest } from "@/lib/lead-intake/normalize";
 import {
   brochureMessageLimit,
   brochureRequestNote,
+  brochureRequestPayload,
   leadMessageWithBrochureRequest,
 } from "./brochure-request";
 import { LeadEoiForm } from "./lead-eoi-form";
 import { PropertyBrochureRequestTrigger } from "./property-brochure-request-trigger";
 
-const context = vi.hoisted(() => ({ enabled: true, openLead: vi.fn() }));
+const context = vi.hoisted(() => ({
+  enabled: true,
+  openLead: vi.fn(),
+  readiness: { intakeReady: true, brochureEmailEnabled: true },
+}));
 vi.mock("./lead-eoi-controller", () => ({ useLeadEoi: () => context }));
+vi.mock("./use-lead-readiness", () => ({ useLeadReadiness: () => context.readiness }));
 
 const project = { slug: "azizi-florence-4-bedroom-villas", title: "Florence 4-bedroom villas" };
 const design = { id: "type-a", label: "Type A" };
 
 beforeEach(() => {
   context.enabled = true;
+  context.readiness = { intakeReady: true, brochureEmailEnabled: true };
   context.openLead.mockClear();
 });
 
@@ -50,9 +57,48 @@ describe("property brochure requests", () => {
     );
     expect(html).toContain("Full brochure request");
     expect(html).toContain("Design: Type A");
-    expect(html).toContain("Brochure email delivery is not yet available");
+    expect(html).toContain("not required to receive it");
     expect(html).not.toContain("Brochure request saved");
     expect(html).not.toContain("brochure sent");
+  });
+
+  it("falls back to a property enquiry while brochure email is unavailable", () => {
+    context.readiness = { intakeReady: true, brochureEmailEnabled: false };
+    const trigger = PropertyBrochureRequestTrigger({ project, design });
+    expect(trigger.props.children).toBe("Enquire about this property");
+    trigger.props.onClick();
+    expect(context.openLead).toHaveBeenCalledWith(expect.objectContaining({
+      project,
+      brochureRequest: { design },
+    }));
+    const html = renderToStaticMarkup(
+      <LeadEoiForm surface="manual_cta" project={project} brochureRequest={{ design }} />,
+    );
+    expect(html).toContain("Brochure email is currently unavailable");
+    expect(html).toContain("Design: Type A");
+    expect(html).not.toContain("not required to receive it");
+  });
+
+  it("does not offer an unconfigured intake or treat a changed interest as a brochure request", () => {
+    context.readiness = { intakeReady: false, brochureEmailEnabled: false };
+    const trigger = PropertyBrochureRequestTrigger({ project, design });
+    expect(trigger.props.disabled).toBe(true);
+    trigger.props.onClick();
+    expect(context.openLead).not.toHaveBeenCalled();
+    for (const interest of ["general_enquiry", "newsletter_only", "sell_let"] as const) {
+      expect(brochureRequestPayload(project, { design }, interest)).toBeUndefined();
+      const html = renderToStaticMarkup(
+        <LeadEoiForm surface="manual_cta" project={project} brochureRequest={{ design }} initialInterest={interest} />,
+      );
+      expect(html).not.toContain("Full brochure request");
+      expect(html).not.toContain("Design: Type A");
+    }
+  });
+
+  it("passes only the selected design identifier, without a client-provided PDF path or revision", () => {
+    expect(brochureRequestPayload(project, { design }, "buy")).toEqual({ designId: "type-a" });
+    expect(brochureRequestPayload(project, {}, "invest")).toEqual({});
+    expect(brochureRequestPayload(undefined, { design }, "buy")).toBeUndefined();
   });
 
   it.each([[false, false], [true, false], [false, true], [true, true]])(
@@ -64,6 +110,7 @@ describe("property brochure requests", () => {
         submissionId: "6bd94ff9-6dc6-4eff-8cb0-1bda245e595a",
         interest: "buy",
         project: { slug: project.slug },
+        brochure: brochureRequestPayload(project, { design }, "buy"),
         contact: { firstName: "Alex", email: "alex@example.test", message },
         privacyAcknowledged: true,
         propertyMatchOptIn,
@@ -73,6 +120,7 @@ describe("property brochure requests", () => {
         context: { surface: "manual_cta", pagePath: `/properties/${project.slug}` },
       });
       expect(normalized.project).toEqual({ slug: project.slug });
+      expect(normalized.brochure).toEqual({ designId: "type-a" });
       expect(normalized.contact.message).toContain(`Full brochure request: ${project.title} (${project.slug})`);
       expect(normalized.contact.message).toContain("Requested design: Type A (type-a)");
       expect(normalized.contact.message).toContain("Please include the floor plan.");

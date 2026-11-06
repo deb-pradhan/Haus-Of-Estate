@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { submitLeadEnquiry, type LeadSubmissionAttempt } from "./client";
+import { isLeadSubmissionReceipt, LeadSubmissionError, submitLeadEnquiry, type LeadSubmissionAttempt } from "./client";
 
 const attempt = () => ({ current: null as LeadSubmissionAttempt | null });
 const payload = { intent: "account", email: "person@example.test" };
@@ -32,5 +32,38 @@ describe("enquiry receipt client", () => {
 
   it("keeps rate-limit errors actionable without claiming receipt", async () => {
     await expect(submitLeadEnquiry(payload, attempt(), vi.fn().mockResolvedValue(new Response(null, { status: 429 })))).rejects.toThrow("wait a few minutes");
+  });
+
+  it("accepts a queued brochure receipt only as a boolean on the matching durable receipt", async () => {
+    const receipt = { success: true, status: "duplicate", leadId: "saved-lead", submissionId: "same-request" };
+    expect(isLeadSubmissionReceipt({ ...receipt, brochureQueued: true }, "same-request")).toBe(true);
+    expect(isLeadSubmissionReceipt({ ...receipt, brochureQueued: "sent" }, "same-request")).toBe(false);
+    expect(isLeadSubmissionReceipt({ ...receipt, brochureQueued: true, leadId: "" }, "same-request")).toBe(false);
+    const fetcher = vi.fn().mockImplementation((_url, init) => {
+      const request = JSON.parse(String(init?.body));
+      expect(request.brochure).toEqual({ designId: "type-a" });
+      expect(request.propertyMatchOptIn).toBe(false);
+      expect(request.newsletterOptIn).toBe(false);
+      return Response.json({ ...receipt, submissionId: request.submissionId, brochureQueued: true });
+    });
+    await expect(submitLeadEnquiry({
+      project: { slug: "florence-villas" },
+      brochure: { designId: "type-a" },
+      propertyMatchOptIn: false,
+      newsletterOptIn: false,
+    }, attempt(), fetcher)).resolves.toMatchObject({ brochureQueued: true, status: "duplicate" });
+  });
+
+  it("surfaces actionable validation errors without displaying arbitrary server content", async () => {
+    const failure = Response.json({
+      error: "internal secret must not be displayed",
+      fieldErrors: { brochure: ["internal secret"], unrelated: ["internal path"] },
+    }, { status: 400 });
+    const promise = submitLeadEnquiry(payload, attempt(), vi.fn().mockResolvedValue(failure));
+    await expect(promise).rejects.toBeInstanceOf(LeadSubmissionError);
+    await expect(promise).rejects.toMatchObject({
+      fieldErrors: { brochure: expect.stringContaining("ordinary property enquiry") },
+      message: expect.not.stringContaining("internal"),
+    });
   });
 });

@@ -83,6 +83,12 @@ function dependencies(
 }
 
 describe("lead delivery worker", () => {
+  it("persists the provider acceptance receipt alongside the completed job", async () => {
+    const receipt = { provider: "resend" as const, providerMessageId: "receipt-123" };
+    const setup = dependencies(makeRecord(), vi.fn().mockResolvedValue(receipt));
+    await processLeadDeliveryOutboxId("event-1", setup.value);
+    expect(setup.repository.markDelivered).toHaveBeenCalledWith("event-1", "worker-1", now, receipt);
+  });
   it("recovers stale locks, claims a bounded batch, and marks success", async () => {
     const setup = dependencies(makeRecord());
     vi.mocked(setup.repository.recoverStaleLocks).mockResolvedValue(2);

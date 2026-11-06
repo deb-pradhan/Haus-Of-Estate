@@ -1,6 +1,20 @@
-import type { LeadBrochureRequest, LeadProjectContext } from "./types";
+import type { LeadBrochureRequest, LeadInterest, LeadProjectContext } from "./types";
 
 const MESSAGE_LIMIT = 2_000;
+
+export function supportsBrochureRequest(interest: LeadInterest | "") {
+  return interest === "buy" || interest === "rent" || interest === "invest";
+}
+
+/** Only identifiers travel to intake; the server resolves approved files and revisions. */
+export function brochureRequestPayload(
+  project: LeadProjectContext | undefined,
+  request: LeadBrochureRequest | undefined,
+  interest: LeadInterest | "",
+): { designId?: string } | undefined {
+  if (!project?.slug || !request || !supportsBrochureRequest(interest)) return undefined;
+  return request.design ? { designId: request.design.id } : {};
+}
 
 function contextLabel(value: string) {
   return value.replace(/\s+/g, " ").trim().slice(0, 180);

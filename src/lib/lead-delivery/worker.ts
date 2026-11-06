@@ -46,11 +46,12 @@ async function processClaimedRecord(
   }
 
   try {
-    await transport.deliver(payload, record.destination, { attempts: record.attempts, createdAt: record.createdAt });
+    const receipt = await transport.deliver(payload, record.destination, { attempts: record.attempts, createdAt: record.createdAt });
     const changed = await repository.markDelivered(
       record.id,
       options.workerId,
       now(),
+      ...(receipt ? [receipt] : []),
     );
     return changed ? "delivered" : "conflict";
   } catch (error) {

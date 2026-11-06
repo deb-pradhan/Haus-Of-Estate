@@ -54,9 +54,10 @@ export function PropertyDevelopmentCard({ development }: { development: Property
   )
 }
 
-export function PropertyDevelopmentShowcase({ development, hero }: {
+export function PropertyDevelopmentShowcase({ development, hero, preview = false }: {
   development: PropertyDevelopment
   hero?: PropertyMediaImage
+  preview?: boolean
 }) {
   const image = hero ?? developmentImage(development)
   const groups = developmentHomeGroups(development.collections)
@@ -65,16 +66,19 @@ export function PropertyDevelopmentShowcase({ development, hero }: {
       <div className="overflow-hidden rounded-2xl border border-border bg-surface">
         <div className="grid lg:grid-cols-[1.2fr_1fr]">
           <div className="relative min-h-72 bg-estate-700 lg:min-h-[430px]">
-            {image ? <Image src={image.src} alt={image.alt} fill preload sizes="(min-width: 1024px) 640px, 100vw" className="object-cover" />
+            {image ? <Image src={image.src} alt={image.alt} fill unoptimized={preview} preload sizes="(min-width: 1024px) 640px, 100vw" className="object-cover" />
               : <Building2 aria-hidden className="absolute inset-0 m-auto h-16 w-16 text-white/40" />}
           </div>
           <div className="flex flex-col justify-center p-6 md:p-10">
             <p className="text-xs uppercase tracking-[0.2em] text-gold-500">Community overview · {development.city}</p>
             <h1 id="development-title" className="mt-3 font-serif text-4xl font-medium text-estate-700 md:text-5xl">{development.title}</h1>
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{development.summary}</p>
-            {development.amenities?.length ? <ul className="mt-5 space-y-2 border-t border-border pt-5 text-sm text-estate-700">
-              {development.amenities.slice(0, 3).map((amenity) => <li key={amenity}>{amenity}</li>)}
-            </ul> : null}
+            {development.amenities?.length ? <div className="mt-5 border-t border-border pt-5">
+              {preview && <p className="mb-3 text-xs uppercase tracking-wider text-muted-foreground">Planned community amenities</p>}
+              <ul className="space-y-2 text-sm text-estate-700">
+                {development.amenities.slice(0, 3).map((amenity) => <li key={amenity}>{amenity}</li>)}
+              </ul>
+            </div> : null}
             {groups.length > 0 && <a href="#home-collections" className="mt-7 inline-flex min-h-11 w-fit items-center gap-3 rounded-md bg-estate-700 px-5 py-3 text-sm font-medium text-white hover:bg-estate-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-estate-700">Explore the home designs <ArrowRight aria-hidden className="h-4 w-4" /></a>}
           </div>
         </div>
@@ -86,7 +90,7 @@ export function PropertyDevelopmentShowcase({ development, hero }: {
             <p className="mt-2 text-sm text-muted-foreground">Explore the home designs. Individual homes and current availability are confirmed on enquiry.</p>
           </div>
           <nav aria-label="Home types" className="flex gap-5 text-sm text-estate-700">
-            {groups.map(({ id, title }) => <a key={id} href={`#${id}`} className="py-2 underline underline-offset-4">{title}</a>)}
+            {groups.map(({ id, title }) => <a key={id} href={`#${id}`} className="inline-flex min-h-11 items-center py-2 underline underline-offset-4">{title}</a>)}
           </nav>
         </div>
         {groups.map(({ id, title, homes }) => <section key={id} id={id} aria-labelledby={`${id}-title`} className="mt-10 scroll-mt-24 md:mt-12 md:scroll-mt-32">
@@ -96,10 +100,10 @@ export function PropertyDevelopmentShowcase({ development, hero }: {
           </div>
           <div className={`grid gap-6 md:grid-cols-2 ${homes.length > 2 ? 'lg:grid-cols-3' : ''}`}>
             {homes.map((home) => {
-              const homeImage = developmentImage(home, true)
-              return <Link key={home._id} href={`/properties/${home.slug}`} className="group overflow-hidden rounded-2xl border border-border bg-surface transition-shadow hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-estate-700">
+              const homeImage = preview ? home.designImage : developmentImage(home, true)
+              return <Link key={home._id} href={`${preview ? '/dev/property-previews' : '/properties'}/${home.slug}`} className="group overflow-hidden rounded-2xl border border-border bg-surface transition-shadow hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-estate-700">
                 <div className="relative aspect-[3/2] overflow-hidden bg-estate-700">
-                  {homeImage ? <Image src={homeImage.src} alt={homeImage.alt || home.title} fill sizes="(min-width: 1024px) 560px, (min-width: 768px) 50vw, 100vw" className="object-cover" />
+                  {homeImage ? <Image src={homeImage.src} alt={homeImage.alt || home.title} fill unoptimized={preview} sizes="(min-width: 1024px) 560px, (min-width: 768px) 50vw, 100vw" className="object-cover" />
                     : <Building2 aria-hidden className="absolute inset-0 m-auto h-10 w-10 text-white/40" />}
                 </div>
                 <div className="p-5 md:p-6">

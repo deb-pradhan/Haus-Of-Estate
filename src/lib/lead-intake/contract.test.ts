@@ -22,6 +22,44 @@ function request(overrides: Record<string, unknown> = {}) {
 }
 
 describe("lead intake v2 contract", () => {
+  it("accepts a brochure request without marketing consent", () => {
+    expect(leadIntakeV2Schema.parse(request({
+      project: { slug: "azizi-florence-4-bedroom-villas" },
+      brochure: { designId: "villa-a" },
+    }))).toMatchObject({
+      brochure: { designId: "villa-a" },
+      propertyMatchOptIn: false,
+      newsletterOptIn: false,
+    });
+  });
+
+  it("requires a property and current acknowledged privacy notice for brochures", () => {
+    const base = request({
+      project: { slug: "azizi-florence-4-bedroom-villas" },
+      brochure: {},
+    });
+    for (const override of [
+      { project: undefined },
+      { privacyAcknowledged: false },
+      { formVersion: "2026-09-01.v3", privacyNoticeVersion: "2026-09-01" },
+      { interest: "general_enquiry", contact: { ...base.contact, message: "Please help" } },
+      { interest: "sell_let" },
+      { interest: "newsletter_only", newsletterOptIn: true },
+    ]) {
+      expect(leadIntakeV2Schema.safeParse({ ...base, ...override }).success).toBe(false);
+    }
+  });
+
+  it.each(["key", "revision", "filename", "url", "recipientEmail"])(
+    "rejects a client-supplied brochure %s",
+    (field) => {
+      expect(leadIntakeV2Schema.safeParse(request({
+        project: { slug: "azizi-florence-4-bedroom-villas" },
+        brochure: { [field]: "https://attacker.example/anything.pdf" },
+      })).success).toBe(false);
+    },
+  );
+
   it("accepts a general question without opting into marketing", () => {
     const result = leadIntakeV2Schema.parse(request({
       interest: "general_enquiry",

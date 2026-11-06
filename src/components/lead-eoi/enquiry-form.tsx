@@ -1,6 +1,10 @@
 "use client";
 
-import { isLeadSubmissionReceipt } from "@/lib/lead-intake/client";
+import {
+  LeadSubmissionError,
+  submitLeadEnquiry,
+  type LeadSubmissionAttempt,
+} from "@/lib/lead-intake/client";
 
 import Link from "next/link";
 import { ArrowRight, Check, Loader2 } from "lucide-react";
@@ -73,7 +77,7 @@ export function EnquiryForm({ interiors }: { interiors?: InteriorEnquiryContext 
   const [state, setState] = useState<
     "idle" | "submitting" | "error" | "success"
   >("idle");
-  const submissionId = useRef<string | null>(null);
+  const submissionAttempt = useRef<LeadSubmissionAttempt | null>(null);
   const sending = useRef(false);
   const viewed = useRef(false);
   const started = useRef(false);
@@ -133,9 +137,7 @@ export function EnquiryForm({ interiors }: { interiors?: InteriorEnquiryContext 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (sending.current) return;
-    submissionId.current ??= crypto.randomUUID();
-    const payload: LeadIntakeV2Input = {
-      submissionId: submissionId.current,
+    const payload: Omit<LeadIntakeV2Input, "submissionId"> = {
       interest: values.interest,
       contact: {
         firstName: values.firstName.trim(),
@@ -166,7 +168,12 @@ export function EnquiryForm({ interiors }: { interiors?: InteriorEnquiryContext 
       context: getLeadAttribution("query_page"),
       website: values.website,
     };
-    const parsed = leadIntakeV2Schema.safeParse(payload);
+    // Validate the full contract locally; the shared client owns the actual
+    // submission reference so unchanged retries and edited enquiries differ.
+    const parsed = leadIntakeV2Schema.safeParse({
+      ...payload,
+      submissionId: submissionAttempt.current?.submissionId ?? crypto.randomUUID(),
+    });
     const nextErrors: FieldErrors = {};
     if (!values.message.trim())
       nextErrors.message = "Tell us what you would like to know.";
@@ -200,24 +207,7 @@ export function EnquiryForm({ interiors }: { interiors?: InteriorEnquiryContext 
     setState("submitting");
     setErrors({});
     try {
-      const response = await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(30_000),
-      });
-      const result: unknown = await response.json().catch(() => null);
-      if (
-        !response.ok || !isLeadSubmissionReceipt(result, payload.submissionId)
-      ) {
-        throw new Error(
-          response.status === 429
-            ? "Please wait a few minutes before trying again. Your question is still here."
-            : response.status === 409
-              ? "An enquiry has already been saved with this reference. Refresh the page if you want to send a different question."
-              : "We couldn’t confirm your question was saved. Please try again, or email info@hausofestate.com.",
-        );
-      }
+      await submitLeadEnquiry(payload, submissionAttempt);
       setState("success");
       trackLeadEvent("lead_submit_success", {
         form_version: LEAD_FORM_VERSION,
@@ -234,6 +224,7 @@ export function EnquiryForm({ interiors }: { interiors?: InteriorEnquiryContext 
         });
     } catch (error) {
       setErrors({
+        ...(error instanceof LeadSubmissionError ? error.fieldErrors : {}),
         request:
           error instanceof Error
             ? error.message
@@ -294,7 +285,7 @@ export function EnquiryForm({ interiors }: { interiors?: InteriorEnquiryContext 
               setValues(initialValues());
               setErrors({});
               setState("idle");
-              submissionId.current = null;
+              submissionAttempt.current = null;
               started.current = false;
               requestAnimationFrame(() =>
                 document.getElementById(`${id}-message`)?.focus(),

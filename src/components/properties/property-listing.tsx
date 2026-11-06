@@ -13,7 +13,8 @@ import { PropertyAssistantSearchEntry } from '@/components/property-assistant/pr
 import { isPropertyAssistantEnabled } from '@/lib/features'
 import { PropertyPrice } from '@/components/currency/property-price'
 import { propertyPriceInput, type PropertyPricing } from '@/lib/currency'
-import { matchesPropertySearch, searchAmount } from '@/lib/property-search'
+import { matchesPropertySearch, normalizePropertySearchParams, searchAmount, type PropertySearchParams } from '@/lib/property-search'
+import { matchesPropertyLocation } from '@/lib/property-locations'
 import { PropertySearchForm } from './property-search-form'
 import { isLocalCataloguePreviewEnabled, loadCataloguePreviewGroups } from '@/lib/property-catalogue-preview'
 import { groupDevelopmentResults, type PropertyDevelopment } from '@/lib/property-developments'
@@ -58,20 +59,7 @@ interface PropertyCard extends PropertyPricing {
   showHausLogo?: boolean
 }
 
-export interface PropertyListingSearchParams {
-  category?: string
-  availability?: string
-  intent?: string
-  type?: string
-  country?: string
-  city?: string
-  location?: string
-  beds?: string
-  q?: string
-  minPrice?: string
-  maxPrice?: string
-  currency?: string
-}
+export type PropertyListingSearchParams = PropertySearchParams
 
 const COMPLETION_LABEL: Record<string, string> = {
   completed: 'Completed',
@@ -96,6 +84,7 @@ type FilterKey =
   | 'type'
   | 'country'
   | 'city'
+  | 'area'
   | 'location'
   | 'beds'
   | 'q'
@@ -103,7 +92,7 @@ type FilterKey =
   | 'maxPrice'
 
 export async function PropertyListing({
-  params,
+  params: rawParams,
   forceCategory,
   eyebrow = 'Properties',
   heading,
@@ -115,6 +104,7 @@ export async function PropertyListing({
   heading?: React.ReactNode
   intro?: string
 }) {
+  const params = normalizePropertySearchParams(rawParams)
   const { isEnabled: draftPreview } = await draftMode()
   const localCataloguePreview = isLocalCataloguePreviewEnabled()
   const assistantEnabled = isPropertyAssistantEnabled() && !draftPreview && !localCataloguePreview
@@ -131,6 +121,7 @@ export async function PropertyListing({
   const type = params.type?.trim() || ''
   const country = params.country?.trim() || ''
   const city = params.city?.trim() || ''
+  const area = params.area?.trim() || ''
   const location = params.location?.trim() || ''
   const q = params.q?.trim().slice(0, 120) || ''
   const minPrice = searchAmount(params.minPrice) === null ? '' : params.minPrice!
@@ -163,27 +154,9 @@ export async function PropertyListing({
   const fetched = properties ?? []
 
   // ── Remaining JS filters (geography + beds) ──────────────────────────
-  const countryLC = country.toLocaleLowerCase('en-GB')
-  const cityLC = city.toLocaleLowerCase('en-GB')
-  const locLC = location.toLowerCase()
   const list = fetched.filter((p) => {
     if (!matchesPropertySearch(p, { q, minPrice, maxPrice, currency, intent })) return false
-    if (
-      countryLC &&
-      p.country?.trim().toLocaleLowerCase('en-GB') !== countryLC
-    ) {
-      return false
-    }
-    if (cityLC && p.city?.trim().toLocaleLowerCase('en-GB') !== cityLC) {
-      return false
-    }
-    if (locLC) {
-      const hay = [p.community, p.city, p.country, p.masterDevelopment]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase()
-      if (!hay.includes(locLC)) return false
-    }
+    if (!matchesPropertyLocation(p, { country, city, area, location })) return false
     if (minBeds !== null) {
       if (typeof p.bedrooms !== 'number') return false
       if (minBeds === 0 && p.bedrooms !== 0) return false
@@ -210,6 +183,7 @@ export async function PropertyListing({
   if (type) activeFilters.push({ label: type, key: 'type' })
   if (country) activeFilters.push({ label: country, key: 'country' })
   if (city) activeFilters.push({ label: city, key: 'city' })
+  if (area) activeFilters.push({ label: area, key: 'area' })
   if (location) activeFilters.push({ label: location, key: 'location' })
   if (q) activeFilters.push({ label: `Search: ${q}`, key: 'q' })
   if (minPrice) activeFilters.push({ label: `From ${currency} ${Number(minPrice).toLocaleString('en-GB')}${intent === 'rent' ? ' / month' : ''}`, key: 'minPrice' })
@@ -233,6 +207,8 @@ export async function PropertyListing({
       country: remove === 'country' ? undefined : country || undefined,
       city:
         remove === 'country' || remove === 'city' ? undefined : city || undefined,
+      area:
+        remove === 'country' || remove === 'city' || remove === 'area' ? undefined : area || undefined,
       location: remove === 'location' ? undefined : location || undefined,
       beds: remove === 'beds' || minBeds === null ? undefined : minBeds,
       q: remove === 'q' ? undefined : q,
@@ -290,7 +266,7 @@ export async function PropertyListing({
                 : 'Explore our published collection by location, property type and budget.')}
           </p>
         </div>
-        <div className="mt-8"><PropertySearchForm key={JSON.stringify(params)} initial={{ category: category || undefined, intent: intent || undefined, availability: availability || undefined, country, city, type, beds: minBeds ?? '', q: q || location, minPrice, maxPrice, currency }} /></div>
+        <div className="mt-8"><PropertySearchForm key={JSON.stringify(params)} initial={{ category, intent, availability: availability || undefined, country, city, area, location, type, beds: minBeds ?? '', q, minPrice, maxPrice, currency }} /></div>
       </section>
 
       {/* Listings */}
@@ -361,7 +337,7 @@ export async function PropertyListing({
                   })
                   return (
                     <article key={overview.document._id} className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-estate-700/40 hover:shadow-xl hover:shadow-estate-700/5">
-                      <Link href="/dev/property-previews" className="flex flex-1 flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-estate-700/50 focus-visible:ring-inset">
+                      <Link href={`/dev/property-previews/${overview.document.slug.current}`} className="flex flex-1 flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-estate-700/50 focus-visible:ring-inset">
                         <div className="relative aspect-[4/3] overflow-hidden bg-estate-700">
                           <Image src={overview.media.hero.src} alt={overview.media.hero.alt} fill unoptimized sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" className="object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transform-none" />
                           <span className="absolute left-3 top-3 rounded-full bg-surface/95 px-3 py-1 text-[11px] font-semibold text-estate-700 shadow-sm">Draft community · not published</span>

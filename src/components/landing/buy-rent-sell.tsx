@@ -19,7 +19,7 @@ export function BuyRentSell() {
         }}
       />
 
-      <div className="relative z-10 mx-auto max-w-5xl px-4 py-20 text-center md:px-6 md:py-28">
+      <div className="relative z-10 mx-auto max-w-6xl px-4 py-10 text-center md:px-6 md:py-16">
         <p className="font-serif text-xs font-medium uppercase tracking-[0.3em] text-gold-400">
           UK · UAE · International
         </p>
@@ -28,7 +28,7 @@ export function BuyRentSell() {
           Welcome to Haus of Estate.
         </p>
 
-        <h1 className="mx-auto mt-3 max-w-3xl font-serif text-[2.75rem] font-medium leading-[1.06] text-white md:text-[4rem] md:leading-[1.04]">
+        <h1 className="mx-auto mt-3 max-w-3xl font-serif text-[2rem] font-medium leading-[1.06] text-white sm:text-[2.75rem] md:text-[4rem] md:leading-[1.04]">
           Property in Dubai, the UK &amp; beyond —{" "}
           <span className="text-gold-400">with proof.</span>
         </h1>

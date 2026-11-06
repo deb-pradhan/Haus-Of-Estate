@@ -4,6 +4,18 @@ import {
   resolvePriceQuote,
   type PropertyPricing,
 } from "./currency";
+import type { PropertyQuery } from "./property-taxonomy";
+
+export type PropertySearchParams = { [Key in keyof PropertyQuery]?: string | string[] };
+
+/** Next.js passes repeated query parameters as arrays; use the first value consistently. */
+export function normalizePropertySearchParams(params: PropertySearchParams): { [Key in keyof PropertyQuery]?: string } {
+  const keys = ["category", "availability", "intent", "type", "country", "city", "area", "location", "beds", "q", "minPrice", "maxPrice", "currency"] as const;
+  return Object.fromEntries(keys.flatMap((key) => {
+    const value = Array.isArray(params[key]) ? params[key][0] : params[key];
+    return typeof value === "string" ? [[key, value.trim()]] : [];
+  }));
+}
 
 export function searchAmount(value?: string): number | null {
   if (!value?.trim() || !/^\d+(?:\.\d{1,2})?$/.test(value.trim())) return null;
@@ -24,6 +36,8 @@ export function matchesPropertySearch(
     country?: string;
     city?: string;
     masterDevelopment?: string;
+    summary?: string;
+    unitType?: string;
   },
   filters: {
     q?: string;
@@ -47,6 +61,8 @@ export function matchesPropertySearch(
     property.country,
     property.city,
     property.masterDevelopment,
+    property.summary,
+    property.unitType,
   ]
     .filter(Boolean)
     .join(" ")

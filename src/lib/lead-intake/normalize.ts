@@ -24,6 +24,7 @@ export interface NormalizedLeadIntake {
     timeframe?: string;
   };
   project?: { slug: string };
+  brochure?: { designId?: string };
   contact: {
     firstName: string;
     surname?: string;
@@ -126,6 +127,7 @@ function fromV2(input: LeadIntakeV2Input): NormalizedLeadIntake {
       timeframe: compact(preferences.timeframe),
     },
     project: isGeneralEnquiry ? undefined : input.project,
+    ...(input.brochure ? { brochure: input.brochure } : {}),
     contact: {
       firstName: compact(input.contact.firstName)!,
       email: input.contact.email.trim().toLowerCase(),
@@ -234,6 +236,7 @@ export function hashNormalizedLead(input: NormalizedLeadIntake): string {
     interest: input.interest,
     preferences: input.preferences,
     project: input.project,
+    ...(input.brochure ? { brochure: input.brochure } : {}),
     contact: input.contact,
     ...(input.formVersion === LEAD_FORM_VERSION ||
     input.formVersion === "2026-09-01.v3" ||

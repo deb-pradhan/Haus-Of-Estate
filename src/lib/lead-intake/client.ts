@@ -8,15 +8,59 @@ export interface LeadSubmissionReceipt {
   status: "created" | "duplicate";
   leadId: string;
   submissionId: string;
+  /** A durable customer-email job exists; this does not confirm email delivery. */
+  brochureQueued?: boolean;
 }
 
 const SAVE_ERROR = "We couldn’t confirm your enquiry was saved. Your details are still here. Please try again, or email info@hausofestate.com.";
+
+const FIELD_MESSAGES: Record<string, string> = {
+  contact: "Check your name, email address, phone number and message.",
+  firstName: "Enter your first name.",
+  email: "Enter a valid email address.",
+  phone: "Enter a valid phone number or leave this blank.",
+  interest: "Choose the option that best matches your enquiry.",
+  privacyAcknowledged: "Confirm that you have read and understood the privacy notice.",
+  newsletterOptIn: "Choose the newsletter option to complete this subscription.",
+  brochure: "Brochure email is unavailable for this selection. You can still send an ordinary property enquiry.",
+  project: "This property is no longer available for this request. Please refresh the page or contact us.",
+};
+
+export class LeadSubmissionError extends Error {
+  constructor(message: string, readonly fieldErrors: Record<string, string> = {}) {
+    super(message);
+    this.name = "LeadSubmissionError";
+  }
+}
+
+function submissionError(status: number, result: unknown) {
+  if (status === 429) {
+    return new LeadSubmissionError("Please wait a few minutes before trying again. Your details are still here.");
+  }
+  if (status === 400 && result && typeof result === "object" && "fieldErrors" in result) {
+    const errors = result.fieldErrors;
+    if (errors && typeof errors === "object") {
+      // Use local, actionable copy instead of reflecting arbitrary response content.
+      const fieldErrors = Object.fromEntries(
+        Object.entries(FIELD_MESSAGES).filter(([key]) =>
+          Array.isArray((errors as Record<string, unknown>)[key]) &&
+          ((errors as Record<string, unknown[]>)[key]?.length ?? 0) > 0,
+        ),
+      );
+      if (Object.keys(fieldErrors).length) {
+        return new LeadSubmissionError(Object.values(fieldErrors).join(" "), fieldErrors);
+      }
+    }
+  }
+  return new LeadSubmissionError(SAVE_ERROR);
+}
 
 export function isLeadSubmissionReceipt(value: unknown, submissionId: string): value is LeadSubmissionReceipt {
   if (!value || typeof value !== "object") return false;
   const receipt = value as Partial<LeadSubmissionReceipt>;
   return receipt.success === true && ["created", "duplicate"].includes(receipt.status ?? "") &&
-    typeof receipt.leadId === "string" && receipt.leadId.length > 0 && receipt.submissionId === submissionId;
+    typeof receipt.leadId === "string" && receipt.leadId.length > 0 && receipt.submissionId === submissionId &&
+    (receipt.brochureQueued === undefined || typeof receipt.brochureQueued === "boolean");
 }
 
 /** Retain the reference after ambiguous failures, but use a new one if the visitor edits the enquiry. */
@@ -43,9 +87,7 @@ export async function submitLeadEnquiry(
   }
   const result: unknown = await response.json().catch(() => null);
   if (!response.ok || !isLeadSubmissionReceipt(result, submissionId)) {
-    throw new Error(response.status === 429
-      ? "Please wait a few minutes before trying again. Your details are still here."
-      : SAVE_ERROR);
+    throw submissionError(response.status, result);
   }
   return result;
 }

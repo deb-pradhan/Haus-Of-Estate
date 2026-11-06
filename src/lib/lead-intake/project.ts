@@ -5,18 +5,26 @@ export interface PublishedProjectContext {
   slug: string;
   title: string;
   community?: string;
+  designVariants?: Array<{
+    _key: string;
+    label: string;
+    brochureKey?: string;
+    brochureRevision?: string;
+  }>;
 }
 
-const PUBLISHED_PROPERTY_QUERY = `
+export const PUBLISHED_PROPERTY_QUERY = `
   *[
     _type == "property" &&
     !(_id in path("drafts.**")) &&
+    !(_id in path("versions.**")) &&
     status == "published" &&
     slug.current == $slug
   ][0]{
     "slug": slug.current,
     title,
-    community
+    community,
+    designVariants[]{_key, label, brochureKey, brochureRevision}
   }
 `;
 
@@ -27,9 +35,13 @@ export async function resolvePublishedProject(
 
   let project: PublishedProjectContext | null;
   try {
-    project = await client.fetch<PublishedProjectContext | null>(
+    project = await client.withConfig({
+      useCdn: false,
+      perspective: "published",
+    }).fetch<PublishedProjectContext | null>(
       PUBLISHED_PROPERTY_QUERY,
       { slug },
+      { cache: "no-store" },
     );
   } catch {
     throw new LeadInfrastructureError();

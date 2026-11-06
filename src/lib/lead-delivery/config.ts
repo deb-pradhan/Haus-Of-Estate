@@ -110,6 +110,12 @@ export function isLeadDeliveryEnabled(
   return environment.LEAD_DELIVERY_ENABLED?.trim().toLowerCase() === "true";
 }
 
+export function isLeadNotificationEnabled(
+  environment: LeadDeliveryEnvironment = process.env,
+): boolean {
+  return environment.LEAD_NOTIFICATIONS_ENABLED?.trim().toLowerCase() === "true";
+}
+
 export function readPowerAutomateConfig(
   environment: LeadDeliveryEnvironment = process.env,
 ): PowerAutomateConfig {

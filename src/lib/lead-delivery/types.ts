@@ -11,7 +11,24 @@ export const LEAD_DELIVERY_STATUSES = {
 export type LeadDeliveryStatus =
   (typeof LEAD_DELIVERY_STATUSES)[keyof typeof LEAD_DELIVERY_STATUSES];
 
-export type LeadDeliveryDestination = "notification" | "google_sheets";
+export type LeadDeliveryDestination = "notification" | "google_sheets" | "customer_brochure";
+
+/** Server-resolved selection and unescaped recipient, never a client download URL. */
+export interface BrochureDeliverySelection {
+  key: string;
+  revision: string;
+  projectSlug: string;
+  projectTitle: string;
+  designId?: string;
+  designLabel?: string;
+  recipientName: string;
+  recipientEmail: string;
+}
+
+export interface LeadDeliveryReceipt {
+  provider: "resend";
+  providerMessageId: string;
+}
 
 export interface LeadExcelRow {
   submissionTime: string;
@@ -44,9 +61,11 @@ export interface LeadDeliveryPayload {
   eventType: typeof LEAD_DELIVERY_EVENT_TYPE;
   leadId: string;
   row: LeadExcelRow;
+  brochure?: BrochureDeliverySelection;
 }
 
 export interface LeadDeliveryPayloadInput {
+  brochure?: BrochureDeliverySelection;
   eventId: string;
   leadId: string;
   submittedAt: Date | string;
@@ -83,6 +102,7 @@ export interface LeadDeliveryOutboxRecord {
   lockedBy: string | null;
   deliveredAt: Date | null;
   lastError: string | null;
+  providerMessageId?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -99,6 +119,7 @@ export interface LeadDeliveryOutboxRepository {
     id: string,
     workerId: string,
     deliveredAt: Date,
+    receipt?: LeadDeliveryReceipt,
   ): Promise<boolean>;
   releaseForRetry(
     id: string,
@@ -119,7 +140,7 @@ export interface LeadDeliveryContext {
 }
 
 export interface LeadDeliveryTransport {
-  deliver(payload: LeadDeliveryPayload, destination?: LeadDeliveryDestination, context?: LeadDeliveryContext): Promise<void>;
+  deliver(payload: LeadDeliveryPayload, destination?: LeadDeliveryDestination, context?: LeadDeliveryContext): Promise<void | LeadDeliveryReceipt>;
 }
 
 export interface LeadDeliveryLogger {

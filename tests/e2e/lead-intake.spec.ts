@@ -164,7 +164,7 @@ test("preserves attribution, separates consent, retries, and records no analytic
 
   await expect(
     page.getByRole("alert").filter({
-      hasText: "We could not save your enquiry just now",
+      hasText: "We couldn’t confirm your enquiry was saved",
     }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Send my brief" }).click();
@@ -242,6 +242,42 @@ test("submits without a phone or marketing consent", async ({ page }) => {
     privacyAcknowledged: true,
   });
   expect((payload?.contact as Record<string, unknown>).phone).toBeUndefined();
+  await expect(page).toHaveURL(/\/register-interest$/);
+  await expect(page.getByRole("link", { name: /Google Forms/i })).toHaveCount(0);
+});
+
+test("shows safe actionable field errors and requires a matching durable receipt", async ({ page }) => {
+  const submittedIds: string[] = [];
+  let attempts = 0;
+  await page.route(API_PATTERN, async (route) => {
+    const request = route.request().postDataJSON();
+    submittedIds.push(request.submissionId);
+    attempts += 1;
+    await route.fulfill({
+      status: attempts === 1 ? 400 : 200,
+      contentType: "application/json",
+      body: JSON.stringify(attempts === 1
+        ? { fieldErrors: { contact: ["Server-only detail should never be shown"] } }
+        : attempts === 2
+          ? { success: true, brochureQueued: true }
+          : { success: true, status: "duplicate", leadId: "saved-enquiry", submissionId: request.submissionId }),
+    });
+  });
+  await page.goto("/register-interest");
+  await reachPreferences(page);
+  const submit = page.getByRole("button", { name: "Send my brief" });
+  await submit.click();
+  await expect(page.getByRole("alert").filter({ hasText: "Check your name, email address, phone number and message" })).toBeVisible();
+  await expect(page.getByText("Server-only detail should never be shown")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Brief received" })).toHaveCount(0);
+  await submit.click();
+  await expect(page.getByRole("alert").filter({ hasText: "We couldn’t confirm your enquiry was saved" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Brochure request saved" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Brief received" })).toHaveCount(0);
+  await submit.click();
+  await expect(page.getByRole("heading", { name: "Brief received" })).toBeVisible();
+  expect(new Set(submittedIds).size).toBe(1);
+  await expect(page).toHaveURL(/\/register-interest$/);
 });
 
 test("announces validation and focuses the first invalid contact field", async ({
@@ -436,4 +472,66 @@ test("ignores invalid or unpublished project query values", async ({
   await expect(
     page.getByRole("heading", { name: "Register your interest" }),
   ).toBeVisible();
+});
+
+test("general enquiry recovers a saved request after its response is lost", async ({ page }) => {
+  const submissions: Record<string, unknown>[] = [];
+  await page.route(API_PATTERN, async (route) => {
+    const request = route.request().postDataJSON() as Record<string, unknown>;
+    submissions.push(request);
+    if (submissions.length === 1) return route.abort("failed");
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, status: "duplicate", leadId: "synthetic-question", submissionId: request.submissionId }),
+    });
+  });
+  await page.goto("/enquire");
+  await page.getByLabel("What would you like to know?").fill("Please explain your property management service.");
+  await enterRequiredContact(page);
+  const submit = page.getByRole("button", { name: "Send my question" });
+  await submit.click();
+  await expect(page.getByRole("alert").filter({ hasText: "We couldn’t confirm your enquiry was saved" })).toBeVisible();
+  await expect(page.getByLabel("Email address")).toHaveValue("surya@example.com");
+  await submit.click();
+  await expect(page.getByRole("heading", { name: "Your question has been received." })).toBeVisible();
+  expect(submissions).toHaveLength(2);
+  expect(submissions[1].submissionId).toBe(submissions[0].submissionId);
+  expect(submissions[1]).toMatchObject({ privacyAcknowledged: true, newsletterOptIn: false, propertyMatchOptIn: false });
+});
+
+test("interiors enquiry rejects incomplete receipts and gives edited requests a new reference", async ({ page }) => {
+  const submissions: Record<string, unknown>[] = [];
+  await page.route(API_PATTERN, async (route) => {
+    const request = route.request().postDataJSON() as Record<string, unknown>;
+    submissions.push(request);
+    if (submissions.length === 1) return route.abort("failed");
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(submissions.length === 2
+        ? { success: true }
+        : { success: true, status: "created", leadId: "synthetic-interiors", submissionId: request.submissionId }),
+    });
+  });
+  await page.goto("/enquire?service=interiors&goal=renovate&room=kitchen");
+  const message = page.getByLabel("Tell us a little about your project");
+  await message.fill("I would like help renovating my kitchen.");
+  await enterRequiredContact(page);
+  const submit = page.getByRole("button", { name: "Send my question" });
+  const error = page.getByRole("alert").filter({ hasText: "We couldn’t confirm your enquiry was saved" });
+  await submit.click();
+  await expect(error).toBeVisible();
+  await submit.click();
+  await expect.poll(() => submissions.length).toBe(2);
+  await expect(error).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Your question has been received." })).toHaveCount(0);
+  await message.fill("Please advise on renovating the kitchen and adjoining room.");
+  await submit.click();
+  await expect(page.getByRole("heading", { name: "Your question has been received." })).toBeVisible();
+  expect(submissions).toHaveLength(3);
+  expect(submissions[1].submissionId).toBe(submissions[0].submissionId);
+  expect(submissions[2].submissionId).not.toBe(submissions[1].submissionId);
+  expect((submissions[2].contact as Record<string, unknown>).message).toContain("Kitchen");
+  expect((submissions[2].contact as Record<string, unknown>).message).toContain("adjoining room");
 });

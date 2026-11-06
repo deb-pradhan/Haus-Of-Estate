@@ -25,7 +25,8 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from 
 import { useLeadModals } from "@/components/lead-modal";
 import { HeaderAuthControl } from "@/components/auth/header-auth-control";
 import { CurrencySelector } from "@/components/currency/currency-selector";
-import { CAREERS_PUBLIC_ENABLED } from "@/lib/careers-availability";
+import { CAREERS_PUBLIC_ENABLED, isCareersContactPath } from "@/lib/careers-availability";
+import { HR_INBOX } from "@/lib/careers";
 import { cn } from "@/lib/utils";
 import { PropertiesCountryMenu, MobilePropertyMarkets, NavbarPropertySearch } from "./property-navigation";
 
@@ -156,7 +157,7 @@ const ABOUT_ITEMS: NavItem[] = [
 export function Header({ authEnabled = false }: { authEnabled?: boolean }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const careersPage = pathname === "/careers" || pathname.startsWith("/careers/");
+  const careersPage = isCareersContactPath(pathname);
 
   return (
     <div className="sticky top-0 z-50">
@@ -505,7 +506,8 @@ function MobileNav({
   pathname: string;
   onClose: () => void;
 }) {
-  const hidePhone = pathname === "/careers" || pathname.startsWith("/careers/");
+  const hidePhone = isCareersContactPath(pathname);
+  const contactEmail = hidePhone ? HR_INBOX : COMPANY_EMAIL;
   return (
     <div className="flex h-full flex-col">
       <div className="flex-1 px-4 pb-4 pt-12">
@@ -548,11 +550,11 @@ function MobileNav({
           </li>}
           <li>
             <a
-              href={`mailto:${COMPANY_EMAIL}`}
+              href={`mailto:${contactEmail}`}
               className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[#4D5257] transition-colors hover:bg-[#F7F5F1] hover:text-[#1F4F2F]"
             >
               <Mail className="h-4 w-4 text-gold-500" />
-              {COMPANY_EMAIL}
+              {contactEmail}
             </a>
           </li>
         </ul>

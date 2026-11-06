@@ -1,23 +1,44 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { ArrowRight, ChevronDown, Search } from "lucide-react";
 import { PROPERTY_MARKETS, marketLinks } from "@/lib/property-markets";
 import { cn } from "@/lib/utils";
+import { normalizeSearchQuery } from "@/lib/site-search";
 
-export function NavbarPropertySearch({
-  onNavigate,
-  className,
-}: {
+interface NavbarSearchProps {
   onNavigate?: () => void;
   className?: string;
-}) {
+}
+
+export function NavbarPropertySearch(props: NavbarSearchProps) {
+  return <Suspense fallback={<NavbarSearchForm {...props} />}>
+    <NavbarSearchFromLocation {...props} />
+  </Suspense>;
+}
+
+function NavbarSearchFromLocation(props: NavbarSearchProps) {
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const query = ["/search", "/properties", "/blog"].includes(pathname)
+    ? normalizeSearchQuery(params.get("q") ?? undefined) : "";
+  // Shared layouts persist across navigation. Remount the uncontrolled form so
+  // back/forward and a new destination cannot leave an old search in the input.
+  return <NavbarSearchForm key={`${pathname}?${params.toString()}`} {...props} query={query} />;
+}
+
+function NavbarSearchForm({
+  onNavigate,
+  className,
+  query = "",
+}: NavbarSearchProps & { query?: string }) {
   return (
     <form
-      action="/properties"
+      action="/search"
       role="search"
-      aria-label="Property search"
+      aria-label="Site search"
       onSubmit={onNavigate}
       className={cn(
         "flex min-w-0 items-center rounded-full border border-estate-700/20 bg-white focus-within:ring-2 focus-within:ring-estate-700/40",
@@ -27,14 +48,15 @@ export function NavbarPropertySearch({
       <input
         type="search"
         name="q"
-        aria-label="Search properties"
-        placeholder="Search properties…"
+        defaultValue={query}
+        aria-label="Search properties and articles"
+        placeholder="Properties & articles…"
         maxLength={120}
-        className="min-w-0 flex-1 rounded-l-full bg-transparent py-2.5 pl-4 text-sm text-estate-700 placeholder:text-estate-700/55 focus:outline-none"
+        className="min-w-0 flex-1 rounded-l-full bg-transparent py-2.5 pl-4 text-base text-estate-700 placeholder:text-estate-700/55 focus:outline-none sm:text-sm"
       />
       <button
         type="submit"
-        aria-label="Search properties"
+        aria-label="Search properties and articles"
         className="flex size-11 shrink-0 items-center justify-center rounded-full text-estate-700 hover:bg-estate-700/5 focus-visible:outline-2 focus-visible:outline-estate-700"
       >
         <Search className="size-4" aria-hidden="true" />

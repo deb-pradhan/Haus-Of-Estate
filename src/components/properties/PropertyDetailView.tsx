@@ -76,7 +76,7 @@ const COMPLETION_LABEL: Record<string, string> = {
 export function PropertyDetailView({ property, media, preview, draftPreview = false, development, parentDevelopment }: {
   property: PropertyDetail
   media: PropertyMedia
-  preview?: { kind: 'development' | 'home-type' | 'property' }
+  preview?: { kind: 'development' | 'home-type' | 'property'; brochureDemo?: boolean }
   draftPreview?: boolean
   development?: PropertyDevelopment
   parentDevelopment?: Pick<PropertyDevelopment, 'title' | 'slug'>
@@ -88,8 +88,15 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
   // Sanity's draft perspective can normalize draft IDs to their published ID.
   // The page also passes Draft Mode so those records cannot trigger public actions.
   const publicActionsEnabled = !preview && !draftPreview && sanityDocumentIdSchema.safeParse(property._id).success
+  const brochureDemo = process.env.NODE_ENV === 'development' && preview?.brochureDemo === true && preview.kind !== 'property'
+  const brochureDemoHref = brochureDemo
+    ? preview?.kind === 'development'
+      ? development ? '#home-collections' : '/dev/property-previews#villas'
+      : `/dev/property-previews/${property.slug}/brochure-demo`
+    : undefined
   const canonicalUrl = canonicalHausUrl(`/properties/${property.slug}`)
   const hasDesigns = Boolean(property.designVariants?.length)
+  const collectionStartingPrice = hasDesigns && typeof property.priceAmount === 'number' && Boolean(property.priceCurrency)
   const firstDesign = property.designVariants?.[0]
   const hero: PropertyMediaImage | undefined = firstDesign?.images[0] ?? media.hero
   const heroCaption = propertyMediaCaption(hero)
@@ -201,6 +208,7 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
             ) : (
               <p className="mt-1">{preview.kind === 'home-type' ? 'A collection of home designs, not an individual available unit.' : 'Community overview for editorial review.'} Artist’s impressions illustrate the home designs and facilities.</p>
             )}
+            {brochureDemo && <p className="mt-2 font-medium">Brochure buttons open a local demonstration. Use sample details; nothing is saved or emailed.</p>}
           </div>
         </div>
       )}
@@ -232,7 +240,7 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
       </div>
 
       {/* Hero image */}
-      {development ? <PropertyDevelopmentShowcase development={development} hero={hero} /> : <>
+      {development ? <PropertyDevelopmentShowcase development={development} hero={hero} preview={Boolean(preview)} /> : <>
       <div className="relative aspect-[16/9] max-h-[460px] w-full overflow-hidden bg-estate-700">
         {hero ? (
           <Image
@@ -301,6 +309,10 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
               <Link href="/dev/property-previews/azizi-florence" className="mt-4 inline-flex text-sm text-estate-700 underline underline-offset-4">View the Florence community overview</Link>
             )}
             {parentDevelopment && <Link href={`/properties/${parentDevelopment.slug}`} className="mt-4 inline-flex text-sm text-estate-700 underline underline-offset-4">View the {parentDevelopment.title} community overview</Link>}
+            {hasDesigns && <nav aria-label="Explore this collection" className="mt-5 flex flex-wrap gap-x-5 gap-y-2 border-y border-border py-3 text-sm text-estate-700">
+              <a href="#home-designs" className="inline-flex min-h-11 items-center underline underline-offset-4">Compare designs & areas</a>
+              {Boolean(property.interiorSchemes?.length) && <a href="#interior-schemes" className="inline-flex min-h-11 items-center underline underline-offset-4">View interior schemes</a>}
+            </nav>}
             </>}
 
             {publicActionsEnabled && (
@@ -339,6 +351,7 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
                 project={projectContext}
                 interactionsEnabled={publicActionsEnabled}
                 preview={Boolean(preview)}
+                brochureDemoHref={preview?.kind === 'home-type' ? brochureDemoHref : undefined}
                 showHausLogo={property.showHausLogo}
               />
             )}
@@ -385,6 +398,7 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
                 <h2 className="font-serif text-xl font-medium text-estate-700">
                   Community amenities
                 </h2>
+                {(hasDesigns || preview?.kind === 'development') && <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Planned facilities shown in the community brochure. Current delivery and opening dates await confirmation.</p>}
                 <ul className="mt-4 grid gap-2 sm:grid-cols-2">
                   {property.amenities.map((a) => (
                     <li key={a} className="flex items-start gap-2 text-sm text-foreground">
@@ -499,12 +513,15 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
 
           {/* Enquiry aside */}
           <aside>
-            <div className="sticky top-24 rounded-2xl border border-border bg-surface p-6 shadow-sm">
+            <div className={`${hasDesigns ? 'lg:sticky lg:top-48' : 'sticky top-24'} rounded-2xl border border-border bg-surface p-6 shadow-sm`}>
               {preview ? (
                 <>
                   <p className="font-serif text-xs font-medium uppercase tracking-[0.22em] text-gold-500">Listing details</p>
-                  <p className="mt-2 font-serif text-2xl font-semibold text-estate-700"><PropertyPrice {...propertyPriceInput(property)} fallback="Awaiting confirmation" /></p>
-                  {hasDesigns && <p className="mt-2 text-xs leading-relaxed text-muted-foreground">Collection pricing. Individual design and plot pricing is confirmed on enquiry.</p>}
+                  <p className="mt-2 font-serif text-2xl font-semibold text-estate-700">{collectionStartingPrice
+                    ? <PropertyPrice amount={property.priceAmount} currency={property.priceCurrency} prefix="From " />
+                    : <PropertyPrice {...propertyPriceInput(property)} fallback="Awaiting confirmation" />}</p>
+                  {collectionStartingPrice && property.priceDisplay && <p className="mt-3 border-t border-border pt-3 text-sm leading-relaxed text-estate-700"><span className="mb-1 block text-xs text-muted-foreground">Supplied collection range</span><PropertyPrice {...propertyPriceInput(property)} /></p>}
+                  {hasDesigns && <p className="mt-2 text-xs leading-relaxed text-muted-foreground">Prices apply to the bedroom collection. The price and availability of a particular design and plot need confirmation.</p>}
                   <dl className="mt-5 space-y-4 text-sm">
                     {(individualPreview ? [
                       ['Asking price', property.priceDisplay],
@@ -525,7 +542,14 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
                       </div>
                     ))}
                   </dl>
-                  <button type="button" disabled className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-md bg-estate-700/15 px-4 py-3 text-sm font-medium text-estate-700/70">Enquiries disabled in preview</button>
+                  {brochureDemoHref ? (
+                    <>
+                      <Link href={hasDesigns ? '#selected-design' : brochureDemoHref} className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-md bg-estate-700 px-4 py-3 text-center text-sm font-medium text-white transition-colors hover:bg-estate-600">
+                        {preview.kind === 'development' ? 'Choose a home & request brochure' : hasDesigns ? 'Continue with selected design' : 'Request full brochure'}
+                      </Link>
+                      <p className="mt-2 text-xs leading-relaxed text-muted-foreground">Try the form and email preview. Nothing is saved or sent.</p>
+                    </>
+                  ) : <button type="button" disabled className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-md bg-estate-700/15 px-4 py-3 text-sm font-medium text-estate-700/70">Enquiries disabled in preview</button>}
                   <p className="mt-3 text-xs leading-relaxed text-muted-foreground">Sonia / Haus must confirm the remaining details and approve publication.</p>
                 </>
               ) : (
@@ -534,9 +558,10 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
                     Enquire
                   </p>
                   <p className="mt-2 font-serif text-2xl font-semibold text-estate-700">
-                    <PropertyPrice {...propertyPriceInput(property)} />
+                    {collectionStartingPrice ? <PropertyPrice amount={property.priceAmount} currency={property.priceCurrency} prefix="From " /> : <PropertyPrice {...propertyPriceInput(property)} />}
                   </p>
-                  {hasDesigns && <p className="mt-2 text-xs leading-relaxed text-muted-foreground">Collection pricing. Individual design and plot pricing is confirmed on enquiry.</p>}
+                  {collectionStartingPrice && property.priceDisplay && <p className="mt-3 border-t border-border pt-3 text-sm leading-relaxed text-estate-700"><span className="mb-1 block text-xs text-muted-foreground">Supplied collection range</span><PropertyPrice {...propertyPriceInput(property)} /></p>}
+                  {hasDesigns && <p className="mt-2 text-xs leading-relaxed text-muted-foreground">Prices apply to the bedroom collection. The price and availability of a particular design and plot need confirmation.</p>}
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                     Pricing, exact sizes and current availability are confirmed on
                     enquiry. We&apos;ll connect you with a vetted agent for this

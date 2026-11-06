@@ -6,6 +6,7 @@ import { resolve } from "node:path";
 // saved content and AskHaus require AUTH_ENABLED before they can access the DB.
 export function releaseNeedsDatabase(environment = process.env) {
   return environment.AUTH_ENABLED === "true"
+    || environment.RESEND_WEBHOOK_ENABLED === "true"
     || environment.LEAD_INTAKE_ENABLED?.toLowerCase() === "true"
     || environment.LEAD_DELIVERY_ENABLED?.trim().toLowerCase() === "true";
 }

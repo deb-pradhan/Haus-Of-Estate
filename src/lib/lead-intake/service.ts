@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { BrochureStorageError, getApprovedBrochureMetadata } from "@/lib/brochures/catalog";
 import {
   LeadConflictError,
   LeadInfrastructureError,
@@ -24,6 +25,11 @@ export interface LeadIntakeServiceDependencies {
   resolveProject(
     slug: string | undefined,
   ): Promise<PublishedProjectContext | undefined>;
+  resolveBrochure?(
+    key: string,
+    revision: string,
+    projectSlug: string,
+  ): Promise<unknown>;
   now(): Date;
   randomId(): string;
 }
@@ -34,6 +40,74 @@ const defaultDependencies: LeadIntakeServiceDependencies = {
   now: () => new Date(),
   randomId: randomUUID,
 };
+
+async function resolveBrochureSelection(
+  input: NormalizedLeadIntake,
+  project: PublishedProjectContext | undefined,
+  dependencies: LeadIntakeServiceDependencies,
+) {
+  if (!input.brochure) return undefined;
+
+  const unavailable = () => new LeadValidationError("Brochure unavailable", {
+    brochure: ["This brochure cannot be emailed right now. You can still send a property enquiry."],
+  });
+  if (
+    !project ||
+    project.slug !== input.project?.slug ||
+    (!dependencies.resolveBrochure && process.env.BROCHURE_EMAIL_ENABLED !== "true")
+  ) {
+    throw unavailable();
+  }
+
+  const designs = project.designVariants ?? [];
+  const selected = input.brochure.designId
+    ? designs.filter((design) => design._key === input.brochure!.designId)
+    : designs;
+  // A collection request is safe only when every applicable design maps to the
+  // same approved brochure revision. Never choose the first arbitrary PDF.
+  if (!selected.length || (input.brochure.designId && selected.length !== 1)) {
+    throw unavailable();
+  }
+  const first = selected[0];
+  if (
+    !first.brochureKey ||
+    !first.brochureRevision ||
+    selected.some((design) =>
+      !design.label ||
+      design.brochureKey !== first.brochureKey ||
+      design.brochureRevision !== first.brochureRevision)
+  ) {
+    throw unavailable();
+  }
+  try {
+    // Approval/path checks are cheap before the transactional IP throttle.
+    // Full byte integrity is verified by the worker before any email is sent.
+    await (dependencies.resolveBrochure ?? getApprovedBrochureMetadata)(
+      first.brochureKey,
+      first.brochureRevision,
+      project.slug,
+    );
+  } catch (error) {
+    // Preserve the selected brochure for retry during a temporary storage outage.
+    // A brochure field error tells the form to fall back to an enquiry without it.
+    if (error instanceof BrochureStorageError) throw new LeadInfrastructureError();
+    throw unavailable();
+  }
+  return {
+    key: first.brochureKey,
+    revision: first.brochureRevision,
+    projectSlug: project.slug,
+    projectTitle: project.title,
+    ...(input.brochure.designId ? {
+      designId: first._key,
+      designLabel: first.label,
+    } : {}),
+    // Spreadsheet cells may be formula-escaped. Email recipients must retain
+    // the validated contact value rather than being recovered from those cells.
+    recipientName: [input.contact.firstName, input.contact.surname].filter(Boolean).join(" "),
+    recipientEmail: input.contact.email,
+  };
+}
 
 export function scoreLead(input: NormalizedLeadIntake): LeadScore {
   let score = 10;
@@ -125,10 +199,12 @@ export async function submitLeadIntake(
   }
 
   const project = await dependencies.resolveProject(input.project?.slug);
+  const brochure = await resolveBrochureSelection(input, project, dependencies);
   const submittedAt = dependencies.now();
   const submission = {
     input,
     project,
+    brochure,
     payloadHash,
     ipHash,
     leadId: dependencies.randomId(),

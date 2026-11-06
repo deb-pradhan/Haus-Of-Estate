@@ -10,6 +10,17 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # Release branches and ongoing work
 
+- Cloud handoff exception, 6 November 2026: this checkout is the isolated
+  `suryak02/claude-cloud-handoff` export prepared for Surya's portable Claude
+  continuation. It preserves the public Release 2 base and reviewed application
+  changes while excluding private local correspondence and held recruitment data.
+  Continue this cloud session here; do not switch to or overwrite the canonical
+  Release 2 checkout. Read `docs/claude-cloud/README.md` and
+  `docs/claude-cloud/EXPORT.md`.
+  This is one coherent cloud handoff, not permission to create per-feature
+  branches or release to production. The historical release guidance below
+  describes the original work and remains relevant to later integration.
+
 - Release 1 / PR #15 was merged into `main` at `20afdeeb` and deployed on 18 September 2026. The remote `suryak02/technical-seo-fixes` branch is retired; do not recreate it. Its SEO/consent implementation is live, but real analytics collection is not yet verified.
 - Release 2 is `suryak02/azizi-florence-content-scaffold`: the cumulative website overhaul, Florence, standalone Sanity setup, and subsequent personalised follow-up milestone. Continue review in draft PR #16 against `main`; closed PR #12 preserves the earlier history.
 - Continue all subsequent feature work on the existing Release 2 branch. Do not create a branch per feature or revive the superseded feature branches. Create a new branch only when Surya explicitly requests it.

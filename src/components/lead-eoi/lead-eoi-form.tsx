@@ -1,6 +1,10 @@
 "use client";
 
-import { isLeadSubmissionReceipt } from "@/lib/lead-intake/client";
+import {
+  LeadSubmissionError,
+  submitLeadEnquiry,
+  type LeadSubmissionAttempt,
+} from "@/lib/lead-intake/client";
 
 import Link from "next/link";
 import {
@@ -17,7 +21,7 @@ import {
   MessageSquareText,
   TrendingUp,
 } from "lucide-react";
-import { useEffect, useId, useRef, useState, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
 import {
   LEAD_FORM_VERSION,
   MARKETING_CONSENT_WORDING,
@@ -38,8 +42,11 @@ import { getLeadAttribution, primeLeadAttribution } from "./attribution";
 import {
   brochureMessageLimit,
   brochureRequestNote,
+  brochureRequestPayload,
   leadMessageWithBrochureRequest,
+  supportsBrochureRequest,
 } from "./brochure-request";
+import { useLeadReadiness } from "./use-lead-readiness";
 import type {
   LeadBrochureRequest,
   LeadInitialPreferences,
@@ -125,6 +132,12 @@ interface LeadEoiFormProps {
   project?: LeadProjectContext;
   modal?: boolean;
   onClose?: () => void;
+  /** Development-only walkthrough: no intake request, attribution storage or email. */
+  localDemo?: {
+    onSubmit: (payload: Omit<LeadIntakeV2Input, "submissionId">) => Promise<void>;
+    confirmation?: ReactNode;
+    onReset?: () => void;
+  };
 }
 
 interface FormValues {
@@ -225,21 +238,6 @@ function supportsOverseasCashBuyer(interest: LeadInterest | "") {
   return interest === "buy" || interest === "invest";
 }
 
-function createSubmissionId() {
-  if (typeof globalThis.crypto?.randomUUID === "function") {
-    return globalThis.crypto.randomUUID();
-  }
-
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
-    /[xy]/g,
-    (character) => {
-      const random = Math.floor(Math.random() * 16);
-      const value = character === "x" ? random : (random & 0x3) | 0x8;
-      return value.toString(16);
-    },
-  );
-}
-
 export function LeadEoiForm({
   surface,
   initialInterest,
@@ -249,9 +247,11 @@ export function LeadEoiForm({
   project,
   modal = false,
   onClose,
+  localDemo,
 }: LeadEoiFormProps) {
+  const demo = process.env.NODE_ENV === "development" ? localDemo : undefined;
+  const demoEnabled = Boolean(demo);
   const id = useId();
-  const requestNote = brochureRequestNote(project, brochureRequest);
   const [step, setStep] = useState(1);
   const [values, setValues] = useState<FormValues>(() =>
     initialValues(project, initialInterest, initialEmail, initialPreferences),
@@ -261,15 +261,28 @@ export function LeadEoiForm({
   const [submittedValues, setSubmittedValues] = useState<FormValues | null>(
     null,
   );
-  const submissionId = useRef(createSubmissionId());
+  const [brochureQueued, setBrochureQueued] = useState(false);
+  const [brochureUnavailable, setBrochureUnavailable] = useState(false);
+  const remoteReadiness = useLeadReadiness(Boolean(brochureRequest) && !demo);
+  const readiness = demo
+    ? { intakeReady: true, brochureEmailEnabled: true }
+    : remoteReadiness;
+  const activeBrochureRequest = supportsBrochureRequest(values.interest)
+    ? brochureRequest
+    : undefined;
+  const brochureEnabled = readiness?.brochureEmailEnabled === true && !brochureUnavailable;
+  const requestNote = brochureRequestNote(project, activeBrochureRequest);
+  const submissionAttempt = useRef<LeadSubmissionAttempt | null>(null);
   const hasStarted = useRef(false);
   const hasTrackedView = useRef(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const requestErrorRef = useRef<HTMLDivElement>(null);
   const successRef = useRef<HTMLDivElement>(null);
   const newsletterOptInRef = useRef<HTMLInputElement>(null);
+  const optionalDetailsRef = useRef<HTMLDetailsElement>(null);
 
   useEffect(() => {
+    if (demo) return;
     if (hasTrackedView.current) return;
     hasTrackedView.current = true;
     primeLeadAttribution();
@@ -285,8 +298,11 @@ export function LeadEoiForm({
 
   useEffect(() => {
     if (submitState !== "success") return;
-    window.requestAnimationFrame(() => successRef.current?.focus());
-  }, [submitState]);
+    window.requestAnimationFrame(() => {
+      successRef.current?.focus(demoEnabled ? { preventScroll: true } : undefined);
+      if (demoEnabled) successRef.current?.scrollIntoView({ block: "start" });
+    });
+  }, [submitState, demoEnabled]);
 
   useEffect(() => {
     if (!errors.newsletterOptIn) return;
@@ -294,6 +310,7 @@ export function LeadEoiForm({
   }, [errors.newsletterOptIn]);
 
   const markStarted = (interest?: LeadInterest) => {
+    if (demo) return;
     if (hasStarted.current) return;
     hasStarted.current = true;
     trackLeadEvent("form_start", {
@@ -336,7 +353,10 @@ export function LeadEoiForm({
 
   const moveToStep = (nextStep: number) => {
     setStep(nextStep);
-    window.requestAnimationFrame(() => headingRef.current?.focus());
+    window.requestAnimationFrame(() => {
+      headingRef.current?.focus(demo ? { preventScroll: true } : undefined);
+      if (demo) headingRef.current?.scrollIntoView({ block: "start" });
+    });
   };
 
   const validateCurrentStep = () => {
@@ -383,9 +403,10 @@ export function LeadEoiForm({
                 ? `${id}-newsletter-opt-in`
                 : undefined;
     if (firstInvalidId) {
-      window.requestAnimationFrame(() =>
-        document.getElementById(firstInvalidId)?.focus(),
-      );
+      window.requestAnimationFrame(() => {
+        if (nextErrors.phone && optionalDetailsRef.current) optionalDetailsRef.current.open = true;
+        document.getElementById(firstInvalidId)?.focus();
+      });
     }
     return !firstInvalidId;
   };
@@ -397,9 +418,12 @@ export function LeadEoiForm({
     setErrors({});
     setSubmitState("idle");
     setSubmittedValues(null);
+    setBrochureQueued(false);
+    setBrochureUnavailable(false);
     setStep(1);
-    submissionId.current = createSubmissionId();
+    submissionAttempt.current = null;
     hasStarted.current = false;
+    demo?.onReset?.();
   };
 
   const submit = async () => {
@@ -421,11 +445,13 @@ export function LeadEoiForm({
     };
     const hasPreferences = Object.values(preferences).some(Boolean);
 
-    const payload: LeadIntakeV2Input = {
-      submissionId: submissionId.current,
+    const payload: Omit<LeadIntakeV2Input, "submissionId"> = {
       interest: submitted.interest,
       preferences: hasPreferences ? preferences : undefined,
       project: project ? { slug: project.slug } : undefined,
+      brochure: brochureEnabled
+        ? brochureRequestPayload(project, activeBrochureRequest, submitted.interest)
+        : undefined,
       contact: {
         firstName: submitted.firstName.trim(),
         email: submitted.email.trim(),
@@ -438,29 +464,20 @@ export function LeadEoiForm({
       overseasCashBuyer: submitted.overseasCashBuyer,
       formVersion: LEAD_FORM_VERSION,
       privacyNoticeVersion: PRIVACY_NOTICE_VERSION,
-      context: getLeadAttribution(surface),
+      context: demo
+        ? { surface, pagePath: "/dev/property-previews" }
+        : getLeadAttribution(surface),
       website: submitted.website,
     };
 
     try {
-      const response = await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(30_000),
-      });
-
-      const responseBody: unknown = await response.json().catch(() => null);
-      if (!response.ok || !isLeadSubmissionReceipt(responseBody, payload.submissionId)) {
-        const friendlyMessage =
-          response.status === 429
-            ? "We have received several requests from this connection. Please wait a few minutes and try again."
-            : response.status >= 500
-              ? "We could not save your enquiry just now. Please try again."
-              : "We couldn’t confirm your enquiry was saved. Please check your details and try again.";
-        throw new Error(friendlyMessage);
+      if (demo) {
+        await demo.onSubmit(payload);
+        setSubmitState("success");
+        return;
       }
-
+      const receipt = await submitLeadEnquiry(payload, submissionAttempt);
+      setBrochureQueued(Boolean(payload.brochure && receipt.brochureQueued === true));
       setSubmitState("success");
       trackLeadEvent("lead_submit_success", {
         form_version: LEAD_FORM_VERSION,
@@ -478,7 +495,11 @@ export function LeadEoiForm({
       }
     } catch (error) {
       setSubmitState("error");
+      if (error instanceof LeadSubmissionError && error.fieldErrors.brochure) {
+        setBrochureUnavailable(true);
+      }
       setErrors({
+        ...(error instanceof LeadSubmissionError ? error.fieldErrors : {}),
         request:
           error instanceof Error
             ? error.message
@@ -492,13 +513,41 @@ export function LeadEoiForm({
     event.preventDefault();
     if (!validateCurrentStep()) return;
     if (step < 3) {
-      moveToStep(step + 1);
+      moveToStep(activeBrochureRequest ? 3 : step + 1);
       return;
     }
     void submit();
   };
 
   const successValues = submittedValues ?? values;
+
+  if (submitState === "success" && demo) {
+    return (
+      <div
+        ref={successRef}
+        role="status"
+        aria-live="polite"
+        tabIndex={-1}
+        className="min-w-0 scroll-mt-32 outline-none lg:scroll-mt-48"
+      >
+        <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-estate-700/10 text-estate-700">
+          <Check className="h-5 w-5" aria-hidden="true" />
+        </div>
+        <h2 className="font-serif text-3xl font-medium text-estate-700">
+          Demo complete — nothing saved or sent
+        </h2>
+        <p className="mt-3 text-sm leading-6 text-muted-foreground">
+          {successValues.firstName.trim()}, this is your preview for {project?.title ?? "the selected property"}
+          {brochureRequest?.design ? ` — ${brochureRequest.design.label}` : ""}.
+          Your details stayed in this browser; no lead or marketing subscription was created.
+        </p>
+        {demo.confirmation}
+        <Button type="button" variant="outline" onClick={reset} className="mt-6">
+          Try another demo request
+        </Button>
+      </div>
+    );
+  }
 
   if (submitState === "success") {
     return (
@@ -513,7 +562,7 @@ export function LeadEoiForm({
           <Check className="h-7 w-7" aria-hidden="true" />
         </div>
         <h2 className="mt-5 font-serif text-3xl font-medium text-estate-700">
-          {brochureRequest
+          {brochureQueued
             ? "Brochure request saved"
             : successValues.interest === "newsletter_only"
               ? "Email preferences saved"
@@ -521,11 +570,11 @@ export function LeadEoiForm({
                 ? "Brief received"
                 : "Enquiry received"}
         </h2>
-        {brochureRequest ? (
+        {brochureQueued ? (
           <p className="mt-3 max-w-md text-sm leading-6 text-muted-foreground">
             Your request for {project?.title ?? "the selected property"}
-            {brochureRequest.design ? ` — ${brochureRequest.design.label}` : ""} has
-            been saved. Brochure email delivery is not yet available.
+            {brochureRequest?.design ? ` — ${brochureRequest.design.label}` : ""} has
+            been saved. Email delivery can take a little time.
           </p>
         ) : null}
         <p className="mt-3 max-w-md text-sm leading-6 text-muted-foreground">
@@ -562,13 +611,53 @@ export function LeadEoiForm({
   }
 
   const isNewsletterOnly = values.interest === "newsletter_only";
-  const finalSubmitLabel = brochureRequest
-    ? "Save brochure request"
+  const EmailUpdatesContainer = activeBrochureRequest ? "details" : "div";
+  const finalSubmitLabel = demo
+    ? "Preview brochure email"
+    : activeBrochureRequest && brochureEnabled
+    ? "Request brochure"
     : isNewsletterOnly
     ? "Save email preferences"
     : supportsPropertyMatches(values.interest)
       ? "Send my brief"
       : "Send enquiry";
+
+  const optionalContactFields = (
+    <>
+      <div className={cn("min-w-0 space-y-1.5 sm:col-span-2", activeBrochureRequest && "[&_input]:text-base sm:[&_input]:text-sm")}>
+        <Label htmlFor={`${id}-phone`}>Phone number (optional)</Label>
+        <PhoneInput
+          id={`${id}-phone`}
+          value={values.phone}
+          onChange={(value) => update("phone", value)}
+          invalid={Boolean(errors.phone)}
+          ariaDescribedBy={errors.phone ? `${id}-phone-error` : undefined}
+        />
+        {errors.phone ? (
+          <p id={`${id}-phone-error`} role="alert" className="text-xs text-destructive">
+            {errors.phone}
+          </p>
+        ) : null}
+      </div>
+      <div className="min-w-0 space-y-1.5 sm:col-span-2">
+        <Label htmlFor={`${id}-message`}>Anything else? (optional)</Label>
+        <div className="relative">
+          <MessageSquareText
+            className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground"
+            aria-hidden="true"
+          />
+          <Textarea
+            id={`${id}-message`}
+            value={values.message}
+            onChange={(event) => update("message", event.target.value)}
+            placeholder="Tell us what would make this enquiry more useful"
+            maxLength={brochureMessageLimit(requestNote)}
+            className={cn("min-h-20 pl-9", activeBrochureRequest && "text-base sm:text-sm")}
+          />
+        </div>
+      </div>
+    </>
+  );
 
   return (
     <form
@@ -581,7 +670,7 @@ export function LeadEoiForm({
         disabled={submitState === "submitting"}
         className="min-w-0 border-0 p-0"
       >
-        {project ? (
+        {project && !demo ? (
           <div className="mb-5 flex items-start gap-3 rounded-md border border-estate-700/15 bg-estate-700/[0.04] p-3.5">
             <MapPin
               className="mt-0.5 h-4 w-4 shrink-0 text-estate-700"
@@ -589,24 +678,25 @@ export function LeadEoiForm({
             />
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase text-estate-700">
-                {brochureRequest ? "Full brochure request" : "Selected property"}
+                {activeBrochureRequest ? "Full brochure request" : "Selected property"}
               </p>
-              <p className="truncate text-sm font-medium text-foreground">
+              <p className="break-words text-sm font-medium text-foreground">
                 {project.title ?? project.slug}
               </p>
-              {brochureRequest?.design ? (
+              {activeBrochureRequest?.design ? (
                 <p className="text-sm text-foreground">
-                  Design: {brochureRequest.design.label}
+                  Design: {activeBrochureRequest.design.label}
                 </p>
               ) : null}
-              {brochureRequest ? (
+              {activeBrochureRequest ? (
                 <p className="mt-1 text-xs text-muted-foreground">
-                  We will save your request with your details. Brochure email
-                  delivery is not yet available. Marketing emails are optional.
+                  {brochureEnabled
+                    ? "The PDF covers this collection of home designs. Marketing emails are optional and are not required to receive it."
+                    : "Brochure email is currently unavailable. You can send an enquiry with your selection for the team to follow up. Marketing emails are optional."}
                 </p>
               ) : null}
               {project.community || project.city ? (
-                <p className="truncate text-xs text-muted-foreground">
+                <p className="break-words text-xs text-muted-foreground">
                   {[project.community, project.city].filter(Boolean).join(", ")}
                 </p>
               ) : null}
@@ -615,11 +705,13 @@ export function LeadEoiForm({
         ) : null}
 
         <ol
-          className="mb-6 grid grid-cols-3 gap-2"
+          className={cn("mb-6 grid gap-3", activeBrochureRequest ? "grid-cols-2" : "grid-cols-3")}
           aria-label="Enquiry progress"
         >
-          {["Contact", "Interest", "Preferences"].map((label, index) => {
-            const number = index + 1;
+          {(activeBrochureRequest
+            ? [{ number: 1, label: "Contact" }, { number: 3, label: "Review" }]
+            : [{ number: 1, label: "Contact" }, { number: 2, label: "Interest" }, { number: 3, label: "Preferences" }]
+          ).map(({ number, label }, index) => {
             const current = step === number;
             const complete = step > number;
             return (
@@ -632,11 +724,11 @@ export function LeadEoiForm({
                 />
                 <span
                   className={cn(
-                    "mt-1.5 block text-[11px] font-medium",
+                    "mt-2 block text-xs font-medium",
                     current ? "text-estate-700" : "text-muted-foreground",
                   )}
                 >
-                  {number}. {label}
+                  {index + 1}. {label}
                 </span>
               </li>
             );
@@ -649,7 +741,7 @@ export function LeadEoiForm({
               id={`${id}-step-title`}
               ref={headingRef}
               tabIndex={-1}
-              className="font-serif text-2xl font-medium text-estate-700 outline-none sm:text-3xl"
+              className={cn("font-serif text-2xl font-medium text-estate-700 outline-none sm:text-3xl", demo && "scroll-mt-32 lg:scroll-mt-48")}
             >
               How can we help?
             </h2>
@@ -660,7 +752,7 @@ export function LeadEoiForm({
               <legend className="sr-only">Your property interest</legend>
               <div className="grid gap-2 sm:grid-cols-2">
                 {INTEREST_OPTIONS.filter(
-                  (option) => !brochureRequest || option.value !== "newsletter_only",
+                  (option) => !brochureRequest || supportsBrochureRequest(option.value),
                 ).map((option) => {
                   const Icon = option.icon;
                   return (
@@ -714,14 +806,25 @@ export function LeadEoiForm({
               id={`${id}-step-title`}
               ref={headingRef}
               tabIndex={-1}
-              className="font-serif text-2xl font-medium text-estate-700 outline-none sm:text-3xl"
+              className={cn("font-serif text-2xl font-medium text-estate-700 outline-none sm:text-3xl", demo && "scroll-mt-32 lg:scroll-mt-48")}
             >
-              {isNewsletterOnly ? "What interests you?" : "Shape your search"}
+              {activeBrochureRequest ? "Review your request" : isNewsletterOnly ? "What interests you?" : "Shape your search"}
             </h2>
             <p className="mt-1.5 text-sm text-muted-foreground">
-              All preferences are optional. Share only what is useful today.
+              {activeBrochureRequest ? demo ? "Check your details before previewing your brochure email." : "Check your email address, then request the collection brochure." : "All preferences are optional. Share only what is useful today."}
             </p>
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            {activeBrochureRequest ? (
+              <div className="mt-5 flex flex-wrap items-start justify-between gap-3 rounded-md border border-estate-700/15 bg-estate-700/[0.04] p-4">
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-muted-foreground">{demo ? "Email preview for" : "Brochure email for"}</p>
+                  <p className="mt-1 break-all text-sm font-medium text-estate-700">{values.email.trim()}</p>
+                  <p className="mt-2 text-sm text-foreground">{project?.title ?? project?.slug}</p>
+                  {activeBrochureRequest.design && <p className="mt-1 text-sm text-muted-foreground">Design of interest: {activeBrochureRequest.design.label}</p>}
+                </div>
+                <button type="button" onClick={() => moveToStep(1)} className="min-h-11 px-2 text-sm font-medium text-estate-700 underline underline-offset-4">Edit details</button>
+              </div>
+            ) : null}
+            {!activeBrochureRequest ? <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <SelectField
                 id={`${id}-market`}
                 label="Country of interest"
@@ -785,28 +888,33 @@ export function LeadEoiForm({
                   />
                 </>
               ) : null}
-            </div>
+            </div> : null}
 
-            <div className="mt-5">
+            {!activeBrochureRequest ? <div className="mt-5">
               <p className="text-xs font-semibold uppercase text-muted-foreground">
                 Follow along on socials
               </p>
               <SocialProfileLinks className="mt-2" />
-            </div>
+            </div> : null}
 
-            <div className="mt-5 space-y-3 rounded-md border border-border bg-subtle p-4">
+            {activeBrochureRequest ? <p className="mt-5 text-xs leading-5 text-muted-foreground">Requesting the brochure does not subscribe you to marketing emails.</p> : null}
+            <EmailUpdatesContainer className={cn("mt-3 rounded-md border border-border bg-subtle", !activeBrochureRequest && "mt-5 p-4")}>
+              {activeBrochureRequest ? <summary className="min-h-11 cursor-pointer px-4 py-3 text-sm font-medium text-estate-700">Optional email updates</summary> : null}
+              <div className={cn("space-y-3", activeBrochureRequest && "border-t border-border p-4")}>
               <div>
+                {!activeBrochureRequest ? (
                 <p className="text-sm font-semibold text-foreground">
                   Optional email updates
                 </p>
+                ) : null}
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  Our email updates are still being prepared. You can save your
-                  preferences now. These choices are optional and separate from
-                  your enquiry.
+                  {activeBrochureRequest
+                    ? "Leave both boxes unticked to receive only the requested brochure. Email updates are still being prepared."
+                    : "Our email updates are still being prepared. You can save your preferences now. These choices are optional and separate from your enquiry."}
                 </p>
               </div>
               {supportsPropertyMatches(values.interest) ? (
-                <label className="flex cursor-pointer items-start gap-3">
+                <label className={cn("flex cursor-pointer items-start gap-3", activeBrochureRequest && "min-h-11 py-2")}>
                   <input
                     id={`${id}-property-match-opt-in`}
                     type="checkbox"
@@ -821,7 +929,7 @@ export function LeadEoiForm({
                   </span>
                 </label>
               ) : null}
-              <label className="flex cursor-pointer items-start gap-3">
+              <label className={cn("flex cursor-pointer items-start gap-3", activeBrochureRequest && "min-h-11 py-2")}>
                 <input
                   id={`${id}-newsletter-opt-in`}
                   ref={newsletterOptInRef}
@@ -851,9 +959,10 @@ export function LeadEoiForm({
                   {errors.newsletterOptIn}
                 </p>
               ) : null}
-            </div>
+              </div>
+            </EmailUpdatesContainer>
 
-            {supportsOverseasCashBuyer(values.interest) ? (
+            {!activeBrochureRequest && supportsOverseasCashBuyer(values.interest) ? (
               <div className="mt-3 rounded-md border border-border bg-surface p-4">
                 <label className="flex cursor-pointer items-start gap-3">
                   <input
@@ -888,7 +997,7 @@ export function LeadEoiForm({
               />
             </div>
 
-            <p className="mt-4 text-xs leading-5 text-muted-foreground">
+            {demo ? <p className="mt-4 text-xs leading-5 text-muted-foreground">This preview stays in your browser. No request or email subscription will be created.</p> : <p className="mt-4 text-xs leading-5 text-muted-foreground">
               By selecting &quot;{finalSubmitLabel}&quot;, you ask Haus of
               Estate to use the details you provided to handle this request.
               This is separate from optional email marketing. Read our{" "}
@@ -900,7 +1009,7 @@ export function LeadEoiForm({
                 privacy policy
               </Link>
               .
-            </p>
+            </p>}
 
             {errors.request ? (
               <div
@@ -921,13 +1030,14 @@ export function LeadEoiForm({
               id={`${id}-step-title`}
               ref={headingRef}
               tabIndex={-1}
-              className="font-serif text-2xl font-medium text-estate-700 outline-none sm:text-3xl"
+              className={cn("font-serif text-2xl font-medium text-estate-700 outline-none sm:text-3xl", demo && "scroll-mt-32 lg:scroll-mt-48")}
             >
-              Where should we reach you?
+              {activeBrochureRequest ? "Your details" : "Where should we reach you?"}
             </h2>
             <p className="mt-1.5 text-sm text-muted-foreground">
-              We only need a name and email. Nothing is sent until you review
-              and submit the final step.
+              {demo
+                ? "Use a sample name and email to preview the brochure."
+                : "We only need a name and email. Nothing is sent until you review and submit the final step."}
             </p>
             <div className="mt-5 grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2">
               <div className="min-w-0 space-y-1.5">
@@ -946,7 +1056,7 @@ export function LeadEoiForm({
                   aria-describedby={
                     errors.firstName ? `${id}-first-name-error` : undefined
                   }
-                  className="h-11"
+                  className={cn("h-11", activeBrochureRequest && "text-base sm:text-sm")}
                 />
                 {errors.firstName ? (
                   <p
@@ -976,7 +1086,7 @@ export function LeadEoiForm({
                   aria-describedby={
                     errors.email ? `${id}-email-error` : undefined
                   }
-                  className="h-11"
+                  className={cn("h-11", activeBrochureRequest && "text-base sm:text-sm")}
                 />
                 {errors.email ? (
                   <p
@@ -988,46 +1098,12 @@ export function LeadEoiForm({
                   </p>
                 ) : null}
               </div>
-              <div className="min-w-0 space-y-1.5 sm:col-span-2">
-                <Label htmlFor={`${id}-phone`}>Phone number (optional)</Label>
-                <PhoneInput
-                  id={`${id}-phone`}
-                  value={values.phone}
-                  onChange={(value) => update("phone", value)}
-                  invalid={Boolean(errors.phone)}
-                  ariaDescribedBy={
-                    errors.phone ? `${id}-phone-error` : undefined
-                  }
-                />
-                {errors.phone ? (
-                  <p
-                    id={`${id}-phone-error`}
-                    role="alert"
-                    className="text-xs text-destructive"
-                  >
-                    {errors.phone}
-                  </p>
-                ) : null}
-              </div>
-              <div className="min-w-0 space-y-1.5 sm:col-span-2">
-                <Label htmlFor={`${id}-message`}>
-                  Anything else? (optional)
-                </Label>
-                <div className="relative">
-                  <MessageSquareText
-                    className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground"
-                    aria-hidden="true"
-                  />
-                  <Textarea
-                    id={`${id}-message`}
-                    value={values.message}
-                    onChange={(event) => update("message", event.target.value)}
-                    placeholder="Tell us what would make this enquiry more useful"
-                    maxLength={brochureMessageLimit(requestNote)}
-                    className="min-h-20 pl-9"
-                  />
-                </div>
-              </div>
+              {activeBrochureRequest ? (
+                <details ref={optionalDetailsRef} className="min-w-0 rounded-lg border border-border sm:col-span-2">
+                  <summary className="min-h-11 cursor-pointer px-4 py-3 text-sm font-medium text-estate-700">Add a phone number or message (optional)</summary>
+                  <div className="grid min-w-0 gap-4 border-t border-border p-4">{optionalContactFields}</div>
+                </details>
+              ) : optionalContactFields}
             </div>
 
             <div className="mt-5 rounded-md border border-border bg-subtle p-4">
@@ -1052,7 +1128,7 @@ export function LeadEoiForm({
                 <div className="min-w-0">
                   <Label
                     htmlFor={`${id}-privacy-acknowledged`}
-                    className="cursor-pointer text-sm leading-5 text-foreground"
+                    className={cn("cursor-pointer text-sm leading-5 text-foreground", activeBrochureRequest && "min-h-11 items-start")}
                   >
                     {PRIVACY_ACKNOWLEDGEMENT_WORDING}
                   </Label>
@@ -1086,13 +1162,14 @@ export function LeadEoiForm({
           </section>
         ) : null}
 
-        <div className="mt-7 flex items-center justify-between gap-3 border-t border-border pt-5">
+        <div className="mt-7 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5">
           {step > 1 ? (
             <Button
               type="button"
               variant="ghost"
-              onClick={() => moveToStep(step - 1)}
+              onClick={() => moveToStep(activeBrochureRequest ? 1 : step - 1)}
               disabled={submitState === "submitting"}
+              className={activeBrochureRequest ? "order-2 min-h-11 px-4 sm:order-none" : undefined}
             >
               <ArrowLeft aria-hidden="true" /> Back
             </Button>
@@ -1106,15 +1183,15 @@ export function LeadEoiForm({
           <Button
             type="submit"
             disabled={submitState === "submitting"}
-            className="min-w-32"
+            className={cn("ml-auto min-w-32 whitespace-normal", activeBrochureRequest && "min-h-12 w-full px-5 sm:w-auto")}
           >
             {submitState === "submitting" ? (
               <>
-                <Loader2 className="animate-spin" aria-hidden="true" /> Sending
+                <Loader2 className="animate-spin" aria-hidden="true" /> {demo ? "Preparing" : "Sending"}
               </>
             ) : step < 3 ? (
               <>
-                Continue <ArrowRight aria-hidden="true" />
+                {activeBrochureRequest ? "Next: review" : "Continue"} <ArrowRight aria-hidden="true" />
               </>
             ) : (
               <>

@@ -1,12 +1,7 @@
-import { buildPropertyLocationGroups } from '@/lib/property-locations'
+import { buildPropertyLocationGroups, type PropertyLocationRecord } from '@/lib/property-locations'
 import { isLocalCataloguePreviewEnabled, loadCataloguePreviewGroups } from '@/lib/property-catalogue-preview'
 import { sanityFetch } from '@/sanity/live'
 import { PROPERTY_LOCATION_OPTIONS_QUERY } from '@/sanity/queries'
-
-interface PropertyLocationRecord {
-  country?: string | null
-  city?: string | null
-}
 
 export async function GET() {
   const localPreview = isLocalCataloguePreviewEnabled()

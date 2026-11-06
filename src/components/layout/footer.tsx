@@ -15,7 +15,7 @@ import { SocialProfileLinks } from "@/components/social/social-profile-links";
 import { CookieSettingsButton } from "@/components/analytics/consent-manager";
 import { useLeadEoi } from "@/components/lead-eoi/lead-eoi-controller";
 import { COMPANY_IDENTITY } from "@/lib/company-identity";
-import { CAREERS_PUBLIC_ENABLED, isCareersPath } from "@/lib/careers-availability";
+import { CAREERS_PUBLIC_ENABLED, isCareersContactPath } from "@/lib/careers-availability";
 
 const COMPANY_PHONE_DISPLAY = "+44 7496 033321";
 const COMPANY_PHONE_HREF = "tel:+447496033321";
@@ -35,7 +35,7 @@ export function Footer({ careersEmail }: { careersEmail: string }) {
   const { openBuyer, openSeller } = useLeadModals();
   const { enabled: leadIntakeEnabled } = useLeadEoi();
   const pathname = usePathname();
-  const isCareersPage = isCareersPath(pathname);
+  const isCareersPage = isCareersContactPath(pathname);
   const year = new Date().getFullYear();
 
   return (
@@ -179,7 +179,7 @@ export function Footer({ careersEmail }: { careersEmail: string }) {
               </li>
             </>
           ) : null}
-          <li>
+          {!isCareersPage ? <li>
             <a
               href={`mailto:${COMPANY_EMAIL}`}
               className="flex items-center gap-2.5 text-sm text-white/60 transition-colors hover:text-white"
@@ -187,7 +187,7 @@ export function Footer({ careersEmail }: { careersEmail: string }) {
               <Mail className="h-4 w-4 shrink-0 text-gold-400" />
               {COMPANY_EMAIL}
             </a>
-          </li>
+          </li> : null}
           <li>
             <a
               href={`mailto:${careersEmail}`}

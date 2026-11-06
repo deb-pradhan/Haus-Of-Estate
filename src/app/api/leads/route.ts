@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { DatabaseUnavailableError } from "@/lib/db-errors";
 import { attemptImmediateLeadDelivery } from "@/lib/lead-delivery";
+import { isBrochureEmailReady } from "@/lib/lead-delivery/brochure";
 import {
   LeadConflictError,
   LeadInfrastructureError,
@@ -22,12 +23,26 @@ export const runtime = "nodejs";
 
 const MAX_BODY_BYTES = 64 * 1_024;
 
+export async function GET() {
+  const intakeReady = isLeadIntakeReady();
+  return NextResponse.json(
+    {
+      intakeReady,
+      brochureEmailEnabled: intakeReady &&
+        process.env.LEAD_DELIVERY_ENABLED?.toLowerCase() === "true" &&
+        process.env.BROCHURE_EMAIL_ENABLED?.toLowerCase() === "true" &&
+        isBrochureEmailReady(),
+    },
+    { headers: { "Cache-Control": "no-store" } },
+  );
+}
+
 function errorResponse(
   error: string,
   status: number,
   extra?: Record<string, unknown>,
 ) {
-  return NextResponse.json({ error, ...extra }, { status });
+  return NextResponse.json({ error, ...extra }, { status, headers: { "Cache-Control": "no-store" } });
 }
 
 function isPrismaFailure(error: unknown): boolean {
@@ -106,8 +121,9 @@ export async function POST(request: Request) {
         score: result.score,
         leadId: result.leadId,
         submissionId: result.submissionId,
+        ...(result.brochureQueued === true ? { brochureQueued: true } : {}),
       },
-      { status: result.created ? 201 : 200 },
+      { status: result.created ? 201 : 200, headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
     if (error instanceof LeadValidationError) {
@@ -126,7 +142,10 @@ export async function POST(request: Request) {
         { error: "Too many submissions" },
         {
           status: 429,
-          headers: { "Retry-After": String(error.retryAfterSeconds) },
+          headers: {
+            "Retry-After": String(error.retryAfterSeconds),
+            "Cache-Control": "no-store",
+          },
         },
       );
     }

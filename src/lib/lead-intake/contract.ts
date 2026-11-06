@@ -54,6 +54,18 @@ export const leadIntakeV2Schema = z
       })
       .strict()
       .optional(),
+    brochure: z
+      .object({
+        designId: z
+          .string()
+          .trim()
+          .min(1)
+          .max(96)
+          .regex(/^[a-zA-Z0-9_-]+$/)
+          .optional(),
+      })
+      .strict()
+      .optional(),
     contact: z
       .object({
         firstName: z.string().trim().min(1).max(80),
@@ -132,6 +144,30 @@ export const leadIntakeV2Schema = z
         message:
           "Confirm that you have read and understood the privacy notice.",
       });
+    }
+
+    if (input.brochure) {
+      if (!input.project) {
+        context.addIssue({
+          code: "custom",
+          path: ["project"],
+          message: "Select the property whose brochure you want.",
+        });
+      }
+      if (!["buy", "rent", "invest"].includes(input.interest)) {
+        context.addIssue({
+          code: "custom",
+          path: ["brochure"],
+          message: "Brochure requests require a buyer, renter or investor enquiry.",
+        });
+      }
+      if (!hasCurrentVersion || !input.privacyAcknowledged) {
+        context.addIssue({
+          code: "custom",
+          path: ["brochure"],
+          message: "Brochure requests require the current privacy acknowledgement.",
+        });
+      }
     }
 
     if (input.interest === "newsletter_only" && !input.newsletterOptIn) {

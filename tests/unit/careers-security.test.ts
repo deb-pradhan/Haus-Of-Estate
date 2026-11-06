@@ -22,6 +22,8 @@ describe('careers email-only intake readiness and protection', () => {
     vi.stubEnv('RESEND_FROM_EMAIL', 'noreply@hausofestate.com')
     vi.stubEnv('CAREERS_EMAIL', 'not-an-email')
     expect(isCareersIntakeEnabled()).toBe(false)
+    vi.stubEnv('CAREERS_EMAIL', 'personal@example.test')
+    expect(isCareersIntakeEnabled()).toBe(false)
     vi.stubEnv('CAREERS_EMAIL', 'careers@hausofestate.com')
     vi.stubEnv('CAREERS_INTAKE_ENABLED', 'false')
     expect(isCareersIntakeEnabled()).toBe(false)

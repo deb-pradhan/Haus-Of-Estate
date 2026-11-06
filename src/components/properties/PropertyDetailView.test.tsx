@@ -4,6 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { LeadOpenOptions, LeadProjectContext } from '@/components/lead-eoi/types'
 import { PropertyDetailView, type PropertyDetail, type PropertyMedia } from './PropertyDetailView'
 import PropertyDetailPage, { generateMetadata } from '@/app/(main)/properties/[slug]/page'
+import PropertyPreviewPage from '@/app/dev/property-previews/[slug]/page'
+import type { PropertyPreview } from '@/lib/property-previews'
 import { PROPERTY_DEVELOPMENTS_QUERY } from '@/sanity/queries'
 import { DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGES } from '@/lib/seo'
 
@@ -16,11 +18,13 @@ const controls = vi.hoisted(() => ({
   draftMode: vi.fn(),
   fetch: vi.fn(),
   urlFor: vi.fn(),
+  previews: vi.fn(),
 }))
 
 vi.mock('next/headers', () => ({ draftMode: controls.draftMode }))
 vi.mock('@/sanity/live', () => ({ sanityFetch: controls.fetch }))
 vi.mock('@/sanity', () => ({ urlFor: controls.urlFor }))
+vi.mock('@/lib/property-previews', () => ({ loadPropertyPreviews: controls.previews, loadPropertyPreview: vi.fn() }))
 vi.mock('next/image', () => ({
   default: ({ src, alt, className }: { src: string; alt: string; className?: string }) => createElement('img', { src, alt, className }),
 }))
@@ -73,6 +77,118 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs())
 
 describe('shared property details', () => {
+  it('connects the development overview and selected design buttons to the isolated demo', () => {
+    vi.stubEnv('NODE_ENV', 'development')
+    const overview = renderToStaticMarkup(<PropertyDetailView property={property} media={media}
+      preview={{ kind: 'development', brochureDemo: true }} />)
+    expect(overview).toContain('href="/dev/property-previews#villas"')
+    expect(overview).toContain('Choose a home &amp; request brochure')
+    expect(overview).not.toContain('Enquiries disabled in preview')
+
+    const home = { ...property, slug: 'azizi-florence-4-bedroom-villas', designVariants: [{
+      _key: 'type-b', label: 'Type B', sellableAreaSqFt: 3831, images: [], floorPlans: [],
+    }] }
+    const details = renderToStaticMarkup(<PropertyDetailView property={home} media={media}
+      preview={{ kind: 'home-type', brochureDemo: true }} />)
+    expect(details).toContain('href="/dev/property-previews/azizi-florence-4-bedroom-villas/brochure-demo?design=type-b"')
+    expect(details).not.toContain('Enquiries disabled in preview')
+    expect(details).not.toContain('Brochure requests are disabled in preview.')
+  })
+
+  it('does not expose demo actions in production even with a preview demo prop', () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    const html = renderToStaticMarkup(<PropertyDetailView property={property} media={media}
+      preview={{ kind: 'development', brochureDemo: true }} />)
+    expect(html).toContain('Enquiries disabled in preview')
+    expect(html).not.toContain('Choose a home &amp; request brochure')
+    expect(html).not.toContain('/brochure-demo')
+  })
+
+  it('keeps the local community journey within its five matching preview collections', async () => {
+    vi.stubEnv('NODE_ENV', 'development')
+    vi.stubEnv('HAUS_BROCHURE_DEMO_ENABLED', 'true')
+    controls.urlFor.mockImplementation(() => { throw new Error('Local media must not use the Sanity image builder') })
+    const overview: PropertyPreview = {
+      kind: 'development', media,
+      document: { _id: property._id, _type: 'property', title: property.title,
+        community: property.community, city: property.city, country: 'United Arab Emirates',
+        summary: property.summary, amenities: property.amenities,
+        listingType: ['sale'], availability: ['off-plan'],
+        slug: { _type: 'slug', current: property.slug } },
+    }
+    const collection = (unitType: string, bedrooms: number): PropertyPreview => {
+      const slug = `azizi-florence-${bedrooms}-bedroom-${unitType.toLowerCase()}s`
+      return { kind: 'home-type', media, document: {
+        ...overview.document, _id: slug, slug: { _type: 'slug', current: slug },
+        title: `${bedrooms}-bedroom ${unitType.toLowerCase()}s`, unitType, bedrooms,
+        masterDevelopment: property.title, priceAmount: bedrooms * 1_000_000,
+        priceCurrency: 'AED', priceDisplay: 'Clusters 1 & 2',
+        designVariants: [{ _key: 'type-a', label: `${bedrooms}-bedroom Type A`, sellableAreaSqFt: 3000, images: [{
+          src: `/dev/property-previews/media/${slug}.jpg`, alt: `${bedrooms}-bedroom ${unitType} rendering`,
+        }], floorPlans: [] }],
+      } }
+    }
+    const homes = [collection('Townhouse', 4), collection('Villa', 6), collection('Villa', 4),
+      collection('Townhouse', 3), collection('Villa', 5)]
+    const unrelated = (id: string, changes: Partial<PropertyPreview['document']>): PropertyPreview => ({
+      ...homes[0], document: { ...homes[0].document, _id: id,
+        slug: { _type: 'slug', current: id }, ...changes },
+    })
+    controls.previews.mockResolvedValue([overview, ...homes,
+      unrelated('other-master', { masterDevelopment: 'Another development' }),
+      unrelated('other-community', { community: 'Another community' }),
+      unrelated('other-city', { city: 'Another city' }),
+      unrelated('other-country', { country: 'Another country' }),
+      { ...unrelated('individual-home', {}), kind: 'property' },
+    ])
+
+    const html = renderToStaticMarkup(await PropertyPreviewPage({ params: Promise.resolve({ slug: property.slug }) }))
+    const collectionLinks = [...html.matchAll(/href="(\/dev\/property-previews\/azizi-florence-\d-bedroom-[^"]+)"/g)]
+      .map((match) => match[1])
+    expect(collectionLinks).toEqual([
+      '/dev/property-previews/azizi-florence-4-bedroom-villas',
+      '/dev/property-previews/azizi-florence-5-bedroom-villas',
+      '/dev/property-previews/azizi-florence-6-bedroom-villas',
+      '/dev/property-previews/azizi-florence-3-bedroom-townhouses',
+      '/dev/property-previews/azizi-florence-4-bedroom-townhouses',
+    ])
+    expect(html).toContain('href="#home-collections"')
+    expect(html).toContain('Choose a home &amp; request brochure')
+    expect(html).toContain('id="villas"')
+    expect(html).toContain('id="townhouses"')
+    expect(html).toContain('Planned community amenities')
+    expect(html).toContain('Clusters 1 &amp; 2')
+    expect(html).toContain('src="/dev/property-previews/media/azizi-florence-4-bedroom-villas.jpg"')
+    expect(html.match(/<h1\b/g)).toHaveLength(1)
+    expect(html).not.toMatch(/other-master|other-community|other-city|other-country|individual-home/)
+    expect(html).not.toContain('href="/properties/azizi-florence-')
+    expect(html).not.toContain('href="/dev/property-previews#villas"')
+    expect(controls.lead).not.toHaveBeenCalled()
+    expect(controls.project).not.toHaveBeenCalled()
+  })
+
+  it('keeps collection pricing separate from the selected design and continues to its brochure action', () => {
+    vi.stubEnv('NODE_ENV', 'development')
+    const html = renderToStaticMarkup(<PropertyDetailView property={{ ...property,
+      priceAmount: 2260000, priceCurrency: 'AED', priceDisplay: 'AED 2,260,000–3,418,000 · Clusters 1 & 2',
+      designVariants: [{ _key: 'novoli-corner', label: 'Novoli corner', family: 'Novoli', rowHomes: 4,
+        plotAreaStatus: 'conflict', plotAreaSqFt: 9999, sellableAreaSqFt: 2711, images: [], floorPlans: [],
+      }, { _key: 'spada-middle', label: 'Spada middle', family: 'Spada', rowHomes: 6,
+        plotAreaSqFt: 1938, sellableAreaSqFt: 2663, images: [], floorPlans: [],
+      }],
+    }} media={media} preview={{ kind: 'home-type', brochureDemo: true }} />)
+    expect(html).toContain('Supplied collection range')
+    expect(html).toContain('Prices apply to the bedroom collection.')
+    expect(html).toContain('href="#selected-design"')
+    expect(html).toContain('/brochure-demo?design=novoli-corner')
+    expect(html).toContain('2,663')
+    expect(html).toContain('1,938 sq ft')
+    expect(html).not.toContain('9,999')
+    expect(html).not.toContain('9999')
+    expect(html).toContain('>Novoli</h3>')
+    expect(html).toContain('>Spada</h3>')
+  })
+
   it('renders the published community overview, grouped home links and public parent navigation', async () => {
     controls.urlFor.mockReturnValue({ width: vi.fn().mockReturnThis(), height: vi.fn().mockReturnThis(), fit: vi.fn().mockReturnThis(), url: () => '/sized-villa-design.jpg' })
     const overview = { ...property, unitType: 'Development' }

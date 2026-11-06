@@ -17,6 +17,11 @@ export function isCareersPath(pathname: string): boolean {
   return /^\/careers(?:\/|$)/i.test(path);
 }
 
+// Contact presentation is separate from the public vacancy allowlist.
+export function isCareersContactPath(pathname: string): boolean {
+  return isCareersPath(pathname);
+}
+
 export function careersUnavailableResponse(): Response {
   return new Response(
     '<!doctype html><html lang="en"><head><meta charset="utf-8">' +

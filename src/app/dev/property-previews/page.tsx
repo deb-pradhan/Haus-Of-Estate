@@ -4,6 +4,7 @@ import { ArrowRight } from 'lucide-react'
 import { loadPropertyPreviews } from '@/lib/property-previews'
 import { PropertyPrice } from '@/components/currency/property-price'
 import { isConceptMedia, propertyMediaCaption } from '@/lib/property-media'
+import { isBrochureDemoEnabled } from '@/lib/brochures/local-demo'
 
 export default async function PropertyPreviewsPage() {
   const previews = await loadPropertyPreviews()
@@ -19,6 +20,7 @@ export default async function PropertyPreviewsPage() {
   }))
   const hasHomeTypes = groups.some(({ homes }) => homes.length > 0)
   const hasFlorence = Boolean(overview) || hasHomeTypes
+  const brochureDemo = isBrochureDemoEnabled()
 
   return (
     <div className="min-h-screen bg-background px-4 py-12 md:px-6 md:py-16">
@@ -32,7 +34,8 @@ export default async function PropertyPreviewsPage() {
         </nav>
         <div className="mt-4 rounded-xl border border-gold-500/30 bg-gold-500/10 px-4 py-3 text-xs leading-relaxed text-estate-700">
           <strong>Draft preview · not published.</strong>{' '}
-          {hasFlorence ? 'Florence prices apply to Clusters 1 & 2. Design areas are brochure figures; flagged plot areas await clarification. Current payment terms, handover and availability require confirmation.' : 'Listing details await confirmation. Proposed interiors are AI-assisted concepts, not completed works.'} Enquiries are disabled.
+          {hasFlorence ? 'Florence prices apply to Clusters 1 & 2. Design areas are brochure figures; flagged plot areas await clarification. Current payment terms, handover and availability require confirmation.' : 'Listing details await confirmation. Proposed interiors are AI-assisted concepts, not completed works.'}{' '}
+          {brochureDemo && hasFlorence ? 'Open a home collection and use Request full brochure to try the form and email preview. Nothing is saved or sent.' : 'Enquiries are disabled.'}
         </div>
         {!overview && <h1 className="mt-8 font-serif text-4xl font-medium text-estate-700">Property draft previews</h1>}
 
@@ -51,9 +54,12 @@ export default async function PropertyPreviewsPage() {
                     <h1 id="florence-title" className="mt-3 font-serif text-4xl font-medium text-estate-700 md:text-5xl">{overview.document.title}</h1>
                     <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{overview.document.summary}</p>
                     {overview.document.amenities?.length ? (
-                      <ul className="mt-5 space-y-2 border-t border-border pt-5 text-sm text-estate-700">
+                      <div className="mt-5 border-t border-border pt-5">
+                      <p className="text-xs uppercase tracking-wider text-muted-foreground">Planned community amenities</p>
+                      <ul className="mt-3 space-y-2 text-sm text-estate-700">
                         {overview.document.amenities.slice(0, 3).map((amenity) => <li key={amenity}>{amenity}</li>)}
                       </ul>
+                      </div>
                     ) : null}
                     <Link href={`/dev/property-previews/${overview.document.slug.current}`} className="mt-7 inline-flex min-h-11 w-fit items-center gap-3 rounded-md bg-estate-700 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-estate-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-estate-700">
                       Explore the community <ArrowRight aria-hidden className="h-4 w-4" />
@@ -65,7 +71,7 @@ export default async function PropertyPreviewsPage() {
             {hasHomeTypes && <div className="mt-12 flex flex-col justify-between gap-4 border-b border-border pb-6 sm:flex-row sm:items-end">
               <div>
                 <h2 className="font-serif text-3xl text-estate-700">Find your home at Florence</h2>
-                <p className="mt-2 text-sm text-muted-foreground">Explore the home designs. Individual units await confirmed inventory.</p>
+                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">Choose a bedroom collection, compare its designs and floor plans, then request the full brochure for the collection that interests you.</p>
               </div>
               <nav aria-label="Home types" className="flex gap-5 text-sm text-estate-700">
                 {groups.filter(({ homes }) => homes.length).map(({ id, title }) => <a key={id} href={`#${id}`} className="py-2 underline underline-offset-4">{title}</a>)}
@@ -75,7 +81,7 @@ export default async function PropertyPreviewsPage() {
               const prices = homes.map(({ document }) => document.priceCurrency === 'AED' ? document.priceAmount : undefined)
               const startingPrice = prices.every((price): price is number => typeof price === 'number') ? Math.min(...prices) : undefined
               return (
-                <section key={id} id={id} aria-labelledby={`${id}-title`} className="mt-10 scroll-mt-24 md:mt-12 md:scroll-mt-32">
+                <section key={id} id={id} aria-labelledby={`${id}-title`} className="mt-10 scroll-mt-32 md:mt-12 lg:scroll-mt-48">
                   <div className="mb-5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
                     <h3 id={`${id}-title`} className="font-serif text-sm uppercase tracking-[0.24em] text-estate-700">{title}</h3>
                     {startingPrice !== undefined && <p className="text-sm text-estate-700"><PropertyPrice amount={startingPrice} currency="AED" prefix="From " /> <span className="text-xs text-muted-foreground">· Clusters 1 & 2</span></p>}

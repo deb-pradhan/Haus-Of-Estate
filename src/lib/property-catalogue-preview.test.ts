@@ -76,14 +76,14 @@ describe('local catalogue preview groups', () => {
   it.each([
     { availability: 'ready' }, { availability: 'off-plan' }, { intent: 'rent' },
     { category: 'commercial' }, { country: 'United Kingdom' }, { city: 'Dubai' },
-    { location: 'Dubai' }, { beds: '7' }, { beds: '0' }, { type: 'Apartment' }, { q: 'unrelated' },
+    { location: 'Dubai' }, { area: 'Orchard' }, { area: 'Another Grove' }, { beds: '7' }, { beds: '0' }, { type: 'Apartment' }, { q: 'unrelated' },
   ])('excludes unsupported collection filters %j', async (params) => {
     expect(await loadCataloguePreviewGroups(params)).toEqual([])
   })
 
   it('filters homes by country, city, legacy location, type and minimum bedrooms', async () => {
     const groups = await loadCataloguePreviewGroups({ country: ' united arab emirates ', city: 'SHARJAH',
-      location: 'Orchard Grove', type: 'Townhouse', beds: '4' })
+      location: 'Orchard Grove', area: ' orchard   GROVE ', type: 'Townhouse', beds: '4' })
     expect(groups).toHaveLength(1)
     expect(groups[0].overview).toBe(previews[0])
     expect(groups[0].homes).toEqual([previews[5]])
@@ -118,8 +118,8 @@ describe('local catalogue geography isolation', () => {
     expect(response.headers.get('cache-control')).toBe('private, no-store, max-age=0')
     expect(response.headers.get('x-robots-tag')).toContain('noindex')
     expect(await response.json()).toEqual({ locations: [
-      { country: 'United Arab Emirates', cities: ['Dubai', 'SHARJAH'] },
-      { country: 'United Kingdom', cities: ['London'] },
+      { country: 'United Arab Emirates', cities: ['Dubai', 'SHARJAH'], areasByCity: { Dubai: [], SHARJAH: ['Orchard Grove'] } },
+      { country: 'United Kingdom', cities: ['London'], areasByCity: { London: [] } },
     ] })
   })
 
@@ -129,7 +129,7 @@ describe('local catalogue geography isolation', () => {
     const response = await GET()
     expect(response.headers.get('cache-control')).toBe('public, max-age=0, s-maxage=60, stale-while-revalidate=300')
     expect(response.headers.has('x-robots-tag')).toBe(false)
-    expect(await response.json()).toEqual({ locations: [{ country: 'United Kingdom', cities: ['London'] }] })
+    expect(await response.json()).toEqual({ locations: [{ country: 'United Kingdom', cities: ['London'], areasByCity: { London: [] } }] })
     expect(controls.previews).not.toHaveBeenCalled()
   })
 
@@ -137,7 +137,7 @@ describe('local catalogue geography isolation', () => {
     controls.fetch.mockResolvedValue({ data: null })
     const local = await GET()
     expect(local.status).toBe(200)
-    expect(await local.json()).toEqual({ locations: [{ country: 'United Arab Emirates', cities: ['Sharjah'] }] })
+    expect(await local.json()).toEqual({ locations: [{ country: 'United Arab Emirates', cities: ['Sharjah'], areasByCity: { Sharjah: ['Orchard Grove'] } }] })
     vi.stubEnv('NODE_ENV', 'production')
     const production = await GET()
     expect(production.status).toBe(503)

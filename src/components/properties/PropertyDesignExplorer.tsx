@@ -2,6 +2,7 @@
 
 import { useId, useState } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { Check, Expand, House } from 'lucide-react'
 import type { PropertyDesign, PropertyDesignImage, PropertyInteriorScheme } from '@/lib/property-designs'
 import type { LeadProjectContext } from '@/components/lead-eoi/types'
@@ -9,6 +10,12 @@ import { PropertyBrochureRequestTrigger } from '@/components/lead-eoi/property-b
 import { PropertyPhotoBranding } from './property-photo-branding'
 
 const areaFormatter = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 })
+
+function plotAreaLabel(design: PropertyDesign) {
+  return design.plotAreaStatus !== 'conflict' && typeof design.plotAreaSqFt === 'number'
+    ? `${areaFormatter.format(design.plotAreaSqFt)} sq ft`
+    : 'Awaiting confirmation'
+}
 
 function DesignPhotos({ images, preview, showHausLogo }: {
   images: PropertyDesignImage[]
@@ -34,7 +41,7 @@ function DesignPhotos({ images, preview, showHausLogo }: {
             <button
               key={`${image.src}-${index}`}
               type="button"
-              aria-label={`Show ${image.label || image.alt}`}
+              aria-label={`Show view ${index + 1}: ${image.label || image.alt}`}
               aria-pressed={selectedIndex === index}
               onClick={() => setSelectedIndex(index)}
               className={`relative h-16 w-24 shrink-0 overflow-hidden rounded-md border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-estate-700 ${selectedIndex === index ? 'border-estate-700' : 'border-transparent'}`}
@@ -48,60 +55,76 @@ function DesignPhotos({ images, preview, showHausLogo }: {
   )
 }
 
-export function PropertyDesignExplorer({ designs, interiorSchemes = [], project, interactionsEnabled = false, preview = false, showHausLogo }: {
+export function PropertyDesignExplorer({ designs, interiorSchemes = [], project, interactionsEnabled = false, preview = false, showHausLogo, brochureDemoHref }: {
   designs: PropertyDesign[]
   interiorSchemes?: PropertyInteriorScheme[]
   project: LeadProjectContext
   interactionsEnabled?: boolean
   preview?: boolean
   showHausLogo?: boolean
+  brochureDemoHref?: string
 }) {
   const [selectedKey, setSelectedKey] = useState(designs[0]?._key)
   const [schemeKey, setSchemeKey] = useState(interiorSchemes[0]?._key)
   const sectionId = useId()
   const selected = designs.find((design) => design._key === selectedKey) ?? designs[0]
   const scheme = interiorSchemes.find((item) => item._key === schemeKey) ?? interiorSchemes[0]
+  const demoHref = process.env.NODE_ENV === 'development' && preview ? brochureDemoHref : undefined
   if (!selected) return null
 
-  const plotArea = selected.plotAreaStatus !== 'conflict' && typeof selected.plotAreaSqFt === 'number'
-    ? `${areaFormatter.format(selected.plotAreaSqFt)} sq ft`
-    : 'Awaiting confirmation'
+  const plotArea = plotAreaLabel(selected)
+  const families = [...new Set(designs.map((design) => design.family ?? ''))]
+  const grouped = families.length > 1
+  const designGroups = grouped
+    ? families.map((family) => ({ family, designs: designs.filter((design) => (design.family ?? '') === family) }))
+    : [{ family: '', designs }]
   const position = selected.position === 'standalone' ? 'Standalone villa' : selected.position ? `${selected.position === 'corner' ? 'Corner' : 'Middle'} home` : undefined
 
   return (
-    <section className="mt-10 border-t border-border pt-8" aria-labelledby={`${sectionId}-heading`}>
+    <section id="home-designs" className="mt-10 scroll-mt-32 border-t border-border pt-8 lg:scroll-mt-48" aria-labelledby={`${sectionId}-heading`}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id={`${sectionId}-heading`} className="font-serif text-2xl font-medium text-estate-700">Home designs</h2>
         <span className="text-xs text-muted-foreground">{designs.length} brochure designs</span>
       </div>
-      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Explore each design’s images, floor plans and areas. Designs illustrate the collection; individual homes and availability are confirmed on enquiry.</p>
+      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Compare the layouts and areas, then select a design to see its images and floor plans. Individual homes and availability are confirmed on enquiry.</p>
+      {designs.some((design) => design.rowHomes) && <p className="mt-2 text-xs leading-relaxed text-muted-foreground">Row images show several connected homes. Corner and middle layouts can share the same exterior image.</p>}
 
-      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3" aria-label="Choose a home design">
-        {designs.map((design) => {
+      <div className="mt-5 space-y-6" aria-label="Choose a home design">
+        {designGroups.map((group) => <div key={group.family}>
+          {grouped && <h3 className="mb-3 font-serif text-lg font-medium text-estate-700">{group.family || 'Other designs'}</h3>}
+          <div className="grid gap-3 min-[480px]:grid-cols-2">
+        {group.designs.map((design) => {
           const active = selected._key === design._key
           const thumbnail = design.images[0]
           return (
             <button
               key={design._key}
               type="button"
+              aria-label={`Select ${design.label}`}
               aria-pressed={active}
-              aria-controls={`${sectionId}-design`}
+              aria-controls="selected-design"
               onClick={() => setSelectedKey(design._key)}
-              className={`overflow-hidden rounded-xl border text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-estate-700 ${active ? 'border-estate-700 bg-estate-700/5 ring-1 ring-estate-700' : 'border-border bg-surface hover:border-estate-700/50'}`}
+              className={`grid h-full grid-cols-[80px_minmax(0,1fr)] overflow-hidden rounded-xl border text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-estate-700 min-[480px]:flex min-[480px]:flex-col ${active ? 'border-estate-700 bg-estate-700/5 ring-1 ring-estate-700' : 'border-border bg-surface hover:border-estate-700/50'}`}
             >
-              <span className="relative flex aspect-[3/2] items-center justify-center overflow-hidden bg-estate-700/5">
-                {thumbnail ? <Image src={thumbnail.src} alt="" fill sizes="(max-width: 640px) 45vw, 220px" className="object-cover" unoptimized={preview} /> : <House className="h-8 w-8 text-estate-700/40" aria-hidden="true" />}
+              <span className="relative row-span-2 flex h-full w-full items-center justify-center overflow-hidden bg-estate-700/5 min-[480px]:aspect-[2/1] min-[480px]:h-auto">
+                {thumbnail ? <Image src={thumbnail.src} alt="" fill sizes="(max-width: 479px) 80px, (max-width: 1023px) 50vw, 350px" className="object-cover" unoptimized={preview} /> : <House className="h-8 w-8 text-estate-700/40" aria-hidden="true" />}
               </span>
-              <span className="flex min-h-16 items-center justify-between gap-2 p-3 text-sm font-medium text-estate-700">
+              <span className="flex w-full items-start justify-between gap-2 px-3 pt-3 text-sm font-medium text-estate-700 min-[480px]:px-4 min-[480px]:pt-4">
                 {design.label}
                 {active && <Check className="h-4 w-4 shrink-0" aria-hidden="true" />}
+              </span>
+              <span className="mt-auto block w-full px-3 pb-3 pt-2 text-xs leading-relaxed min-[480px]:px-4 min-[480px]:pb-4 min-[480px]:pt-3">
+                <span className="flex flex-wrap justify-between gap-x-2"><span className="text-muted-foreground">Built-up area</span><span className="font-medium tabular-nums text-estate-700">{areaFormatter.format(design.sellableAreaSqFt)} sq ft</span></span>
+                <span className="mt-1 flex flex-wrap justify-between gap-x-2"><span className="text-muted-foreground">Plot area</span><span className="font-medium tabular-nums text-estate-700">{plotAreaLabel(design)}</span></span>
               </span>
             </button>
           )
         })}
+          </div>
+        </div>)}
       </div>
 
-      <div id={`${sectionId}-design`} className="mt-6 rounded-2xl border border-border bg-surface p-4 sm:p-6">
+      <div id="selected-design" className="mt-6 scroll-mt-32 rounded-2xl border border-border bg-surface p-4 sm:p-6 lg:scroll-mt-48">
         <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Selected design</p>
         <h3 className="mt-1 font-serif text-xl font-medium text-estate-700" aria-live="polite">{selected.label}</h3>
         {(selected.rowHomes || position) && (
@@ -109,7 +132,7 @@ export function PropertyDesignExplorer({ designs, interiorSchemes = [], project,
         )}
         {selected.summary && <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{selected.summary}</p>}
 
-        <dl className="mt-5 grid grid-cols-1 gap-3 min-[400px]:grid-cols-2">
+        <dl className="mt-5 grid grid-cols-1 gap-3 min-[360px]:grid-cols-2">
           <div className="rounded-xl border border-border bg-background p-4">
             <dt className="text-xs uppercase tracking-wider text-muted-foreground">Plot area</dt>
             <dd className="mt-1 text-lg font-medium text-estate-700">{plotArea}</dd>
@@ -120,6 +143,20 @@ export function PropertyDesignExplorer({ designs, interiorSchemes = [], project,
           </div>
         </dl>
         <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{selected.plotAreaStatus === 'conflict' ? 'The brochure’s plot dimensions and area table differ. Plot area is awaiting confirmation.' : 'Areas shown are from the supplied brochure.'}{selected.plotAreaStatus !== 'conflict' && selected.areaNote ? ` ${selected.areaNote}` : ''}</p>
+
+        <div className="mt-5 border-t border-border pt-5">
+          {demoHref ? <Link
+            href={`${demoHref}?design=${encodeURIComponent(selected._key)}`}
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-estate-700 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-estate-600 sm:w-auto">
+            Request full brochure
+          </Link> : <PropertyBrochureRequestTrigger
+            project={project}
+            design={{ id: selected._key, label: selected.label }}
+            disabled={!interactionsEnabled}
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-estate-700 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-estate-600 disabled:cursor-not-allowed disabled:bg-estate-700/15 disabled:text-estate-700/70 sm:w-auto"
+          />}
+          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{demoHref ? 'Try the request form with this design selected. Local demonstration only; nothing is saved or emailed.' : interactionsEnabled ? 'Request the collection’s full brochure with this design noted as your interest.' : 'Brochure requests are disabled in preview.'}</p>
+        </div>
 
         <div className="mt-6">
           <DesignPhotos key={selected._key} images={selected.images} preview={preview} showHausLogo={showHausLogo} />
@@ -150,19 +187,10 @@ export function PropertyDesignExplorer({ designs, interiorSchemes = [], project,
             </div>
           </div>
         )}
-        <div className="mt-6 border-t border-border pt-5">
-          <PropertyBrochureRequestTrigger
-            project={project}
-            design={{ id: selected._key, label: selected.label }}
-            disabled={!interactionsEnabled}
-            className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-estate-700 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-estate-600 disabled:cursor-not-allowed disabled:bg-estate-700/15 disabled:text-estate-700/70 sm:w-auto"
-          />
-          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{interactionsEnabled ? 'Request the collection’s full brochure with this design noted as your interest.' : 'Brochure requests are disabled in preview.'}</p>
-        </div>
       </div>
 
       {scheme && (
-        <section className="mt-8" aria-labelledby={`${sectionId}-interiors`}>
+        <section id="interior-schemes" className="mt-8 scroll-mt-32 lg:scroll-mt-48" aria-labelledby={`${sectionId}-interiors`}>
           <h3 id={`${sectionId}-interiors`} className="font-serif text-xl font-medium text-estate-700">Interior schemes shown in the brochure</h3>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">These images show the brochure’s interior schemes. Whether a scheme can be chosen, which homes it applies to and what is included are awaiting confirmation.</p>
           <div className="mt-4 flex flex-wrap gap-2" aria-label="Compare brochure interior schemes">

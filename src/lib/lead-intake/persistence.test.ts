@@ -126,6 +126,71 @@ function database(overrides: Record<string, unknown> = {}) {
 }
 
 describe("Prisma lead intake transaction", () => {
+  function brochureSubmission(): PersistLeadSubmission {
+    const request = submission();
+    request.input.contact.firstName = "+Alex";
+    request.input.contact.email = "+alex@example.com";
+    request.input.project = { slug: "florence-villas" };
+    request.input.brochure = { designId: "villa-a" };
+    request.project = { slug: "florence-villas", title: "Florence Villas" };
+    request.brochure = {
+      key: "florence-4br",
+      revision: "2026-10",
+      projectSlug: "florence-villas",
+      projectTitle: "Florence Villas",
+      designId: "villa-a",
+      designLabel: "Villa Type A",
+      recipientName: "+Alex",
+      recipientEmail: "+alex@example.com",
+    };
+    request.payloadHash = hashNormalizedLead(request.input);
+    return request;
+  }
+
+  it("queues the selected brochure independently and atomically with the lead", async () => {
+    const { client, transaction } = database();
+    const request = brochureSubmission();
+    const result = await createPrismaLeadIntakeStore(client as never).persistSubmission(request);
+    expect(result).toMatchObject({
+      brochureQueued: true,
+      outboxIds: ["outbox-id", "outbox-id-sheets", "outbox-id-brochure"],
+    });
+    expect(transaction.leadDeliveryOutbox.create).toHaveBeenCalledTimes(3);
+    expect(transaction.leadDeliveryOutbox.create).toHaveBeenLastCalledWith({
+      data: expect.objectContaining({
+        id: "outbox-id-brochure",
+        leadId: "lead-id",
+        destination: "customer_brochure",
+        payload: expect.objectContaining({
+          eventId: "outbox-id-brochure",
+          brochure: request.brochure,
+          row: expect.objectContaining({ email: "'+alex@example.com", name: "'+Alex" }),
+        }),
+      }),
+    });
+    expect(transaction.newsletterSubscription.create).not.toHaveBeenCalled();
+    expect(transaction.propertyMatchSubscription.create).not.toHaveBeenCalled();
+    expect(client.$transaction).toHaveBeenCalledWith(expect.any(Function), { isolationLevel: "Serializable" });
+  });
+
+  it("rolls back the enquiry and other destinations when brochure queue creation fails", async () => {
+    const { client, transaction } = database();
+    let committed = false;
+    client.$transaction.mockImplementation(async (callback) => {
+      const result = await callback(transaction);
+      committed = true;
+      return result;
+    });
+    transaction.leadDeliveryOutbox.create
+      .mockResolvedValueOnce({ id: "outbox-id" })
+      .mockResolvedValueOnce({ id: "outbox-id-sheets" })
+      .mockRejectedValueOnce(new Error("brochure outbox write failed"));
+    await expect(createPrismaLeadIntakeStore(client as never).persistSubmission(brochureSubmission()))
+      .rejects.toThrow("brochure outbox write failed");
+    expect(committed).toBe(false);
+    expect(transaction.lead.create).toHaveBeenCalledTimes(1);
+  });
+
   it("persists a social query and queues its question and source without marketing subscriptions", async () => {
     const { client, transaction } = database();
     const store = createPrismaLeadIntakeStore(client as never);

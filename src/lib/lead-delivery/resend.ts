@@ -6,6 +6,7 @@ import type {
   LeadDeliveryPayload,
   LeadDeliveryDestination,
   LeadDeliveryTransport,
+  LeadDeliveryReceipt,
   LeadExcelRow,
 } from "./types";
 
@@ -51,7 +52,7 @@ export class ResendLeadDeliveryTransport implements LeadDeliveryTransport {
     payload: LeadDeliveryPayload,
     destination: LeadDeliveryDestination = "notification",
     context?: AttemptContext,
-  ): Promise<void> {
+  ): Promise<LeadDeliveryReceipt> {
     if (destination !== "notification")
       throw new LeadDeliveryError("RESEND_WRONG_DESTINATION", false);
     if (
@@ -130,6 +131,7 @@ export class ResendLeadDeliveryTransport implements LeadDeliveryTransport {
       ) {
         throw new LeadDeliveryError("RESEND_INVALID_ACK", true);
       }
+      return { provider: "resend", providerMessageId: result.id };
     } catch (error) {
       if (error instanceof LeadDeliveryError) throw error;
       throw new LeadDeliveryError(

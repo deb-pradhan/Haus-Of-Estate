@@ -83,7 +83,7 @@ export function createPrismaLeadDeliveryOutboxRepository(
       return record;
     },
 
-    async markDelivered(id, workerId, deliveredAt) {
+    async markDelivered(id, workerId, deliveredAt, receipt) {
       const result = await outbox.updateMany({
         where: {
           id,
@@ -93,6 +93,7 @@ export function createPrismaLeadDeliveryOutboxRepository(
         data: {
           status: LEAD_DELIVERY_STATUSES.delivered,
           deliveredAt,
+          ...(receipt ? { providerMessageId: receipt.providerMessageId } : {}),
           lockedAt: null,
           lockedBy: null,
           lastError: null,

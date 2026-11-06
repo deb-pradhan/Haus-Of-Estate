@@ -1,6 +1,7 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { db } from "@/lib/db";
 import { buildLeadDeliveryPayload } from "@/lib/lead-delivery";
+import type { LeadDeliveryPayload } from "@/lib/lead-delivery/types";
 import {
   PROPERTY_MATCH_CONSENT_WORDING,
   newsletterConsentWordingFor,
@@ -19,7 +20,7 @@ export interface ExistingLeadSubmission {
   payloadHash: string | null;
   score: number;
   tier: string | null;
-  deliveryOutbox?: Array<{ id: string }>;
+  deliveryOutbox?: Array<{ id: string; destination?: string }>;
 }
 
 export interface LeadScore {
@@ -31,6 +32,7 @@ export interface LeadScore {
 export interface PersistLeadSubmission {
   input: NormalizedLeadIntake;
   project?: PublishedProjectContext;
+  brochure?: NonNullable<LeadDeliveryPayload["brochure"]>;
   payloadHash: string;
   ipHash: string;
   leadId: string;
@@ -47,6 +49,7 @@ export interface StoredLeadSubmission {
   tier: string;
   outboxId?: string;
   outboxIds?: string[];
+  brochureQueued?: true;
 }
 
 export interface LeadIntakeStore {
@@ -72,6 +75,9 @@ function replayOrConflict(
     tier: existing.tier ?? "nurture",
     outboxId: existing.deliveryOutbox?.[0]?.id,
     outboxIds: existing.deliveryOutbox?.map((record) => record.id),
+    ...(existing.deliveryOutbox?.some((record) => record.destination === "customer_brochure")
+      ? { brochureQueued: true as const }
+      : {}),
   };
 }
 
@@ -125,7 +131,7 @@ export function createPrismaLeadIntakeStore(
           payloadHash: true,
           score: true,
           tier: true,
-          deliveryOutbox: { select: { id: true } },
+          deliveryOutbox: { select: { id: true, destination: true } },
         },
       });
     },
@@ -145,7 +151,7 @@ export function createPrismaLeadIntakeStore(
               payloadHash: true,
               score: true,
               tier: true,
-              deliveryOutbox: { select: { id: true } },
+              deliveryOutbox: { select: { id: true, destination: true } },
             },
           });
           if (existing) {
@@ -350,6 +356,7 @@ export function createPrismaLeadIntakeStore(
             campaign: input.context.utmCampaign,
             landingPage: input.context.pagePath,
             message: input.contact.message,
+            brochure: submission.brochure,
           });
           await transaction.leadDeliveryOutbox.create({
             data: {
@@ -374,6 +381,21 @@ export function createPrismaLeadIntakeStore(
             },
           });
 
+          const outboxIds = [submission.outboxId, sheetsOutboxId];
+          if (submission.brochure) {
+            const brochureOutboxId = `${submission.outboxId}-brochure`;
+            await transaction.leadDeliveryOutbox.create({
+              data: {
+                id: brochureOutboxId,
+                leadId: lead.id,
+                destination: "customer_brochure",
+                payload: { ...deliveryPayload, eventId: brochureOutboxId } as unknown as Prisma.InputJsonValue,
+                availableAt: submission.submittedAt,
+              },
+            });
+            outboxIds.push(brochureOutboxId);
+          }
+
           return {
             created: true,
             leadId: lead.id,
@@ -381,7 +403,8 @@ export function createPrismaLeadIntakeStore(
             score: scoring.score,
             tier: scoring.tier,
             outboxId: submission.outboxId,
-            outboxIds: [submission.outboxId, sheetsOutboxId],
+            outboxIds,
+            ...(submission.brochure ? { brochureQueued: true as const } : {}),
           };
         },
         { isolationLevel: "Serializable" },

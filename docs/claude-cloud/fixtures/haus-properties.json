@@ -1,0 +1,1999 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Protected design showcase only; not a Sanity import or live inventory feed.",
+  "preparedOn": "2026-11-06",
+  "provenance": {
+    "florence": "Allowlisted projection of the prepared Florence property snapshot dated 5 November 2026, based on supplied brochures and curated renders.",
+    "london": "Allowlisted anonymous query of the published North London property dated 6 November 2026.",
+    "media": "Existing Sanity CDN image references. No original packages or full brochures are included."
+  },
+  "requirements": [
+    "Protect preview access and send noindex headers; do not publish as a live inventory feed.",
+    "Render each display notice and preserve plan labels, captions and plot discrepancy notes.",
+    "Keep customer intake and email sending disabled; brochure requests are simulated only."
+  ],
+  "properties": [
+    {
+      "kind": "development",
+      "document": {
+        "_id": "showcase-azizi-florence",
+        "_type": "property",
+        "status": "draft",
+        "featured": false,
+        "slug": {
+          "_type": "slug",
+          "current": "azizi-florence"
+        },
+        "title": "Azizi Florence",
+        "community": "Florence",
+        "city": "Sharjah",
+        "country": "United Arab Emirates",
+        "developer": "Azizi Developments",
+        "category": "residential",
+        "unitType": "Development",
+        "summary": "A planned residential community in Sharjah alongside Sheikh Mohammed Bin Zayed Road (E311), with villa and townhouse designs, planned landscaped parkland and leisure amenities.",
+        "keyFeatures": [
+          "A Sharjah community alongside Sheikh Mohammed Bin Zayed Road (E311)",
+          "Four-, five- and six-bedroom villa designs over three floors",
+          "Three- and four-bedroom townhouse designs",
+          "Townhouses arranged in four-, six- and eight-home groups",
+          "Contemporary and Mediterranean-inspired residential clusters",
+          "Planned landscaped parkland, recreation and neighbourhood amenities"
+        ],
+        "amenities": [
+          "Landscaped gardens and parkland",
+          "Walking, running and cycling routes",
+          "Basketball, tennis and volleyball courts",
+          "Children's play areas",
+          "Skate and water-play areas",
+          "Outdoor theatre and fountains",
+          "Barbecue and picnic areas",
+          "Fitness and yoga areas",
+          "Swimming pools and clubhouses",
+          "Gyms, sauna, steam and jacuzzi facilities",
+          "Cafes and neighbourhood leisure spaces",
+          "Electric-vehicle charging"
+        ],
+        "description": [
+          {
+            "_type": "block",
+            "_key": "paragraph-1",
+            "style": "normal",
+            "markDefs": [],
+            "children": [
+              {
+                "_type": "span",
+                "_key": "text-1",
+                "text": "Azizi Florence is planned to bring together apartments, villas and townhouses in Sharjah alongside Sheikh Mohammed Bin Zayed Road (E311), with landscaped parkland and neighbourhood amenities throughout the community.",
+                "marks": []
+              }
+            ]
+          },
+          {
+            "_type": "block",
+            "_key": "paragraph-2",
+            "style": "normal",
+            "markDefs": [],
+            "children": [
+              {
+                "_type": "span",
+                "_key": "text-2",
+                "text": "The villa designs comprise four-, five- and six-bedroom homes over three floors. The townhouse designs include three- and four-bedroom homes arranged in four-, six- and eight-home groups, with a choice of corner and middle layouts.",
+                "marks": []
+              }
+            ]
+          },
+          {
+            "_type": "block",
+            "_key": "paragraph-3",
+            "style": "normal",
+            "markDefs": [],
+            "children": [
+              {
+                "_type": "span",
+                "_key": "text-3",
+                "text": "Planned community amenities include landscaped gardens, walking, running and cycling routes, sports courts, children’s play areas, clubhouses, swimming pools, fitness and wellness facilities, cafés and electric-vehicle charging. These are community proposals, not confirmation of facilities included with every home.",
+                "marks": []
+              }
+            ]
+          }
+        ]
+      },
+      "media": {
+        "hero": {
+          "src": "https://cdn.sanity.io/images/jdxbkry4/production/1ec1a3a48945583221769f8350146620f44399f3-2560x1439.jpg",
+          "alt": "Aerial architectural render of Azizi Florence in Sharjah.",
+          "width": 2560,
+          "height": 1439,
+          "mediaKind": "render"
+        },
+        "gallery": [
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/4c757561d38bf42733bfef39f54af30facd9c911-2000x1000.jpg",
+            "alt": "Daytime architectural render of the Azizi Florence entrance.",
+            "width": 2000,
+            "height": 1000,
+            "mediaKind": "render"
+          },
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/8375d7202cf827998937cd14ff50379aa9e17f91-2560x1423.jpg",
+            "alt": "Front-view architectural render of a four-bedroom villa at Azizi Florence.",
+            "width": 2560,
+            "height": 1423,
+            "mediaKind": "render"
+          },
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/a762fe8b8ea29d4586997a2ff70d66291138a91d-2560x1439.jpg",
+            "alt": "Street-view architectural render of a five-bedroom villa at Azizi Florence.",
+            "width": 2560,
+            "height": 1439,
+            "mediaKind": "render"
+          },
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/b8d7f8b9bc83cd451fecdd18494bd8bbf838f3fe-2560x1439.jpg",
+            "alt": "Front-view architectural render of a six-bedroom villa at Azizi Florence.",
+            "width": 2560,
+            "height": 1439,
+            "mediaKind": "render"
+          },
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/0ec4d5ff3f394f39cd3b32e172f4f84be051df16-2000x1125.jpg",
+            "alt": "Architectural render of a row of Azizi Florence townhouses.",
+            "width": 2000,
+            "height": 1125,
+            "mediaKind": "render"
+          },
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/88ee898e6ebd3bac98e10cf5e0368d41d0b35a3f-2000x1111.jpg",
+            "alt": "Architectural render of Azizi Florence townhouse gardens with boundary fences.",
+            "width": 2000,
+            "height": 1111,
+            "mediaKind": "render"
+          },
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/ab236d4108150f7e381dabf91eb6d2aef7dde97e-2000x1300.jpg",
+            "alt": "Interior architectural render of a three-bedroom townhouse living area at Azizi Florence.",
+            "width": 2000,
+            "height": 1300,
+            "mediaKind": "render"
+          },
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/81b5ff0e7a2c8c428661885ef87becb3c3a3d70e-2000x1116.jpg",
+            "alt": "Architectural render of a children's play area at Azizi Florence.",
+            "width": 2000,
+            "height": 1116,
+            "mediaKind": "render"
+          },
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/93895ef38e6dbf20c07b68f90036759e256cc5ee-2000x1124.jpg",
+            "alt": "Architectural render of the flower garden at Azizi Florence.",
+            "width": 2000,
+            "height": 1124,
+            "mediaKind": "render"
+          },
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/cd16d8f9e142f4f4555f03428f8603e38bedfcc2-2000x1125.jpg",
+            "alt": "Architectural render of a cafe and amphitheatre setting at Azizi Florence.",
+            "width": 2000,
+            "height": 1125,
+            "mediaKind": "render"
+          }
+        ]
+      },
+      "display": {
+        "inventoryNotice": "Design showcase. Contact sales for current prices and availability.",
+        "amenitiesHeading": "Planned community amenities",
+        "areaLabel": "Built-up area",
+        "areaSourceLabel": "The brochure labels this figure sellable area.",
+        "interiorNotice": "Brochure interior illustrations. Buyer-selectable finishes and inclusions are not confirmed.",
+        "brochureMode": "simulated-only"
+      }
+    },
+    {
+      "kind": "home-type",
+      "document": {
+        "_id": "showcase-azizi-florence-4-bedroom-villas",
+        "_type": "property",
+        "status": "draft",
+        "featured": false,
+        "slug": {
+          "_type": "slug",
+          "current": "azizi-florence-4-bedroom-villas"
+        },
+        "title": "Azizi Florence — 4-Bedroom Villas",
+        "community": "Florence",
+        "city": "Sharjah",
+        "country": "United Arab Emirates",
+        "developer": "Azizi Developments",
+        "category": "residential",
+        "unitType": "Villa",
+        "bedrooms": 4,
+        "summary": "Four-bedroom villa designs at Azizi Florence in Sharjah, with Type A and Type B layouts over three floors, planned landscaped parkland, recreation and neighbourhood amenities.",
+        "keyFeatures": [
+          "Four-bedroom villa design collection",
+          "Two distinct designs: Type A and Type B",
+          "Villa layouts over three floors",
+          "Part of Azizi Florence in Sharjah",
+          "Alongside Sheikh Mohammed Bin Zayed Road (E311)",
+          "Planned landscaped parkland, recreation and neighbourhood amenities"
+        ],
+        "amenities": [
+          "Landscaped gardens and parkland",
+          "Walking, running and cycling routes",
+          "Basketball, tennis and volleyball courts",
+          "Children's play areas",
+          "Skate and water-play areas",
+          "Outdoor theatre and fountains",
+          "Barbecue and picnic areas",
+          "Fitness and yoga areas",
+          "Swimming pools and clubhouses",
+          "Gyms, sauna, steam and jacuzzi facilities",
+          "Cafes and neighbourhood leisure spaces",
+          "Electric-vehicle charging"
+        ],
+        "description": [
+          {
+            "_type": "block",
+            "_key": "paragraph-1",
+            "style": "normal",
+            "markDefs": [],
+            "children": [
+              {
+                "_type": "span",
+                "_key": "text-1",
+                "text": "Explore the four-bedroom villa collection at Azizi Florence, a residential community in Sharjah alongside Sheikh Mohammed Bin Zayed Road (E311).",
+                "marks": []
+              }
+            ]
+          },
+          {
+            "_type": "block",
+            "_key": "paragraph-2",
+            "style": "normal",
+            "markDefs": [],
+            "children": [
+              {
+                "_type": "span",
+                "_key": "text-2",
+                "text": "Type A and Type B offer two distinct four-bedroom villa designs over three floors, with separate layouts for each design.",
+                "marks": []
+              }
+            ]
+          },
+          {
+            "_type": "block",
+            "_key": "paragraph-3",
+            "style": "normal",
+            "markDefs": [],
+            "children": [
+              {
+                "_type": "span",
+                "_key": "text-3",
+                "text": "Planned community amenities include landscaped gardens, walking, running and cycling routes, sports courts, children’s play areas, clubhouses, swimming pools, fitness and wellness facilities, cafés and electric-vehicle charging. These are community proposals, not confirmation of facilities included with every home.",
+                "marks": []
+              }
+            ]
+          }
+        ],
+        "masterDevelopment": "Azizi Florence",
+        "designVariants": [
+          {
+            "_key": "villa-4br-type-a",
+            "label": "Brochure Type A",
+            "position": "standalone",
+            "sellableAreaSqFt": 3831,
+            "plotAreaStatus": "brochure",
+            "summary": "4-bedroom standalone villa, shown as Type A in the collection brochure.",
+            "brochureKey": "villa-4br",
+            "plotAreaSqFt": 3363,
+            "images": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/0af1f28ac14fd5c24aa1dcc9dc9d0fee8ede0d4b-2304x1385.jpg",
+                "alt": "Azizi Florence — 4-bedroom villa Brochure Type A, brochure exterior view 1",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "4-bedroom villa Brochure Type A — exterior view 1"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/7f5d40cfa46ce94e4d7adc78c955eeabb1c56599-2304x1385.jpg",
+                "alt": "Azizi Florence — 4-bedroom villa Brochure Type A, brochure exterior view 2",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "4-bedroom villa Brochure Type A — exterior view 2"
+              }
+            ],
+            "floorPlans": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/555fad185a7d88e39d3146567e11a212e48470d0-2560x1811.jpg",
+                "alt": "Azizi Florence — 4-bedroom villa Brochure Type A — Ground and first floors",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "Ground and first floors"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/79413b75858f065b02d4a642b58e03475d220ec0-2560x1811.jpg",
+                "alt": "Azizi Florence — 4-bedroom villa Brochure Type A — Roof floor and brochure area summary",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "Roof floor and brochure area summary"
+              }
+            ]
+          },
+          {
+            "_key": "villa-4br-type-b",
+            "label": "Brochure Type B",
+            "position": "standalone",
+            "sellableAreaSqFt": 3714,
+            "plotAreaStatus": "brochure",
+            "summary": "4-bedroom standalone villa, shown as Type B in the collection brochure.",
+            "brochureKey": "villa-4br",
+            "plotAreaSqFt": 3363,
+            "images": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/b2f6f512b8c860f4ec8a0a6ab675173e066fd5f8-2304x1385.jpg",
+                "alt": "Azizi Florence — 4-bedroom villa Brochure Type B, brochure exterior view 1",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "4-bedroom villa Brochure Type B — exterior view 1"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/69d9b439c4b9f4c7fbaf70b5f09f6c7aaee6dd4c-2304x1385.jpg",
+                "alt": "Azizi Florence — 4-bedroom villa Brochure Type B, brochure exterior view 2",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "4-bedroom villa Brochure Type B — exterior view 2"
+              }
+            ],
+            "floorPlans": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/27d5feff995809a7b4cea9ae85fb42a442afd26f-2560x1811.jpg",
+                "alt": "Azizi Florence — 4-bedroom villa Brochure Type B — Ground and first floors",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "Ground and first floors"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/4e966bb0a06f7a153355a993aa60b6dab76f30d9-2560x1811.jpg",
+                "alt": "Azizi Florence — 4-bedroom villa Brochure Type B — Roof floor and brochure area summary",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "Roof floor and brochure area summary"
+              }
+            ]
+          }
+        ],
+        "interiorSchemes": []
+      },
+      "media": {
+        "hero": {
+          "src": "https://cdn.sanity.io/images/jdxbkry4/production/8375d7202cf827998937cd14ff50379aa9e17f91-2560x1423.jpg",
+          "alt": "Front-view architectural render of a four-bedroom villa at Azizi Florence.",
+          "width": 2560,
+          "height": 1423,
+          "mediaKind": "render"
+        },
+        "gallery": [
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/ac8e63fd9774589339611ed7f25c05b932560e33-2000x1116.jpg",
+            "alt": "Garden-view architectural render of a four-bedroom villa at Azizi Florence.",
+            "width": 2000,
+            "height": 1116,
+            "mediaKind": "render"
+          },
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/7028c906a077d76d33521d10892b8fea49a591f3-2000x1064.jpg",
+            "alt": "Alternative garden-view architectural render of a four-bedroom villa at Azizi Florence.",
+            "width": 2000,
+            "height": 1064,
+            "mediaKind": "render"
+          },
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/93895ef38e6dbf20c07b68f90036759e256cc5ee-2000x1124.jpg",
+            "alt": "Architectural render of the flower garden at Azizi Florence.",
+            "width": 2000,
+            "height": 1124,
+            "mediaKind": "render"
+          },
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/cd16d8f9e142f4f4555f03428f8603e38bedfcc2-2000x1125.jpg",
+            "alt": "Architectural render of a cafe and amphitheatre setting at Azizi Florence.",
+            "width": 2000,
+            "height": 1125,
+            "mediaKind": "render"
+          }
+        ]
+      },
+      "display": {
+        "inventoryNotice": "Design showcase. Contact sales for current prices and availability.",
+        "amenitiesHeading": "Planned community amenities",
+        "areaLabel": "Built-up area",
+        "areaSourceLabel": "The brochure labels this figure sellable area.",
+        "interiorNotice": "Brochure interior illustrations. Buyer-selectable finishes and inclusions are not confirmed.",
+        "brochureMode": "simulated-only"
+      }
+    },
+    {
+      "kind": "home-type",
+      "document": {
+        "_id": "showcase-azizi-florence-5-bedroom-villas",
+        "_type": "property",
+        "status": "draft",
+        "featured": false,
+        "slug": {
+          "_type": "slug",
+          "current": "azizi-florence-5-bedroom-villas"
+        },
+        "title": "Azizi Florence — 5-Bedroom Villas",
+        "community": "Florence",
+        "city": "Sharjah",
+        "country": "United Arab Emirates",
+        "developer": "Azizi Developments",
+        "category": "residential",
+        "unitType": "Villa",
+        "bedrooms": 5,
+        "summary": "Explore the five-bedroom villa collection at Azizi Florence: Type A and Type B designs over three floors in a planned Sharjah community alongside Sheikh Mohammed Bin Zayed Road (E311).",
+        "keyFeatures": [
+          "Five-bedroom villa design collection",
+          "Two design types: Type A and Type B",
+          "Villa layouts over three floors",
+          "Within the wider Azizi Florence community",
+          "Sharjah location alongside Sheikh Mohammed Bin Zayed Road (E311)",
+          "Planned gardens, sports, leisure and neighbourhood amenities"
+        ],
+        "amenities": [
+          "Landscaped gardens and parkland",
+          "Walking, running and cycling routes",
+          "Basketball, tennis and volleyball courts",
+          "Children's play areas",
+          "Skate and water-play areas",
+          "Outdoor theatre and fountains",
+          "Barbecue and picnic areas",
+          "Fitness and yoga areas",
+          "Swimming pools and clubhouses",
+          "Gyms, sauna, steam and jacuzzi facilities",
+          "Cafes and neighbourhood leisure spaces",
+          "Electric-vehicle charging"
+        ],
+        "description": [
+          {
+            "_type": "block",
+            "_key": "paragraph-1",
+            "style": "normal",
+            "markDefs": [],
+            "children": [
+              {
+                "_type": "span",
+                "_key": "text-1",
+                "text": "Azizi Florence’s five-bedroom villa collection brings together Type A and Type B designs in a Sharjah community alongside Sheikh Mohammed Bin Zayed Road (E311).",
+                "marks": []
+              }
+            ]
+          },
+          {
+            "_type": "block",
+            "_key": "paragraph-2",
+            "style": "normal",
+            "markDefs": [],
+            "children": [
+              {
+                "_type": "span",
+                "_key": "text-2",
+                "text": "The five-bedroom range spans three floors, with distinct layouts for Type A and Type B.",
+                "marks": []
+              }
+            ]
+          },
+          {
+            "_type": "block",
+            "_key": "paragraph-3",
+            "style": "normal",
+            "markDefs": [],
+            "children": [
+              {
+                "_type": "span",
+                "_key": "text-3",
+                "text": "Planned community amenities include landscaped gardens, walking, running and cycling routes, sports courts, children’s play areas, clubhouses, swimming pools, fitness and wellness facilities, cafés and electric-vehicle charging. These are community proposals, not confirmation of facilities included with every home.",
+                "marks": []
+              }
+            ]
+          }
+        ],
+        "masterDevelopment": "Azizi Florence",
+        "designVariants": [
+          {
+            "_key": "villa-5br-type-a",
+            "label": "Brochure Type A",
+            "position": "standalone",
+            "sellableAreaSqFt": 4635,
+            "plotAreaStatus": "brochure",
+            "summary": "5-bedroom standalone villa, shown as Type A in the collection brochure.",
+            "brochureKey": "villa-5br",
+            "plotAreaSqFt": 3767,
+            "images": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/9af95eb5abc65c5b6fa0658f032d1b55a561506a-2304x1385.jpg",
+                "alt": "Azizi Florence — 5-bedroom villa Brochure Type A, brochure exterior view 1",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "5-bedroom villa Brochure Type A — exterior view 1"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/4b958c8d982037741798af4c9beba33813c11fe9-2304x1385.jpg",
+                "alt": "Azizi Florence — 5-bedroom villa Brochure Type A, brochure exterior view 2",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "5-bedroom villa Brochure Type A — exterior view 2"
+              }
+            ],
+            "floorPlans": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/97962438b07bae8331d9840e0a8c8bc541c24ddf-2560x1811.jpg",
+                "alt": "Azizi Florence — 5-bedroom villa Brochure Type A — Ground and first floors",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "Ground and first floors"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/2c460352bb99240c4fd41304a003b3c5eec3614c-2560x1811.jpg",
+                "alt": "Azizi Florence — 5-bedroom villa Brochure Type A — Roof floor and brochure area summary",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "Roof floor and brochure area summary"
+              }
+            ]
+          },
+          {
+            "_key": "villa-5br-type-b",
+            "label": "Brochure Type B",
+            "position": "standalone",
+            "sellableAreaSqFt": 4629,
+            "plotAreaStatus": "brochure",
+            "summary": "5-bedroom standalone villa, shown as Type B in the collection brochure.",
+            "brochureKey": "villa-5br",
+            "plotAreaSqFt": 3767,
+            "images": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/c0cfe1ea183eee5699a85182434c29feba03cca1-2304x1385.jpg",
+                "alt": "Azizi Florence — 5-bedroom villa Brochure Type B, brochure exterior view 1",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "5-bedroom villa Brochure Type B — exterior view 1"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/4db8c0bab25d1c565ed7680b7c00408c90f15bb6-2304x1385.jpg",
+                "alt": "Azizi Florence — 5-bedroom villa Brochure Type B, brochure exterior view 2",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "5-bedroom villa Brochure Type B — exterior view 2"
+              }
+            ],
+            "floorPlans": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/a8ac3efee1b6f1a1ad4d4eaf4f3dce8816024cda-2560x1811.jpg",
+                "alt": "Azizi Florence — 5-bedroom villa Brochure Type B — Ground and first floors",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "Ground and first floors"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/a6a1f6c19643ffe5cecacc535121e442e9f85db9-2560x1811.jpg",
+                "alt": "Azizi Florence — 5-bedroom villa Brochure Type B — Roof floor and brochure area summary",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "Roof floor and brochure area summary"
+              }
+            ]
+          }
+        ],
+        "interiorSchemes": []
+      },
+      "media": {
+        "hero": {
+          "src": "https://cdn.sanity.io/images/jdxbkry4/production/a762fe8b8ea29d4586997a2ff70d66291138a91d-2560x1439.jpg",
+          "alt": "Street-view architectural render of a five-bedroom villa at Azizi Florence.",
+          "width": 2560,
+          "height": 1439,
+          "mediaKind": "render"
+        },
+        "gallery": [
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/4c9ee999fb007f621d3908a5108bc290cc02f79f-2000x1116.jpg",
+            "alt": "Daytime garden-view architectural render of a five-bedroom villa at Azizi Florence.",
+            "width": 2000,
+            "height": 1116,
+            "mediaKind": "render"
+          },
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/64aed0e0c16aa77f9377900a7f99347417c1b13c-2000x1124.jpg",
+            "alt": "Dusk garden-view architectural render of a five-bedroom villa at Azizi Florence.",
+            "width": 2000,
+            "height": 1124,
+            "mediaKind": "render"
+          },
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/93895ef38e6dbf20c07b68f90036759e256cc5ee-2000x1124.jpg",
+            "alt": "Architectural render of the flower garden at Azizi Florence.",
+            "width": 2000,
+            "height": 1124,
+            "mediaKind": "render"
+          },
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/cd16d8f9e142f4f4555f03428f8603e38bedfcc2-2000x1125.jpg",
+            "alt": "Architectural render of a cafe and amphitheatre setting at Azizi Florence.",
+            "width": 2000,
+            "height": 1125,
+            "mediaKind": "render"
+          }
+        ]
+      },
+      "display": {
+        "inventoryNotice": "Design showcase. Contact sales for current prices and availability.",
+        "amenitiesHeading": "Planned community amenities",
+        "areaLabel": "Built-up area",
+        "areaSourceLabel": "The brochure labels this figure sellable area.",
+        "interiorNotice": "Brochure interior illustrations. Buyer-selectable finishes and inclusions are not confirmed.",
+        "brochureMode": "simulated-only"
+      }
+    },
+    {
+      "kind": "home-type",
+      "document": {
+        "_id": "showcase-azizi-florence-6-bedroom-villas",
+        "_type": "property",
+        "status": "draft",
+        "featured": false,
+        "slug": {
+          "_type": "slug",
+          "current": "azizi-florence-6-bedroom-villas"
+        },
+        "title": "Azizi Florence — 6-Bedroom Villas",
+        "community": "Florence",
+        "city": "Sharjah",
+        "country": "United Arab Emirates",
+        "developer": "Azizi Developments",
+        "category": "residential",
+        "unitType": "Villa",
+        "bedrooms": 6,
+        "summary": "Three six-bedroom villa designs — Types A, B and C — form this Azizi Florence collection in Sharjah, with layouts over three floors and planned park, leisure and neighbourhood amenities.",
+        "keyFeatures": [
+          "Six-bedroom villa design collection",
+          "Three design types: Type A, Type B and Type C",
+          "Villa layouts over three floors",
+          "Part of the Azizi Florence master community",
+          "Sharjah location alongside Sheikh Mohammed Bin Zayed Road (E311)",
+          "Planned parkland, sports, fitness and neighbourhood amenities"
+        ],
+        "amenities": [
+          "Landscaped gardens and parkland",
+          "Walking, running and cycling routes",
+          "Basketball, tennis and volleyball courts",
+          "Children's play areas",
+          "Skate and water-play areas",
+          "Outdoor theatre and fountains",
+          "Barbecue and picnic areas",
+          "Fitness and yoga areas",
+          "Swimming pools and clubhouses",
+          "Gyms, sauna, steam and jacuzzi facilities",
+          "Cafes and neighbourhood leisure spaces",
+          "Electric-vehicle charging"
+        ],
+        "description": [
+          {
+            "_type": "block",
+            "_key": "paragraph-1",
+            "style": "normal",
+            "markDefs": [],
+            "children": [
+              {
+                "_type": "span",
+                "_key": "text-1",
+                "text": "The six-bedroom villa collection at Azizi Florence comprises Type A, Type B and Type C designs in a residential community in Sharjah alongside Sheikh Mohammed Bin Zayed Road (E311).",
+                "marks": []
+              }
+            ]
+          },
+          {
+            "_type": "block",
+            "_key": "paragraph-2",
+            "style": "normal",
+            "markDefs": [],
+            "children": [
+              {
+                "_type": "span",
+                "_key": "text-2",
+                "text": "Each design has its own layout over three floors, giving the six-bedroom collection three distinct options.",
+                "marks": []
+              }
+            ]
+          },
+          {
+            "_type": "block",
+            "_key": "paragraph-3",
+            "style": "normal",
+            "markDefs": [],
+            "children": [
+              {
+                "_type": "span",
+                "_key": "text-3",
+                "text": "Planned community amenities include landscaped gardens, walking, running and cycling routes, sports courts, children’s play areas, clubhouses, swimming pools, fitness and wellness facilities, cafés and electric-vehicle charging. These are community proposals, not confirmation of facilities included with every home.",
+                "marks": []
+              }
+            ]
+          }
+        ],
+        "masterDevelopment": "Azizi Florence",
+        "designVariants": [
+          {
+            "_key": "villa-6br-type-a",
+            "label": "Brochure Type A",
+            "position": "standalone",
+            "sellableAreaSqFt": 4949,
+            "plotAreaStatus": "brochure",
+            "summary": "6-bedroom standalone villa, shown as Type A in the collection brochure.",
+            "brochureKey": "villa-6br",
+            "plotAreaSqFt": 4843,
+            "images": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/e6fcded6c9fa5c9bef4ca543779b372231982ef1-2304x1385.jpg",
+                "alt": "Azizi Florence — 6-bedroom villa Brochure Type A, brochure exterior view 1",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "6-bedroom villa Brochure Type A — exterior view 1"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/b365cbfe5d1b2a2d2a544f8f5a22e95070afe4c5-2304x1385.jpg",
+                "alt": "Azizi Florence — 6-bedroom villa Brochure Type A, brochure exterior view 2",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "6-bedroom villa Brochure Type A — exterior view 2"
+              }
+            ],
+            "floorPlans": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/55bcf20062a47afc345214ee231e72e1ec0925d6-2560x1811.jpg",
+                "alt": "Azizi Florence — 6-bedroom villa Brochure Type A — Ground and first floors",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "Ground and first floors"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/0c9c05e076d8fce87962151eff617edb2b45d471-2560x1811.jpg",
+                "alt": "Azizi Florence — 6-bedroom villa Brochure Type A — Roof floor and brochure area summary",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "Roof floor and brochure area summary"
+              }
+            ]
+          },
+          {
+            "_key": "villa-6br-type-b",
+            "label": "Brochure Type B",
+            "position": "standalone",
+            "sellableAreaSqFt": 4930,
+            "plotAreaStatus": "brochure",
+            "summary": "6-bedroom standalone villa, shown as Type B in the collection brochure.",
+            "brochureKey": "villa-6br",
+            "plotAreaSqFt": 4843,
+            "images": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/d017b15abda50c3ec00e314a9ec2253fa0386041-2304x1385.jpg",
+                "alt": "Azizi Florence — 6-bedroom villa Brochure Type B, brochure exterior view 1",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "6-bedroom villa Brochure Type B — exterior view 1"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/281a347de02282cdce17638e2e6943173455970c-2304x1385.jpg",
+                "alt": "Azizi Florence — 6-bedroom villa Brochure Type B, brochure exterior view 2",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "6-bedroom villa Brochure Type B — exterior view 2"
+              }
+            ],
+            "floorPlans": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/e6fe2d01bc374f636c1ffc1e4a9dfa13bad92210-2560x1811.jpg",
+                "alt": "Azizi Florence — 6-bedroom villa Brochure Type B — Ground and first floors",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "Ground and first floors"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/9f957004cbff0992a8183edafc4affdb8d21f74f-2560x1811.jpg",
+                "alt": "Azizi Florence — 6-bedroom villa Brochure Type B — Roof floor and brochure area summary",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "Roof floor and brochure area summary"
+              }
+            ]
+          },
+          {
+            "_key": "villa-6br-type-c",
+            "label": "Brochure Type C",
+            "position": "standalone",
+            "sellableAreaSqFt": 4944,
+            "plotAreaStatus": "brochure",
+            "summary": "6-bedroom standalone villa, shown as Type C in the collection brochure.",
+            "brochureKey": "villa-6br",
+            "plotAreaSqFt": 4843,
+            "images": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/0701f7acaf7f03246bf0f2c6d1395123a7bdbe80-2304x1385.jpg",
+                "alt": "Azizi Florence — 6-bedroom villa Brochure Type C, brochure exterior view 1",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "6-bedroom villa Brochure Type C — exterior view 1"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/725ac4355f2d7bec1b9d31991e46f46717a8cdef-2304x1385.jpg",
+                "alt": "Azizi Florence — 6-bedroom villa Brochure Type C, brochure exterior view 2",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "6-bedroom villa Brochure Type C — exterior view 2"
+              }
+            ],
+            "floorPlans": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/f045a28426b53827d05dfdc9ee71600b4dc1ddf9-2560x1811.jpg",
+                "alt": "Azizi Florence — 6-bedroom villa Brochure Type C — Ground and first floors",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "Ground and first floors"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/c818aab3cf11196903073fde83f0b1c837370cc2-2560x1811.jpg",
+                "alt": "Azizi Florence — 6-bedroom villa Brochure Type C — Roof floor and brochure area summary",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "Roof floor and brochure area summary"
+              }
+            ]
+          }
+        ],
+        "interiorSchemes": []
+      },
+      "media": {
+        "hero": {
+          "src": "https://cdn.sanity.io/images/jdxbkry4/production/b8d7f8b9bc83cd451fecdd18494bd8bbf838f3fe-2560x1439.jpg",
+          "alt": "Front-view architectural render of a six-bedroom villa at Azizi Florence.",
+          "width": 2560,
+          "height": 1439,
+          "mediaKind": "render"
+        },
+        "gallery": [
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/884e77394bcfe94963c7e3c0a2a794c703c792be-2000x1125.jpg",
+            "alt": "Garden-view architectural render of a six-bedroom villa at Azizi Florence.",
+            "width": 2000,
+            "height": 1125,
+            "mediaKind": "render"
+          },
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/eaae33ddf72c0ffca3a0962ee552043ab729ab22-2000x1116.jpg",
+            "alt": "Interior architectural render of a double-height villa living area at Azizi Florence.",
+            "width": 2000,
+            "height": 1116,
+            "mediaKind": "render"
+          },
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/93895ef38e6dbf20c07b68f90036759e256cc5ee-2000x1124.jpg",
+            "alt": "Architectural render of the flower garden at Azizi Florence.",
+            "width": 2000,
+            "height": 1124,
+            "mediaKind": "render"
+          },
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/cd16d8f9e142f4f4555f03428f8603e38bedfcc2-2000x1125.jpg",
+            "alt": "Architectural render of a cafe and amphitheatre setting at Azizi Florence.",
+            "width": 2000,
+            "height": 1125,
+            "mediaKind": "render"
+          }
+        ]
+      },
+      "display": {
+        "inventoryNotice": "Design showcase. Contact sales for current prices and availability.",
+        "amenitiesHeading": "Planned community amenities",
+        "areaLabel": "Built-up area",
+        "areaSourceLabel": "The brochure labels this figure sellable area.",
+        "interiorNotice": "Brochure interior illustrations. Buyer-selectable finishes and inclusions are not confirmed.",
+        "brochureMode": "simulated-only"
+      }
+    },
+    {
+      "kind": "home-type",
+      "document": {
+        "_id": "showcase-azizi-florence-3-bedroom-townhouses",
+        "_type": "property",
+        "status": "draft",
+        "featured": false,
+        "slug": {
+          "_type": "slug",
+          "current": "azizi-florence-3-bedroom-townhouses"
+        },
+        "title": "Azizi Florence — 3-Bedroom Townhouses",
+        "community": "Florence",
+        "city": "Sharjah",
+        "country": "United Arab Emirates",
+        "developer": "Azizi Developments",
+        "category": "residential",
+        "unitType": "Townhouse",
+        "bedrooms": 3,
+        "summary": "Three-bedroom townhouse designs from Florence’s Tasso, Novoli and Spada families, with corner and middle layouts in a planned residential community in Sharjah.",
+        "keyFeatures": [
+          "Three-bedroom townhouse design collection",
+          "Tasso four-home groups: three-bedroom corner and middle layouts",
+          "Novoli four-home groups: three-bedroom middle layouts",
+          "Novoli six-home groups: three-bedroom middle layouts",
+          "Spada eight-home groups: three-bedroom middle layouts",
+          "Part of Azizi Florence in Sharjah alongside Sheikh Mohammed Bin Zayed Road (E311)",
+          "Planned community gardens, recreation and neighbourhood amenities"
+        ],
+        "amenities": [
+          "Landscaped gardens and parkland",
+          "Walking, running and cycling routes",
+          "Basketball, tennis and volleyball courts",
+          "Children's play areas",
+          "Skate and water-play areas",
+          "Outdoor theatre and fountains",
+          "Barbecue and picnic areas",
+          "Fitness and yoga areas",
+          "Swimming pools and clubhouses",
+          "Gyms, sauna, steam and jacuzzi facilities",
+          "Cafes and neighbourhood leisure spaces",
+          "Electric-vehicle charging"
+        ],
+        "description": [
+          {
+            "_type": "block",
+            "_key": "paragraph-1",
+            "style": "normal",
+            "markDefs": [],
+            "children": [
+              {
+                "_type": "span",
+                "_key": "text-1",
+                "text": "Explore three-bedroom townhouse designs from the Tasso, Novoli and Spada families at Azizi Florence in Sharjah, alongside Sheikh Mohammed Bin Zayed Road (E311).",
+                "marks": []
+              }
+            ]
+          },
+          {
+            "_type": "block",
+            "_key": "paragraph-2",
+            "style": "normal",
+            "markDefs": [],
+            "children": [
+              {
+                "_type": "span",
+                "_key": "text-2",
+                "text": "Tasso four-home groups include three-bedroom corner and middle layouts. Novoli four- and six-home groups include three-bedroom middle layouts, while Spada eight-home groups also include three-bedroom middle layouts.",
+                "marks": []
+              }
+            ]
+          },
+          {
+            "_type": "block",
+            "_key": "paragraph-3",
+            "style": "normal",
+            "markDefs": [],
+            "children": [
+              {
+                "_type": "span",
+                "_key": "text-3",
+                "text": "Planned community amenities include landscaped gardens, walking, running and cycling routes, sports courts, children’s play areas, clubhouses, swimming pools, fitness and wellness facilities, cafés and electric-vehicle charging. These are community proposals, not confirmation of facilities included with every home.",
+                "marks": []
+              }
+            ]
+          }
+        ],
+        "masterDevelopment": "Azizi Florence",
+        "designVariants": [
+          {
+            "_key": "tasso-4-home-corner",
+            "label": "Tasso - 4-home row - corner",
+            "family": "Tasso",
+            "rowHomes": 4,
+            "position": "corner",
+            "sellableAreaSqFt": 2354,
+            "plotAreaStatus": "brochure",
+            "summary": "3-bedroom corner home in the Tasso 4-home row. Shared row views and plans show multiple homes.",
+            "brochureKey": "townhouse-3-4br",
+            "plotAreaSqFt": 1938,
+            "images": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/8744a269d320bd6c215049f56013d3bf4ada980e-2304x1385.jpg",
+                "alt": "Azizi Florence — Tasso 4-home row, brochure exterior view 1",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "Tasso 4-home row — shared row view"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/37e71b4538a2d74206f4c56910588a2884d0eab2-2304x1385.jpg",
+                "alt": "Azizi Florence — Tasso 4-home row, brochure exterior view 2",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "Tasso 4-home row — shared row view"
+              }
+            ],
+            "floorPlans": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/2be1af2927dad2005578ec872e4aa1bc2cd52b8b-2560x1811.jpg",
+                "alt": "Azizi Florence — Tasso 4-home row — Ground floor — whole row",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "Ground floor — whole row"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/54fdcd66989eb68bbd5f6f64a165f6ce87653814-2560x1811.jpg",
+                "alt": "Azizi Florence — Tasso 4-home row — First floor — whole row",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "First floor — whole row"
+              }
+            ]
+          },
+          {
+            "_key": "tasso-4-home-middle",
+            "label": "Tasso - 4-home row - middle",
+            "family": "Tasso",
+            "rowHomes": 4,
+            "position": "middle",
+            "sellableAreaSqFt": 2228,
+            "plotAreaStatus": "brochure",
+            "summary": "3-bedroom middle home in the Tasso 4-home row. Shared row views and plans show multiple homes.",
+            "brochureKey": "townhouse-3-4br",
+            "plotAreaSqFt": 1615,
+            "images": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/8744a269d320bd6c215049f56013d3bf4ada980e-2304x1385.jpg",
+                "alt": "Azizi Florence — Tasso 4-home row, brochure exterior view 1",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "Tasso 4-home row — shared row view"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/37e71b4538a2d74206f4c56910588a2884d0eab2-2304x1385.jpg",
+                "alt": "Azizi Florence — Tasso 4-home row, brochure exterior view 2",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "Tasso 4-home row — shared row view"
+              }
+            ],
+            "floorPlans": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/2be1af2927dad2005578ec872e4aa1bc2cd52b8b-2560x1811.jpg",
+                "alt": "Azizi Florence — Tasso 4-home row — Ground floor — whole row",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "Ground floor — whole row"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/54fdcd66989eb68bbd5f6f64a165f6ce87653814-2560x1811.jpg",
+                "alt": "Azizi Florence — Tasso 4-home row — First floor — whole row",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "First floor — whole row"
+              }
+            ]
+          },
+          {
+            "_key": "novoli-4-home-middle",
+            "label": "Novoli - 4-home row - middle",
+            "family": "Novoli",
+            "rowHomes": 4,
+            "position": "middle",
+            "sellableAreaSqFt": 2225,
+            "plotAreaStatus": "brochure",
+            "summary": "3-bedroom middle home in the Novoli 4-home row. Shared row views and plans show multiple homes.",
+            "brochureKey": "townhouse-3-4br",
+            "plotAreaSqFt": 1615,
+            "images": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/a1c99e4c9fef5d8a41b3f9a897f295e2e7051ba0-2304x1385.jpg",
+                "alt": "Azizi Florence — Novoli 4-home row, brochure exterior view 1",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "Novoli 4-home row — shared row view"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/8ba1121989fb806f6d887c0e006bd20c5af13bec-2304x1385.jpg",
+                "alt": "Azizi Florence — Novoli 4-home row, brochure exterior view 2",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "Novoli 4-home row — shared row view"
+              }
+            ],
+            "floorPlans": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/1304a53580ab3d3d35b88b78b75d5de98c49f085-2560x1811.jpg",
+                "alt": "Azizi Florence — Novoli 4-home row — Ground floor — whole row",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "Ground floor — whole row"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/d57ead0abdcd485b23e504f382b4a780644f7032-2560x1811.jpg",
+                "alt": "Azizi Florence — Novoli 4-home row — First floor — whole row",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "First floor — whole row"
+              }
+            ]
+          },
+          {
+            "_key": "novoli-6-home-middle",
+            "label": "Novoli - 6-home row - middle",
+            "family": "Novoli",
+            "rowHomes": 6,
+            "position": "middle",
+            "sellableAreaSqFt": 2224,
+            "plotAreaStatus": "brochure",
+            "summary": "3-bedroom middle home in the Novoli 6-home row. Shared row views and plans show multiple homes.",
+            "brochureKey": "townhouse-3-4br",
+            "plotAreaSqFt": 1615,
+            "images": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/e9ab6b5e81032953017d057438cb72b34f0daf4e-2304x1385.jpg",
+                "alt": "Azizi Florence — Novoli 6-home row, brochure exterior view 1",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "Novoli 6-home row — shared row view"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/8a67711e8f77126ab5e38d1ea350dd9670d913cc-2304x1385.jpg",
+                "alt": "Azizi Florence — Novoli 6-home row, brochure exterior view 2",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "Novoli 6-home row — shared row view"
+              }
+            ],
+            "floorPlans": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/25087a8b5e6c7550c37408d1cf1534a6bf491af0-2560x1811.jpg",
+                "alt": "Azizi Florence — Novoli 6-home row — Ground floor — whole row",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "Ground floor — whole row"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/b7771b9931dde63ef628207f5c83c861b86d9a73-2560x1811.jpg",
+                "alt": "Azizi Florence — Novoli 6-home row — First floor — whole row",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "First floor — whole row"
+              }
+            ]
+          },
+          {
+            "_key": "spada-8-home-middle",
+            "label": "Spada - 8-home row - middle",
+            "family": "Spada",
+            "rowHomes": 8,
+            "position": "middle",
+            "sellableAreaSqFt": 2225,
+            "plotAreaStatus": "brochure",
+            "summary": "3-bedroom middle home in the Spada 8-home row. Shared row views and plans show multiple homes.",
+            "brochureKey": "townhouse-3-4br",
+            "plotAreaSqFt": 1615,
+            "images": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/9fe6cb9209cc8cff888ed2afa6fcc07c81cf2855-2304x1385.jpg",
+                "alt": "Azizi Florence — Spada 8-home row, brochure exterior view 1",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "Spada 8-home row — shared row view"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/bcee2fc9c959361312f06698a7994268884bf8be-2304x1385.jpg",
+                "alt": "Azizi Florence — Spada 8-home row, brochure exterior view 2",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "Spada 8-home row — shared row view"
+              }
+            ],
+            "floorPlans": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/41270d38df7a07c649cd491df62d42beac1a102b-2560x1811.jpg",
+                "alt": "Azizi Florence — Spada 8-home row — Ground floor — whole row",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "Ground floor — whole row"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/c6907ab9bc2ea75a0797acf0ff1d9165c0328c28-2560x1811.jpg",
+                "alt": "Azizi Florence — Spada 8-home row — First floor — whole row",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "First floor — whole row"
+              }
+            ]
+          }
+        ],
+        "interiorSchemes": [
+          {
+            "_key": "palette-a",
+            "label": "Palette A",
+            "images": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/853580f905fe707b234bafc24d8bf9186934a939-2304x1385.jpg",
+                "alt": "Azizi Florence — 3-bedroom townhouse — Palette A, brochure interior illustration",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "3-bedroom townhouse — Palette A"
+              }
+            ]
+          },
+          {
+            "_key": "palette-b",
+            "label": "Palette B",
+            "images": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/19d41e14c1b02fbc85aeeabb53f9ebe74683e694-2304x1385.jpg",
+                "alt": "Azizi Florence — 3-bedroom townhouse — Palette B, brochure interior illustration",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "3-bedroom townhouse — Palette B"
+              }
+            ]
+          }
+        ]
+      },
+      "media": {
+        "hero": {
+          "src": "https://cdn.sanity.io/images/jdxbkry4/production/9ff0fed2a3ebc51dc50fe20a337913447acfa67f-2560x1440.jpg",
+          "alt": "Front-view architectural render of three-bedroom Azizi Florence townhouses.",
+          "width": 2560,
+          "height": 1440,
+          "mediaKind": "render"
+        },
+        "gallery": [
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/53a2f88d9dcc24962f2ade6de4d2f1e9a2a58375-2000x1125.jpg",
+            "alt": "Garden-view architectural render of three-bedroom Azizi Florence townhouses.",
+            "width": 2000,
+            "height": 1125,
+            "mediaKind": "render"
+          },
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/ab236d4108150f7e381dabf91eb6d2aef7dde97e-2000x1300.jpg",
+            "alt": "Interior architectural render of a three-bedroom townhouse living area at Azizi Florence.",
+            "width": 2000,
+            "height": 1300,
+            "mediaKind": "render"
+          },
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/81b5ff0e7a2c8c428661885ef87becb3c3a3d70e-2000x1116.jpg",
+            "alt": "Architectural render of a children's play area at Azizi Florence.",
+            "width": 2000,
+            "height": 1116,
+            "mediaKind": "render"
+          },
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/93895ef38e6dbf20c07b68f90036759e256cc5ee-2000x1124.jpg",
+            "alt": "Architectural render of the flower garden at Azizi Florence.",
+            "width": 2000,
+            "height": 1124,
+            "mediaKind": "render"
+          }
+        ]
+      },
+      "display": {
+        "inventoryNotice": "Design showcase. Contact sales for current prices and availability.",
+        "amenitiesHeading": "Planned community amenities",
+        "areaLabel": "Built-up area",
+        "areaSourceLabel": "The brochure labels this figure sellable area.",
+        "interiorNotice": "Brochure interior illustrations. Buyer-selectable finishes and inclusions are not confirmed.",
+        "brochureMode": "simulated-only"
+      }
+    },
+    {
+      "kind": "home-type",
+      "document": {
+        "_id": "showcase-azizi-florence-4-bedroom-townhouses",
+        "_type": "property",
+        "status": "draft",
+        "featured": false,
+        "slug": {
+          "_type": "slug",
+          "current": "azizi-florence-4-bedroom-townhouses"
+        },
+        "title": "Azizi Florence — 4-Bedroom Townhouses",
+        "community": "Florence",
+        "city": "Sharjah",
+        "country": "United Arab Emirates",
+        "developer": "Azizi Developments",
+        "category": "residential",
+        "unitType": "Townhouse",
+        "bedrooms": 4,
+        "summary": "Four-bedroom townhouse designs from Florence’s Novoli and Spada families, with corner and middle layouts across four-, six- and eight-home groups in Sharjah.",
+        "keyFeatures": [
+          "Four-bedroom townhouse design collection",
+          "Novoli four-home groups: four-bedroom corner layouts",
+          "Novoli six-home groups: four-bedroom corner layouts",
+          "Spada four-home groups: four-bedroom corner and middle layouts",
+          "Spada six-home groups: four-bedroom corner and middle layouts",
+          "Spada eight-home groups: four-bedroom corner layouts",
+          "Part of Azizi Florence in Sharjah alongside Sheikh Mohammed Bin Zayed Road (E311)",
+          "Planned community gardens, recreation and neighbourhood amenities"
+        ],
+        "amenities": [
+          "Landscaped gardens and parkland",
+          "Walking, running and cycling routes",
+          "Basketball, tennis and volleyball courts",
+          "Children's play areas",
+          "Skate and water-play areas",
+          "Outdoor theatre and fountains",
+          "Barbecue and picnic areas",
+          "Fitness and yoga areas",
+          "Swimming pools and clubhouses",
+          "Gyms, sauna, steam and jacuzzi facilities",
+          "Cafes and neighbourhood leisure spaces",
+          "Electric-vehicle charging"
+        ],
+        "description": [
+          {
+            "_type": "block",
+            "_key": "paragraph-1",
+            "style": "normal",
+            "markDefs": [],
+            "children": [
+              {
+                "_type": "span",
+                "_key": "text-1",
+                "text": "The four-bedroom townhouse collection at Azizi Florence is planned to bring together the Novoli and Spada design families in a Sharjah community alongside Sheikh Mohammed Bin Zayed Road (E311).",
+                "marks": []
+              }
+            ]
+          },
+          {
+            "_type": "block",
+            "_key": "paragraph-2",
+            "style": "normal",
+            "markDefs": [],
+            "children": [
+              {
+                "_type": "span",
+                "_key": "text-2",
+                "text": "Novoli four- and six-home groups include four-bedroom corner layouts. Spada four- and six-home groups include four-bedroom corner and middle layouts, while Spada eight-home groups include four-bedroom corner layouts.",
+                "marks": []
+              }
+            ]
+          },
+          {
+            "_type": "block",
+            "_key": "paragraph-3",
+            "style": "normal",
+            "markDefs": [],
+            "children": [
+              {
+                "_type": "span",
+                "_key": "text-3",
+                "text": "Planned community amenities include landscaped gardens, walking, running and cycling routes, sports courts, children’s play areas, clubhouses, swimming pools, fitness and wellness facilities, cafés and electric-vehicle charging. These are community proposals, not confirmation of facilities included with every home.",
+                "marks": []
+              }
+            ]
+          }
+        ],
+        "masterDevelopment": "Azizi Florence",
+        "designVariants": [
+          {
+            "_key": "novoli-4-home-corner",
+            "label": "Novoli - 4-home row - corner",
+            "family": "Novoli",
+            "rowHomes": 4,
+            "position": "corner",
+            "sellableAreaSqFt": 2711,
+            "plotAreaStatus": "conflict",
+            "summary": "4-bedroom corner home in the Novoli 4-home row. Shared row views and plans show multiple homes.",
+            "brochureKey": "townhouse-3-4br",
+            "areaNote": "Plot area is withheld while the source brochure table and diagram are reconciled. The uncropped source plans may show the conflicting figures; they are not confirmed plot measurements.",
+            "images": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/a1c99e4c9fef5d8a41b3f9a897f295e2e7051ba0-2304x1385.jpg",
+                "alt": "Azizi Florence — Novoli 4-home row, brochure exterior view 1",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "Novoli 4-home row — shared row view"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/8ba1121989fb806f6d887c0e006bd20c5af13bec-2304x1385.jpg",
+                "alt": "Azizi Florence — Novoli 4-home row, brochure exterior view 2",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "Novoli 4-home row — shared row view"
+              }
+            ],
+            "floorPlans": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/1304a53580ab3d3d35b88b78b75d5de98c49f085-2560x1811.jpg",
+                "alt": "Azizi Florence — Novoli 4-home row — Ground floor — whole row",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "Ground floor — whole row"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/d57ead0abdcd485b23e504f382b4a780644f7032-2560x1811.jpg",
+                "alt": "Azizi Florence — Novoli 4-home row — First floor — whole row",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "First floor — whole row"
+              }
+            ]
+          },
+          {
+            "_key": "novoli-6-home-corner",
+            "label": "Novoli - 6-home row - corner",
+            "family": "Novoli",
+            "rowHomes": 6,
+            "position": "corner",
+            "sellableAreaSqFt": 2709,
+            "plotAreaStatus": "conflict",
+            "summary": "4-bedroom corner home in the Novoli 6-home row. Shared row views and plans show multiple homes.",
+            "brochureKey": "townhouse-3-4br",
+            "areaNote": "Plot area is withheld while the source brochure table and diagram are reconciled. The uncropped source plans may show the conflicting figures; they are not confirmed plot measurements.",
+            "images": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/e9ab6b5e81032953017d057438cb72b34f0daf4e-2304x1385.jpg",
+                "alt": "Azizi Florence — Novoli 6-home row, brochure exterior view 1",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "Novoli 6-home row — shared row view"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/8a67711e8f77126ab5e38d1ea350dd9670d913cc-2304x1385.jpg",
+                "alt": "Azizi Florence — Novoli 6-home row, brochure exterior view 2",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "Novoli 6-home row — shared row view"
+              }
+            ],
+            "floorPlans": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/25087a8b5e6c7550c37408d1cf1534a6bf491af0-2560x1811.jpg",
+                "alt": "Azizi Florence — Novoli 6-home row — Ground floor — whole row",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "Ground floor — whole row"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/b7771b9931dde63ef628207f5c83c861b86d9a73-2560x1811.jpg",
+                "alt": "Azizi Florence — Novoli 6-home row — First floor — whole row",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "First floor — whole row"
+              }
+            ]
+          },
+          {
+            "_key": "spada-4-home-corner",
+            "label": "Spada - 4-home row - corner",
+            "family": "Spada",
+            "rowHomes": 4,
+            "position": "corner",
+            "sellableAreaSqFt": 2709,
+            "plotAreaStatus": "brochure",
+            "summary": "4-bedroom corner home in the Spada 4-home row. Shared row views and plans show multiple homes.",
+            "brochureKey": "townhouse-3-4br",
+            "plotAreaSqFt": 2260,
+            "images": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/0fe6f359f8b23957688c38349d529358e421c38b-2304x1385.jpg",
+                "alt": "Azizi Florence — Spada 4-home row, brochure exterior view 1",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "Spada 4-home row — shared row view"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/bd06547af2ceb9a80fd6a03a0e0e4866c6e8fc53-2304x1385.jpg",
+                "alt": "Azizi Florence — Spada 4-home row, brochure exterior view 2",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "Spada 4-home row — shared row view"
+              }
+            ],
+            "floorPlans": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/172e4bef56a6ae6e53ee80226477d70ba7695c8b-2560x1811.jpg",
+                "alt": "Azizi Florence — Spada 4-home row — Ground floor — whole row",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "Ground floor — whole row"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/a05163ed92c244b4eefc91c2972127395764602d-2560x1811.jpg",
+                "alt": "Azizi Florence — Spada 4-home row — First floor — whole row",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "First floor — whole row"
+              }
+            ]
+          },
+          {
+            "_key": "spada-4-home-middle",
+            "label": "Spada - 4-home row - middle",
+            "family": "Spada",
+            "rowHomes": 4,
+            "position": "middle",
+            "sellableAreaSqFt": 2660,
+            "plotAreaStatus": "brochure",
+            "summary": "4-bedroom middle home in the Spada 4-home row. Shared row views and plans show multiple homes.",
+            "brochureKey": "townhouse-3-4br",
+            "plotAreaSqFt": 1938,
+            "images": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/0fe6f359f8b23957688c38349d529358e421c38b-2304x1385.jpg",
+                "alt": "Azizi Florence — Spada 4-home row, brochure exterior view 1",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "Spada 4-home row — shared row view"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/bd06547af2ceb9a80fd6a03a0e0e4866c6e8fc53-2304x1385.jpg",
+                "alt": "Azizi Florence — Spada 4-home row, brochure exterior view 2",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "Spada 4-home row — shared row view"
+              }
+            ],
+            "floorPlans": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/172e4bef56a6ae6e53ee80226477d70ba7695c8b-2560x1811.jpg",
+                "alt": "Azizi Florence — Spada 4-home row — Ground floor — whole row",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "Ground floor — whole row"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/a05163ed92c244b4eefc91c2972127395764602d-2560x1811.jpg",
+                "alt": "Azizi Florence — Spada 4-home row — First floor — whole row",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "First floor — whole row"
+              }
+            ]
+          },
+          {
+            "_key": "spada-6-home-corner",
+            "label": "Spada - 6-home row - corner",
+            "family": "Spada",
+            "rowHomes": 6,
+            "position": "corner",
+            "sellableAreaSqFt": 2717,
+            "plotAreaStatus": "brochure",
+            "summary": "4-bedroom corner home in the Spada 6-home row. Shared row views and plans show multiple homes.",
+            "brochureKey": "townhouse-3-4br",
+            "plotAreaSqFt": 2260,
+            "images": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/bfbb9f3daff45eb534979308757f8ecf2796dcab-2304x1385.jpg",
+                "alt": "Azizi Florence — Spada 6-home row, brochure exterior view 1",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "Spada 6-home row — shared row view"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/df4042b8e418faf5e15bf84d1adac73b35d06021-2304x1385.jpg",
+                "alt": "Azizi Florence — Spada 6-home row, brochure exterior view 2",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "Spada 6-home row — shared row view"
+              }
+            ],
+            "floorPlans": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/ae08b1caf0ac220883136dc7cb38ae7def22c511-2560x1811.jpg",
+                "alt": "Azizi Florence — Spada 6-home row — Ground floor — whole row",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "Ground floor — whole row"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/b105d531ef69d2ca49fab966bad596bcf386f5d4-2560x1811.jpg",
+                "alt": "Azizi Florence — Spada 6-home row — First floor — whole row",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "First floor — whole row"
+              }
+            ]
+          },
+          {
+            "_key": "spada-6-home-middle",
+            "label": "Spada - 6-home row - middle",
+            "family": "Spada",
+            "rowHomes": 6,
+            "position": "middle",
+            "sellableAreaSqFt": 2663,
+            "plotAreaStatus": "brochure",
+            "summary": "4-bedroom middle home in the Spada 6-home row. Shared row views and plans show multiple homes.",
+            "brochureKey": "townhouse-3-4br",
+            "plotAreaSqFt": 1938,
+            "images": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/bfbb9f3daff45eb534979308757f8ecf2796dcab-2304x1385.jpg",
+                "alt": "Azizi Florence — Spada 6-home row, brochure exterior view 1",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "Spada 6-home row — shared row view"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/df4042b8e418faf5e15bf84d1adac73b35d06021-2304x1385.jpg",
+                "alt": "Azizi Florence — Spada 6-home row, brochure exterior view 2",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "Spada 6-home row — shared row view"
+              }
+            ],
+            "floorPlans": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/ae08b1caf0ac220883136dc7cb38ae7def22c511-2560x1811.jpg",
+                "alt": "Azizi Florence — Spada 6-home row — Ground floor — whole row",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "Ground floor — whole row"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/b105d531ef69d2ca49fab966bad596bcf386f5d4-2560x1811.jpg",
+                "alt": "Azizi Florence — Spada 6-home row — First floor — whole row",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "First floor — whole row"
+              }
+            ]
+          },
+          {
+            "_key": "spada-8-home-corner",
+            "label": "Spada - 8-home row - corner",
+            "family": "Spada",
+            "rowHomes": 8,
+            "position": "corner",
+            "sellableAreaSqFt": 2718,
+            "plotAreaStatus": "conflict",
+            "summary": "4-bedroom corner home in the Spada 8-home row. Shared row views and plans show multiple homes.",
+            "brochureKey": "townhouse-3-4br",
+            "areaNote": "Plot area is withheld while the source brochure table and diagram are reconciled. The uncropped source plans may show the conflicting figures; they are not confirmed plot measurements.",
+            "images": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/9fe6cb9209cc8cff888ed2afa6fcc07c81cf2855-2304x1385.jpg",
+                "alt": "Azizi Florence — Spada 8-home row, brochure exterior view 1",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "Spada 8-home row — shared row view"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/bcee2fc9c959361312f06698a7994268884bf8be-2304x1385.jpg",
+                "alt": "Azizi Florence — Spada 8-home row, brochure exterior view 2",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "Spada 8-home row — shared row view"
+              }
+            ],
+            "floorPlans": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/41270d38df7a07c649cd491df62d42beac1a102b-2560x1811.jpg",
+                "alt": "Azizi Florence — Spada 8-home row — Ground floor — whole row",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "Ground floor — whole row"
+              },
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/c6907ab9bc2ea75a0797acf0ff1d9165c0328c28-2560x1811.jpg",
+                "alt": "Azizi Florence — Spada 8-home row — First floor — whole row",
+                "width": 2560,
+                "height": 1811,
+                "mediaKind": "floor-plan",
+                "label": "First floor — whole row"
+              }
+            ]
+          }
+        ],
+        "interiorSchemes": [
+          {
+            "_key": "palette-a",
+            "label": "Palette A",
+            "images": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/171ca819672b40ee1455780f262dfb7217767b38-2304x1385.jpg",
+                "alt": "Azizi Florence — 4-bedroom townhouse — Palette A, brochure interior illustration",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "4-bedroom townhouse — Palette A"
+              }
+            ]
+          },
+          {
+            "_key": "palette-b",
+            "label": "Palette B",
+            "images": [
+              {
+                "src": "https://cdn.sanity.io/images/jdxbkry4/production/c5de70cf95d51c2aa19bbdb1103ee1980f341fbd-2304x1385.jpg",
+                "alt": "Azizi Florence — 4-bedroom townhouse — Palette B, brochure interior illustration",
+                "width": 2304,
+                "height": 1385,
+                "mediaKind": "render",
+                "label": "4-bedroom townhouse — Palette B"
+              }
+            ]
+          }
+        ]
+      },
+      "media": {
+        "hero": {
+          "src": "https://cdn.sanity.io/images/jdxbkry4/production/5a9751f5d20888771fe65160bb78b48a0b0cefd1-2560x1440.jpg",
+          "alt": "Front-view architectural render of four-bedroom Azizi Florence townhouses.",
+          "width": 2560,
+          "height": 1440,
+          "mediaKind": "render"
+        },
+        "gallery": [
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/fbde0cde7e946df5a3f5c09f0dfbffab4ab6d201-2000x1116.jpg",
+            "alt": "Garden-view architectural render of four-bedroom Azizi Florence townhouses.",
+            "width": 2000,
+            "height": 1116,
+            "mediaKind": "render"
+          },
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/0c84cc3e2ef0c0ae20dc76153fed93502f21d40f-2000x1601.jpg",
+            "alt": "Interior architectural render of a bedroom in a four-bedroom Azizi Florence townhouse.",
+            "width": 2000,
+            "height": 1601,
+            "mediaKind": "render"
+          },
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/81b5ff0e7a2c8c428661885ef87becb3c3a3d70e-2000x1116.jpg",
+            "alt": "Architectural render of a children's play area at Azizi Florence.",
+            "width": 2000,
+            "height": 1116,
+            "mediaKind": "render"
+          },
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/93895ef38e6dbf20c07b68f90036759e256cc5ee-2000x1124.jpg",
+            "alt": "Architectural render of the flower garden at Azizi Florence.",
+            "width": 2000,
+            "height": 1124,
+            "mediaKind": "render"
+          }
+        ]
+      },
+      "display": {
+        "inventoryNotice": "Design showcase. Contact sales for current prices and availability.",
+        "amenitiesHeading": "Planned community amenities",
+        "areaLabel": "Built-up area",
+        "areaSourceLabel": "The brochure labels this figure sellable area.",
+        "interiorNotice": "Brochure interior illustrations. Buyer-selectable finishes and inclusions are not confirmed.",
+        "brochureMode": "simulated-only"
+      }
+    },
+    {
+      "kind": "property",
+      "document": {
+        "_id": "showcase-north-london-three-bedroom-property",
+        "_type": "property",
+        "status": "draft",
+        "featured": false,
+        "slug": {
+          "_type": "slug",
+          "current": "north-london-three-bedroom-property"
+        },
+        "title": "Three-bedroom terraced house in North London",
+        "community": "North London",
+        "city": "London",
+        "country": "United Kingdom",
+        "category": "residential",
+        "unitType": "Terraced House",
+        "bedrooms": 3,
+        "summary": "A three-bedroom terraced house for sale in North London at £500,000. Presented with supplied existing views and clearly labelled proposed interior concepts.",
+        "keyFeatures": [
+          "Three bedrooms",
+          "Terraced house",
+          "North London location",
+          "Asking price £500,000",
+          "Ready property",
+          "Approx. gross internal floor area 889.9 sq ft / 82.67 m²",
+          "Supplied floor plan with ground and first floors"
+        ],
+        "priceAmount": 500000,
+        "priceCurrency": "GBP",
+        "priceDisplay": "£500,000",
+        "sizeDisplay": "Approx. Gross Internal Floor Area: 889.9 sq ft / 82.67 m²",
+        "description": [
+          {
+            "_type": "block",
+            "_key": "paragraph-1",
+            "style": "normal",
+            "markDefs": [],
+            "children": [
+              {
+                "_type": "span",
+                "_key": "text-1",
+                "text": "A three-bedroom terraced house in North London, offered for sale through Haus of Estate at an asking price of £500,000. Haus has confirmed this is a ready property. The supplied imagery includes existing views and a separate interior design proposal.",
+                "marks": []
+              }
+            ]
+          },
+          {
+            "_type": "block",
+            "_key": "paragraph-2",
+            "style": "normal",
+            "markDefs": [],
+            "children": [
+              {
+                "_type": "span",
+                "_key": "text-2",
+                "text": "The proposed interiors explore ideas for the living and dining space, kitchen and bathroom areas. AI-assisted visuals illustrate possible furnishing, lighting and finishes; they do not show completed renovation works or confirm what is included in the sale.",
+                "marks": []
+              }
+            ]
+          },
+          {
+            "_type": "block",
+            "_key": "paragraph-3",
+            "style": "normal",
+            "markDefs": [],
+            "children": [
+              {
+                "_type": "span",
+                "_key": "text-3",
+                "text": "Images labelled BEFORE show the existing views supplied with the proposal. Images labelled AFTER show proposed design concepts. Current condition and any proposed works must be verified separately.",
+                "marks": []
+              }
+            ]
+          },
+          {
+            "_type": "block",
+            "_key": "paragraph-4",
+            "style": "normal",
+            "markDefs": [],
+            "children": [
+              {
+                "_type": "span",
+                "_key": "text-4",
+                "text": "The supplied floor plan states an approximate gross internal floor area of 889.9 sq ft / 82.67 m². It shows three bedrooms and a bathroom on the first floor, with a living room, kitchen and separate WC on the ground floor, plus a front garden and backyard. Measurements are approximate and for guidance only; the internal floor area is not the plot size.",
+                "marks": []
+              }
+            ]
+          }
+        ],
+        "floorPlans": [
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/3b5e8edf9065462a67966e8d9a351fac2727754d-1169x1983.jpg",
+            "alt": "Ground- and first-floor plan showing three bedrooms, one first-floor bathroom, a separate ground-floor WC, living room, kitchen, backyard and front garden",
+            "width": 1169,
+            "height": 1983,
+            "mediaKind": "floor-plan",
+            "caption": "Supplied ground- and first-floor plan. Approx. Gross Internal Floor Area: 889.9 sq ft / 82.67 m². Measurements are approximate and for guidance only. Floor areas have been calculated in accordance with Property Measurement Standards."
+          }
+        ]
+      },
+      "media": {
+        "hero": {
+          "src": "https://cdn.sanity.io/images/jdxbkry4/production/d30a5319f275fecbf81578aa0990a4eb0d07684b-1536x1024.jpg",
+          "alt": "Living and dining room comparison showing supplied existing views on the left and proposed AI interiors on the right",
+          "width": 1536,
+          "height": 1024,
+          "mediaKind": "concept-comparison",
+          "caption": "Living and dining room: supplied existing views beside AI-generated proposed interiors. Panels marked AFTER are concepts, not completed works."
+        },
+        "gallery": [
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/fb0df695f78b7a360044a2e3eb57c0a2846f193b-1312x1199.jpg",
+            "alt": "Living and dining design board with existing views, proposed interiors and a conceptual furniture layout",
+            "width": 1312,
+            "height": 1199,
+            "mediaKind": "concept-comparison",
+            "caption": "Living and dining design board: supplied existing views and AI-assisted proposed interiors. The top-down illustration is a design concept, not a measured floor plan."
+          },
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/05bdb9ebe315184aa7f273eb92e916d3348a92ac-1312x1199.jpg",
+            "alt": "Proposed kitchen design board with AI-generated interior views and a conceptual layout",
+            "width": 1312,
+            "height": 1199,
+            "mediaKind": "concept",
+            "caption": "AI-generated kitchen concept — proposed appearance, not the property’s current condition. The layout illustration is not a measured floor plan."
+          },
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/30896f79a76f9502c47ba4c5bc3b4005594d7166-1536x1024.jpg",
+            "alt": "Bathroom comparison with a supplied existing view on the left and an AI-generated proposal on the right",
+            "width": 1536,
+            "height": 1024,
+            "mediaKind": "concept-comparison",
+            "caption": "Bathroom: supplied existing view beside an AI-generated proposed interior. AFTER means proposed appearance, not completed works."
+          },
+          {
+            "src": "https://cdn.sanity.io/images/jdxbkry4/production/3580b2c9e3c4d04feb2f5a2a8238d187cce98c08-1312x1199.jpg",
+            "alt": "Toilet design board showing a supplied existing view beside proposed interiors and finish suggestions",
+            "width": 1312,
+            "height": 1199,
+            "mediaKind": "concept-comparison",
+            "caption": "Toilet design board: supplied existing view and AI-assisted proposed interiors. Proposed fittings and finishes are illustrative, not completed works."
+          }
+        ]
+      },
+      "display": {
+        "inventoryNotice": "Public listing content sampled on 6 November 2026. Confirm current availability with sales.",
+        "imageNotice": "AFTER images are AI-assisted proposed interiors, not completed renovations. Preserve BEFORE/AFTER labels and captions.",
+        "areaLabel": "Approximate gross internal floor area",
+        "brochureMode": "not-supplied"
+      }
+    }
+  ]
+}

@@ -2,6 +2,7 @@ import 'server-only'
 
 import { loadPropertyPreviews, type PropertyPreview } from './property-previews'
 import { matchesPropertySearch } from './property-search'
+import { matchesPropertyLocation, propertyLocationKey } from './property-locations'
 import { bedroomsHidden, isAvailability, isCategory, isIntent } from './property-taxonomy'
 
 export interface PropertyCataloguePreviewParams {
@@ -11,6 +12,7 @@ export interface PropertyCataloguePreviewParams {
   type?: string
   country?: string
   city?: string
+  area?: string
   location?: string
   beds?: string
   q?: string
@@ -29,13 +31,9 @@ export function isLocalCataloguePreviewEnabled(): boolean {
     process.env.HAUS_LOCAL_PROPERTY_CATALOGUE_PREVIEW === 'true'
 }
 
-function locationKey(value: string | undefined) {
-  return value?.trim().replace(/\s+/g, ' ').toLocaleLowerCase('en-GB') ?? ''
-}
-
 function communityKey(preview: PropertyPreview) {
   const { community, city, country } = preview.document
-  return JSON.stringify([community, city, country].map(locationKey))
+  return JSON.stringify([community, city, country].map(propertyLocationKey))
 }
 
 /** Editorial collection cards only; these records never enter the public Sanity catalogue. */
@@ -48,9 +46,6 @@ export async function loadCataloguePreviewGroups(
   const availability = isAvailability(params.availability) ? params.availability : undefined
   const intent = availability === 'off-plan' ? 'sale' : isIntent(params.intent) ? params.intent : undefined
   const type = params.type?.trim() || undefined
-  const country = locationKey(params.country)
-  const city = locationKey(params.city)
-  const location = locationKey(params.location)
   const parsedBeds = params.beds ? Number.parseInt(params.beds, 10) : NaN
   const minimumBeds = !bedroomsHidden(category, type) && Number.isInteger(parsedBeds) && parsedBeds >= 0
     ? parsedBeds : undefined
@@ -66,10 +61,7 @@ export async function loadCataloguePreviewGroups(
     // Do not add listingType or imply that individual homes are available for sale.
     if (intent === 'sale' && document.listingType?.length && !document.listingType.includes('sale')) return false
     if (type && document.unitType !== type) return false
-    if (country && locationKey(document.country) !== country) return false
-    if (city && locationKey(document.city) !== city) return false
-    if (location && ![document.community, document.city, document.country, document.masterDevelopment]
-      .map(locationKey).join(' ').includes(location)) return false
+    if (!matchesPropertyLocation(document, params)) return false
     if (minimumBeds !== undefined && (typeof document.bedrooms !== 'number' ||
       (minimumBeds === 0 ? document.bedrooms !== 0 : document.bedrooms < minimumBeds))) return false
     return matchesPropertySearch({ ...document, slug: document.slug.current }, {

@@ -80,7 +80,9 @@ describe("Resend lead notification", () => {
       .fn<typeof fetch>()
       .mockResolvedValue(new Response(JSON.stringify({ id: "email-123" })));
     const transport = new ResendLeadDeliveryTransport(config, send, () => now);
-    await transport.deliver(payload, "notification", context);
+    await expect(transport.deliver(payload, "notification", context)).resolves.toEqual({
+      provider: "resend", providerMessageId: "email-123",
+    });
     send.mockResolvedValue(new Response(JSON.stringify({ id: "email-123" })));
     await transport.deliver(payload, "notification", {
       ...context,

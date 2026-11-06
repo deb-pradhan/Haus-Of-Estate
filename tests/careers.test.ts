@@ -237,15 +237,26 @@ describe('email acceptance', () => {
     expect(cmsFetch).not.toHaveBeenCalled()
     expect(send).not.toHaveBeenCalled()
   })
-  it('uses the configured recruitment inbox consistently for delivery and failure guidance', async () => {
-    vi.stubEnv('CAREERS_EMAIL', ' recruitment@example.test ')
+  it('uses only the careers inbox for delivery and failure guidance', async () => {
+    vi.stubEnv('CAREERS_EMAIL', ' CAREERS@HAUSOFESTATE.COM ')
     const { getCareersInbox } = await import('@/lib/careers-settings')
-    expect(getCareersInbox()).toBe('recruitment@example.test')
+    expect(getCareersInbox()).toBe('careers@hausofestate.com')
     expect((await submit()).status).toBe(200)
-    expect(send.mock.calls[0][0].to).toBe('recruitment@example.test')
+    expect(send.mock.calls[0][0].to).toBe('careers@hausofestate.com')
     expect(send.mock.calls[1][0].html).not.toContain('two working days')
     send.mockResolvedValue({ data: null, error: { message: 'synthetic rejection' } })
-    expect((await (await submit()).json()).error).toContain('recruitment@example.test')
+    expect((await (await submit()).json()).error).toContain('careers@hausofestate.com')
+  })
+
+  it('rejects a conflicting recruitment setting before reading applicant data or sending mail', async () => {
+    vi.stubEnv('CAREERS_EMAIL', 'personal@example.test')
+    const { getCareersInbox } = await import('@/lib/careers-settings')
+    expect(getCareersInbox()).toBe('careers@hausofestate.com')
+    const request = new Request('http://localhost/api/applications', { method: 'POST', body: 'unreadable' })
+    expect((await POST(request)).status).toBe(404)
+    expect(request.bodyUsed).toBe(false)
+    expect(cmsFetch).not.toHaveBeenCalled()
+    expect(send).not.toHaveBeenCalled()
   })
 
   it('does not report success or confirm when the provider rejects the HR email', async () => {

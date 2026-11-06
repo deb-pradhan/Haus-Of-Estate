@@ -10,9 +10,11 @@ test("release decision matches runtime flag parsing and keeps email-only careers
     { AUTH_ENABLED: "false", LEAD_INTAKE_ENABLED: "false", LEAD_DELIVERY_ENABLED: "false" },
     { AUTH_ENABLED: "TRUE", LEAD_INTAKE_ENABLED: " true ", LEAD_DELIVERY_ENABLED: "yes" },
     { CAREERS_INTAKE_ENABLED: "true", SAVED_CONTENT_ENABLED: "true", PROPERTY_ASSISTANT_ENABLED: "true" },
+    { RESEND_WEBHOOK_ENABLED: " TRUE " },
   ]) assert.equal(releaseNeedsDatabase(environment), false);
   for (const environment of [
     { AUTH_ENABLED: "true" },
+    { RESEND_WEBHOOK_ENABLED: "true" },
     { LEAD_INTAKE_ENABLED: "true" },
     { LEAD_INTAKE_ENABLED: "TRUE" },
     { LEAD_DELIVERY_ENABLED: "true" },
@@ -31,6 +33,7 @@ function runWithoutDatabase(environment = {}) {
       AUTH_ENABLED: "false",
       LEAD_INTAKE_ENABLED: "false",
       LEAD_DELIVERY_ENABLED: "false",
+      RESEND_WEBHOOK_ENABLED: "false",
       ...environment,
     },
   });
@@ -44,7 +47,7 @@ test("disabled release succeeds without a database even when careers email intak
   assert.doesNotMatch(result.stdout, /db:migrate:approved/);
 });
 
-for (const flag of ["AUTH_ENABLED", "LEAD_INTAKE_ENABLED", "LEAD_DELIVERY_ENABLED"]) {
+for (const flag of ["AUTH_ENABLED", "LEAD_INTAKE_ENABLED", "LEAD_DELIVERY_ENABLED", "RESEND_WEBHOOK_ENABLED"]) {
   test(`${flag} retains the unchanged migration gate and fails without a database`, () => {
     const result = runWithoutDatabase({ [flag]: "true" });
     assert.ifError(result.error);

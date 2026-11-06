@@ -202,6 +202,22 @@ export const PROPERTY_DEVELOPMENTS_QUERY = `
   }
 `
 
+// Site search is public even when another document is open in Draft Mode.
+// Fetch summary fields only; never expose private contacts or verification notes.
+export const SITE_SEARCH_QUERY = `
+  *[_type in ["property", "post"] && status == "published"
+    && defined(slug.current) && slug.current != "" && defined(title)
+    && !(_id in path("drafts.**")) && !(_id in path("versions.**"))
+    && !(coalesce(_originalId, _id) in path("drafts.**"))
+    && !(coalesce(_originalId, _id) in path("versions.**"))
+    && (_type != "property" || coalesce(listingState, "active") in ["active", "reserved", "under_offer"])
+  ] | order(publishedAt desc) {
+    _id, _type, title, "slug": slug.current,
+    "summary": coalesce(summary, subtitle, ""),
+    community, city, country, developer, unitType
+  }
+`
+
 export const PROPERTIES_QUERY = `
   *[_type == "property" && ${DISCOVERABLE_PROPERTY}]
     | order(featured desc, publishedAt desc) {
@@ -230,12 +246,13 @@ export const FEATURED_PROPERTIES_QUERY = `
 `
 
 export const PROPERTY_LOCATION_OPTIONS_QUERY = `
-  *[_type == "property" && ${DISCOVERABLE_PROPERTY}
+  *[_type == "property" && ${PUBLISHED_DISCOVERABLE_PROPERTY} && defined(slug.current) && slug.current != ""
     && defined(country) && country != ""
     && defined(city) && city != ""
   ] {
     country,
-    city
+    city,
+    community
   }
 `
 

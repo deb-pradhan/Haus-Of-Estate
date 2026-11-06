@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import {
   isLeadDeliveryEnabled,
+  isLeadNotificationEnabled,
   readLeadDeliveryWorkerOptions,
   readPowerAutomateConfig,
   readLeadDeliveryProvider,
@@ -12,6 +13,7 @@ import { PowerAutomateLeadDeliveryTransport } from "./power-automate";
 import { ZeptoMailLeadDeliveryTransport } from "./zeptomail";
 import { ResendLeadDeliveryTransport } from "./resend";
 import { readResendLeadConfig } from "./resend-config";
+import { ResendBrochureDeliveryTransport } from "./brochure";
 import { GoogleSheetsLeadDeliveryTransport } from "./google-sheets";
 import { isGoogleSheetsDeliveryEnabled, readGoogleSheetsLeadConfig } from "./google-sheets-config";
 import { LeadDeliveryError } from "./errors";
@@ -53,13 +55,15 @@ export function createDestinationLeadDeliveryTransport(
     async deliver(payload, destination = "notification", context) {
       let transport: LeadDeliveryTransport;
       try {
-        transport = destination === "google_sheets"
+        transport = destination === "customer_brochure"
+          ? new ResendBrochureDeliveryTransport(environment)
+          : destination === "google_sheets"
           ? new GoogleSheetsLeadDeliveryTransport(readGoogleSheetsLeadConfig(environment))
           : createConfiguredLeadDeliveryTransport(environment);
       } catch {
         throw new LeadDeliveryError(destination === "google_sheets" ? "SHEETS_CONFIG_INVALID" : "NOTIFICATION_CONFIG_INVALID", true);
       }
-      await transport.deliver(payload, destination, context);
+      return transport.deliver(payload, destination, context);
     },
   };
 }
@@ -69,14 +73,21 @@ function configuredDependencies(
   workerPrefix: string,
 ) {
   const workerId = `${workerPrefix}-${randomUUID()}`;
-  const destinations: LeadDeliveryDestination[] = ["notification"];
-  if (isGoogleSheetsDeliveryEnabled(environment)) destinations.push("google_sheets");
+  const destinations = enabledLeadDeliveryDestinations(environment);
   return {
     repository: createPrismaLeadDeliveryOutboxRepository(undefined, destinations),
     transport: createDestinationLeadDeliveryTransport(environment),
     logger: leadDeliveryLogger,
     options: readLeadDeliveryWorkerOptions(workerId, environment),
   };
+}
+
+export function enabledLeadDeliveryDestinations(environment: LeadDeliveryEnvironment = process.env): LeadDeliveryDestination[] {
+  const destinations: LeadDeliveryDestination[] = [];
+  if (isLeadNotificationEnabled(environment)) destinations.push("notification");
+  if (isGoogleSheetsDeliveryEnabled(environment)) destinations.push("google_sheets");
+  if (environment.BROCHURE_EMAIL_ENABLED === "true") destinations.push("customer_brochure");
+  return destinations;
 }
 
 export async function attemptImmediateLeadDelivery(

@@ -19,7 +19,7 @@ beforeEach(() => {
   mocks.fetch.mockReset().mockResolvedValue({ data: [] })
   mocks.draft = false
   vi.stubEnv('CAREERS_INTAKE_ENABLED', 'false')
-  vi.stubEnv('CAREERS_EMAIL', 'recruitment@example.test')
+  vi.stubEnv('CAREERS_EMAIL', 'careers@hausofestate.com')
   vi.stubEnv('RESEND_API_KEY', 're_synthetic_test_only')
   vi.stubEnv('RESEND_FROM_EMAIL', 'noreply@hausofestate.com')
 })
@@ -34,7 +34,7 @@ describe('public careers pages', () => {
     }
     for (const heading of ['Lettings Agent', 'Sales Agent', 'Career Experience Openings']) expect(html).toContain(heading)
     expect(html).toContain('Online applications are not open yet')
-    expect(html).toContain('mailto:recruitment@example.test')
+    expect(html).toContain('mailto:careers@hausofestate.com')
     expect(html).not.toMatch(/Life at HoE|7721|Advisory|Full.time|Part.time|two working days|data-application-form|Sales Specialist|Lettings Specialist -/)
   })
 
@@ -45,13 +45,19 @@ describe('public careers pages', () => {
     expect(html).not.toContain('href="/careers/content-writer"')
   })
 
-  it('shows honest intake status and the configured mailbox on a title-only vacancy', async () => {
+  it('shows honest intake status and only the careers mailbox despite a stale setting', async () => {
+    vi.stubEnv('CAREERS_EMAIL', 'personal@example.test')
     mocks.fetch.mockResolvedValue({ data: { role: null } })
     const html = renderToStaticMarkup(await RolePage({ params: Promise.resolve({ slug: 'content-writer' }) }))
     expect(html).toContain('Content Writer')
     expect(html).toContain('Full role details will be added here')
     expect(html).toContain('Online applications are not open yet')
-    expect(html).toContain('mailto:recruitment@example.test')
+    expect(html).toContain('mailto:careers@hausofestate.com')
+    expect(html).not.toContain('personal@example.test')
+    mocks.fetch.mockResolvedValue({ data: [] })
+    const indexHtml = renderToStaticMarkup(await CareersPage())
+    expect(indexHtml).toContain('mailto:careers@hausofestate.com')
+    expect(indexHtml).not.toContain('personal@example.test')
     expect(html).not.toMatch(/data-application-form|Apply for this role|two working days|JobPosting/)
   })
 
@@ -62,7 +68,7 @@ describe('public careers pages', () => {
     const props = { params: Promise.resolve({ slug: 'content-writer' }) }
     const html = renderToStaticMarkup(await RolePage(props))
     expect(html).toContain('data-application-form')
-    expect(html).toContain('recruitment@example.test')
+    expect(html).toContain('careers@hausofestate.com')
     expect(html).not.toContain('legacy@example.test')
     mocks.draft = true
     expect(renderToStaticMarkup(await RolePage(props))).not.toContain('data-application-form')

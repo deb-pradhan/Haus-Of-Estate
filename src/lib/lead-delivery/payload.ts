@@ -4,6 +4,18 @@ import {
   type LeadDeliveryPayload,
   type LeadDeliveryPayloadInput,
 } from "./types";
+import { z } from "zod";
+
+const brochureDeliverySchema = z.object({
+  key: z.string().min(1).max(120),
+  revision: z.string().min(1).max(200),
+  projectSlug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(96),
+  projectTitle: z.string().min(1).max(240),
+  designId: z.string().min(1).max(120).optional(),
+  designLabel: z.string().min(1).max(240).optional(),
+  recipientName: z.string().min(1).max(180),
+  recipientEmail: z.email().max(254),
+}).strict();
 
 export const EXCEL_LEAD_TABLE_HEADINGS = [
   "submission time",
@@ -76,6 +88,7 @@ export function buildLeadDeliveryPayload(
     eventId: requiredCell(input.eventId, "eventId"),
     eventType: LEAD_DELIVERY_EVENT_TYPE,
     leadId: requiredCell(input.leadId, "leadId"),
+    ...(input.brochure ? { brochure: input.brochure } : {}),
     row: {
       submissionTime: isoDate(input.submittedAt),
       leadId: requiredCell(input.leadId, "leadId"),
@@ -135,6 +148,7 @@ export function isLeadDeliveryPayload(
   return (
     candidate.schemaVersion === LEAD_DELIVERY_SCHEMA_VERSION &&
     candidate.eventType === LEAD_DELIVERY_EVENT_TYPE &&
+    (candidate.brochure === undefined || brochureDeliverySchema.safeParse(candidate.brochure).success) &&
     typeof candidate.eventId === "string" &&
     candidate.eventId.length > 0 &&
     typeof candidate.leadId === "string" &&

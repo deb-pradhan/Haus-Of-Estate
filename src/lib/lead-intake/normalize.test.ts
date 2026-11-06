@@ -88,6 +88,22 @@ function hashQualifierContractShape(input: NormalizedLead): string {
 }
 
 describe("normalizeLeadRequest", () => {
+  it("preserves existing hashes and binds new hashes to brochure selection", () => {
+    const ordinary = normalizeLeadRequest(v2({
+      project: { slug: "azizi-florence-4-bedroom-villas" },
+    }));
+    expect(hashNormalizedLead(ordinary)).toBe(hashQualifierContractShape(ordinary));
+    expect(ordinary).not.toHaveProperty("brochure");
+    const collection = { ...ordinary, brochure: {} };
+    const designA = { ...ordinary, brochure: { designId: "villa-a" } };
+    const designB = { ...ordinary, brochure: { designId: "villa-b" } };
+    expect(new Set([ordinary, collection, designA, designB].map(hashNormalizedLead)).size).toBe(4);
+    expect(normalizeLeadRequest(v2({
+      project: { slug: "azizi-florence-4-bedroom-villas" },
+      brochure: { designId: " villa-a " },
+    })).brochure).toEqual({ designId: "villa-a" });
+  });
+
   it("clears hidden property context for general questions and retains campaign attribution", () => {
     const request = v2({
       interest: "general_enquiry",

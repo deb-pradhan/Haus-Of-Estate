@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   matchesPropertySearch,
+  normalizePropertySearchParams,
   searchAmount,
 } from "../../src/lib/property-search";
 import { buildPropertiesHref } from "../../src/lib/property-taxonomy";
@@ -20,6 +21,7 @@ describe("property search", () => {
   it("matches all keywords across public listing fields, without case sensitivity", () => {
     expect(matchesPropertySearch(property, { q: "DUBAI azizi" })).toBe(true);
     expect(matchesPropertySearch(property, { q: "Dubai Greece" })).toBe(false);
+    expect(matchesPropertySearch({ ...property, summary: 'Views of landscaped gardens', unitType: 'Townhouse' }, { q: 'townhouse landscaped' })).toBe(true);
   });
   it("compares inclusive native-currency budgets and excludes POA and mixed currencies", () => {
     expect(
@@ -102,6 +104,9 @@ describe("property search", () => {
     const url = new URL(
       buildPropertiesHref({
         q: "Azizi & Dubai",
+        country: "United Kingdom",
+        city: "London",
+        area: "King's Cross & St Pancras",
         availability: "off-plan",
         intent: "rent",
         minPrice: 0,
@@ -114,6 +119,20 @@ describe("property search", () => {
     expect(url.searchParams.get("intent")).toBe("sale");
     expect(url.searchParams.get("minPrice")).toBe("0");
     expect(url.searchParams.get("currency")).toBe("AED");
+    expect(url.searchParams.get("area")).toBe("King's Cross & St Pancras");
+    expect(url.searchParams.get("city")).toBe("London");
+  });
+  it("normalizes repeated Next.js parameters before trimming, matching and budgeting", () => {
+    const filters = normalizePropertySearchParams({
+      category: ['residential', 'commercial'], country: [' United Arab Emirates ', 'United Kingdom'],
+      city: [' Dubai ', 'London'], area: [' Downtown ', 'Elsewhere'],
+      q: [' Azizi ', 'Missing'], minPrice: [' 500000 ', '600000'],
+      maxPrice: ['500000', '0'], currency: ['AED', 'GBP'], beds: [],
+    });
+    expect(filters).toEqual({ category: 'residential', country: 'United Arab Emirates', city: 'Dubai',
+      area: 'Downtown', q: 'Azizi', minPrice: '500000', maxPrice: '500000', currency: 'AED' });
+    expect(matchesPropertySearch(property, filters)).toBe(true);
+    expect(normalizePropertySearchParams({ q: ['', 'second'] }).q).toBe('');
   });
   it("country navigation carries the selected market and mode into real search URLs", () => {
     const links = marketLinks("Greece");

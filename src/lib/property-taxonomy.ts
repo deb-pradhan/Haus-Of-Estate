@@ -150,6 +150,7 @@ export interface PropertyQuery {
   type?: string
   country?: string
   city?: string
+  area?: string
   location?: string
   beds?: string | number
   q?: string
@@ -160,7 +161,8 @@ export interface PropertyQuery {
 
 /**
  * Build a canonical `/properties` href from a taxonomy selection.
- * Produces: /properties?category=&availability=&intent=&type=&country=&city=&location=&beds=
+ * Produces: /properties?category=&availability=&intent=&type=&country=&city=&area=&location=&beds=
+ * `area` matches the existing community value within the selected city.
  * `location` remains available for older broad-location links.
  * Off-Plan is buy-only, so intent is forced to `sale` whenever
  * availability is `off-plan`.
@@ -178,6 +180,7 @@ export function buildPropertiesHref(query: PropertyQuery = {}): string {
   if (query.type) params.set('type', String(query.type))
   if (query.country) params.set('country', String(query.country))
   if (query.city) params.set('city', String(query.city))
+  if (query.area) params.set('area', String(query.area))
   if (query.location) params.set('location', String(query.location))
   if (query.beds !== undefined && query.beds !== null && query.beds !== '') {
     params.set('beds', String(query.beds))

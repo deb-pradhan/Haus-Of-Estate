@@ -109,7 +109,7 @@ export const role = defineType({
       name: 'applyEmail',
       title: 'Apply email',
       type: 'string',
-      description: 'Retained for history. The website contact and application destination are both set by CAREERS_EMAIL (HR mailbox by default).',
+      description: 'Retained for history. The website contact and application destination are fixed to careers@hausofestate.com; this historical value is not used.',
       readOnly: true,
       validation: (rule) => rule.email(),
     }),

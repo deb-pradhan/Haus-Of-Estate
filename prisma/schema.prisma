@@ -572,13 +572,27 @@ model LeadDeliveryOutbox {
   lockedAt    DateTime?
   lockedBy    String?
   deliveredAt DateTime?
+  /// Provider acceptance receipt, not proof of inbox delivery.
+  providerMessageId String?
   lastError   String?   @db.Text
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   @@index([status, availableAt])
   @@index([status, lockedAt])
+  @@index([providerMessageId])
   @@unique([leadId, destination])
+}
+
+/// Append-only provider events. These may arrive before an outbox acceptance receipt.
+model ResendWebhookEvent {
+  svixId            String   @id
+  providerMessageId String
+  eventType         String
+  occurredAt        DateTime
+  receivedAt        DateTime @default(now())
+
+  @@index([providerMessageId])
 }
 
 model LeadSubmissionThrottle {

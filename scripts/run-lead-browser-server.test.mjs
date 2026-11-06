@@ -3,8 +3,8 @@ import test from "node:test";
 import { leadBrowserEnvironment } from "./run-lead-browser-server.mjs";
 
 test("production lead harness cannot inherit service credentials or recover them from dotenv", () => {
-  const inherited = { PATH: "test-path", DATABASE_URL: "real-database", RESEND_API_KEY: "real-mail-key", PRIVATE_OTHER_KEY: "private" };
-  const dotenv = ["DATABASE_URL=real-database\nRESEND_API_KEY=real-mail-key\nPRIVATE_OTHER_KEY=private\nexport CUSTOM_SECRET=private"];
+  const inherited = { PATH: "test-path", DATABASE_URL: "real-database", RESEND_API_KEY: "real-mail-key", RESEND_WEBHOOK_ENABLED: "true", RESEND_WEBHOOK_SECRET: "real-signing-secret", PRIVATE_OTHER_KEY: "private" };
+  const dotenv = ["DATABASE_URL=real-database\nRESEND_API_KEY=real-mail-key\nRESEND_WEBHOOK_ENABLED=true\nRESEND_WEBHOOK_SECRET=real-signing-secret\nPRIVATE_OTHER_KEY=private\nexport CUSTOM_SECRET=private"];
   const build = leadBrowserEnvironment("build", inherited, dotenv);
   const runtime = leadBrowserEnvironment("runtime", inherited, dotenv);
   assert.equal(build.PATH, "test-path");
@@ -13,7 +13,8 @@ test("production lead harness cannot inherit service credentials or recover them
   assert.equal(runtime.LEAD_INTAKE_ENABLED, "true");
   assert.match(runtime.DATABASE_URL, /127\.0\.0\.1:1\//);
   for (const environment of [build, runtime]) {
-    for (const key of ["RESEND_API_KEY", "PRIVATE_OTHER_KEY", "CUSTOM_SECRET", "LEAD_GOOGLE_SERVICE_ACCOUNT_JSON"]) assert.equal(environment[key], "");
-    for (const key of ["AUTH_ENABLED", "SAVED_CONTENT_ENABLED", "PROPERTY_ASSISTANT_ENABLED", "CAREERS_INTAKE_ENABLED", "LEAD_DELIVERY_ENABLED", "LEAD_SHEETS_ENABLED"]) assert.equal(environment[key], "false");
+    for (const key of ["RESEND_API_KEY", "RESEND_WEBHOOK_SECRET", "PRIVATE_OTHER_KEY", "CUSTOM_SECRET", "LEAD_GOOGLE_SERVICE_ACCOUNT_JSON"]) assert.equal(environment[key], "");
+    for (const key of ["AUTH_ENABLED", "SAVED_CONTENT_ENABLED", "PROPERTY_ASSISTANT_ENABLED", "CAREERS_INTAKE_ENABLED", "LEAD_DELIVERY_ENABLED", "BROCHURE_EMAIL_ENABLED", "LEAD_SHEETS_ENABLED", "RESEND_WEBHOOK_ENABLED"]) assert.equal(environment[key], "false");
+    assert.equal(environment.NEXT_PUBLIC_GA4_ID, "");
   }
 });

@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
   attemptImmediateLeadDelivery: vi.fn(),
   notifyLegacyLead: vi.fn(),
   submitLeadIntake: vi.fn(),
+  isBrochureEmailReady: vi.fn(),
 }));
 
 vi.mock("@/lib/lead-delivery", () => ({
@@ -25,8 +26,11 @@ vi.mock("@/lib/lead-intake/legacy", () => ({
 vi.mock("@/lib/lead-intake/service", () => ({
   submitLeadIntake: mocks.submitLeadIntake,
 }));
+vi.mock("@/lib/lead-delivery/brochure", () => ({
+  isBrochureEmailReady: mocks.isBrochureEmailReady,
+}));
 
-import { POST } from "./route";
+import { GET, POST } from "./route";
 import { POST as funnelPOST } from "@/app/api/funnel/route";
 
 function v2(overrides: Record<string, unknown> = {}) {
@@ -61,6 +65,9 @@ beforeEach(() => {
   vi.stubEnv("DATABASE_URL", "postgresql://test:test@localhost/test");
   vi.stubEnv("LEAD_RATE_LIMIT_SECRET", "test-rate-secret");
   vi.stubEnv("LEAD_INTAKE_ENABLED", "true");
+  vi.stubEnv("BROCHURE_EMAIL_ENABLED", "false");
+  vi.stubEnv("LEAD_DELIVERY_ENABLED", "false");
+  mocks.isBrochureEmailReady.mockReturnValue(false);
   mocks.attemptImmediateLeadDelivery.mockResolvedValue("disabled");
   mocks.notifyLegacyLead.mockResolvedValue(undefined);
   mocks.submitLeadIntake.mockResolvedValue({
@@ -79,6 +86,60 @@ afterEach(() => {
 });
 
 describe("POST /api/leads", () => {
+  it("returns only configuration readiness with no caching or secret values", async () => {
+    const response = await GET();
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(await response.json()).toEqual({ intakeReady: true, brochureEmailEnabled: false });
+    vi.stubEnv("BROCHURE_EMAIL_ENABLED", "true");
+    vi.stubEnv("LEAD_DELIVERY_ENABLED", "true");
+    mocks.isBrochureEmailReady.mockReturnValue(true);
+    expect(await (await GET()).json()).toEqual({ intakeReady: true, brochureEmailEnabled: true });
+    vi.stubEnv("DATABASE_URL", "");
+    expect(await (await GET()).json()).toEqual({ intakeReady: false, brochureEmailEnabled: false });
+  });
+
+  it("accepts the selected design without marketing opt-in and reports only a durably queued brochure", async () => {
+    mocks.submitLeadIntake.mockResolvedValueOnce({
+      created: true,
+      leadId: "lead-id",
+      submissionId: "6bd94ff9-6dc6-4eff-8cb0-1bda245e595a",
+      score: 30,
+      tier: "nurture",
+      outboxId: "staff-job",
+      outboxIds: ["staff-job", "brochure-job"],
+      brochureQueued: true,
+    });
+    const response = await POST(request(v2({
+      project: { slug: "florence-4-bedroom-villas" },
+      brochure: { designId: "type-a" },
+    })));
+    expect(response.status).toBe(201);
+    expect(await response.json()).toMatchObject({ success: true, brochureQueued: true });
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(mocks.submitLeadIntake).toHaveBeenCalledWith(expect.objectContaining({
+      brochure: { designId: "type-a" },
+      propertyMatchOptIn: false,
+      newsletterOptIn: false,
+    }), expect.any(String));
+    expect(mocks.attemptImmediateLeadDelivery).toHaveBeenCalledWith("brochure-job");
+  });
+
+  it("returns a retryable storage failure without telling the form to discard the requested brochure", async () => {
+    mocks.submitLeadIntake.mockRejectedValueOnce(new LeadInfrastructureError());
+    const response = await POST(request(v2({
+      project: { slug: "florence-villas" },
+      brochure: { designId: "type-a" },
+    })));
+
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({ error: "Lead intake is temporarily unavailable" });
+    expect(mocks.attemptImmediateLeadDelivery).not.toHaveBeenCalled();
+  });
+
+  it("does not fabricate a queued email when persistence returns an ordinary enquiry receipt", async () => {
+    const response = await POST(request(v2()));
+    expect(await response.json()).not.toHaveProperty("brochureQueued");
+  });
   it("requires durable intake through the former funnel endpoint too", async () => {
     const saved = await funnelPOST(request(v2()));
     expect(saved.status).toBe(201);

@@ -20,6 +20,7 @@
     "db:migrate:approved": "node scripts/run-approved-migrations.mjs",
     "db:prepare-release": "node scripts/prepare-release-database.mjs",
     "lead-delivery:worker": "tsx scripts/process-lead-deliveries.ts",
+    "brochure:check": "node --import tsx scripts/check-brochure-email-setup.mjs",
     "studio:dev": "npm --prefix ../studio-haus-of-estate run dev",
     "studio:embedded:dev": "sanity dev",
     "studio:validate": "sanity schema validate",
