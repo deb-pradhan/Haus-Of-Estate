@@ -4,7 +4,7 @@ Prepared 6 November 2026. This file is safe for the public source repository. Th
 
 ## Start here
 
-Read `AGENTS.md`, this file and `GOAL.md`. Inspect the installed Next.js documentation before changing framework code. Build a tangible responsive concept early; do not spend the whole task producing another plan.
+Read `AGENTS.md`, this file and `GOAL.md`. `CONTINUATION.md` records the first cloud milestone (the `/showcase` fixture preview), its checks and open decisions. Inspect the installed Next.js documentation before changing framework code. Build a tangible responsive concept early; do not spend the whole task producing another plan.
 
 Start from `suryak02/claude-cloud-handoff`, the sanitized cloud continuation of Release 2, not deployed main. The canonical Release 2 branch is `suryak02/azizi-florence-content-scaffold`; its latest local work through `3b895b15` also contains private correspondence/held material that must not be published wholesale. This cloud branch carries the useful application changes without that private history. Inspect the export note for exclusions. Preserve the canonical work. Use one coherent review branch/session; do not create branches for every feature.
 
