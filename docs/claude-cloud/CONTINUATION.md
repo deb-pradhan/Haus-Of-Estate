@@ -54,23 +54,35 @@ queries, analytics events or feature-gated UI run inside the showcase.
 | Typecheck | `npx tsc --noEmit` | Passed |
 | Lint (scoped) | `npx eslint src/lib/showcase src/components/showcase src/app/showcase next.config.ts` | Passed, 0 problems |
 | Unit tests | `npx vitest run src/lib/showcase src/app/sitemap.test.ts src/lib/property-catalogue-preview.test.ts src/lib/brochures` | 8 files, 78 tests passed (17 new in `src/lib/showcase/*.test.ts`) |
-| Production build (default Turbopack) | `HAUS_NEXT_DIST_DIR=.next-showcase npx next build` | **Failed** before any route compiled: 20 × `Module not found: Can't resolve '@vercel/turbopack-next/internal/font/google/font'` / `next/font/google queries have exactly one entry` for Cormorant Garamond in the root layout. Google Fonts hosts answer 200 from this sandbox, so this is a Turbopack font-resolution issue in 16.3.4 here, not the showcase code |
+| Production build (default Turbopack), first attempt | `HAUS_NEXT_DIST_DIR=.next-showcase npx next build` | **Failed** while a Turbopack dev server was running in the same checkout: 20 × `Module not found: Can't resolve '@vercel/turbopack-next/internal/font/google/font'` / `next/font/google queries have exactly one entry` for Cormorant Garamond in the root layout |
+| Production build, pre-showcase commit `b66b0d85` (Turbopack) | `npx next build` in a hard-linked worktree | Passed: compiled in 33.1 s. The failure above therefore did not predate the showcase, but see the next row |
+| Production build (default Turbopack), repeat at HEAD | `HAUS_NEXT_DIST_DIR=.next-showcase-tp npx next build` | **Passed**: compiled in 29.9 s with the same code, dev server still running. The first failure was intermittent; a GitHub discussion reports the same intermittent font-resolution error under Turbopack |
 | Production build (webpack) | `HAUS_NEXT_DIST_DIR=.next-showcase npx next build --webpack` | Passed: compiled in 67 s, 56 static pages, showcase routes present as dynamic |
-| Production server, flag on | `HAUS_FIXTURE_SHOWCASE_ENABLED=true HAUS_NEXT_DIST_DIR=.next-showcase npx next start -p 3500` | All showcase routes 200; invalid `?design=` and unknown slugs 404; `/dev/property-previews` 404; noindex header, no-store header and robots meta present; no canonical emitted |
+| Production server, flag on | `HAUS_FIXTURE_SHOWCASE_ENABLED=true HAUS_NEXT_DIST_DIR=.next-showcase-tp npx next start -p 3500` (default build; the webpack build gave the same results) | All showcase routes 200; invalid `?design=` and unknown slugs 404; `/dev/property-previews` 404; noindex header, no-store header and robots meta present; no canonical emitted |
 | Production server, flag off | same build without the flag | Every showcase route 404 |
-| Browser journey | Playwright/Chromium at 390×844 (2×) and 1440×900 against the dev server | Completed with no step failures at either width: no horizontal overflow on any page; keyboard focus visible on each tab stop; validation errors announced in a `role="alert"` list with focus moved to the first invalid field; marketing checkboxes unticked by default; success state shows the simulated label, subject, chosen design and “None. No subscription was created”; the email iframe contains the design label; the back link returns to `?design=spada-4-home-corner#selected-design`; withheld plot shown for the Novoli corner design; mobile sticky bar visible |
+| Browser journey | `scripts/showcase-journey-audit.mjs` (Playwright/Chromium) at 390×844 (2×) and 1440×900 against the default production build on port 3500 | 0 failed steps, 0 overflow steps at either width (`docs/claude-cloud/showcase-journey-report.json`): keyboard focus visible on each tab stop; validation errors announced in a `role="alert"` list with focus moved to the first invalid field; marketing checkboxes unticked by default; success state shows the simulated label, subject, chosen design and “None. No subscription was created”; the email iframe contains the design label; the back link returns to `?design=spada-4-home-corner#selected-design`; withheld plot shown for the Novoli corner design; mobile sticky bar visible. The same run against the dev server and against the webpack build gave the same results |
 
 Touch-target audit: every visible control measured ≥ 44 px except the native
 20 px checkbox inputs (their clickable labels are 44 px tall) and the root
 layout’s skip link, which is visually hidden until focused.
 
 Screenshots: `docs/claude-cloud/screenshots/` (JPEG, full-page captures capped
-in height; a few below-the-fold lazy images had not finished loading when the
-community pages were captured).
+in height, taken from the default production build; a few below-the-fold lazy
+images had not finished loading when the long community pages were captured).
+
+Repeat the audit against any running showcase server with:
+
+```bash
+BASE_URL=http://127.0.0.1:3500 OUT_DIR=./showcase-journey node scripts/showcase-journey-audit.mjs
+```
+
+It writes screenshots and `report.json` to `OUT_DIR` (git-ignored) and exits
+non-zero on a failed step or horizontal overflow. Set `PLAYWRIGHT_CHROMIUM_PATH`
+when the repository's Playwright version has no downloaded browser.
 
 ## Preview
 
-- Cloud session ports: `3500` serves the webpack production build with the flag
+- Cloud session ports: `3500` serves the default production build with the flag
   on; `3400` serves the dev server. Both stop when the container is reclaimed.
 - Local run:
 
@@ -79,10 +91,12 @@ community pages were captured).
   HAUS_FIXTURE_SHOWCASE_ENABLED=true npm run dev
   ```
 
-  then open `http://localhost:3000/showcase`. For a production check use
-  `npx next build --webpack` and `npx next start` with the same flag and a
-  separate `HAUS_NEXT_DIST_DIR`. (`next start` warns that `output: standalone`
-  prefers `node <dist>/standalone/server.js`; both served the showcase here.)
+  then open `http://localhost:3000/showcase`. For a production check run
+  `npx next build` and `npx next start` with the same flag and a separate
+  `HAUS_NEXT_DIST_DIR`. (`next start` warns that `output: standalone` prefers
+  `node <dist>/standalone/server.js`; both served the showcase here.) Do not run
+  a Turbopack build while a Turbopack dev server is compiling the same checkout;
+  that is when the intermittent font error appeared.
 
 - Vercel: no authenticated Vercel connection, CLI or connector exists in this
   session, so nothing was deployed. A protected preview needs the intended
@@ -108,17 +122,17 @@ community pages were captured).
 
 ## Open decisions and follow-ups
 
-1. Turbopack production build: investigate the `next/font/google` failure
-   (self-hosted fonts or a Next patch release); the webpack build is the verified
-   path for now.
+1. The intermittent Turbopack `next/font/google` failure seen once during a
+   concurrent dev server session is worth a retry rule in CI; the default build
+   passes at HEAD and at the pre-showcase commit.
 2. Decide how much of the showcase to fold into the public `/properties`
    journey. The adapter keeps the showcase data model separate on purpose; the
    components could be pointed at Sanity-backed records through the same shapes.
 3. London enquiry is a `mailto:` to the sales inbox only; no simulated enquiry
    acknowledgement email was built.
 4. Dirham typography is not exercised because the fixture carries no AED prices.
-5. The Playwright journey script lives in the session scratchpad; a committed
-   `tests/e2e/showcase.spec.ts` would make the audit repeatable.
+5. `scripts/showcase-journey-audit.mjs` is a standalone audit; folding it into
+   `tests/e2e` as a Playwright spec with its own web server config is optional.
 6. Kore remains out of scope and untouched.
 
 ## Files changed in this milestone
@@ -132,4 +146,6 @@ community pages were captured).
   brochure request journey)
 - `src/lib/showcase/*` (access, fixture adapter, search, format, captions,
   request) with unit tests
-- `docs/claude-cloud/CONTINUATION.md`, `docs/claude-cloud/screenshots/*`
+- `scripts/showcase-journey-audit.mjs`, `.gitignore` (audit output folder)
+- `docs/claude-cloud/CONTINUATION.md`, `docs/claude-cloud/screenshots/*`,
+  `docs/claude-cloud/showcase-journey-report.json`

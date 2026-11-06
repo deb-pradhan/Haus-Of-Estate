@@ -1,0 +1,419 @@
+{
+  "base": "http://127.0.0.1:3500",
+  "startedAt": "2026-11-06T13:36:37.127Z",
+  "viewports": {
+    "mobile-390": {
+      "failures": [],
+      "1-home": {
+        "docWidth": 390,
+        "viewportWidth": 390,
+        "overflow": false,
+        "interactiveCount": 32,
+        "small": [
+          "a \"Skip to main content\" 1x1"
+        ],
+        "imageCount": 5,
+        "broken": [],
+        "unloaded": 2,
+        "title": "Overview — Haus of Estate",
+        "h1": "Find your next home, from the first search to the floor plan."
+      },
+      "2-catalogue-filtered": {
+        "docWidth": 390,
+        "viewportWidth": 390,
+        "overflow": false,
+        "interactiveCount": 37,
+        "small": [
+          "a \"Skip to main content\" 1x1"
+        ],
+        "imageCount": 5,
+        "broken": [],
+        "unloaded": 3,
+        "title": "Find a home — Haus of Estate design showcase",
+        "h1": "Find a home",
+        "url": "http://127.0.0.1:3500/showcase/properties?country=United+Arab+Emirates&city=Sharjah&area=Florence&type=Townhouse",
+        "status": "Showing 1 community, 2 home collections."
+      },
+      "2b-catalogue-empty": {
+        "docWidth": 390,
+        "viewportWidth": 390,
+        "overflow": false,
+        "interactiveCount": 33,
+        "small": [
+          "a \"Skip to main content\" 1x1"
+        ],
+        "imageCount": 2,
+        "broken": [],
+        "unloaded": 0,
+        "title": "Find a home — Haus of Estate design showcase",
+        "h1": "Find a home",
+        "status": "No homes match these filters.",
+        "afterRemovingBeds": "Showing 1 ready home."
+      },
+      "3-community": {
+        "docWidth": 390,
+        "viewportWidth": 390,
+        "overflow": false,
+        "interactiveCount": 31,
+        "small": [
+          "a \"Skip to main content\" 1x1"
+        ],
+        "imageCount": 18,
+        "broken": [],
+        "unloaded": 13,
+        "title": "Azizi Florence — Haus of Estate design showcase",
+        "h1": "Azizi Florence",
+        "sections": [
+          "villas",
+          "townhouses",
+          "amenities",
+          "gallery"
+        ]
+      },
+      "4-collection": {
+        "docWidth": 390,
+        "viewportWidth": 390,
+        "overflow": false,
+        "interactiveCount": 38,
+        "small": [
+          "a \"Skip to main content\" 1x1"
+        ],
+        "imageCount": 15,
+        "broken": [],
+        "unloaded": 6,
+        "title": "Azizi Florence — 4-Bedroom Townhouses — Haus of Estate design showcase",
+        "h1": "Azizi Florence — 4-Bedroom Townhouses"
+      },
+      "5-design": {
+        "selected": "Spada - 4-home row - corner",
+        "url": "http://127.0.0.1:3500/showcase/properties/azizi-florence-4-bedroom-townhouses?design=spada-4-home-corner",
+        "stickyBarVisible": true,
+        "withheld": true
+      },
+      "6-request-form": {
+        "docWidth": 390,
+        "viewportWidth": 390,
+        "overflow": false,
+        "interactiveCount": 29,
+        "small": [
+          "a \"Skip to main content\" 1x1",
+          "input#_r_1_-privacy \"\" 20x20",
+          "input#_r_1_-property-match \"\" 20x20",
+          "input#_r_1_-newsletter \"\" 20x20"
+        ],
+        "imageCount": 3,
+        "broken": [],
+        "unloaded": 0,
+        "title": "Request a brochure (simulated) — Haus of Estate design showcase",
+        "h1": "Request the brochure",
+        "errors": [
+          "Enter your first name.",
+          "Enter your email address.",
+          "Confirm that you have read and understood the privacy notice."
+        ],
+        "focusedAfterError": "_r_1_-first-name",
+        "checkboxesBeforeSubmit": [
+          {
+            "id": "_r_1_-privacy",
+            "required": true,
+            "checked": false
+          },
+          {
+            "id": "property-match",
+            "required": false,
+            "checked": false
+          },
+          {
+            "id": "_1_-newsletter",
+            "required": false,
+            "checked": false
+          }
+        ]
+      },
+      "7-success": {
+        "docWidth": 390,
+        "viewportWidth": 390,
+        "overflow": false,
+        "interactiveCount": 22,
+        "small": [
+          "a \"Skip to main content\" 1x1"
+        ],
+        "imageCount": 3,
+        "broken": [],
+        "unloaded": 0,
+        "title": "Request a brochure (simulated) — Haus of Estate design showcase",
+        "h1": "Request the brochure",
+        "heading": "Here is the email Sample would receive",
+        "subject": "Your requested brochure — Azizi Florence — 4-Bedroom Townhouses",
+        "design": "Spada - 4-home row - corner",
+        "optIns": "None. No subscription was created.",
+        "focused": "Here is the email Sample would receive",
+        "emailMentionsDesign": true
+      },
+      "8-back": {
+        "url": "http://127.0.0.1:3500/showcase/properties/azizi-florence-4-bedroom-townhouses?design=spada-4-home-corner#selected-design",
+        "selected": "Spada - 4-home row - corner"
+      },
+      "9-london": {
+        "docWidth": 390,
+        "viewportWidth": 390,
+        "overflow": false,
+        "interactiveCount": 23,
+        "small": [
+          "a \"Skip to main content\" 1x1"
+        ],
+        "imageCount": 8,
+        "broken": [],
+        "unloaded": 4,
+        "title": "Three-bedroom terraced house in North London — Haus of Estate design showcase",
+        "h1": "Three-bedroom terraced house in North London",
+        "price": "£500,000"
+      },
+      "10-errors": {
+        "invalidDesignStatus": 404,
+        "invalidDesignH1": "We couldn’t find that page.",
+        "unknownSlugStatus": 404
+      },
+      "11-keyboard": [
+        {
+          "tag": "a",
+          "text": "Skip to main content",
+          "outline": true
+        },
+        {
+          "tag": "a",
+          "text": "Haus of Estate design showcase home",
+          "outline": true
+        },
+        {
+          "tag": "a",
+          "text": "Find a home",
+          "outline": true
+        },
+        {
+          "tag": "summary",
+          "text": "Open showcase menu",
+          "outline": true
+        },
+        {
+          "tag": "select",
+          "text": "All countriesUnited Arab EmiratesUnited ",
+          "outline": true
+        },
+        {
+          "tag": "select",
+          "text": "All typesVillaTownhouseTerraced House",
+          "outline": true
+        }
+      ]
+    },
+    "desktop-1440": {
+      "failures": [],
+      "1-home": {
+        "docWidth": 1440,
+        "viewportWidth": 1440,
+        "overflow": false,
+        "interactiveCount": 31,
+        "small": [
+          "a \"Skip to main content\" 1x1"
+        ],
+        "imageCount": 5,
+        "broken": [],
+        "unloaded": 1,
+        "title": "Overview — Haus of Estate",
+        "h1": "Find your next home, from the first search to the floor plan."
+      },
+      "2-catalogue-filtered": {
+        "docWidth": 1440,
+        "viewportWidth": 1440,
+        "overflow": false,
+        "interactiveCount": 36,
+        "small": [
+          "a \"Skip to main content\" 1x1"
+        ],
+        "imageCount": 5,
+        "broken": [],
+        "unloaded": 1,
+        "title": "Find a home — Haus of Estate design showcase",
+        "h1": "Find a home",
+        "url": "http://127.0.0.1:3500/showcase/properties?country=United+Arab+Emirates&city=Sharjah&area=Florence&type=Townhouse",
+        "status": "Showing 1 community, 2 home collections."
+      },
+      "2b-catalogue-empty": {
+        "docWidth": 1440,
+        "viewportWidth": 1440,
+        "overflow": false,
+        "interactiveCount": 32,
+        "small": [
+          "a \"Skip to main content\" 1x1"
+        ],
+        "imageCount": 2,
+        "broken": [],
+        "unloaded": 0,
+        "title": "Find a home — Haus of Estate design showcase",
+        "h1": "Find a home",
+        "status": "No homes match these filters.",
+        "afterRemovingBeds": "Showing 1 ready home."
+      },
+      "3-community": {
+        "docWidth": 1440,
+        "viewportWidth": 1440,
+        "overflow": false,
+        "interactiveCount": 30,
+        "small": [
+          "a \"Skip to main content\" 1x1"
+        ],
+        "imageCount": 18,
+        "broken": [],
+        "unloaded": 10,
+        "title": "Azizi Florence — Haus of Estate design showcase",
+        "h1": "Azizi Florence",
+        "sections": [
+          "villas",
+          "townhouses",
+          "amenities",
+          "gallery"
+        ]
+      },
+      "4-collection": {
+        "docWidth": 1440,
+        "viewportWidth": 1440,
+        "overflow": false,
+        "interactiveCount": 36,
+        "small": [
+          "a \"Skip to main content\" 1x1"
+        ],
+        "imageCount": 15,
+        "broken": [],
+        "unloaded": 2,
+        "title": "Azizi Florence — 4-Bedroom Townhouses — Haus of Estate design showcase",
+        "h1": "Azizi Florence — 4-Bedroom Townhouses"
+      },
+      "5-design": {
+        "selected": "Spada - 4-home row - corner",
+        "url": "http://127.0.0.1:3500/showcase/properties/azizi-florence-4-bedroom-townhouses?design=spada-4-home-corner",
+        "withheld": true
+      },
+      "6-request-form": {
+        "docWidth": 1440,
+        "viewportWidth": 1440,
+        "overflow": false,
+        "interactiveCount": 28,
+        "small": [
+          "a \"Skip to main content\" 1x1",
+          "input#_r_1_-privacy \"\" 20x20",
+          "input#_r_1_-property-match \"\" 20x20",
+          "input#_r_1_-newsletter \"\" 20x20"
+        ],
+        "imageCount": 3,
+        "broken": [],
+        "unloaded": 0,
+        "title": "Request a brochure (simulated) — Haus of Estate design showcase",
+        "h1": "Request the brochure",
+        "errors": [
+          "Enter your first name.",
+          "Enter your email address.",
+          "Confirm that you have read and understood the privacy notice."
+        ],
+        "focusedAfterError": "_r_1_-first-name",
+        "checkboxesBeforeSubmit": [
+          {
+            "id": "_r_1_-privacy",
+            "required": true,
+            "checked": false
+          },
+          {
+            "id": "property-match",
+            "required": false,
+            "checked": false
+          },
+          {
+            "id": "_1_-newsletter",
+            "required": false,
+            "checked": false
+          }
+        ]
+      },
+      "7-success": {
+        "docWidth": 1440,
+        "viewportWidth": 1440,
+        "overflow": false,
+        "interactiveCount": 21,
+        "small": [
+          "a \"Skip to main content\" 1x1"
+        ],
+        "imageCount": 3,
+        "broken": [],
+        "unloaded": 0,
+        "title": "Request a brochure (simulated) — Haus of Estate design showcase",
+        "h1": "Request the brochure",
+        "heading": "Here is the email Sample would receive",
+        "subject": "Your requested brochure — Azizi Florence — 4-Bedroom Townhouses",
+        "design": "Spada - 4-home row - corner",
+        "optIns": "None. No subscription was created.",
+        "focused": "Here is the email Sample would receive",
+        "emailMentionsDesign": true
+      },
+      "8-back": {
+        "url": "http://127.0.0.1:3500/showcase/properties/azizi-florence-4-bedroom-townhouses?design=spada-4-home-corner#selected-design",
+        "selected": "Spada - 4-home row - corner"
+      },
+      "9-london": {
+        "docWidth": 1440,
+        "viewportWidth": 1440,
+        "overflow": false,
+        "interactiveCount": 22,
+        "small": [
+          "a \"Skip to main content\" 1x1"
+        ],
+        "imageCount": 8,
+        "broken": [],
+        "unloaded": 1,
+        "title": "Three-bedroom terraced house in North London — Haus of Estate design showcase",
+        "h1": "Three-bedroom terraced house in North London",
+        "price": "£500,000"
+      },
+      "10-errors": {
+        "invalidDesignStatus": 404,
+        "invalidDesignH1": "We couldn’t find that page.",
+        "unknownSlugStatus": 404
+      },
+      "11-keyboard": [
+        {
+          "tag": "a",
+          "text": "Skip to main content",
+          "outline": true
+        },
+        {
+          "tag": "a",
+          "text": "Haus of Estate design showcase home",
+          "outline": true
+        },
+        {
+          "tag": "a",
+          "text": "Overview",
+          "outline": true
+        },
+        {
+          "tag": "a",
+          "text": "Florence, Sharjah",
+          "outline": true
+        },
+        {
+          "tag": "a",
+          "text": "North London",
+          "outline": true
+        },
+        {
+          "tag": "a",
+          "text": "Find a home",
+          "outline": true
+        }
+      ]
+    }
+  },
+  "summary": {
+    "failures": 0,
+    "overflowSteps": []
+  }
+}
