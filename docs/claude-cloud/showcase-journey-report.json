@@ -1,6 +1,6 @@
 {
   "base": "http://127.0.0.1:3500",
-  "startedAt": "2026-11-06T13:36:37.127Z",
+  "startedAt": "2026-11-06T14:02:00.599Z",
   "viewports": {
     "mobile-390": {
       "failures": [],
@@ -48,7 +48,7 @@
         "title": "Find a home — Haus of Estate design showcase",
         "h1": "Find a home",
         "status": "No homes match these filters.",
-        "afterRemovingBeds": "Showing 1 ready home."
+        "afterRemovingBeds": "Showing 1 existing home."
       },
       "3-community": {
         "docWidth": 390,
@@ -60,7 +60,7 @@
         ],
         "imageCount": 18,
         "broken": [],
-        "unloaded": 13,
+        "unloaded": 14,
         "title": "Azizi Florence — Haus of Estate design showcase",
         "h1": "Azizi Florence",
         "sections": [
@@ -74,7 +74,7 @@
         "docWidth": 390,
         "viewportWidth": 390,
         "overflow": false,
-        "interactiveCount": 38,
+        "interactiveCount": 39,
         "small": [
           "a \"Skip to main content\" 1x1"
         ],
@@ -150,6 +150,13 @@
         "focused": "Here is the email Sample would receive",
         "emailMentionsDesign": true
       },
+      "7b-no-js-inert": {
+        "submitDisabled": true,
+        "urlUnchanged": true,
+        "urlLeaksDetails": false,
+        "namedFields": 0,
+        "noscriptNotice": 0
+      },
       "8-back": {
         "url": "http://127.0.0.1:3500/showcase/properties/azizi-florence-4-bedroom-townhouses?design=spada-4-home-corner#selected-design",
         "selected": "Spada - 4-home row - corner"
@@ -219,7 +226,7 @@
         ],
         "imageCount": 5,
         "broken": [],
-        "unloaded": 1,
+        "unloaded": 2,
         "title": "Overview — Haus of Estate",
         "h1": "Find your next home, from the first search to the floor plan."
       },
@@ -253,7 +260,7 @@
         "title": "Find a home — Haus of Estate design showcase",
         "h1": "Find a home",
         "status": "No homes match these filters.",
-        "afterRemovingBeds": "Showing 1 ready home."
+        "afterRemovingBeds": "Showing 1 existing home."
       },
       "3-community": {
         "docWidth": 1440,
@@ -353,6 +360,13 @@
         "optIns": "None. No subscription was created.",
         "focused": "Here is the email Sample would receive",
         "emailMentionsDesign": true
+      },
+      "7b-no-js-inert": {
+        "submitDisabled": true,
+        "urlUnchanged": true,
+        "urlLeaksDetails": false,
+        "namedFields": 0,
+        "noscriptNotice": 0
       },
       "8-back": {
         "url": "http://127.0.0.1:3500/showcase/properties/azizi-florence-4-bedroom-townhouses?design=spada-4-home-corner#selected-design",

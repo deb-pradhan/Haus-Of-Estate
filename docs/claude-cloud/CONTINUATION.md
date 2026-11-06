@@ -82,8 +82,11 @@ when the repository's Playwright version has no downloaded browser.
 
 ## Preview
 
-- Cloud session ports: `3500` serves the default production build with the flag
-  on; `3400` serves the dev server. Both stop when the container is reclaimed.
+- Cloud session ports: `3500` serves the default production build of checkpoint
+  3 with the flag on; `3400` serves the dev server. Both stop when the container
+  is reclaimed. When restarting `next start` on a reused port, stop the
+  `next-server` child process too; killing only the parent left the old build
+  listening once in this session.
 - Local run:
 
   ```bash
@@ -167,8 +170,8 @@ Checks for this checkpoint:
 | `npx eslint src/lib/showcase src/components/showcase src/app/showcase scripts/showcase-journey-audit.mjs next.config.ts` | Passed, 0 problems |
 | `npx vitest run src/lib/showcase src/components/showcase` | 5 files, 20 tests passed (3 new pre-hydration tests) |
 | `HAUS_NEXT_DIST_DIR=.next-showcase-tp2 npx next build` (default Turbopack) | Passed: compiled in 30.4 s |
-| Browser audit against that build, including the new no-JS step | **Pending** at the time of this commit. An earlier run of the new audit accidentally hit the previous build still bound to port 3500 and reported the old form leaking fields, which is the behaviour this checkpoint removes; the rerun against the rebuilt server was still in progress when the source fixes were pushed |
-| Screenshots in `docs/claude-cloud/screenshots/` | Still from the previous checkpoint (f14f20bf); not regenerated for these fixes |
+| Browser audit against that build, including the new no-JS step | **Passed** after the source fixes were pushed: 0 failed steps, 0 overflow steps at 390 px and 1440 px. With JavaScript disabled the submit button is disabled, pressing Enter and force-clicking submit leave the URL unchanged, no contact details appear in it and the form has 0 named fields. (The audit's text probe did not detect the `<noscript>` notice; the server-markup unit test covers it.) The first attempt of this run hit an orphaned `next-server` child process still serving the previous build on port 3500 and reported the old leaking form; that process was stopped and the audit rerun against the rebuilt server. `docs/claude-cloud/showcase-journey-report.json` is from the passing run |
+| Screenshots in `docs/claude-cloud/screenshots/` | Regenerated from the rebuilt default production build after these fixes (serif headings, “Existing home” wording, explicit bedroom lists) |
 
 ## Open decisions and follow-ups
 
