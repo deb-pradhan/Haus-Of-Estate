@@ -236,6 +236,42 @@ Git connection.
   Surya. A protection-bypass link for the project or turning protection off for
   this one project are the options for Sonia; neither was done.
 
+## Florence brochure-email preparation — 6 November 2026 (local)
+
+Codex-coordinated bounded task on this same branch after the Vercel preview was
+settled; full detail in `docs/brochure-email-activation-2026-11-06.md`. The
+existing public pipeline (design explorer → brochure request trigger → lead form
+→ `/api/leads` → published Sanity mapping → PostgreSQL lead/consent/outbox →
+worker → Resend → signed private download) was reused; no second pipeline was
+built and the `/showcase` simulation is untouched.
+
+- `eb9d298a` — honest dead-letter receipts: persistence returns the brochure job
+  id and describes a `DEAD_LETTER` row as failed; `/api/leads` reports
+  `brochureDeliveryFailed` instead of `brochureQueued` when the immediate attempt
+  or the stored job is a dead letter, keeping the saved-lead receipt, status
+  codes and replay idempotency; the form says saved for team follow-up, no need
+  to resend, never delivered. Failed-save fallback now names
+  `sales@hausofestate.com`.
+- `453f98b8` — per-selection availability: unmapped designs open an enquiry that
+  keeps the design in the note instead of a brochure request the server would
+  reject; `npm run brochure:mapping` audits the private catalog against the
+  published design variants (read-only, reason codes per collection); activation
+  checklist with storage layout options, migrations, runtime settings and the
+  blocked steps.
+- Checks: vitest 33 files / 316 tests across lead intake, lead delivery,
+  brochures, the leads and brochure download routes, lead-eoi and property
+  components, plus the webhook route and showcase suites (5 files / 66 tests);
+  node:test 2/2 for the mapping script; `tsc --noEmit` clean; eslint clean on the
+  changed files; `next build --webpack` passed (27.4 s). No email, database or
+  Sanity call was made.
+- Still blocked outside this repository: Sonia's mapping, stock, design and
+  follow-up-owner confirmations and the SRERD status; the Sanity
+  `brochureKey`/`brochureRevision` edits on published Florence designs; the
+  private storage decision (single-service Railway volume versus private object
+  storage, both documented, neither built); hosted migrations, runtime secrets and
+  the controlled staging send, download and webhook test. The four source PDFs
+  stay `approved: false` in the private catalog.
+
 ## UI/UX benchmark — 6 November 2026
 
 `ux-benchmark-2026-11-06.md` is the competitive research Surya requested after
