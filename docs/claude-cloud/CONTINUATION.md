@@ -190,6 +190,52 @@ Checks for this checkpoint:
   approve production, public deployment, real emails or CMS writes. Further work
   waits on design feedback and a hosting decision.
 
+## Vercel preview — 6 November 2026 (local machine)
+
+Set up from Surya's local desktop session after the cloud session stopped short of
+Vercel. Account: Surya's personal Hobby account `suryak02` (no team; Vercel's
+documentation restricts Hobby to non-commercial personal use, so a Pro team is the
+right home if this preview outgrows internal review). Vercel's GitHub app only sees
+the `suryak02` namespace, and a collaborator cannot connect a repository owned by
+another personal account, so deploys are CLI uploads from this checkout, never a
+Git connection.
+
+- Project `haus-of-estate-showcase` (`prj_AvtgOibkMjYerlIfPQL9rRZFwV76`): Next.js,
+  Node 22.x, build `npx prisma generate && npm run build`, install
+  `npm ci && npm install --no-save` of the five Linux native bindings the
+  Windows-generated lockfile omits (lightningcss, @tailwindcss/oxide, @rolldown
+  binding, @esbuild/linux-x64, unrs-resolver), `HAUS_FIXTURE_SHOWCASE_ENABLED=true`
+  on Preview only, no other variables, no domain, Vercel Authentication
+  (Standard Protection) on.
+- Repository changes: `.vercelignore` (3c80802a) keeps the upload to 647 files and
+  excludes the tracked legacy Studio tree; `next.config.ts` (3892f4de) skips
+  `output: "standalone"` when `VERCEL` is set because Vercel's post-build step
+  expected `.next/next-server.js.nft.json`, which Next does not write in
+  standalone mode. Railway's Docker image is unchanged.
+- Deploy history: the first `vercel deploy` from CLI 65.12.1 without an
+  environment flag created a **production**-target deployment; it was cancelled
+  while still building and never served. The second, explicit preview deploy
+  failed on the standalone trace file. The third, after the config change, built
+  and passed: `https://haus-of-estate-showcase-f5difm48x-suryak02s-projects.vercel.app`
+  (deployment `92STfroXM96QCKgrhC7germdMbPg`, commit 3892f4de). Always deploy with
+  `vercel deploy --yes --archive=tgz --environment preview`; never `--prod`.
+- Verified through the protection with `vercel curl` (full URLs; Git Bash
+  rewrites bare `/paths`): `/showcase`, `/showcase/properties`, the 4-bedroom
+  townhouse collection with `?design=spada-4-home-corner`, and the North London
+  listing return 200 with `X-Robots-Tag: noindex, nofollow, noarchive,
+  noimageindex`, `Cache-Control: private, no-store` and no canonical tag; an
+  unknown slug and `/dev/property-previews` return 404; the public root renders
+  with Vercel's own preview `noindex`; an unauthenticated request is redirected
+  (302) to the Vercel login. An unknown `?design=` value on a collection page
+  renders the collection with its default design (200) rather than a 404.
+- Local checks of HEAD before the upload: production build with webpack, typecheck
+  and the showcase unit tests all passed. The default Turbopack build fails in this
+  worktree only because its `node_modules` is a junction into the main checkout;
+  Vercel's fresh install is unaffected.
+- Sharing: the Hobby account has no members, so Vercel Authentication admits only
+  Surya. A protection-bypass link for the project or turning protection off for
+  this one project are the options for Sonia; neither was done.
+
 ## UI/UX benchmark — 6 November 2026
 
 `ux-benchmark-2026-11-06.md` is the competitive research Surya requested after
