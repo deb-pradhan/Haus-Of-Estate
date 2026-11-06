@@ -271,3 +271,17 @@ country/city/area/townhouse filters return one community and two collections.
 The original report is not presented as that corrected rerun. Both reports and
 full screenshots remain outside Git in the local bright-direction review folder.
 No real intake or email endpoint was called.
+
+## Kore hold — 6 November 2026
+
+Surya requested keeping Kore's preparation work saved while leaving it out for
+now. It is already absent from the seven-record showcase fixture. The public
+catalogue inspected on this date did not list Kore either; no CMS or production
+change was made. Keep it out of this release and its enquiry/brochure choices.
+
+The existing `drafts.kore-wellness-residence` preparation, source assessment and
+local preview remain preserved in the property-publication checkout. Do not
+delete or reimport them. Phase 1 being reported sold out does not establish the
+status of every later phase. Revisit only after Sonia confirms marketable stock
+or a confirmed future release, current prices/terms and approved media. Keep
+the older commercial schedule as source history, not current offers.

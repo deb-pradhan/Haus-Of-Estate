@@ -31,7 +31,7 @@ Use `fixtures/haus-properties.json` and its README for display-only approved-sou
 - Public plans and both area figures are intended. Use Built-up area for the Florence figure stored as `sellableAreaSqFt`; preserve source semantics internally. Keep disputed plot figures withheld.
 - Old Florence prices are not current stock confirmation. Payment terms, handover and available inventory require refreshed approval. Do not present held values as current offers.
 - London: three-bedroom terraced house; the supplied asking price is GBP 500,000. Approximate gross internal floor area is 889.9 sq ft / 82.67 sq m. Broad North London only, no road/postcode/precise map. BEFORE/AFTER images distinguish existing views and proposed concepts. Gross internal area is not plot size.
-- Kore is separate. Do not invent approved imagery or current availability; the earlier phase is reported sold out. Revalidate commercial material before publication.
+- Kore is explicitly on hold for this release (Surya, 6 November 2026). Preserve the existing draft and preparation work, but leave it out of the showcase, public catalogue and enquiry/brochure choices. Phase 1 is reported sold out; this does not establish that the whole project is sold out. Resume only when Sonia confirms a marketable phase or specific units, current commercial details and approved media. Do not present the earlier prices as current offers.
 
 CDN images are already optimized source derivatives. Never copy the multi-GB original packages into Git, upload private PDFs as public assets, or use one project's renders for another. The existing Windows local bundle loader is deliberately strict and cannot be made portable by just copying its folder. Its `/dev` routes must remain unavailable in production.
 
