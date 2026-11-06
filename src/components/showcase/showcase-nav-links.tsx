@@ -29,10 +29,10 @@ export function ShowcaseNavLinks() {
           </Link>
         ))}
       </nav>
-      <Link href={searchHref} aria-current={searchActive ? 'page' : undefined}
-        className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-estate-700 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-estate-600">
-        <Search aria-hidden className="size-4" />
-        <span>Find a home</span>
+      <Link href={searchHref} aria-label="Find a home" aria-current={searchActive ? 'page' : undefined}
+        className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-estate-700 px-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-estate-600 sm:px-4">
+        <Search aria-hidden className="size-4 shrink-0" />
+        <span className="hidden whitespace-nowrap sm:inline">Find a home</span>
       </Link>
       <details className="relative md:hidden">
         <summary aria-label="Open showcase menu" className="inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center gap-1 rounded-xl border border-estate-700/20 px-3 text-sm font-medium text-estate-700">

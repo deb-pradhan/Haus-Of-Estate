@@ -106,12 +106,21 @@ for (const viewport of viewports) {
   })
 
   await step('2-catalogue-filtered', async () => {
+    await page.fill('#home-search', 'Florence')
+    await page.click('form[role="search"] button[type="submit"]')
+    await page.waitForURL((url) => url.pathname === '/showcase/properties' && url.searchParams.get('q') === 'Florence')
+    await waitImages()
+    record['2-catalogue-filtered'] = { homepageKeywordQuery: 'Florence', homepageKeywordUrl: page.url() }
     await page.selectOption('select[name="country"]', 'United Arab Emirates')
     await page.selectOption('select[name="city"]', 'Sharjah')
     await page.selectOption('select[name="area"]', 'Florence')
     await page.selectOption('select[name="type"]', 'Townhouse')
     await page.click('form[role="search"] button[type="submit"]')
-    await page.waitForURL(/\/showcase\/properties\?/)
+    await page.waitForURL((url) => url.pathname === '/showcase/properties'
+      && url.searchParams.get('country') === 'United Arab Emirates'
+      && url.searchParams.get('city') === 'Sharjah'
+      && url.searchParams.get('area') === 'Florence'
+      && url.searchParams.get('type') === 'Townhouse')
     await waitImages()
     await audit(page, '2-catalogue-filtered', record)
     record['2-catalogue-filtered'].url = page.url()

@@ -1,9 +1,10 @@
 /* Design language for the fixture showcase. Brand tokens come from globals.css. */
 .showcase {
-  --sc-paper: #fbfaf7;
+  --sc-paper: #fcfbf8;
   --sc-gold-ink: #76603a;
   --sc-ring: #1f4f2f;
   color: var(--foreground);
+  background-color: var(--sc-paper);
 }
 
 .showcase p { text-wrap: pretty; }
@@ -28,8 +29,8 @@
   font-variant-ligatures: common-ligatures;
 }
 .showcase .sc-display {
-  font-size: clamp(2.5rem, 1.5rem + 4.2vw, 4.75rem);
-  line-height: 1.02;
+  font-size: clamp(2.625rem, 1.75rem + 2.6vw, 4.25rem);
+  line-height: 1.06;
   letter-spacing: -0.02em;
 }
 .showcase .sc-title {
@@ -45,7 +46,19 @@
   font-size: clamp(1.05rem, 1rem + 0.3vw, 1.25rem);
   line-height: 1.55;
 }
-.showcase .sc-section { padding-block: clamp(3rem, 2rem + 4vw, 6rem); }
+.showcase .sc-section { padding-block: clamp(2.75rem, 2rem + 2.5vw, 4.5rem); }
+
+.showcase .sc-text-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 1px solid currentColor;
+  color: var(--sc-ring);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.showcase .sc-text-link:hover { color: #50735c; }
 
 /* Visible keyboard focus everywhere, including on dark bands. */
 .showcase :focus-visible {

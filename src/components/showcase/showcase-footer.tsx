@@ -16,7 +16,7 @@ export function ShowcaseFooter() {
         <div>
           <p className="font-serif text-2xl font-medium tracking-wide text-white">Haus of Estate</p>
           <p className="mt-3 max-w-sm text-sm leading-6">
-            An international property service for buyers, landlords and investors. This showcase presents a Sharjah community and one North London home from a sanitized fixture so the buying journey can be reviewed before publication.
+            An international property service for buyers, landlords and investors, across the UK and selected international markets.
           </p>
           <div className="mt-5 space-y-1 text-xs leading-5 text-white/65">
             <p className="font-semibold text-white/85">{COMPANY_IDENTITY.legalName}</p>

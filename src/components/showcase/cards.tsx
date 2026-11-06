@@ -19,28 +19,28 @@ export function CommunityIntro({ community, variant = 'catalogue', className }: 
   const townhouses = community.groups.find((group) => group.id === 'townhouses')
   const bedrooms = (collections: ShowcaseProperty[] | undefined) => bedroomList(collections ?? [])
   return (
-    <article className={cn('sc-lift overflow-hidden rounded-3xl border border-border bg-surface shadow-sm', className)}>
-      <div className="grid lg:grid-cols-[1.25fr_1fr]">
-        <Link href={href} className="relative block aspect-[16/10] min-h-64 bg-estate-700 lg:aspect-auto lg:min-h-[420px]" aria-label={`Explore ${overview.title}`}>
-          <FixtureImage image={overview.media.hero} sizes="(min-width: 1024px) 720px, 100vw" preload={variant === 'home'} />
-          <span className="absolute left-4 top-4 rounded-full bg-surface/95 px-3 py-1.5 text-xs font-semibold text-estate-700 shadow-sm">Community · artist’s impression</span>
+    <article className={cn('overflow-hidden rounded-xl border border-border bg-surface', className)}>
+      <div className="grid lg:grid-cols-[1.4fr_1fr]">
+        <Link href={href} className="relative block aspect-[16/10] bg-estate-700 lg:aspect-auto lg:min-h-[420px]" aria-label={`Explore ${overview.title}`}>
+          <FixtureImage image={overview.media.hero} sizes="(min-width: 1024px) 720px, 100vw" />
+          <span className="absolute bottom-4 left-4 rounded-md bg-surface/95 px-3 py-1.5 text-xs font-medium text-estate-700">Masterplan · artist’s impression</span>
         </Link>
         <div className="flex flex-col justify-center p-6 md:p-9">
-          <p className="sc-eyebrow">{[overview.city, overview.country].join(', ')}{overview.developer ? ` · ${overview.developer}` : ''}</p>
+          <p className="sc-eyebrow">{overview.city} · {overview.developer}</p>
           <h3 className="sc-title mt-3 text-estate-700">{overview.title}</h3>
-          <p className="mt-4 text-base leading-7 text-muted-foreground">{overview.summary}</p>
-          <dl className="mt-6 grid grid-cols-2 gap-3 text-sm">
-            {villas && <div className="rounded-2xl bg-subtle px-4 py-3">
+          <p className="mt-4 text-base leading-7 text-muted-foreground">{variant === 'home' ? 'Explore a planned community with landscaped parkland, villas and townhouses, alongside Sheikh Mohammed Bin Zayed Road.' : overview.summary}</p>
+          <dl className="mt-5 grid grid-cols-2 gap-4 border-y border-border py-4 text-sm">
+            {villas && <div>
               <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Villas</dt>
               <dd className="mt-1 font-medium text-estate-700">{bedrooms(villas.collections)} designs</dd>
             </div>}
-            {townhouses && <div className="rounded-2xl bg-subtle px-4 py-3">
+            {townhouses && <div>
               <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Townhouses</dt>
               <dd className="mt-1 font-medium text-estate-700">{bedrooms(townhouses.collections)} designs</dd>
             </div>}
           </dl>
           <p className="mt-4 text-xs leading-5 text-muted-foreground">{overview.display.inventoryNotice}</p>
-          <Link href={href} className="mt-6 inline-flex min-h-12 w-fit items-center gap-2 rounded-xl bg-estate-700 px-5 text-sm font-semibold text-white transition-colors hover:bg-estate-600">
+          <Link href={href} className="sc-text-link mt-4 w-fit">
             Explore the community <ArrowRight aria-hidden className="size-4" />
           </Link>
         </div>
@@ -55,8 +55,8 @@ export function CollectionCard({ collection, className }: { collection: Showcase
   const range = builtUpAreaRange(collection)
   const href = showcasePropertyPath(collection.slug)
   return (
-    <article className={cn('sc-lift group flex flex-col overflow-hidden rounded-3xl border border-border bg-surface shadow-sm', className)}>
-      <Link href={href} className="flex flex-1 flex-col rounded-3xl" aria-label={`${collectionLabel(collection)}: compare ${collection.designs.length} brochure designs`}>
+    <article className={cn('sc-lift group flex flex-col overflow-hidden rounded-xl border border-border bg-surface', className)}>
+      <Link href={href} className="flex flex-1 flex-col rounded-xl" aria-label={`${collectionLabel(collection)}: compare ${collection.designs.length} brochure designs`}>
         <div className="relative aspect-[3/2] overflow-hidden bg-estate-700">
           <FixtureImage image={image} sizes="(min-width: 1024px) 400px, (min-width: 640px) 50vw, 100vw" className="transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transform-none" />
         </div>
@@ -87,8 +87,8 @@ export function ReadyHomeCard({ home, className, wide = false }: { home: Showcas
   const href = showcasePropertyPath(home.slug)
   const caption = showcaseImageCaption(home.media.hero)
   return (
-    <article className={cn('sc-lift group overflow-hidden rounded-3xl border border-border bg-surface shadow-sm', className)}>
-      <Link href={href} className={cn('grid rounded-3xl', wide && 'lg:grid-cols-[1.25fr_1fr]')} aria-label={`View ${home.title}`}>
+    <article className={cn('sc-lift group overflow-hidden rounded-xl border border-border bg-surface', className)}>
+      <Link href={href} className={cn('grid rounded-xl', wide && 'lg:grid-cols-[1.4fr_1fr]')} aria-label={`View ${home.title}`}>
         <figure>
           <div className="relative aspect-[3/2] bg-[#f3efe6]">
             <FixtureImage image={home.media.hero} fit="contain" sizes={wide ? '(min-width: 1024px) 720px, 100vw' : '(min-width: 1024px) 400px, 100vw'} />

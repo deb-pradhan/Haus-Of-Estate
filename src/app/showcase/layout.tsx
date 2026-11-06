@@ -28,7 +28,7 @@ export default async function ShowcaseLayout({ children }: { children: React.Rea
   return (
     <div className="showcase flex min-h-screen flex-col bg-background">
       <p role="note" className="border-b border-gold-500/30 bg-[#f3eee2] px-4 py-2 text-center text-xs leading-5 text-estate-700">
-        <strong className="font-semibold">Design showcase.</strong> Fixture content for review, not live inventory. Brochure requests are simulated; nothing is saved or sent.
+        <strong className="font-semibold">Design preview.</strong> Not live inventory. Requests are simulated; nothing is saved or sent.
       </p>
       <ShowcaseHeader />
       <main id="main-content" className="flex-1">{children}</main>

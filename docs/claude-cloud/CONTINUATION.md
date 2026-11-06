@@ -219,3 +219,42 @@ Checks for this checkpoint:
 - `scripts/showcase-journey-audit.mjs`, `.gitignore` (audit output folder)
 - `docs/claude-cloud/CONTINUATION.md`, `docs/claude-cloud/screenshots/*`,
   `docs/claude-cloud/showcase-journey-report.json`
+
+## Visual direction revision — 6 November 2026
+
+Surya rejected the first concept's heavy, dark presentation and selected **a
+brighter, more image-led luxury property site**. Treat this as the current design
+direction, superseding the first homepage screenshots above.
+
+- Warm-white canvas, natural-colour Florence villa hero and concise serif heading.
+- Compact native keyword search on the homepage. Full country/city/area, type
+  and bedroom filters remain in the catalogue; no search architecture changes.
+- Image-led Villas and Townhouses entry points, restrained cards and inline facts.
+- Removed tutorial cards and fixture metrics from the main homepage. Provenance
+  is in an expandable note; simulation and inventory warnings stay visible where
+  needed. No new commercial facts, current-stock claims or interior-choice claims.
+- Mobile search uses a labelled 44px icon button so the header does not squeeze
+  its label across lines. Keyboard focus and reduced-motion styling remain.
+- Existing floor plans, area discrepancy notes, form safeguards, optional marketing
+  consent, example email and all production gates remain intact.
+
+Changes are confined to the isolated showcase presentation plus its journey audit.
+Typecheck, scoped ESLint and the existing five showcase test files (20 tests) pass.
+Desktop and mobile screenshots are `screenshots/bright-desktop-home.jpg` and
+`screenshots/bright-mobile-home.jpg` (1440x900 and 390x844). These are local
+webpack development-preview evidence, not a new production-build claim.
+
+The first cloud production-build report remains historical evidence for its own
+revision. Nothing in this visual revision authorizes production deployment,
+Sanity publication, message sending or merging the cumulative release.
+
+Local browser verification for the brighter revision: the full journey audit
+completed at 390px and 1440px with zero failed steps and zero horizontal-overflow
+steps. It covered keyword search, collection/design selection, validation,
+simulated email, return navigation, London, 404s and the inert no-JavaScript form.
+The audit's desktop filter waiter initially matched the earlier keyword URL;
+its waiter is now precise and a separate 1440px probe confirms the requested
+country/city/area/townhouse filters return one community and two collections.
+The original report is not presented as that corrected rerun. Both reports and
+full screenshots remain outside Git in the local bright-direction review folder.
+No real intake or email endpoint was called.

@@ -73,7 +73,7 @@ export function FactGrid({ items, className }: { items: { label: string; value: 
   return (
     <dl className={cn('grid grid-cols-2 gap-3 sm:grid-cols-4', className)}>
       {items.map((item) => (
-        <div key={item.label} className="rounded-2xl border border-border bg-surface px-4 py-3.5">
+        <div key={item.label} className="border-b border-border py-3.5 pr-3">
           <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{item.label}</dt>
           <dd className="mt-1 text-base font-medium leading-6 text-estate-700">{item.value}</dd>
           {item.note && <dd className="mt-1 text-xs leading-5 text-muted-foreground">{item.note}</dd>}
