@@ -428,9 +428,18 @@ smallest safe integration path, separate today's production Studio from the
 unreleased approval checklist, and record Sonia's 5 November cover-removal
 request as received. Both journeys were verified on that deployment through
 protection. Sonia's previous share link was revoked on 8 November 2026 and now
-ends at the Vercel login; the replacement link for the new deployment is created
-from the dashboard Share button and reported separately.
+ends at the Vercel login. The replacement link was created on 8 November 2026
+from the dashboard Share button ("Anyone with the link") for deployment
+`7S5mVnGi4oqKg2B5aN7dk9QuaFz6`, opens `/showcase`, and was verified without a
+session: the first hop is a 307 that sets the seven-day `_vercel_jwt` cookie,
+then `/showcase` is 200 with noindex and both "Start here" links; the Florence
+community, collection, Palm Springs draft and launch register routes are 200
+through that session, an unknown draft slug 404, and the bare URL and the old
+link both still redirect to the login. The token is bound to this deployment
+only. Vercel's dialog sets no expiry: the link is valid until it is revoked or
+replaced, and Hobby allows one shareable link at a time. The link is held by
+Surya and is not recorded in this repository; it has not been emailed.
 
 Boundaries kept: no Sanity write or publication, no email, no database call,
 no migration, no production deployment, no change to the live Dubai IT
-article, and the existing share link for Sonia was left as it was.
+article. Sonia's old share link was revoked and replaced, as instructed.
