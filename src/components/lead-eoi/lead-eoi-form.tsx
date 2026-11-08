@@ -286,6 +286,15 @@ export function LeadEoiForm({
     : undefined;
   const brochureEnabled = readiness?.brochureEmailEnabled === true && !brochureUnavailable;
   const requestNote = brochureRequestNote(project, activeBrochureRequest);
+  // A launch offers only its reported home types and bedroom counts, labelled
+  // as such; a published property keeps the generic lists.
+  const launchOptions =
+    launchInterest && !project && (launchInterest.unitTypes?.length || launchInterest.bedrooms?.length)
+      ? {
+          unitTypes: launchInterest.unitTypes?.length ? [...launchInterest.unitTypes] : PROPERTY_TYPE_OPTIONS,
+          bedrooms: launchInterest.bedrooms?.length ? [...launchInterest.bedrooms] : BEDROOM_OPTIONS,
+        }
+      : undefined;
   const submissionAttempt = useRef<LeadSubmissionAttempt | null>(null);
   const hasStarted = useRef(false);
   const hasTrackedView = useRef(false);
@@ -896,27 +905,28 @@ export function LeadEoiForm({
                 <>
                   <SelectField
                     id={`${id}-property-type`}
-                    label="Property type"
+                    label={launchOptions ? "Home type (reported options)" : "Property type"}
                     value={values.propertyType}
                     options={optionsWithCurrentValue(
-                      PROPERTY_TYPE_OPTIONS,
+                      launchOptions?.unitTypes ?? PROPERTY_TYPE_OPTIONS,
                       values.propertyType,
                     )}
-                    placeholder="Choose a type"
+                    placeholder={launchOptions ? "Not sure yet" : "Choose a type"}
                     onChange={(value) => update("propertyType", value)}
                   />
                   <SelectField
                     id={`${id}-bedrooms`}
-                    label="Bedrooms"
+                    label={launchOptions ? "Bedrooms (reported options)" : "Bedrooms"}
                     value={values.bedrooms}
                     options={optionsWithCurrentValue(
-                      BEDROOM_OPTIONS,
+                      launchOptions?.bedrooms ?? BEDROOM_OPTIONS,
                       values.bedrooms,
                     )}
-                    placeholder="Any"
+                    placeholder={launchOptions ? "Not sure yet" : "Any"}
                     icon={Home}
                     onChange={(value) => update("bedrooms", value)}
                   />
+                  {launchOptions ? null : (
                   <SelectField
                     id={`${id}-bathrooms`}
                     label="Bathrooms"
@@ -929,6 +939,7 @@ export function LeadEoiForm({
                     icon={Bath}
                     onChange={(value) => update("bathrooms", value)}
                   />
+                  )}
                   <SelectField
                     id={`${id}-timeframe`}
                     label="Timeframe"
@@ -937,6 +948,11 @@ export function LeadEoiForm({
                     placeholder="Choose a timeframe"
                     onChange={(value) => update("timeframe", value)}
                   />
+                  {launchOptions ? (
+                    <p className="text-xs leading-5 text-muted-foreground sm:col-span-2">
+                      Home types and bedroom counts are reported pre-launch options, not confirmed availability. Choose what you have in mind; the developer&apos;s final mix may differ.
+                    </p>
+                  ) : null}
                 </>
               ) : null}
             </div> : null}

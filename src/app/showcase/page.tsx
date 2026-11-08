@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowRight, Search } from 'lucide-react'
+import { ArrowRight, FileText, Search } from 'lucide-react'
 import { CommunityIntro, ReadyHomeCard } from '@/components/showcase/cards'
 import { FixtureImage, SectionHeading } from '@/components/showcase/primitives'
 import { showcasePath, showcasePropertyPath } from '@/lib/showcase/access'
@@ -52,6 +52,44 @@ export default function ShowcaseHomePage() {
           </div>
           <Link href={showcasePath('/properties')} className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-estate-700 underline underline-offset-4">All homes &amp; filters <ArrowRight aria-hidden className="size-4" /></Link>
         </form>
+      </section>
+
+      <section className="px-4 pt-10 md:px-6 md:pt-14" aria-labelledby="showcase-start-title">
+        <div className="mx-auto max-w-7xl">
+          <SectionHeading id="showcase-start-title" eyebrow="Start here" title="Two things to review" intro="Both open from this page. Florence is the community and design journey; Palm Springs is a draft article with a simulated register-interest form." />
+          <div className="mt-7 grid gap-5 md:grid-cols-2">
+            {florence && (
+              <Link href={showcasePropertyPath(florence.overview.slug)} className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-surface transition-colors hover:border-estate-700/40">
+                <div className="relative aspect-[16/9] overflow-hidden bg-subtle">
+                  <FixtureImage image={florence.overview.media.hero} sizes="(min-width: 1280px) 600px, (min-width: 768px) 50vw, 100vw" className="transition-transform duration-700 group-hover:scale-[1.02] motion-reduce:transform-none" />
+                </div>
+                <div className="flex flex-1 items-start justify-between gap-4 p-5">
+                  <div>
+                    <p className="text-xs font-semibold uppercase text-estate-700">Community · Sharjah</p>
+                    <h3 className="mt-1 font-serif text-2xl font-medium leading-tight text-estate-700">Azizi Florence</h3>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">Villas and townhouses, {florence.designCount} home designs with plans, and a simulated brochure request.</p>
+                  </div>
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-estate-700/20 text-estate-700 transition-colors group-hover:bg-estate-700 group-hover:text-white"><ArrowRight aria-hidden className="size-5" /></span>
+                </div>
+              </Link>
+            )}
+            {articles.map((article) => (
+              <Link key={article.slug} href={showcasePath(`/insights/${article.slug}`)} className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-surface transition-colors hover:border-estate-700/40">
+                <div className="flex aspect-[16/9] items-center justify-center border-b border-dashed border-estate-700/25 bg-[repeating-linear-gradient(135deg,transparent,transparent_14px,rgba(23,74,58,0.05)_14px,rgba(23,74,58,0.05)_28px)] px-6 text-center">
+                  <span className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1.5 text-xs font-medium text-estate-700"><FileText aria-hidden className="size-4" /> Draft article · image pending approval</span>
+                </div>
+                <div className="flex flex-1 items-start justify-between gap-4 p-5">
+                  <div>
+                    <p className="text-xs font-semibold uppercase text-estate-700">Article · {article.status} · prepared {article.preparedOn}</p>
+                    <h3 className="mt-1 font-serif text-2xl font-medium leading-tight text-estate-700">{article.launch?.title ?? article.title}</h3>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{article.subtitle}</p>
+                  </div>
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-estate-700/20 text-estate-700 transition-colors group-hover:bg-estate-700 group-hover:text-white"><ArrowRight aria-hidden className="size-5" /></span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
       </section>
 
       {florence && (

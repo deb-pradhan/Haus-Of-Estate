@@ -122,6 +122,7 @@ export function LaunchRegisterSimulated({ launch, livePath }: { launch: LaunchIn
         <span><strong className="font-semibold">Simulation.</strong> Use sample details. The registration is validated against the native lead contract, but nothing is saved, sent or subscribed.</span>
       </p>
       <h3 id={`${id}-form-title`} className="mt-5 font-serif text-2xl font-medium text-estate-700">Your interest in {launch.title}</h3>
+      <p className="mt-2 text-sm leading-6 text-muted-foreground">Home types and bedroom counts below are reported pre-launch options, not confirmed availability. Choose what you have in mind.</p>
       {errorList.length > 0 && (
         <div ref={summaryRef} tabIndex={-1} role="alert" className="mt-4 rounded-xl border border-red-700/30 bg-red-50 px-4 py-3 text-sm text-red-800 outline-none">
           <p className="font-semibold">Please check the following:</p>
@@ -148,7 +149,7 @@ export function LaunchRegisterSimulated({ launch, livePath }: { launch: LaunchIn
             {launch.reportedUnitTypes.map((type) => <option key={type} value={type}>{type}</option>)}
           </select>
         </label>
-        <label className="block text-sm font-semibold text-estate-700" htmlFor={`${id}-beds`}>Bedrooms
+        <label className="block text-sm font-semibold text-estate-700" htmlFor={`${id}-beds`}>Bedrooms <span className="font-normal text-muted-foreground">(reported options)</span>
           <select id={`${id}-beds`} value={values.bedrooms} onChange={(event) => update('bedrooms', event.target.value)} className={cn(inputClass, 'border-estate-700/20')}>
             <option value="">Not sure yet</option>
             {launch.reportedBedrooms.map((beds) => <option key={beds} value={beds}>{beds}</option>)}
