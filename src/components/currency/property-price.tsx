@@ -3,7 +3,7 @@
 import { convertPrice, formatPriceNumber, isDisplayCurrency, resolvePriceQuote, sourcePriceText } from "@/lib/currency";
 import { useCurrency } from "./currency-provider";
 
-function DirhamSymbol() {
+export function DirhamSymbol() {
   // The viewBox removes only transparent canvas around CBUAE's original PNG.
   // Its outline and proportions are unchanged; the source asset stays intact.
   // Give the artwork a small descent to align with the numerals. Both metrics

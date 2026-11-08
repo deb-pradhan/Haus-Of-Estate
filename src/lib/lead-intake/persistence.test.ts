@@ -495,3 +495,54 @@ describe("Prisma lead intake transaction", () => {
     ).rejects.toBeInstanceOf(LeadConflictError);
   });
 });
+
+describe("launch interest persistence", () => {
+  it("stores the launch as the project and defaults the campaign cell to the launch key without UTMs", async () => {
+    const { client, transaction } = database();
+    const store = createPrismaLeadIntakeStore(client as never);
+    const input = normalizeLeadRequest({
+      submissionId: "6bd94ff9-6dc6-4eff-8cb0-1bda245e595a",
+      interest: "buy",
+      preferences: { market: "United Arab Emirates", location: "Jebel Ali, Dubai", propertyType: "Townhouse", bedrooms: "3" },
+      launchInterest: { key: "palm-springs-by-nakheel" },
+      contact: { firstName: "Alex", email: "alex@example.com" },
+      privacyAcknowledged: true,
+      formVersion: LEAD_FORM_VERSION,
+      privacyNoticeVersion: PRIVACY_NOTICE_VERSION,
+      context: { surface: "launch_article", pagePath: "/blog/palm-springs-by-nakheel-dubai" },
+    });
+    await store.persistSubmission({
+      ...submission(),
+      input,
+      project: { slug: "palm-springs-by-nakheel", title: "Palm Springs by Nakheel (pre-launch interest)", community: "Jebel Ali, Dubai" },
+      payloadHash: hashNormalizedLead(input),
+      scoring: { score: 30, tier: "nurture", routing: "luxury" },
+    });
+    expect(transaction.lead.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        projectSlug: "palm-springs-by-nakheel",
+        projectTitle: "Palm Springs by Nakheel (pre-launch interest)",
+        projectCommunity: "Jebel Ali, Dubai",
+        formSurface: "launch_article",
+        source: "launch_article",
+        utmCampaign: null,
+        propertyType: "Townhouse",
+        bedrooms: "3",
+        newsletterOptIn: false,
+      }),
+    });
+    expect(transaction.leadDeliveryOutbox.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ destination: "notification", payload: expect.objectContaining({
+        row: expect.objectContaining({
+          project: "Palm Springs by Nakheel (pre-launch interest)",
+          source: "launch_article",
+          campaign: "palm-springs-by-nakheel",
+          landingPage: "/blog/palm-springs-by-nakheel-dubai",
+        }),
+      }) }),
+    });
+    expect(transaction.leadDeliveryOutbox.create).not.toHaveBeenCalledWith({
+      data: expect.objectContaining({ destination: "customer_brochure" }),
+    });
+  });
+});

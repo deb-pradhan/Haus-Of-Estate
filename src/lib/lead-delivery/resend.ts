@@ -7,33 +7,8 @@ import type {
   LeadDeliveryDestination,
   LeadDeliveryTransport,
   LeadDeliveryReceipt,
-  LeadExcelRow,
 } from "./types";
-
-const EMAIL_FIELDS: Array<[string, keyof LeadExcelRow]> = [
-  ["Submitted at", "submissionTime"],
-  ["Lead ID", "leadId"],
-  ["Name", "name"],
-  ["Email", "email"],
-  ["Phone", "phone"],
-  ["Interest", "interest"],
-  ["Country of interest", "market"],
-  ["Location", "location"],
-  ["Property type", "propertyType"],
-  ["Bedrooms", "bedrooms"],
-  ["Bathrooms", "bathrooms"],
-  ["Timeframe", "timeframe"],
-  ["Project", "project"],
-  ["Property match opt-in", "propertyMatchOptIn"],
-  ["Newsletter opt-in", "newsletterOptIn"],
-  ["Overseas cash buyer", "overseasCashBuyer"],
-  ["Source", "source"],
-  ["Campaign", "campaign"],
-  ["Landing page", "landingPage"],
-  ["Status", "status"],
-  ["Owner", "owner"],
-  ["Enquiry message", "notes"],
-];
+import { LEAD_NOTIFICATION_SUBJECT, leadNotificationText } from "./notification-text";
 
 // Resend retains keys for 24 hours. Use a conservative outbox-age bound with
 // one hour of margin; older ambiguous attempts require operator reconciliation.
@@ -95,16 +70,8 @@ export class ResendLeadDeliveryTransport implements LeadDeliveryTransport {
             from: `Haus of Estate <${this.config.fromEmail}>`,
             to: [this.config.toEmail],
             ...(replyEmail?.success ? { reply_to: replyEmail.data } : {}),
-            subject: "New Haus of Estate enquiry",
-            text: [
-              "A website enquiry has been saved for your team to follow up.",
-              `Delivery event: ${payload.eventId}`,
-              "",
-              ...EMAIL_FIELDS.map(([label, key]) => {
-                const value = payload.row[key];
-                return `${label}: ${typeof value === "boolean" ? (value ? "Yes" : "No") : value || "—"}`;
-              }),
-            ].join("\n"),
+            subject: LEAD_NOTIFICATION_SUBJECT,
+            text: leadNotificationText(payload),
           }),
         },
       );

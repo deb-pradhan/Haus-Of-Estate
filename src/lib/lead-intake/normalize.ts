@@ -24,6 +24,8 @@ export interface NormalizedLeadIntake {
     timeframe?: string;
   };
   project?: { slug: string };
+  /** Explicit launch attribution; kept for every interest because the form shows it. */
+  launchInterest?: { key: string };
   brochure?: { designId?: string };
   contact: {
     firstName: string;
@@ -127,6 +129,7 @@ function fromV2(input: LeadIntakeV2Input): NormalizedLeadIntake {
       timeframe: compact(preferences.timeframe),
     },
     project: isGeneralEnquiry ? undefined : input.project,
+    ...(input.launchInterest ? { launchInterest: input.launchInterest } : {}),
     ...(input.brochure ? { brochure: input.brochure } : {}),
     contact: {
       firstName: compact(input.contact.firstName)!,
@@ -236,6 +239,7 @@ export function hashNormalizedLead(input: NormalizedLeadIntake): string {
     interest: input.interest,
     preferences: input.preferences,
     project: input.project,
+    ...(input.launchInterest ? { launchInterest: input.launchInterest } : {}),
     ...(input.brochure ? { brochure: input.brochure } : {}),
     contact: input.contact,
     ...(input.formVersion === LEAD_FORM_VERSION ||

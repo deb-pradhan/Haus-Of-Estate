@@ -6,6 +6,7 @@ import { FixtureImage, SectionHeading } from '@/components/showcase/primitives'
 import { showcasePath, showcasePropertyPath } from '@/lib/showcase/access'
 import { bedroomList } from '@/lib/showcase/format'
 import { getShowcaseCatalogue } from '@/lib/showcase/fixture'
+import { getShowcaseArticles } from '@/lib/showcase/articles'
 
 export const metadata: Metadata = { title: 'Overview' }
 
@@ -14,6 +15,7 @@ export default function ShowcaseHomePage() {
   const florence = catalogue.communities[0]
   const london = catalogue.readyHomes[0]
   const featured = florence?.groups.find((group) => group.id === 'villas')?.collections[0]
+  const articles = getShowcaseArticles()
 
   return (
     <>
@@ -89,6 +91,24 @@ export default function ShowcaseHomePage() {
           <div className="mx-auto max-w-7xl">
             <SectionHeading id="showcase-london-title" eyebrow="Closer to home" title="Discover North London" intro="A three-bedroom terraced home, with a supplied floor plan and proposed interior concepts to explore." />
             <ReadyHomeCard home={london} wide className="mt-7" />
+          </div>
+        </section>
+      )}
+
+      {articles.length > 0 && (
+        <section className="border-t border-border px-4 py-12 md:px-6 md:py-16" aria-labelledby="showcase-insights-title">
+          <div className="mx-auto max-w-7xl">
+            <SectionHeading id="showcase-insights-title" eyebrow="Insights · draft preview" title="Articles awaiting review" intro="Draft articles rendered in the blog layout before they are created in Studio. Register-interest forms are simulated." />
+            <ul className="mt-7 grid gap-5 md:grid-cols-2">
+              {articles.map((article) => (
+                <li key={article.slug} className="rounded-2xl border border-border bg-surface p-5">
+                  <p className="text-xs font-semibold uppercase text-estate-700">{article.status} · prepared {article.preparedOn}</p>
+                  <h3 className="mt-2 font-serif text-2xl font-medium leading-tight text-estate-700">{article.title}</h3>
+                  {article.subtitle && <p className="mt-2 text-sm leading-6 text-muted-foreground">{article.subtitle}</p>}
+                  <Link href={showcasePath(`/insights/${article.slug}`)} className="sc-text-link mt-4">Read the draft <ArrowRight aria-hidden className="size-4" /></Link>
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
       )}

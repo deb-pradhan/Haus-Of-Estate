@@ -20,6 +20,9 @@ import type { Metadata } from 'next'
 import { DEFAULT_OG_IMAGE } from '@/lib/seo'
 import { HAUS_SITE_ORIGIN, canonicalHausUrl } from '@/lib/share'
 import { SaveContentButton } from '@/components/saved-content'
+import { LaunchInterestCta, LaunchInterestSection } from '@/components/blog/LaunchInterestSection'
+import { findLaunchInterestByArticle } from '@/lib/launches/registry'
+import { isLeadIntakeReady } from '@/lib/lead-intake/security'
 
 // Revalidate every 60s so edits in Sanity (e.g. a replaced cover image)
 // propagate to the statically-generated post pages without a full rebuild.
@@ -102,6 +105,8 @@ async function PostContent({ slug }: { slug: string }) {
   const tags = (post.categories || []).map((c) => ({ title: c.title, slug: c.slug }))
   const canonicalUrl = canonicalHausUrl(`/blog/${post.slug}`)
   const shareText = post.subtitle || `Read ${post.title} on Haus of Estate`
+  // A launch article carries a project-attributed register-interest section.
+  const launch = findLaunchInterestByArticle(post.slug)
 
   const blogPostingJsonLd = {
     '@context': 'https://schema.org',
@@ -195,6 +200,8 @@ async function PostContent({ slug }: { slug: string }) {
             </span>
           </div>
 
+          {launch && <LaunchInterestCta launch={launch} />}
+
           {/* Compact share action below desktop-rail breakpoint. */}
           <div className="mt-6 border-t border-border/70 pt-5 xl:hidden">
             <ContentShare
@@ -238,6 +245,7 @@ async function PostContent({ slug }: { slug: string }) {
           </div>
           <div className="min-w-0 lg:col-span-8 xl:col-auto">
             {post.body && <PortableTextRenderer content={post.body} />}
+            {launch && <LaunchInterestSection launch={launch} intakeReady={isLeadIntakeReady()} />}
             <div className="mt-14 border-t border-border pt-10">
               <AuthorCard variant="full" />
             </div>

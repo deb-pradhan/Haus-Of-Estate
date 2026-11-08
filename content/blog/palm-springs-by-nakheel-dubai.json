@@ -1,0 +1,989 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Paste-ready draft for the existing Sanity post workflow and the source of the protected showcase editorial preview. Not a CMS import and not a published record.",
+  "preparedOn": "2026-11-08",
+  "source": "Article text, SEO settings and page structure supplied by Sonia on 8 November 2026, edited for qualification and house style. Every project particular is a preliminary market report, not a developer fact.",
+  "launchInterestKey": "palm-springs-by-nakheel",
+  "post": {
+    "_type": "post",
+    "title": "Palm Springs by Nakheel: Dubai's Upcoming Villa and Townhouse Launch – Everything Buyers Need to Know",
+    "subtitle": "What has been reported about Nakheel's upcoming Jebel Ali townhouse and villa community, what is still unconfirmed, and how to register interest with Haus of Estate.",
+    "slug": {
+      "_type": "slug",
+      "current": "palm-springs-by-nakheel-dubai"
+    },
+    "status": "draft",
+    "featured": false,
+    "categorySlugs": [
+      "dubai",
+      "market-insights"
+    ],
+    "author": null,
+    "featuredImage": null,
+    "seo": {
+      "seoTitle": "Palm Springs by Nakheel Dubai – Launch Date, Prices & EOI",
+      "seoDesc": "Discover Palm Springs by Nakheel in Dubai. Explore expected villa prices, townhouses, launch dates and EOI registration. Contact Haus of Estate."
+    },
+    "body": [
+      {
+        "_key": "b0",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b0s0",
+            "_type": "span",
+            "text": "Dubai's upcoming property market is attracting attention once again as Nakheel prepares to introduce Palm Springs, a new residential development expected in the Jebel Ali area. With townhouses and standalone villas anticipated, the project is generating interest from property investors and from families looking to secure a home in one of Dubai's emerging development corridors.",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b1",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b1s0",
+            "_type": "span",
+            "text": "As anticipation builds ahead of the reported November 2026 launch window, prospective buyers are already asking about the location, expected prices, property types, payment plans and the Expression of Interest (EOI) process.",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b2",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b2s0",
+            "_type": "span",
+            "text": "Haus of Estate takes a closer look at what is currently being reported about Palm Springs by Nakheel, what remains unconfirmed, and how interested buyers can register their interest ahead of the anticipated release.",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b3",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b3s0",
+            "_type": "span",
+            "text": "Status at the time of writing (8 November 2026):",
+            "marks": [
+              "strong"
+            ]
+          },
+          {
+            "_key": "b3s1",
+            "_type": "span",
+            "text": " we could not locate official Palm Springs project documentation on Nakheel's website. Every figure below comes from preliminary market reports and will be updated once the developer releases official material.",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b4",
+        "_type": "block",
+        "style": "h2",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b4s0",
+            "_type": "span",
+            "text": "What Is Palm Springs by Nakheel?",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b5",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b5s0",
+            "_type": "span",
+            "text": "Palm Springs is an upcoming residential development attributed to Nakheel, one of Dubai's most recognised master developers, known for landmark projects including Palm Jumeirah, Palm Jebel Ali and Dubai Islands.",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b6",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b6s0",
+            "_type": "span",
+            "text": "The proposed development is expected to introduce a collection of family-oriented townhouses and standalone villas, offering buyers a new residential address within the wider Jebel Ali growth corridor.",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b7",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b7s0",
+            "_type": "span",
+            "text": "Pre-launch information indicates that the development could feature three, four and five-bedroom homes, catering to different household requirements and investment budgets.",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b8",
+        "_type": "block",
+        "style": "h2",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b8s0",
+            "_type": "span",
+            "text": "Where Is Palm Springs Located?",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b9",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b9s0",
+            "_type": "span",
+            "text": "Palm Springs is reportedly located in the Jebel Ali area of Dubai, on the mainland near Palm Jebel Ali and Sheikh Zayed Road.",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b10",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b10s0",
+            "_type": "span",
+            "text": "The wider area is attracting attention because of major infrastructure and development projects, including Palm Jebel Ali, Dubai South and the expansion of Al Maktoum International Airport.",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b11",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b11s0",
+            "_type": "span",
+            "text": "For buyers considering long-term ownership, the location offers a chance to explore an emerging part of Dubai rather than focusing only on the city's established residential communities.",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b12",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b12s0",
+            "_type": "span",
+            "text": "The precise development boundaries and access arrangements remain subject to confirmation through Nakheel's official project documentation.",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b13",
+        "_type": "block",
+        "style": "h2",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b13s0",
+            "_type": "span",
+            "text": "What Properties Will Be Available?",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b14",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b14s0",
+            "_type": "span",
+            "text": "Preliminary market information indicates that Palm Springs could offer:",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b15",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b15s0",
+            "_type": "span",
+            "text": "Three-bedroom townhouses",
+            "marks": []
+          }
+        ],
+        "listItem": "bullet",
+        "level": 1
+      },
+      {
+        "_key": "b16",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b16s0",
+            "_type": "span",
+            "text": "Four-bedroom townhouses",
+            "marks": []
+          }
+        ],
+        "listItem": "bullet",
+        "level": 1
+      },
+      {
+        "_key": "b17",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b17s0",
+            "_type": "span",
+            "text": "Four-bedroom standalone villas",
+            "marks": []
+          }
+        ],
+        "listItem": "bullet",
+        "level": 1
+      },
+      {
+        "_key": "b18",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b18s0",
+            "_type": "span",
+            "text": "Five-bedroom standalone villas",
+            "marks": []
+          }
+        ],
+        "listItem": "bullet",
+        "level": 1
+      },
+      {
+        "_key": "b19",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b19s0",
+            "_type": "span",
+            "text": "This range could appeal to families seeking additional living space, as well as investors looking to diversify their Dubai property portfolios.",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b20",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b20s0",
+            "_type": "span",
+            "text": "Final floor plans, plot sizes, internal areas and specifications are expected to be confirmed through the developer's official launch materials.",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b21",
+        "_type": "block",
+        "style": "h2",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b21s0",
+            "_type": "span",
+            "text": "What Are the Expected Prices?",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b22",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b22s0",
+            "_type": "span",
+            "text": "Early market indications suggest that Palm Springs could have starting prices of approximately AED 3.8 million, with larger standalone villas potentially reaching AED 8 million to AED 9 million.",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b23",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b23s0",
+            "_type": "span",
+            "text": "These figures are indicative and should not be treated as official developer prices.",
+            "marks": [
+              "strong"
+            ]
+          },
+          {
+            "_key": "b23s1",
+            "_type": "span",
+            "text": " Payment plans have been reported but not confirmed.",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b24",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b24s0",
+            "_type": "span",
+            "text": "Buyers are encouraged to register their interest to receive the confirmed price list and available property options once released.",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b25",
+        "_type": "block",
+        "style": "h2",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b25s0",
+            "_type": "span",
+            "text": "When Is the Palm Springs by Nakheel Launch?",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b26",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b26s0",
+            "_type": "span",
+            "text": "The anticipated launch period is November 2026.",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b27",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b27s0",
+            "_type": "span",
+            "text": "Property-market listings have referenced 9 November 2026 for an exclusive first-look event, with further project information expected during the week commencing 9 November. Bookings have also been reported as potentially taking place by 20 November 2026.",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b28",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b28s0",
+            "_type": "span",
+            "text": "The exact public sales launch date and booking arrangements remain subject to confirmation by Nakheel.",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b29",
+        "_type": "block",
+        "style": "h2",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b29s0",
+            "_type": "span",
+            "text": "What Is the EOI Process for Palm Springs?",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b30",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b30s0",
+            "_type": "span",
+            "text": "An Expression of Interest (EOI) is an initial step through which prospective buyers indicate their intention to purchase a property in a new development. A developer's formal EOI usually involves a deposit that is later applied to a booking or returned under the developer's terms.",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b31",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b31s0",
+            "_type": "span",
+            "text": "Registering your interest early allows you to begin discussions with a property consultant, establish your budget and understand the purchasing options available.",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b32",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b32s0",
+            "_type": "span",
+            "text": "Pre-launch reports indicate that Nakheel's initial formal EOI process may prioritise buyers interested in purchasing multiple units, with a reported deposit of AED 200,000 per unit.",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b33",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b33s0",
+            "_type": "span",
+            "text": "The eligibility criteria, deposit requirements and refund terms must be confirmed with the developer before any payment is made.",
+            "marks": [
+              "strong"
+            ]
+          },
+          {
+            "_key": "b33s1",
+            "_type": "span",
+            "text": " Registering your interest with Haus of Estate is not a developer EOI: it involves no payment, does not reserve a unit and does not guarantee priority.",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b34",
+        "_type": "block",
+        "style": "h2",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b34s0",
+            "_type": "span",
+            "text": "How to Register Your Interest with Haus of Estate",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b35",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b35s0",
+            "_type": "span",
+            "text": "Haus of Estate is welcoming enquiries from prospective buyers interested in Palm Springs by Nakheel. Our team can assist with:",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b36",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b36s0",
+            "_type": "span",
+            "text": "Registering your interest ahead of the anticipated launch.",
+            "marks": []
+          }
+        ],
+        "listItem": "number",
+        "level": 1
+      },
+      {
+        "_key": "b37",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b37s0",
+            "_type": "span",
+            "text": "Discussing your preferred bedroom configuration and budget.",
+            "marks": []
+          }
+        ],
+        "listItem": "number",
+        "level": 1
+      },
+      {
+        "_key": "b38",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b38s0",
+            "_type": "span",
+            "text": "Providing updates as official project information becomes available.",
+            "marks": []
+          }
+        ],
+        "listItem": "number",
+        "level": 1
+      },
+      {
+        "_key": "b39",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b39s0",
+            "_type": "span",
+            "text": "Requesting the developer's official brochures, floor plans and price lists once released.",
+            "marks": []
+          }
+        ],
+        "listItem": "number",
+        "level": 1
+      },
+      {
+        "_key": "b40",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b40s0",
+            "_type": "span",
+            "text": "Guiding you through the EOI and purchasing process once the official terms are published.",
+            "marks": []
+          }
+        ],
+        "listItem": "number",
+        "level": 1
+      },
+      {
+        "_key": "b41",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [
+          {
+            "_key": "b41l0",
+            "_type": "link",
+            "href": "https://hausofestate.com/properties",
+            "blank": false
+          },
+          {
+            "_key": "b41l1",
+            "_type": "link",
+            "href": "https://hausofestate.com/blog?category=investment-guides",
+            "blank": false
+          }
+        ],
+        "children": [
+          {
+            "_key": "b41s0",
+            "_type": "span",
+            "text": "Whether you are looking for a family residence or considering a property investment in Dubai, our team can help you explore the opportunity. You can also browse our current ",
+            "marks": []
+          },
+          {
+            "_key": "b41s1",
+            "_type": "span",
+            "text": "property listings",
+            "marks": [
+              "b41l0"
+            ]
+          },
+          {
+            "_key": "b41s2",
+            "_type": "span",
+            "text": " and ",
+            "marks": []
+          },
+          {
+            "_key": "b41s3",
+            "_type": "span",
+            "text": "investment guides",
+            "marks": [
+              "b41l1"
+            ]
+          },
+          {
+            "_key": "b41s4",
+            "_type": "span",
+            "text": ".",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b42",
+        "_type": "block",
+        "style": "h2",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b42s0",
+            "_type": "span",
+            "text": "Why Consider Palm Springs?",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b43",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b43s0",
+            "_type": "span",
+            "text": "Nakheel's established presence in Dubai's real estate market, combined with the wider development taking place in Jebel Ali, makes Palm Springs a development worth monitoring.",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b44",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b44s0",
+            "_type": "span",
+            "text": "For prospective buyers, the key considerations will be the final launch prices, location, property specifications, payment structure and anticipated completion schedule.",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b45",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b45s0",
+            "_type": "span",
+            "text": "As with any off-plan purchase, buyers should review the official sales documentation and assess the investment against their individual objectives before committing.",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b46",
+        "_type": "block",
+        "style": "h2",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b46s0",
+            "_type": "span",
+            "text": "Register Your Interest Today",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b47",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b47s0",
+            "_type": "span",
+            "text": "Interested in Palm Springs by Nakheel? Be among the first to receive updates as further project information, availability and official pricing become available.",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b48",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [
+          {
+            "_key": "b48l0",
+            "_type": "link",
+            "href": "https://hausofestate.com/register-interest?launch=palm-springs-by-nakheel",
+            "blank": false
+          }
+        ],
+        "children": [
+          {
+            "_key": "b48s0",
+            "_type": "span",
+            "text": "Use the ",
+            "marks": []
+          },
+          {
+            "_key": "b48s1",
+            "_type": "span",
+            "text": "register your interest form",
+            "marks": [
+              "b48l0"
+            ]
+          },
+          {
+            "_key": "b48s2",
+            "_type": "span",
+            "text": " below, or contact the team directly:",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b49",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [
+          {
+            "_key": "b49l0",
+            "_type": "link",
+            "href": "mailto:sales@hausofestate.com",
+            "blank": false
+          }
+        ],
+        "children": [
+          {
+            "_key": "b49s0",
+            "_type": "span",
+            "text": "Email: ",
+            "marks": []
+          },
+          {
+            "_key": "b49s1",
+            "_type": "span",
+            "text": "sales@hausofestate.com",
+            "marks": [
+              "b49l0"
+            ]
+          }
+        ],
+        "listItem": "bullet",
+        "level": 1
+      },
+      {
+        "_key": "b50",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b50s0",
+            "_type": "span",
+            "text": "Call (UK): +44 7496 033321",
+            "marks": []
+          }
+        ],
+        "listItem": "bullet",
+        "level": 1
+      },
+      {
+        "_key": "b51",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [
+          {
+            "_key": "b51l0",
+            "_type": "link",
+            "href": "https://wa.me/971585607033",
+            "blank": false
+          }
+        ],
+        "children": [
+          {
+            "_key": "b51s0",
+            "_type": "span",
+            "text": "WhatsApp (UAE): ",
+            "marks": []
+          },
+          {
+            "_key": "b51s1",
+            "_type": "span",
+            "text": "+971 58 560 7033",
+            "marks": [
+              "b51l0"
+            ]
+          }
+        ],
+        "listItem": "bullet",
+        "level": 1
+      },
+      {
+        "_key": "b52",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [
+          {
+            "_key": "b52l0",
+            "_type": "link",
+            "href": "https://hausofestate.com/contact",
+            "blank": false
+          }
+        ],
+        "children": [
+          {
+            "_key": "b52s0",
+            "_type": "span",
+            "text": "Or ",
+            "marks": []
+          },
+          {
+            "_key": "b52s1",
+            "_type": "span",
+            "text": "contact us",
+            "marks": [
+              "b52l0"
+            ]
+          },
+          {
+            "_key": "b52s2",
+            "_type": "span",
+            "text": " online.",
+            "marks": []
+          }
+        ],
+        "listItem": "bullet",
+        "level": 1
+      },
+      {
+        "_key": "b53",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b53s0",
+            "_type": "span",
+            "text": "Haus of Estate – Connecting UK, UAE and International Property Markets.",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "_key": "b54",
+        "_type": "block",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_key": "b54s0",
+            "_type": "span",
+            "text": "Disclaimer: Information in this article is based on preliminary market reports and is subject to change. Prices, property specifications, payment plans, launch dates, EOI requirements and handover dates are indicative unless confirmed in official Nakheel documentation. This article does not constitute an offer to sell, a reservation of any property, or financial advice.",
+            "marks": [
+              "em"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "editorialGuidance": {
+    "primaryKeyword": "Palm Springs by Nakheel",
+    "secondaryKeywords": [
+      "Nakheel new launch Dubai",
+      "Palm Springs Dubai villas",
+      "Jebel Ali properties",
+      "Palm Springs EOI",
+      "Dubai off-plan properties"
+    ],
+    "internalLinks": [
+      "/properties",
+      "/blog?category=investment-guides",
+      "/contact",
+      "/register-interest?launch=palm-springs-by-nakheel"
+    ],
+    "note": "Keywords guide the copy only. The site has no meta-keyword field and ranking is not promised."
+  },
+  "reviewFlags": [
+    "Contact email changed from the supplied info@hausofestate.com to sales@hausofestate.com, the agreed follow-up address. Confirm or revert.",
+    "The supplied SEO title promises 'Prices'; the body gives indicative figures only. Keep the title or soften it.",
+    "Launch, event and booking dates, prices, unit mix and the AED 200,000 EOI deposit are third-party reports. Nakheel's website had no Palm Springs page on 8 November 2026.",
+    "No approved Palm Springs image or brochure was supplied; the preview shows a labelled placeholder and the draft has no featured image.",
+    "Author must be chosen in Studio (the public byline always reads Haus of Estate)."
+  ]
+}

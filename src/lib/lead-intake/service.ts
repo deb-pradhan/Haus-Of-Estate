@@ -19,12 +19,15 @@ import {
   resolvePublishedProject,
   type PublishedProjectContext,
 } from "./project";
+import { resolveLaunchInterestProject } from "./launch";
 
 export interface LeadIntakeServiceDependencies {
   store: LeadIntakeStore;
   resolveProject(
     slug: string | undefined,
   ): Promise<PublishedProjectContext | undefined>;
+  /** Code-allowlisted developer launches; defaults to the registry. */
+  resolveLaunch?(key: string): PublishedProjectContext;
   resolveBrochure?(
     key: string,
     revision: string,
@@ -198,7 +201,11 @@ export async function submitLeadIntake(
     });
   }
 
-  const project = await dependencies.resolveProject(input.project?.slug);
+  // A launch key never reaches the CMS resolver: the contract forbids sending
+  // both, and the launch must resolve from the allowlist or fail validation.
+  const project = input.launchInterest
+    ? (dependencies.resolveLaunch ?? resolveLaunchInterestProject)(input.launchInterest.key)
+    : await dependencies.resolveProject(input.project?.slug);
   const brochure = await resolveBrochureSelection(input, project, dependencies);
   const submittedAt = dependencies.now();
   const submission = {

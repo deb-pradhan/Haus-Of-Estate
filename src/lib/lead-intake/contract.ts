@@ -54,6 +54,18 @@ export const leadIntakeV2Schema = z
       })
       .strict()
       .optional(),
+    /** A developer launch from the code allowlist, used when no published property exists yet. */
+    launchInterest: z
+      .object({
+        key: z
+          .string()
+          .trim()
+          .min(1)
+          .max(96)
+          .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+      })
+      .strict()
+      .optional(),
     brochure: z
       .object({
         designId: z
@@ -98,6 +110,7 @@ export const leadIntakeV2Schema = z
           "newsletter",
           "register_interest",
           "query_page",
+          "launch_article",
         ]),
         pagePath: z.string().trim().min(1).max(500),
         referrer: optionalString(1_000),
@@ -166,6 +179,30 @@ export const leadIntakeV2Schema = z
           code: "custom",
           path: ["brochure"],
           message: "Brochure requests require the current privacy acknowledgement.",
+        });
+      }
+    }
+
+    if (input.launchInterest) {
+      if (input.project) {
+        context.addIssue({
+          code: "custom",
+          path: ["launchInterest"],
+          message: "A launch registration cannot also name a published property.",
+        });
+      }
+      if (input.brochure) {
+        context.addIssue({
+          code: "custom",
+          path: ["brochure"],
+          message: "Brochures are not available for a pre-launch registration.",
+        });
+      }
+      if (["sell_let", "newsletter_only"].includes(input.interest)) {
+        context.addIssue({
+          code: "custom",
+          path: ["interest"],
+          message: "Register launch interest as a buyer, investor, renter or general enquiry.",
         });
       }
     }

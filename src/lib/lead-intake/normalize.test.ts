@@ -293,3 +293,17 @@ describe("normalizeReferrer", () => {
     );
   });
 });
+
+describe("launch interest normalization", () => {
+  it("carries the launch key for every interest and includes it in the idempotency hash", () => {
+    const launch = v2({ launchInterest: { key: "palm-springs-by-nakheel" }, context: { surface: "launch_article", pagePath: "/blog/palm-springs-by-nakheel-dubai" } });
+    const buyer = normalizeLeadRequest(launch);
+    expect(buyer.launchInterest).toEqual({ key: "palm-springs-by-nakheel" });
+    expect(buyer.project).toBeUndefined();
+    const question = normalizeLeadRequest({ ...launch, interest: "general_enquiry", contact: { firstName: "Alex", email: "alex@example.com", message: "Is a 5-bed villa likely?" } });
+    expect(question.launchInterest).toEqual({ key: "palm-springs-by-nakheel" });
+    expect(question.preferences).toEqual({});
+    const without = normalizeLeadRequest(v2({ context: launch.context }));
+    expect(hashNormalizedLead(buyer)).not.toBe(hashNormalizedLead(without));
+  });
+});

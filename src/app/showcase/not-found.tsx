@@ -9,7 +9,7 @@ export default function ShowcaseNotFound() {
         <p className="sc-eyebrow">Not in this showcase</p>
         <h1 id="showcase-not-found" className="sc-title mt-3 text-estate-700">We couldn’t find that page.</h1>
         <p className="mt-4 text-base leading-7 text-muted-foreground">
-          The showcase holds Azizi Florence in Sharjah and one existing home in North London. The link may be out of date, or the design you chose is not part of this collection.
+          The showcase holds Azizi Florence in Sharjah, one existing home in North London and the draft Palm Springs article. The link may be out of date, or the design you chose is not part of this collection.
         </p>
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
           <Link href={showcasePath('/properties')} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-estate-700 px-6 text-sm font-semibold text-white transition-colors hover:bg-estate-600">

@@ -5,8 +5,10 @@ import { Check, Clock3, LockKeyhole } from "lucide-react";
 import { LeadEoiForm } from "@/components/lead-eoi/lead-eoi-form";
 import type {
   LeadInterest,
+  LeadLaunchContext,
   LeadProjectContext,
 } from "@/components/lead-eoi/types";
+import { findLaunchInterest } from "@/lib/launches/registry";
 import { DEFAULT_OG_IMAGES } from "@/lib/seo";
 import { sanityFetch } from "@/sanity/live";
 
@@ -67,6 +69,23 @@ async function getProjectContext(
   return data ?? undefined;
 }
 
+/** `?launch=<key>` names a pre-launch project from the code allowlist, not a CMS record. */
+function getLaunchContext(rawKey: string | undefined): LeadLaunchContext | undefined {
+  const launch = findLaunchInterest(rawKey);
+  if (!launch) return undefined;
+  return {
+    key: launch.key,
+    title: launch.title,
+    developer: launch.developer,
+    community: launch.community,
+    city: launch.city,
+    country: launch.country,
+    unitTypes: launch.reportedUnitTypes,
+    bedrooms: launch.reportedBedrooms,
+    qualification: launch.qualification,
+  };
+}
+
 function inferProjectInterest(
   project: LeadProjectContext | undefined,
 ): LeadInterest | undefined {
@@ -86,6 +105,7 @@ export default async function RegisterInterestPage({
 
   const query = await searchParams;
   const project = await getProjectContext(firstSearchParam(query.project));
+  const launch = project ? undefined : getLaunchContext(firstSearchParam(query.launch));
 
   return (
     <div className="bg-subtle">
@@ -95,12 +115,18 @@ export default async function RegisterInterestPage({
             Property enquiries
           </p>
           <h1 className="mt-3 max-w-xl font-serif text-4xl font-medium leading-tight text-estate-700 sm:text-5xl">
-            Register your interest
+            {launch ? `Register your interest in ${launch.title}` : "Register your interest"}
           </h1>
           <p className="mt-5 max-w-lg text-base leading-7 text-muted-foreground">
-            Tell us what you are looking for and we will direct your enquiry to
-            the right Haus of Estate specialist.
+            {launch
+              ? `Tell us the home type, size and timing you have in mind and a Haus of Estate consultant will follow up as official ${launch.developer ?? "developer"} information is released.`
+              : "Tell us what you are looking for and we will direct your enquiry to the right Haus of Estate specialist."}
           </p>
+          {launch?.qualification ? (
+            <p className="mt-4 max-w-lg rounded-md border border-gold-500/35 bg-gold-500/10 px-3.5 py-3 text-sm leading-6 text-estate-700">
+              {launch.qualification}
+            </p>
+          ) : null}
           <ul className="mt-8 space-y-4 text-sm text-foreground">
             <li className="flex items-start gap-3">
               <Check className="mt-0.5 h-4 w-4 shrink-0 text-estate-700" aria-hidden="true" />
@@ -125,6 +151,7 @@ export default async function RegisterInterestPage({
           <LeadEoiForm
             surface="register_interest"
             project={project}
+            launchInterest={launch}
             initialInterest={inferProjectInterest(project)}
           />
         </section>

@@ -10,6 +10,7 @@ const LINKS = [
   { href: showcasePath(), label: 'Overview', exact: true },
   { href: showcasePropertyPath('azizi-florence'), label: 'Florence, Sharjah' },
   { href: showcasePropertyPath('north-london-three-bedroom-property'), label: 'North London' },
+  { href: showcasePath('/insights/palm-springs-by-nakheel-dubai'), label: 'Palm Springs article' },
 ]
 
 export function ShowcaseNavLinks() {

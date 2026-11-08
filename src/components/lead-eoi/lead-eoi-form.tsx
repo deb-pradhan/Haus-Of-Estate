@@ -52,6 +52,7 @@ import type {
   LeadBrochureRequest,
   LeadInitialPreferences,
   LeadInterest,
+  LeadLaunchContext,
   LeadProjectContext,
   LeadSurface,
 } from "./types";
@@ -131,6 +132,8 @@ interface LeadEoiFormProps {
   initialPreferences?: LeadInitialPreferences;
   brochureRequest?: LeadBrochureRequest;
   project?: LeadProjectContext;
+  /** A pre-launch developer project from the code allowlist; used instead of `project`. */
+  launchInterest?: LeadLaunchContext;
   modal?: boolean;
   onClose?: () => void;
   /** Development-only walkthrough: no intake request, attribution storage or email. */
@@ -194,11 +197,17 @@ function initialValues(
   initialInterest?: LeadInterest,
   initialEmail?: string,
   initialPreferences?: LeadInitialPreferences,
+  launchInterest?: LeadLaunchContext,
 ): FormValues {
+  // A launch prefills only its place; the buyer chooses home type and size,
+  // because the reported unit mix is not confirmed inventory.
+  const place = project ?? (launchInterest
+    ? { slug: launchInterest.key, community: launchInterest.community, city: launchInterest.city, country: launchInterest.country }
+    : undefined);
   return {
-    interest: initialInterest ?? inferInterest(project) ?? "",
-    market: initialPreferences?.market ?? inferCountryOfInterest(project),
-    location: initialPreferences?.location ?? project?.community ?? "",
+    interest: initialInterest ?? (launchInterest ? "buy" : inferInterest(project)) ?? "",
+    market: initialPreferences?.market ?? inferCountryOfInterest(place),
+    location: initialPreferences?.location ?? place?.community ?? "",
     propertyType: project?.unitType ?? "",
     bedrooms:
       initialPreferences?.bedrooms ??
@@ -246,6 +255,7 @@ export function LeadEoiForm({
   initialPreferences,
   brochureRequest,
   project,
+  launchInterest,
   modal = false,
   onClose,
   localDemo,
@@ -255,7 +265,7 @@ export function LeadEoiForm({
   const id = useId();
   const [step, setStep] = useState(1);
   const [values, setValues] = useState<FormValues>(() =>
-    initialValues(project, initialInterest, initialEmail, initialPreferences),
+    initialValues(project, initialInterest, initialEmail, initialPreferences, launchInterest),
   );
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
@@ -454,6 +464,7 @@ export function LeadEoiForm({
       interest: submitted.interest,
       preferences: hasPreferences ? preferences : undefined,
       project: project ? { slug: project.slug } : undefined,
+      launchInterest: launchInterest ? { key: launchInterest.key } : undefined,
       brochure: brochureEnabled
         ? brochureRequestPayload(project, activeBrochureRequest, submitted.interest)
         : undefined,
@@ -679,6 +690,33 @@ export function LeadEoiForm({
         disabled={submitState === "submitting"}
         className="min-w-0 border-0 p-0"
       >
+        {launchInterest && !project ? (
+          <div className="mb-5 flex items-start gap-3 rounded-md border border-estate-700/15 bg-estate-700/[0.04] p-3.5">
+            <MapPin
+              className="mt-0.5 h-4 w-4 shrink-0 text-estate-700"
+              aria-hidden="true"
+            />
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase text-estate-700">
+                Launch interest
+              </p>
+              <p className="break-words text-sm font-medium text-foreground">
+                {launchInterest.title}
+              </p>
+              {launchInterest.community || launchInterest.city ? (
+                <p className="break-words text-xs text-muted-foreground">
+                  {[launchInterest.community, launchInterest.city].filter(Boolean).join(", ")}
+                  {launchInterest.developer ? ` · ${launchInterest.developer}` : ""}
+                </p>
+              ) : null}
+              {launchInterest.qualification ? (
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                  {launchInterest.qualification}
+                </p>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
         {project && !demo ? (
           <div className="mb-5 flex items-start gap-3 rounded-md border border-estate-700/15 bg-estate-700/[0.04] p-3.5">
             <MapPin
@@ -763,7 +801,9 @@ export function LeadEoiForm({
               <legend className="sr-only">Your property interest</legend>
               <div className="grid gap-2 sm:grid-cols-2">
                 {INTEREST_OPTIONS.filter(
-                  (option) => !brochureRequest || supportsBrochureRequest(option.value),
+                  (option) =>
+                    (!brochureRequest || supportsBrochureRequest(option.value)) &&
+                    (!launchInterest || !["sell_let", "newsletter_only"].includes(option.value)),
                 ).map((option) => {
                   const Icon = option.icon;
                   return (

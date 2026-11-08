@@ -272,3 +272,30 @@ describe("lead intake v2 contract", () => {
     ).toBe(false);
   });
 });
+
+describe("launch interest registrations", () => {
+  const launch = { launchInterest: { key: "palm-springs-by-nakheel" }, context: { surface: "launch_article", pagePath: "/blog/palm-springs-by-nakheel-dubai" } };
+
+  it("accepts a launch key for buyer, investor, renter and general enquiries without marketing consent", () => {
+    for (const interest of ["buy", "invest", "rent"]) {
+      const parsed = leadIntakeV2Schema.parse(request({ ...launch, interest, preferences: { propertyType: "Villa", bedrooms: "4" } }));
+      expect(parsed.launchInterest).toEqual({ key: "palm-springs-by-nakheel" });
+      expect(parsed.project).toBeUndefined();
+      expect(parsed.newsletterOptIn).toBe(false);
+    }
+    expect(leadIntakeV2Schema.safeParse(request({ ...launch, interest: "general_enquiry", contact: { firstName: "Alex", email: "alex@example.com", message: "When is the launch?" } })).success).toBe(true);
+  });
+
+  it("rejects a launch combined with a property, a brochure, a sale brief or a newsletter-only registration", () => {
+    for (const override of [
+      { project: { slug: "azizi-florence-4-bedroom-villas" } },
+      { brochure: { designId: "villa-a" } },
+      { interest: "sell_let" },
+      { interest: "newsletter_only", newsletterOptIn: true },
+      { launchInterest: { key: "Palm Springs" } },
+      { launchInterest: { key: "palm-springs-by-nakheel", title: "client supplied" } },
+    ]) {
+      expect(leadIntakeV2Schema.safeParse(request({ ...launch, ...override })).success).toBe(false);
+    }
+  });
+});

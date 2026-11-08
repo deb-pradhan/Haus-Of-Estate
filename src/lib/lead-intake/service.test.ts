@@ -397,3 +397,39 @@ describe("scoreLead", () => {
     expect(scoreLead(uaeBuyer).routing).toBe("luxury");
   });
 });
+
+describe("submitLeadIntake with a launch interest", () => {
+  function launchFixture() {
+    const value = input();
+    value.launchInterest = { key: "palm-springs-by-nakheel" };
+    value.context = { surface: "launch_article", pagePath: "/blog/palm-springs-by-nakheel-dubai" };
+    const store: LeadIntakeStore = {
+      findSubmission: vi.fn(async () => null),
+      persistSubmission: vi.fn(async (submission) => ({
+        created: true,
+        leadId: submission.leadId,
+        submissionId: submission.input.submissionId,
+        score: submission.scoring.score,
+        tier: submission.scoring.tier,
+      })),
+    };
+    return { value, store, deps: dependencies(store) };
+  }
+
+  it("resolves the launch from the code allowlist as the lead's project and never asks the CMS", async () => {
+    const { value, store, deps } = launchFixture();
+    await submitLeadIntake(value, "ip-hash", deps);
+    expect(deps.resolveProject).not.toHaveBeenCalled();
+    expect(store.persistSubmission).toHaveBeenCalledWith(expect.objectContaining({
+      project: { slug: "palm-springs-by-nakheel", title: "Palm Springs by Nakheel (pre-launch interest)", community: "Jebel Ali, Dubai" },
+      brochure: undefined,
+    }));
+  });
+
+  it("rejects an unknown launch key before persisting", async () => {
+    const { value, store, deps } = launchFixture();
+    value.launchInterest = { key: "palm-jebel-ali-phase-9" };
+    await expect(submitLeadIntake(value, "ip-hash", deps)).rejects.toMatchObject({ fieldErrors: { launchInterest: ["Select a current launch"] } });
+    expect(store.persistSubmission).not.toHaveBeenCalled();
+  });
+});

@@ -11,7 +11,8 @@ export type LeadSurface =
   | "modal"
   | "manual_cta"
   | "newsletter"
-  | "register_interest";
+  | "register_interest"
+  | "launch_article";
 
 export interface LeadProjectContext {
   slug: string;
@@ -24,6 +25,20 @@ export interface LeadProjectContext {
   bedrooms?: number;
   bathrooms?: number;
   listingType?: string[];
+}
+
+/** A developer launch from the code allowlist; no published property exists yet. */
+export interface LeadLaunchContext {
+  key: string;
+  title: string;
+  developer?: string;
+  community?: string;
+  city?: string;
+  country?: string;
+  /** Reported options offered as choices, never asserted as inventory. */
+  unitTypes?: readonly string[];
+  bedrooms?: readonly string[];
+  qualification?: string;
 }
 
 export interface LeadInitialPreferences {
@@ -42,6 +57,7 @@ export interface LeadOpenOptions {
   interest?: LeadInterest;
   email?: string;
   project?: LeadProjectContext;
+  launchInterest?: LeadLaunchContext;
   initialPreferences?: LeadInitialPreferences;
   brochureRequest?: LeadBrochureRequest;
   surface?: LeadSurface;

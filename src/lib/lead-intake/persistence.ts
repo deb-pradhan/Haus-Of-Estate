@@ -367,7 +367,9 @@ export function createPrismaLeadIntakeStore(
             newsletterOptIn: input.newsletterOptIn,
             overseasCashBuyer: input.overseasCashBuyer,
             source: input.context.utmSource ?? input.context.surface,
-            campaign: input.context.utmCampaign,
+            // Launch registrations default the campaign cell to the launch key
+            // so the sales email and sheet name the launch even without UTMs.
+            campaign: input.context.utmCampaign ?? input.launchInterest?.key,
             landingPage: input.context.pagePath,
             message: input.contact.message,
             brochure: submission.brochure,

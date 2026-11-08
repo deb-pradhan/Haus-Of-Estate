@@ -26,6 +26,7 @@ const FIELD_MESSAGES: Record<string, string> = {
   newsletterOptIn: "Choose the newsletter option to complete this subscription.",
   brochure: "Brochure email is unavailable for this selection. You can still send an ordinary property enquiry.",
   project: "This property is no longer available for this request. Please refresh the page or contact us.",
+  launchInterest: "Registrations for this launch are not open right now. Please refresh the page or email sales@hausofestate.com.",
 };
 
 export class LeadSubmissionError extends Error {

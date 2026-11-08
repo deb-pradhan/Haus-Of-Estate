@@ -4,6 +4,7 @@ import { PortableText, PortableTextComponents } from '@portabletext/react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { headingId } from '@/lib/reading-time'
+import { DirhamSymbol } from '@/components/currency/property-price'
 
 interface PortableTextRendererProps {
   content: any[]
@@ -172,10 +173,50 @@ const components: PortableTextComponents = {
   },
 }
 
+/**
+ * Replace "AED" directly before a number with the official dirham symbol at
+ * render time. The stored article keeps the plain ISO code, the symbol is
+ * never inferred for amounts written without it, and spans keep their marks.
+ */
+const DIRHAM_BEFORE_AMOUNT = /\bAED\s*(?=\d)/
+
+interface PortableNode { _type?: string; _key?: string; [key: string]: unknown }
+interface PortableSpan extends PortableNode { _type: 'span'; text: string }
+interface PortableBlock extends PortableNode { _type: 'block'; children: PortableNode[] }
+
+const isSpan = (node: PortableNode): node is PortableSpan => node?._type === 'span' && typeof node.text === 'string'
+const isBlock = (node: PortableNode): node is PortableBlock => node?._type === 'block' && Array.isArray(node.children)
+const hasAmount = (node: PortableNode) => isSpan(node) && DIRHAM_BEFORE_AMOUNT.test(node.text)
+
+export function withDirhamSymbols<T extends PortableNode>(content: T[]): T[] {
+  return content.map((block) => {
+    if (!isBlock(block) || !block.children.some(hasAmount)) return block
+    const children = block.children.flatMap((child): PortableNode[] => {
+      if (!isSpan(child) || !hasAmount(child)) return [child]
+      const key = child._key ?? 'span'
+      return child.text.split(new RegExp(DIRHAM_BEFORE_AMOUNT.source)).flatMap((text, index): PortableNode[] => {
+        const nodes: PortableNode[] = []
+        if (index > 0) nodes.push({ _type: 'dirhamSymbol', _key: `${key}-aed-${index}` })
+        if (text) nodes.push({ ...child, _key: index === 0 ? child._key : `${key}-${index}`, text })
+        return nodes
+      })
+    })
+    return { ...block, children }
+  })
+}
+
+const componentsWithDirham: PortableTextComponents = {
+  ...components,
+  types: {
+    ...components.types,
+    dirhamSymbol: () => <DirhamSymbol />,
+  },
+}
+
 export function PortableTextRenderer({ content }: PortableTextRendererProps) {
   return (
     <div className="blog-body">
-      <PortableText value={content} components={components} />
+      <PortableText value={withDirhamSymbols(content)} components={componentsWithDirham} />
     </div>
   )
 }
