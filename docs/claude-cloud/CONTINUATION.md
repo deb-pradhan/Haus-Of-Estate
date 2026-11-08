@@ -369,3 +369,54 @@ delete or reimport them. Phase 1 being reported sold out does not establish the
 status of every later phase. Revisit only after Sonia confirms marketable stock
 or a confirmed future release, current prices/terms and approved media. Keep
 the older commercial schedule as source history, not current offers.
+
+## Palm Springs article and launch-interest enquiry — 8 November 2026 (local)
+
+Sonia asked to publish a "Palm Springs by Nakheel" article with supplied SEO
+settings and to collect interest for it. Full notes, the Sonia/technical
+split and the Studio steps are in `docs/palm-springs-launch-page-2026-11-08.md`.
+Commit `9faa62e7` on this branch (draft PR #21) carries:
+
+- `content/blog/palm-springs-by-nakheel-dubai.json`: the paste-ready draft for
+  the existing Sanity post type, status `draft`, no image, no author chosen,
+  every particular kept as a qualified market report. Nakheel's website had no
+  Palm Springs page on this date.
+- Lead intake: `launchInterest: { key }` resolved from
+  `src/lib/launches/registry.ts` on the server, stored as the lead's project
+  "Palm Springs by Nakheel (pre-launch interest)" and carried into the sales
+  notification and sheet as Project, Source `launch_article`, Campaign
+  `palm-springs-by-nakheel` and the article as landing page. No unpublished
+  property, no schema or migration change.
+- `/blog/[slug]` adds a register-interest section for launch articles (live
+  form when intake is ready, otherwise the sales-inbox fallback), and
+  `/register-interest?launch=palm-springs-by-nakheel` opens the same form.
+- `/showcase/insights/palm-springs-by-nakheel-dubai`: protected editorial
+  preview in the blog layout with a labelled image placeholder, review notes
+  and a simulated registration that prints the exact staff notification.
+- `scripts/remove-dubai-it-cover.mjs`: read-only-by-default removal of the
+  branded "Dubai IT" cover from the published article, not run.
+
+Checks: `tsc` clean; ESLint on the touched files adds no problems (three
+pre-existing `any` types in `PortableTextRenderer.tsx` remain); vitest
+lead-intake 10 files / 98 tests, showcase + blog + lead form + API + delivery
+27 files / 200 tests; node:test planners 4/4 and 2/2; webpack production build
+compiled in 109 s with `/showcase/insights/[slug]` present; Playwright at
+390×844 and 1440×900 against that build: preview 200 with the noindex and
+no-store headers, unknown slug 404, zero horizontal overflow before and after
+submission, header call to action anchors to `#register-interest`, empty submit
+announces a `role="alert"` summary, the simulated submission shows Project,
+Source, Campaign, Landing page, property type, bedrooms and "Newsletter opt-in:
+No", and the four dirham amounts render with the symbol.
+
+Preview: deployment `A1fzLHpW5ZFHLPQ9F4fHYav7NZkD`
+(`haus-of-estate-showcase-4h05hiwaa-suryak02s-projects.vercel.app`) is READY
+from commit `9faa62e7`, preview target, Vercel Authentication on. Through
+protection the draft page is 200 with the noindex header, an unknown slug 404,
+the launch register page 200 with the intake-unavailable notice; without a
+session every route redirects to the login. Sonia's existing share link stays
+bound to the earlier Florence deployment; opening the Palm Springs preview for
+her needs a new share link, which on Hobby replaces the old one.
+
+Boundaries kept: no Sanity write or publication, no email, no database call,
+no migration, no production deployment, no change to the live Dubai IT
+article, and the existing share link for Sonia was left as it was.
