@@ -233,16 +233,24 @@ and keep Status at draft until the review flags are settled.
 
 ## E. Checks run on 8 November 2026
 
+Second pass, after the corrections (commit `b4293a53`):
+
 | Check | Command | Result |
 | --- | --- | --- |
 | Typecheck | `npx tsc --noEmit -p tsconfig.json` | Passed |
 | Lint, touched files | `npx eslint …` over the launch, lead-intake, showcase, blog, register and script files | 0 new problems. The three pre-existing `any` types in `PortableTextRenderer.tsx` remain. |
-| Lead intake suites | `npx vitest run src/lib/lead-intake` | 10 files, 98 tests passed, including the new contract, normalisation, service and persistence launch cases |
-| Showcase, blog, lead form, API, delivery, launches | `npx vitest run src/lib/showcase src/components/blog src/components/lead-eoi src/app/api/leads src/lib/lead-delivery src/lib/launches tests/unit/careers-pages.test.tsx src/app/sitemap.test.ts` | 27 files, 200 tests passed |
+| Lead form launch options | `npx vitest run src/components/lead-eoi/lead-eoi-launch.test.tsx` | 2 tests: the launch form offers Townhouse/Villa and 3/4/5 labelled "reported options", no bathroom field, no Studio; a published property keeps the generic lists |
+| Lead intake, lead form, showcase | `npx vitest run src/components/lead-eoi src/lib/showcase src/components/showcase src/lib/lead-intake` | 22 files, 157 tests passed |
+| Blog, API, delivery, launches, pages (first pass) | `npx vitest run src/lib/showcase src/components/blog src/components/lead-eoi src/app/api/leads src/lib/lead-delivery src/lib/launches tests/unit/careers-pages.test.tsx src/app/sitemap.test.ts` | 27 files, 200 tests passed |
 | Script planners | `node --test scripts/lib/cover-removal-plan.test.mjs`; `node --import tsx --test scripts/check-brochure-mapping.test.mjs` | 4/4 and 2/2 passed |
-| Production build | `HAUS_FIXTURE_SHOWCASE_ENABLED=true npx next build --webpack` | Compiled in 109 s; `/showcase/insights/[slug]` and `/register-interest` present as dynamic routes |
-| Browser flow | Playwright at 390 × 844 and 1440 × 900 against that build on port 3500 | Preview 200 with noindex and no-store headers; unknown slug 404; zero horizontal overflow before and after submission; header call to action anchors to `#register-interest`; empty submit announces a `role="alert"` summary; the simulated submission shows Project, Source, Campaign, Landing page, property type, bedrooms and "Newsletter opt-in: No"; four dirham amounts render with the symbol |
-| Protected preview | `vercel deploy --yes --archive=tgz --environment preview` from commit `9faa62e7`, deployment `A1fzLHpW5ZFHLPQ9F4fHYav7NZkD` (`haus-of-estate-showcase-4h05hiwaa-suryak02s-projects.vercel.app`) | READY, preview target, commit metadata `9faa62e7`. Through protection: the draft page 200 with the noindex header and placeholder copy, unknown slug 404, `/register-interest?launch=…` 200 showing the intake-unavailable notice, `/showcase` 200. Without a session every route redirects to the Vercel login. The earlier deployment started from the uncommitted tree was cancelled because its metadata named `f566bf14`. Sonia's existing share link is bound to the previous deployment and does not open this one; a new share link is a separate decision because a Hobby account holds one at a time |
+| Production build | `HAUS_FIXTURE_SHOWCASE_ENABLED=true npx next build --webpack` | Compiled (23.5 s incremental; 109 s on the first pass) with `/showcase/insights/[slug]` and `/register-interest` present |
+| Florence journey | `scripts/showcase-journey-audit.mjs` at 390 × 844 and 1440 × 900 against that build on port 3500 | 0 failed steps, 0 overflow steps |
+| Palm Springs journey | Playwright at 390 × 844 and 1440 × 900 against the same build | Preview 200 with noindex and no-store headers; unknown slug 404; zero horizontal overflow before and after submission; header call to action anchors to `#register-interest`; empty submit announces a `role="alert"` summary and focuses the first invalid field; the simulated submission shows Project, Source, Campaign, Landing page, property type, bedrooms and "Newsletter opt-in: No"; four dirham amounts render with the symbol |
+| Showcase entry point | `/showcase` on that build | "Start here" block links to `/showcase/properties/azizi-florence` and `/showcase/insights/palm-springs-by-nakheel-dubai`; no horizontal overflow at either width |
+| Protected preview | `vercel deploy --yes --archive=tgz --environment preview` from commit `b4293a53`, deployment `7S5mVnGi4oqKg2B5aN7dk9QuaFz6` (`haus-of-estate-showcase-kqbjeakz0-suryak02s-projects.vercel.app`) | READY, preview target, commit metadata `b4293a53`. Through protection: `/showcase` 200 with both links, Florence community, collection with design and request page 200, Palm Springs draft 200 with the placeholder, unknown slug 404, `/register-interest?launch=…` 200 with the intake-unavailable notice. Without a session every route redirects to the Vercel login |
+| Share link | Vercel shareable link | The previous link (deployment `EedhPiEyehswjwS7YYQBWwmvhp2L`) was revoked on 8 November 2026 and now ends at the Vercel login. The replacement for the new deployment is created from the dashboard Share button; see the continuation note for its state |
+
+Earlier deployments from this work: `A1fzLHpW5ZFHLPQ9F4fHYav7NZkD` (commit `9faa62e7`) remains READY but superseded; `82ka9ox5bVsf5wV49v4bfD9ypCaN` was cancelled because it started from an uncommitted tree and named `f566bf14`.
 
 Not done, by design: no Sanity write, no email, no database call, no
 migration, no production deployment, no change to the live Dubai IT article.

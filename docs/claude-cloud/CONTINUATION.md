@@ -417,6 +417,20 @@ session every route redirects to the login. Sonia's existing share link stays
 bound to the earlier Florence deployment; opening the Palm Springs preview for
 her needs a new share link, which on Hobby replaces the old one.
 
+Second pass (commit `b4293a53`, deployment `7S5mVnGi4oqKg2B5aN7dk9QuaFz6`,
+`haus-of-estate-showcase-kqbjeakz0-suryak02s-projects.vercel.app`): `/showcase`
+is the shared entry point with a "Start here" block linking Florence and the
+Palm Springs draft; the live lead form offers the launch's reported home types
+and bedroom counts (labelled as reported options, no bathroom field) instead of
+the generic lists; the notes now say the live site runs `main` at `5d30c03d`
+on Railway, list the 21 files on which PR #21 conflicts with `main` with the
+smallest safe integration path, separate today's production Studio from the
+unreleased approval checklist, and record Sonia's 5 November cover-removal
+request as received. Both journeys were verified on that deployment through
+protection. Sonia's previous share link was revoked on 8 November 2026 and now
+ends at the Vercel login; the replacement link for the new deployment is created
+from the dashboard Share button and reported separately.
+
 Boundaries kept: no Sanity write or publication, no email, no database call,
 no migration, no production deployment, no change to the live Dubai IT
 article, and the existing share link for Sonia was left as it was.
