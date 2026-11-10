@@ -16,7 +16,9 @@ import {
   type SimulatedBrochureErrors,
   type SimulatedBrochureResult,
 } from '@/lib/showcase/request'
+import { formatArea, formatAreaDual } from '@/lib/showcase/format'
 import { cn } from '@/lib/utils'
+import { ErrorSummary, RequiredMark } from './form-parts'
 
 export interface RequestDesign {
   id: string
@@ -59,7 +61,6 @@ const EMPTY: FormValues = {
   privacyAcknowledged: false, propertyMatchOptIn: false, newsletterOptIn: false,
 }
 
-const areaFormatter = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 0 })
 const inputClass = 'mt-1.5 min-h-12 w-full rounded-xl border bg-white px-3.5 text-base text-estate-700 shadow-sm sm:text-sm'
 const subscribeToNothing = () => () => {}
 
@@ -91,11 +92,11 @@ function DesignSummary({ design, areaLabel, areaSourceLabel, compact = false }: 
         <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
           <div>
             <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{areaLabel}</dt>
-            <dd className="font-medium tabular-nums text-estate-700">{areaFormatter.format(design.builtUpAreaSqFt)} sq ft</dd>
+            <dd className="font-medium tabular-nums text-estate-700">{formatAreaDual(design.builtUpAreaSqFt)}</dd>
           </div>
           <div>
             <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Plot area</dt>
-            <dd className="font-medium tabular-nums text-estate-700">{withheld ? 'Withheld' : `${areaFormatter.format(design.plotAreaSqFt!)} sq ft`}</dd>
+            <dd className="font-medium tabular-nums text-estate-700">{withheld ? 'Withheld' : formatAreaDual(design.plotAreaSqFt!)}</dd>
           </div>
         </dl>
         <ul className="mt-2 space-y-1 text-xs leading-5 text-muted-foreground">
@@ -169,9 +170,8 @@ export function BrochureRequestJourney({ project, designs, initialDesignId, area
     if (!outcome.ok) {
       setErrors(outcome.errors)
       window.requestAnimationFrame(() => {
-        const first = formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')
-        if (first) first.focus()
-        else summaryRef.current?.focus()
+        // Announce every problem once; each one links to its field.
+        summaryRef.current?.focus()
       })
       return
     }
@@ -262,7 +262,7 @@ export function BrochureRequestJourney({ project, designs, initialDesignId, area
                         <span className="relative block aspect-[4/3] overflow-hidden rounded-lg bg-estate-700/5"><Image src={item.image.src} alt="" fill unoptimized sizes="72px" className="object-cover" /></span>
                         <span className="min-w-0 py-1">
                           <span className="block truncate text-sm font-semibold text-estate-700">{item.label}</span>
-                          <span className="block text-xs tabular-nums text-muted-foreground">{areaLabel} {areaFormatter.format(item.builtUpAreaSqFt)} sq ft</span>
+                          <span className="block text-xs tabular-nums text-muted-foreground">{areaLabel} {formatArea(item.builtUpAreaSqFt)}</span>
                         </span>
                         <ArrowRight aria-hidden className="mr-2 size-4 text-estate-700" />
                       </button>
@@ -277,20 +277,18 @@ export function BrochureRequestJourney({ project, designs, initialDesignId, area
           <form ref={formRef} onSubmit={submit} noValidate autoComplete="on" className="rounded-3xl border border-border bg-surface p-5 sm:p-7" aria-labelledby={`${id}-form-title`}>
             <p className="sc-eyebrow">Your details</p>
             <h2 id={`${id}-form-title`} className="mt-1 font-serif text-2xl font-medium text-estate-700">Where should the brochure go?</h2>
-            {errorList.length > 0 && (
-              <div ref={summaryRef} tabIndex={-1} role="alert" className="mt-4 rounded-xl border border-red-700/30 bg-red-50 px-4 py-3 text-sm text-red-800 outline-none">
-                <p className="font-semibold">Please check the following:</p>
-                <ul className="mt-1 list-disc pl-5">{errorList.map(([key, message]) => <li key={key}>{message}</li>)}</ul>
-              </div>
-            )}
+            <ErrorSummary ref={summaryRef} errors={errorList} fieldIds={{
+              firstName: `${id}-first-name`, email: `${id}-email`, phone: `${id}-phone`,
+              message: `${id}-message`, privacyAcknowledged: `${id}-privacy`,
+            }} />
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <label className="block text-sm font-semibold text-estate-700" htmlFor={`${id}-first-name`}>First name
+              <label className="block text-sm font-semibold text-estate-700" htmlFor={`${id}-first-name`}>First name<RequiredMark />
                 <input id={`${id}-first-name`} autoComplete="given-name" required maxLength={80} value={values.firstName} onChange={(event) => update('firstName', event.target.value)}
                   aria-invalid={errors.firstName ? 'true' : undefined} aria-describedby={errors.firstName ? `${id}-first-name-error` : undefined}
                   className={cn(inputClass, errors.firstName ? 'border-red-700' : 'border-estate-700/20')} />
                 {errors.firstName && <span id={`${id}-first-name-error`} className="mt-1 block text-xs font-medium text-red-700">{errors.firstName}</span>}
               </label>
-              <label className="block text-sm font-semibold text-estate-700" htmlFor={`${id}-email`}>Email address
+              <label className="block text-sm font-semibold text-estate-700" htmlFor={`${id}-email`}>Email address<RequiredMark />
                 <input id={`${id}-email`} type="email" autoComplete="email" inputMode="email" required maxLength={254} value={values.email} onChange={(event) => update('email', event.target.value)}
                   aria-invalid={errors.email ? 'true' : undefined} aria-describedby={errors.email ? `${id}-email-error` : undefined}
                   className={cn(inputClass, errors.email ? 'border-red-700' : 'border-estate-700/20')} />
@@ -311,7 +309,7 @@ export function BrochureRequestJourney({ project, designs, initialDesignId, area
             </div>
 
             <fieldset className="mt-6 border-t border-border pt-5">
-              <legend className="text-sm font-semibold text-estate-700">Privacy</legend>
+              <legend className="text-sm font-semibold text-estate-700">Privacy<RequiredMark /></legend>
               <label className={cn('mt-3 flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border p-3', errors.privacyAcknowledged ? 'border-red-700' : 'border-transparent')} htmlFor={`${id}-privacy`}>
                 <input id={`${id}-privacy`} type="checkbox" required checked={values.privacyAcknowledged} onChange={(event) => update('privacyAcknowledged', event.target.checked)}
                   aria-invalid={errors.privacyAcknowledged ? 'true' : undefined} aria-describedby={`${id}-privacy-help${errors.privacyAcknowledged ? ` ${id}-privacy-error` : ''}`}

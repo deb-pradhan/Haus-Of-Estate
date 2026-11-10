@@ -6,7 +6,10 @@ import { useRouter } from 'next/navigation'
 import { ArrowRight, Search } from 'lucide-react'
 import type { PropertyLocationGroup } from '@/lib/property-locations'
 import { propertyLocationKey } from '@/lib/property-locations'
-import { hasShowcaseFilters, showcaseSearchHref, type ShowcaseSearch } from '@/lib/showcase/search'
+import {
+  countShowcaseHomes, countShowcaseHomesWith, hasShowcaseFilters, homesLabel, showcaseSearchHref,
+  type ShowcaseSearch, type ShowcaseSearchIndexItem,
+} from '@/lib/showcase/search'
 import { showcasePath } from '@/lib/showcase/access'
 import { cn } from '@/lib/utils'
 
@@ -23,12 +26,15 @@ function Field({ label, children, className }: { label: string; children: React.
 
 /**
  * Country → city → area, then type, bedrooms and a keyword. The options come
- * from the fixture, so a buyer only sees places that have homes to show.
+ * from the fixture, so a buyer only sees places that have homes to show. Each
+ * option carries the number of homes it would leave, counted against the other
+ * choices already made, and an option that would leave none cannot be picked.
  */
-export function ShowcaseSearchForm({ locations, types, bedrooms, initial = {}, variant = 'hero' }: {
+export function ShowcaseSearchForm({ locations, types, bedrooms, index, initial = {}, variant = 'hero' }: {
   locations: PropertyLocationGroup[]
   types: string[]
   bedrooms: number[]
+  index: ShowcaseSearchIndexItem[]
   initial?: ShowcaseSearch
   variant?: 'hero' | 'bar'
 }) {
@@ -56,7 +62,16 @@ export function ShowcaseSearchForm({ locations, types, bedrooms, initial = {}, v
       type: type || undefined,
       beds: Number.isInteger(parsedBeds) ? parsedBeds : undefined,
       q: q.trim() || undefined,
+      sort: initial.sort,
     }
+  }
+
+  const current = currentSearch()
+  const matching = countShowcaseHomes(index, current)
+  /** Label and state for one choice: "Sharjah (5)", unavailable at zero unless already chosen. */
+  function option(key: 'country' | 'city' | 'area' | 'type' | 'beds', value: string | number, label: string, selected: boolean) {
+    const count = countShowcaseHomesWith(index, current, key, value)
+    return { label: `${label} (${count})`, disabled: count === 0 && !selected }
   }
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -73,19 +88,28 @@ export function ShowcaseSearchForm({ locations, types, bedrooms, initial = {}, v
         <Field label="Country">
           <select id={`${id}-country`} name="country" value={country} onChange={(event) => { setCountry(event.target.value); setCity(''); setArea('') }} className={fieldClass}>
             <option value="">All countries</option>
-            {locations.map((group) => <option key={group.country} value={group.country}>{group.country}</option>)}
+            {locations.map((group) => {
+              const state = option('country', group.country, group.country, group.country === country)
+              return <option key={group.country} value={group.country} disabled={state.disabled}>{state.label}</option>
+            })}
           </select>
         </Field>
         <Field label="City">
           <select id={`${id}-city`} name="city" value={cityKey ?? city} disabled={!country || !cities.length} onChange={(event) => { setCity(event.target.value); setArea('') }} className={fieldClass}>
             <option value="">{country ? 'All cities' : 'Choose a country first'}</option>
-            {cities.map((value) => <option key={value} value={value}>{value}</option>)}
+            {cities.map((value) => {
+              const state = option('city', value, value, value === cityKey)
+              return <option key={value} value={value} disabled={state.disabled}>{state.label}</option>
+            })}
           </select>
         </Field>
         <Field label="Area or community">
           <select id={`${id}-area`} name="area" value={area} disabled={!cityKey || !areas.length} onChange={(event) => setArea(event.target.value)} className={fieldClass}>
             <option value="">{cityKey ? 'All areas' : 'Choose a city first'}</option>
-            {areas.map((value) => <option key={value} value={value}>{value}</option>)}
+            {areas.map((value) => {
+              const state = option('area', value, value, value === area)
+              return <option key={value} value={value} disabled={state.disabled}>{state.label}</option>
+            })}
           </select>
         </Field>
       </div>
@@ -93,13 +117,19 @@ export function ShowcaseSearchForm({ locations, types, bedrooms, initial = {}, v
         <Field label="Home type">
           <select id={`${id}-type`} name="type" value={type} onChange={(event) => setType(event.target.value)} className={fieldClass}>
             <option value="">All types</option>
-            {types.map((value) => <option key={value} value={value}>{value}</option>)}
+            {types.map((value) => {
+              const state = option('type', value, value, value === type)
+              return <option key={value} value={value} disabled={state.disabled}>{state.label}</option>
+            })}
           </select>
         </Field>
         <Field label="Bedrooms">
           <select id={`${id}-beds`} name="beds" value={beds} onChange={(event) => setBeds(event.target.value)} className={fieldClass}>
             <option value="">Any</option>
-            {bedrooms.map((value) => <option key={value} value={value}>{value === 0 ? 'Studio' : `${value}+`}</option>)}
+            {bedrooms.map((value) => {
+              const state = option('beds', value, value === 0 ? 'Studio' : `${value}+`, String(value) === beds)
+              return <option key={value} value={value} disabled={state.disabled}>{state.label}</option>
+            })}
           </select>
         </Field>
         <Field label="Community, design or keyword" className="col-span-2 sm:col-span-1">
@@ -108,13 +138,13 @@ export function ShowcaseSearchForm({ locations, types, bedrooms, initial = {}, v
       </div>
       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs leading-5 text-muted-foreground">
-          {variant === 'hero' ? 'Showing one Sharjah community and one North London home from the review fixture.' : 'Change any filter and search again, or clear them to see everything.'}
+          {variant === 'hero' ? 'Showing one Sharjah community and one North London home from the review fixture.' : 'The number beside each choice is how many homes it would show with your other choices.'}
         </p>
         <div className="flex items-center gap-3">
           {showClear && <Link href={showcasePath('/properties')} className="inline-flex min-h-12 items-center px-2 text-sm font-medium text-estate-700 underline underline-offset-4">Clear filters</Link>}
           <button type="submit" disabled={pending} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-estate-700 px-6 text-sm font-semibold text-white transition-colors hover:bg-estate-600 disabled:opacity-60 sm:w-auto">
             <Search aria-hidden className="size-4" />
-            {pending ? 'Searching…' : 'Search homes'}
+            <span aria-live="polite">{pending ? 'Searching…' : matching > 0 ? `Show ${homesLabel(matching)}` : 'Search homes'}</span>
             <ArrowRight aria-hidden className="size-4" />
           </button>
         </div>

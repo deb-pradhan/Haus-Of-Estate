@@ -3,12 +3,14 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowDown, ArrowRight, Check, Rows3 } from 'lucide-react'
+import { ArrowDown, ArrowRight, Check, Mail, Phone, Rows3 } from 'lucide-react'
 import { showcasePropertyPath } from '@/lib/showcase/access'
+import { SHOWCASE_SALES_EMAIL, showcaseMailto } from '@/lib/showcase/contact'
 import type { ShowcaseDesign, ShowcaseDisplay, ShowcaseInteriorScheme } from '@/lib/showcase/fixture'
-import { designMetaLabel, formatArea } from '@/lib/showcase/format'
+import { designMetaLabel, formatArea, formatAreaDual } from '@/lib/showcase/format'
 import { cn } from '@/lib/utils'
-import { PlanFigure } from './primitives'
+import { ImageViews } from './image-views'
+import { PlanFigure, ProvenanceLine } from './primitives'
 
 interface ExplorerProps {
   collection: { slug: string; title: string; label: string }
@@ -22,30 +24,6 @@ const designMeta = designMetaLabel
 
 function requestHref(slug: string, key: string) {
   return showcasePropertyPath(slug, `/request?design=${encodeURIComponent(key)}`)
-}
-
-function Views({ images, preview = false }: { images: ShowcaseDesign['images']; preview?: boolean }) {
-  const [index, setIndex] = useState(0)
-  const selected = images[index] ?? images[0]
-  if (!selected) return null
-  return (
-    <figure>
-      <div className="relative aspect-[5/3] overflow-hidden rounded-2xl bg-estate-700/5">
-        <Image src={selected.src} alt={selected.alt} fill unoptimized sizes="(min-width: 1024px) 760px, 100vw" className={cn('object-cover', preview && 'opacity-90')} />
-      </div>
-      <figcaption className="mt-2 text-xs leading-5 text-muted-foreground">{selected.label ?? selected.alt}</figcaption>
-      {images.length > 1 && (
-        <div className="sc-scroll-x mt-3 flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Design views">
-          {images.map((image, viewIndex) => (
-            <button key={image.src} type="button" aria-pressed={index === viewIndex} aria-label={`Show view ${viewIndex + 1}: ${image.label ?? image.alt}`} onClick={() => setIndex(viewIndex)}
-              className={cn('relative h-16 w-24 shrink-0 overflow-hidden rounded-lg border-2', index === viewIndex ? 'border-estate-700' : 'border-transparent')}>
-              <Image src={image.src} alt="" fill unoptimized sizes="96px" className="object-cover" />
-            </button>
-          ))}
-        </div>
-      )}
-    </figure>
-  )
 }
 
 export function DesignExplorer({ collection, designs, interiorSchemes, display, initialDesignKey }: ExplorerProps) {
@@ -159,21 +137,32 @@ export function DesignExplorer({ collection, designs, interiorSchemes, display, 
               <h3 id="selected-design" ref={selectedHeadingRef} tabIndex={-1} className="mt-1 scroll-mt-28 font-serif text-2xl font-medium leading-tight text-estate-700 sm:text-3xl">{selected.label}</h3>
               {designMeta(selected) && <p className="mt-1 text-sm text-muted-foreground">{designMeta(selected)}</p>}
             </div>
-            <Link ref={ctaRef} href={requestHref(collection.slug, selected.key)} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-estate-700 px-5 text-sm font-semibold text-white hover:bg-estate-600 sm:w-auto">
-              Request the brochure <ArrowRight aria-hidden className="size-4" />
-            </Link>
           </div>
           {selected.summary && <p className="mt-4 text-sm leading-6 text-muted-foreground">{selected.summary}</p>}
+
+          {/* Three plain next steps, side by side. None is a countdown or a reservation. */}
+          <div className="mt-5 grid gap-2.5 sm:grid-cols-3" role="group" aria-label={`Next steps for ${selected.label}`}>
+            <Link ref={ctaRef} href={requestHref(collection.slug, selected.key)} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-estate-700 px-4 text-center text-sm font-semibold text-white hover:bg-estate-600">
+              Request the brochure <ArrowRight aria-hidden className="size-4 shrink-0" />
+            </Link>
+            <a href={showcaseMailto(`Question — ${collection.title} — ${selected.label}`)} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-estate-700/25 px-4 text-center text-sm font-semibold text-estate-700 hover:bg-estate-700/5">
+              <Mail aria-hidden className="size-4 shrink-0" /> Email a question
+            </a>
+            <a href={showcaseMailto(`Call request — ${collection.title} — ${selected.label}`)} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-estate-700/25 px-4 text-center text-sm font-semibold text-estate-700 hover:bg-estate-700/5">
+              <Phone aria-hidden className="size-4 shrink-0" /> Email to arrange a call
+            </a>
+          </div>
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">The email links open your own email app addressed to {SHOWCASE_SALES_EMAIL}. The showcase itself sends nothing.</p>
 
           <dl className="mt-5 grid gap-3 sm:grid-cols-2">
             <div className="rounded-2xl bg-subtle p-4">
               <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{display.areaLabel}</dt>
-              <dd className="mt-1 font-serif text-2xl font-medium tabular-nums text-estate-700">{formatArea(selected.builtUpAreaSqFt)}</dd>
+              <dd className="mt-1 font-serif text-2xl font-medium tabular-nums text-estate-700">{formatAreaDual(selected.builtUpAreaSqFt)}</dd>
               {display.areaSourceLabel && <dd className="mt-1 text-xs leading-5 text-muted-foreground">{display.areaSourceLabel}</dd>}
             </div>
             <div className="rounded-2xl bg-subtle p-4">
               <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Plot area</dt>
-              <dd className="mt-1 font-serif text-2xl font-medium tabular-nums text-estate-700">{plotWithheld ? 'Withheld' : formatArea(selected.plotAreaSqFt!)}</dd>
+              <dd className="mt-1 font-serif text-2xl font-medium tabular-nums text-estate-700">{plotWithheld ? 'Withheld' : formatAreaDual(selected.plotAreaSqFt!)}</dd>
               <dd className="mt-1 text-xs leading-5 text-muted-foreground">
                 {plotWithheld
                   ? (selected.areaNote ?? 'The brochure’s plot table and diagram differ; the figure is withheld until reconciled.')
@@ -181,9 +170,10 @@ export function DesignExplorer({ collection, designs, interiorSchemes, display, 
               </dd>
             </div>
           </dl>
-          <p className="mt-3 text-xs leading-5 text-muted-foreground">Areas are design-level brochure figures, not an available-unit schedule. The brochure covers the whole collection; your design choice records your interest and does not reserve a home.</p>
+          <p className="mt-3 text-xs leading-5 text-muted-foreground">Areas are design-level brochure figures, not an available-unit schedule. Square-metre figures are conversions. The brochure covers the whole collection; your design choice records your interest and does not reserve a home.</p>
+          <ProvenanceLine provenance={display.provenance} className="mt-2" />
 
-          <div className="mt-6"><Views key={selected.key} images={selected.images} /></div>
+          <div className="mt-6"><ImageViews key={selected.key} images={selected.images} label="Design views" /></div>
 
           {selected.floorPlans.length > 0 && (
             <div className="mt-8">
@@ -212,12 +202,12 @@ export function DesignExplorer({ collection, designs, interiorSchemes, display, 
               </button>
             ))}
           </div>
-          <div className="mt-5 max-w-4xl"><Views key={scheme.key} images={scheme.images} /></div>
+          <div className="mt-5 max-w-4xl"><ImageViews key={scheme.key} images={scheme.images} label="Palette illustrations" /></div>
         </section>
       )}
 
       {/* Mobile action bar */}
-      <div aria-hidden={barHidden} className={cn('sc-safe-bottom fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface/95 backdrop-blur transition-transform duration-300 md:hidden', barHidden && 'pointer-events-none translate-y-full')}>
+      <div aria-hidden={barHidden} className={cn('sc-safe-bottom fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface/95 backdrop-blur transition-transform duration-300 motion-reduce:transition-none md:hidden', barHidden && 'pointer-events-none translate-y-full')}>
         <div className="flex items-center gap-3 px-4 py-3">
           <p className="min-w-0 flex-1">
             <span className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Selected</span>

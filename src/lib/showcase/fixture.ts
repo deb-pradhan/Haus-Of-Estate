@@ -2,8 +2,11 @@ import 'server-only'
 
 import fixtureJson from '../../../docs/claude-cloud/fixtures/haus-properties.json'
 import { buildPropertyLocationGroups, type PropertyLocationGroup } from '@/lib/property-locations'
-import { hasShowcaseFilters, matchesShowcaseSearch, type ShowcaseSearch } from './search'
-import { formatAreaRange } from './format'
+import {
+  hasShowcaseFilters, matchesShowcaseSearch, showcaseSearchIndexItem,
+  type ShowcaseSearch, type ShowcaseSearchIndexItem,
+} from './search'
+import { formatAreaRange, formatAreaRangeDual } from './format'
 
 export { designPositionLabel, formatArea, formatAreaRange } from './format'
 
@@ -57,8 +60,16 @@ export interface ShowcaseInteriorScheme {
 export interface ShowcaseTextSpan { key: string; text: string; strong: boolean }
 export interface ShowcaseTextBlock { key: string; style: 'normal' | 'h2' | 'h3'; spans: ShowcaseTextSpan[] }
 
+/** Where a record's facts come from, and when that source was sampled. */
+export interface ShowcaseProvenance {
+  source: string
+  /** ISO date of the content snapshot, not of the source document itself. */
+  snapshotDate: string
+}
+
 export interface ShowcaseDisplay {
   inventoryNotice: string
+  provenance?: ShowcaseProvenance
   amenitiesHeading?: string
   areaLabel: string
   areaSourceLabel?: string
@@ -219,10 +230,19 @@ function description(value: unknown): ShowcaseTextBlock[] {
   })
 }
 
+function provenance(value: unknown): ShowcaseProvenance | undefined {
+  if (value === undefined) return undefined
+  const raw = record(value, 'display provenance')
+  const snapshotDate = text(raw.snapshotDate, 'display provenance snapshot date')
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(snapshotDate) || Number.isNaN(Date.parse(snapshotDate))) invalid('display provenance snapshot date')
+  return { source: text(raw.source, 'display provenance source'), snapshotDate }
+}
+
 function display(value: unknown, kind: ShowcaseKind): ShowcaseDisplay {
   const raw = record(value, 'display')
   return {
     inventoryNotice: text(raw.inventoryNotice, 'display inventory notice'),
+    provenance: provenance(raw.provenance),
     amenitiesHeading: optionalText(raw.amenitiesHeading),
     areaLabel: optionalText(raw.areaLabel) ?? (kind === 'property' ? 'Floor area' : 'Built-up area'),
     areaSourceLabel: optionalText(raw.areaSourceLabel),
@@ -367,6 +387,33 @@ export function builtUpAreaRange(item: ShowcaseProperty): string | undefined {
   return formatAreaRange(Math.min(...areas), Math.max(...areas))
 }
 
+/** The same range with its square-metre conversion, for pages with room for both. */
+export function builtUpAreaRangeDual(item: ShowcaseProperty): string | undefined {
+  const areas = item.designs.map((design) => design.builtUpAreaSqFt)
+  if (!areas.length) return undefined
+  return formatAreaRangeDual(Math.min(...areas), Math.max(...areas))
+}
+
+/** Largest brochure built-up area in a collection; the figure a size sort uses. */
+function largestBuiltUpArea(item: ShowcaseProperty): number {
+  return item.designs.reduce((largest, design) => Math.max(largest, design.builtUpAreaSqFt), 0)
+}
+
+/**
+ * The fields the search form needs to count matches as a buyer chooses. Each
+ * collection is tied to its community so the form follows the catalogue rule.
+ */
+export function showcaseSearchIndex(source: ShowcaseCatalogue = getShowcaseCatalogue()): ShowcaseSearchIndexItem[] {
+  return [
+    ...source.communities.flatMap((community) => [
+      showcaseSearchIndexItem(community.overview, { id: community.overview.id, overview: true }),
+      ...community.collections.map((collection) =>
+        showcaseSearchIndexItem(collection, { id: community.overview.id, overview: false })),
+    ]),
+    ...source.readyHomes.map((home) => showcaseSearchIndexItem(home)),
+  ]
+}
+
 /** "4-bedroom villas" for a collection; falls back to the supplied title. */
 export function collectionLabel(item: ShowcaseProperty): string {
   const group = HOME_TYPES.find((entry) => entry.type === item.unitType)
@@ -374,6 +421,16 @@ export function collectionLabel(item: ShowcaseProperty): string {
     ? `${item.bedrooms}-bedroom ${group.title.toLowerCase()}` : item.title
 }
 
+
+/** A size sort reorders the collections inside each home type; groups keep their place. */
+function sortedGroups(groups: ShowcaseCollectionGroup[], sort: ShowcaseSearch['sort']): ShowcaseCollectionGroup[] {
+  if (sort !== 'size-asc' && sort !== 'size-desc') return groups
+  const direction = sort === 'size-asc' ? 1 : -1
+  return groups.map((group) => ({
+    ...group,
+    collections: [...group.collections].sort((a, b) => direction * (largestBuiltUpArea(a) - largestBuiltUpArea(b))),
+  }))
+}
 
 export interface ShowcaseSearchResult {
   search: ShowcaseSearch
@@ -383,6 +440,8 @@ export interface ShowcaseSearchResult {
   /** Communities plus ready homes: the number a buyer would count as results. */
   total: number
   collectionCount: number
+  /** Collections plus existing homes: the homes a buyer can open. */
+  homeCount: number
 }
 
 /**
@@ -397,15 +456,17 @@ export function searchShowcase(search: ShowcaseSearch, source: ShowcaseCatalogue
       matchesShowcaseSearch(community.overview, search)
     if (!collections.length && !overviewMatches) return []
     const shown = collections.length ? collections : community.collections
-    return [{ ...community, collections: shown, groups: collectionGroupsFor(shown) }]
+    return [{ ...community, collections: shown, groups: sortedGroups(collectionGroupsFor(shown), search.sort) }]
   })
   const readyHomes = source.readyHomes.filter((home) => matchesShowcaseSearch(home, search))
+  const collectionCount = communities.reduce((count, community) => count + community.collections.length, 0)
   return {
     search,
     hasFilters: hasShowcaseFilters(search),
     communities,
     readyHomes,
     total: communities.length + readyHomes.length,
-    collectionCount: communities.reduce((count, community) => count + community.collections.length, 0),
+    collectionCount,
+    homeCount: collectionCount + readyHomes.length,
   }
 }

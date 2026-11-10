@@ -15,6 +15,7 @@ import {
   type SimulatedLaunchResult,
 } from '@/lib/showcase/launch-request'
 import { cn } from '@/lib/utils'
+import { ErrorSummary, RequiredMark } from './form-parts'
 
 interface FormValues {
   interest: 'buy' | 'invest'
@@ -78,9 +79,8 @@ export function LaunchRegisterSimulated({ launch, livePath }: { launch: LaunchIn
     if (!outcome.ok) {
       setErrors(outcome.errors)
       window.requestAnimationFrame(() => {
-        const first = formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')
-        if (first) first.focus()
-        else summaryRef.current?.focus()
+        // Announce every problem once; each one links to its field.
+        summaryRef.current?.focus()
       })
       return
     }
@@ -123,12 +123,11 @@ export function LaunchRegisterSimulated({ launch, livePath }: { launch: LaunchIn
       </p>
       <h3 id={`${id}-form-title`} className="mt-5 font-serif text-2xl font-medium text-estate-700">Your interest in {launch.title}</h3>
       <p className="mt-2 text-sm leading-6 text-muted-foreground">Home types and bedroom counts below are reported pre-launch options, not confirmed availability. Choose what you have in mind.</p>
-      {errorList.length > 0 && (
-        <div ref={summaryRef} tabIndex={-1} role="alert" className="mt-4 rounded-xl border border-red-700/30 bg-red-50 px-4 py-3 text-sm text-red-800 outline-none">
-          <p className="font-semibold">Please check the following:</p>
-          <ul className="mt-1 list-disc pl-5">{errorList.map(([key, message]) => <li key={key}>{message}</li>)}</ul>
-        </div>
-      )}
+      <ErrorSummary ref={summaryRef} errors={errorList} fieldIds={{
+        firstName: `${id}-first-name`, email: `${id}-email`, phone: `${id}-phone`,
+        message: `${id}-message`, privacyAcknowledged: `${id}-privacy`,
+        propertyType: `${id}-type`, bedrooms: `${id}-beds`, timeframe: `${id}-timeframe`,
+      }} />
 
       <fieldset className="mt-5">
         <legend className="text-sm font-semibold text-estate-700">I am looking to</legend>
@@ -164,13 +163,13 @@ export function LaunchRegisterSimulated({ launch, livePath }: { launch: LaunchIn
       </div>
 
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
-        <label className="block text-sm font-semibold text-estate-700" htmlFor={`${id}-first-name`}>First name
+        <label className="block text-sm font-semibold text-estate-700" htmlFor={`${id}-first-name`}>First name<RequiredMark />
           <input id={`${id}-first-name`} autoComplete="given-name" required maxLength={80} value={values.firstName} onChange={(event) => update('firstName', event.target.value)}
             aria-invalid={errors.firstName ? 'true' : undefined} aria-describedby={errors.firstName ? `${id}-first-name-error` : undefined}
             className={cn(inputClass, errors.firstName ? 'border-red-700' : 'border-estate-700/20')} />
           {errors.firstName && <span id={`${id}-first-name-error`} className="mt-1 block text-xs font-medium text-red-700">{errors.firstName}</span>}
         </label>
-        <label className="block text-sm font-semibold text-estate-700" htmlFor={`${id}-email`}>Email address
+        <label className="block text-sm font-semibold text-estate-700" htmlFor={`${id}-email`}>Email address<RequiredMark />
           <input id={`${id}-email`} type="email" autoComplete="email" inputMode="email" required maxLength={254} value={values.email} onChange={(event) => update('email', event.target.value)}
             aria-invalid={errors.email ? 'true' : undefined} aria-describedby={errors.email ? `${id}-email-error` : undefined}
             className={cn(inputClass, errors.email ? 'border-red-700' : 'border-estate-700/20')} />
@@ -191,7 +190,7 @@ export function LaunchRegisterSimulated({ launch, livePath }: { launch: LaunchIn
       </div>
 
       <fieldset className="mt-6 border-t border-border pt-5">
-        <legend className="text-sm font-semibold text-estate-700">Privacy</legend>
+        <legend className="text-sm font-semibold text-estate-700">Privacy<RequiredMark /></legend>
         <label className={cn('mt-3 flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border p-3', errors.privacyAcknowledged ? 'border-red-700' : 'border-transparent')} htmlFor={`${id}-privacy`}>
           <input id={`${id}-privacy`} type="checkbox" required checked={values.privacyAcknowledged} onChange={(event) => update('privacyAcknowledged', event.target.checked)}
             aria-invalid={errors.privacyAcknowledged ? 'true' : undefined} aria-describedby={`${id}-privacy-help${errors.privacyAcknowledged ? ` ${id}-privacy-error` : ''}`}

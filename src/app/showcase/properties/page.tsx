@@ -10,9 +10,14 @@ import {
   searchShowcase,
   showcaseBedroomOptions,
   showcaseLocationGroups,
+  showcaseSearchIndex,
   showcaseTypeOptions,
 } from '@/lib/showcase/fixture'
-import { activeShowcaseFilters, normalizeShowcaseSearch, type ShowcaseSearchParamsInput } from '@/lib/showcase/search'
+import {
+  activeShowcaseFilters, homesLabel, normalizeShowcaseSearch, showcaseSearchHref, showcaseSearchWithout,
+  SHOWCASE_SORTS, type ShowcaseSearchParamsInput,
+} from '@/lib/showcase/search'
+import { cn } from '@/lib/utils'
 
 export const metadata: Metadata = { title: 'Find a home' }
 
@@ -25,6 +30,13 @@ export default async function ShowcaseCataloguePage({ searchParams }: { searchPa
   const catalogue = getShowcaseCatalogue()
   const result = searchShowcase(search, catalogue)
   const filters = activeShowcaseFilters(search)
+  // What each active filter is costing: the homes shown if it alone were removed.
+  const widenings = filters.map((filter) => ({
+    ...filter,
+    homes: searchShowcase(showcaseSearchWithout(search, filter.key), catalogue).homeCount,
+  })).filter((filter) => filter.homes > 0)
+  const everything = searchShowcase({}, catalogue).homeCount
+  const sort = search.sort ?? 'curated'
   const summaryParts = [
     result.communities.length ? summarise(result.communities.length, 'community', 'communities') : null,
     result.collectionCount ? summarise(result.collectionCount, 'home collection') : null,
@@ -42,18 +54,35 @@ export default async function ShowcaseCataloguePage({ searchParams }: { searchPa
             <p className="mt-3 text-base leading-7 text-muted-foreground">Narrow by place first, then by home type and bedrooms. Communities show only the collections that match.</p>
           </div>
           <div className="mt-6">
-            <ShowcaseSearchForm key={JSON.stringify(search)} locations={showcaseLocationGroups()} types={showcaseTypeOptions()} bedrooms={showcaseBedroomOptions()} initial={search} variant="bar" />
+            <ShowcaseSearchForm key={JSON.stringify(search)} locations={showcaseLocationGroups()} types={showcaseTypeOptions()} bedrooms={showcaseBedroomOptions()} index={showcaseSearchIndex(catalogue)} initial={search} variant="bar" />
           </div>
         </div>
       </section>
 
       <section className="px-4 py-10 md:px-6 md:py-14" aria-labelledby="results-title">
         <div className="mx-auto max-w-7xl">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-            <h2 id="results-title" className="sr-only">Results</h2>
-            <p role="status" className="text-sm font-medium text-estate-700">
-              {result.total === 0 ? 'No homes match these filters.' : `Showing ${summaryParts.join(', ')}.`}
-            </p>
+          <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4 border-b border-border pb-5">
+            <div>
+              <h2 id="results-title" className="sc-heading text-estate-700">
+                {result.homeCount === 0 ? 'No homes match these filters' : `${homesLabel(result.homeCount)}${filters.length ? ' match' : ''}`}
+              </h2>
+              <p role="status" className="mt-1 text-sm font-medium text-estate-700">
+                {result.total === 0 ? 'The wider searches below say how many homes each would show.' : `Showing ${summaryParts.join(', ')}.`}
+              </p>
+            </div>
+            {result.collectionCount > 1 && (
+              <nav aria-label="Sort home collections" className="flex flex-wrap items-center gap-1.5 text-sm">
+                <span className="mr-1 text-muted-foreground">Sort</span>
+                {SHOWCASE_SORTS.map((option) => (
+                  <Link key={option.value} href={showcaseSearchHref({ ...search, sort: option.value })} aria-current={sort === option.value ? 'true' : undefined} scroll={false}
+                    className={cn('inline-flex min-h-11 items-center rounded-full border px-3.5 font-medium', sort === option.value ? 'border-estate-700 bg-estate-700 text-white' : 'border-estate-700/20 bg-surface text-estate-700 hover:border-estate-700/50')}>
+                    {option.label}
+                  </Link>
+                ))}
+              </nav>
+            )}
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-3">
             {filters.length > 0 && (
               <ul className="flex flex-wrap items-center gap-2" aria-label="Active filters">
                 {filters.map((filter) => (
@@ -73,13 +102,14 @@ export default async function ShowcaseCataloguePage({ searchParams }: { searchPa
               <p className="sc-eyebrow">Nothing to show yet</p>
               <h3 className="sc-heading mt-2 text-estate-700">Try a wider search</h3>
               <p className="mt-3 max-w-xl text-base leading-7 text-muted-foreground">
-                The showcase holds {summarise(catalogue.communities.length, 'community', 'communities')} in Sharjah and {summarise(catalogue.readyHomes.length, 'existing home')} in North London. Remove a filter above, or start again.
+                The showcase holds {summarise(catalogue.communities.length, 'community', 'communities')} in Sharjah and {summarise(catalogue.readyHomes.length, 'existing home')} in North London.{' '}
+                {widenings.length > 0 ? 'Each option below removes one filter and says how many homes that would show.' : 'No single filter is the cause, so start again from everything.'}
               </p>
-              <ul className="mt-6 flex flex-wrap gap-3">
-                {filters.map((filter) => (
-                  <li key={filter.key}><Link href={filter.href} className="inline-flex min-h-12 items-center rounded-xl border border-estate-700/25 px-5 text-sm font-semibold text-estate-700 hover:bg-estate-700/5">Without {filter.label}</Link></li>
+              <ul className="mt-6 flex flex-wrap gap-3" aria-label="Wider searches">
+                {widenings.map((filter) => (
+                  <li key={filter.key}><Link href={filter.href} className="inline-flex min-h-12 items-center rounded-xl border border-estate-700/25 px-5 text-sm font-semibold text-estate-700 hover:bg-estate-700/5">Without {filter.label} · {homesLabel(filter.homes)}</Link></li>
                 ))}
-                <li><Link href={showcasePath('/properties')} className="inline-flex min-h-12 items-center rounded-xl bg-estate-700 px-5 text-sm font-semibold text-white hover:bg-estate-600">Show everything</Link></li>
+                <li><Link href={showcasePath('/properties')} className="inline-flex min-h-12 items-center rounded-xl bg-estate-700 px-5 text-sm font-semibold text-white hover:bg-estate-600">Show everything · {homesLabel(everything)}</Link></li>
               </ul>
             </div>
           ) : (

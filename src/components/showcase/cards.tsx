@@ -22,8 +22,7 @@ export function CommunityIntro({ community, variant = 'catalogue', className }: 
     <article className={cn('overflow-hidden rounded-xl border border-border bg-surface', className)}>
       <div className="grid lg:grid-cols-[1.4fr_1fr]">
         <Link href={href} className="relative block aspect-[16/10] bg-estate-700 lg:aspect-auto lg:min-h-[420px]" aria-label={`Explore ${overview.title}`}>
-          <FixtureImage image={overview.media.hero} sizes="(min-width: 1024px) 720px, 100vw" />
-          <span className="absolute bottom-4 left-4 rounded-md bg-surface/95 px-3 py-1.5 text-xs font-medium text-estate-700">Masterplan · artist’s impression</span>
+          <FixtureImage image={overview.media.hero} sizes="(min-width: 1024px) 720px, 100vw" badge="Masterplan · illustration" />
         </Link>
         <div className="flex flex-col justify-center p-6 md:p-9">
           <p className="sc-eyebrow">{overview.city} · {overview.developer}</p>
@@ -92,12 +91,11 @@ export function ReadyHomeCard({ home, className, wide = false }: { home: Showcas
         <figure>
           <div className="relative aspect-[3/2] bg-[#f3efe6]">
             <FixtureImage image={home.media.hero} fit="contain" sizes={wide ? '(min-width: 1024px) 720px, 100vw' : '(min-width: 1024px) 400px, 100vw'} />
-            <span className="absolute left-4 top-4 rounded-full bg-surface/95 px-3 py-1.5 text-xs font-semibold text-estate-700 shadow-sm">Existing home</span>
           </div>
           {caption && <figcaption className="border-t border-border px-5 py-3 text-xs leading-5 text-muted-foreground">{caption}</figcaption>}
         </figure>
         <div className="flex flex-col justify-center p-5 md:p-7">
-          <p className="sc-eyebrow">{[home.community, home.city, home.country].join(', ')}</p>
+          <p className="sc-eyebrow">Existing home · {[home.community, home.city, home.country].join(', ')}</p>
           <h4 className="mt-2 font-serif text-2xl font-medium leading-tight text-estate-700 md:text-3xl">{home.title}</h4>
           {home.price && <p className="mt-3 font-serif text-3xl font-semibold tabular-nums text-estate-700">{home.price.display}<span className="ml-2 align-middle text-xs font-sans font-medium uppercase tracking-[0.14em] text-muted-foreground">Asking price</span></p>}
           <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-foreground/80">

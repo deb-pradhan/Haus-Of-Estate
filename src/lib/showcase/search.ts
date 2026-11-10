@@ -14,10 +14,20 @@ export interface ShowcaseSearch {
   type?: string
   beds?: number
   q?: string
+  /** Presentation order only; never counted as a filter. */
+  sort?: ShowcaseSort
 }
 
+/** `curated` keeps the editorial order: communities first, bedrooms ascending. */
+export type ShowcaseSort = 'curated' | 'size-asc' | 'size-desc'
+export const SHOWCASE_SORTS: { value: ShowcaseSort; label: string }[] = [
+  { value: 'curated', label: 'Recommended' },
+  { value: 'size-asc', label: 'Smallest first' },
+  { value: 'size-desc', label: 'Largest first' },
+]
+
 export type ShowcaseSearchParamsInput = Record<string, string | string[] | undefined>
-export type ShowcaseFilterKey = keyof ShowcaseSearch
+export type ShowcaseFilterKey = Exclude<keyof ShowcaseSearch, 'sort'>
 
 const KEYS: ShowcaseFilterKey[] = ['country', 'city', 'area', 'type', 'beds', 'q']
 
@@ -36,6 +46,8 @@ export function normalizeShowcaseSearch(raw: ShowcaseSearchParamsInput = {}): Sh
   if (Number.isInteger(beds) && beds >= 0 && beds <= 20) search.beds = beds
   const q = first(raw.q).slice(0, 120)
   if (q) search.q = q
+  const sort = first(raw.sort)
+  if (sort === 'size-asc' || sort === 'size-desc') search.sort = sort
   return search
 }
 
@@ -50,6 +62,7 @@ export function showcaseSearchHref(search: ShowcaseSearch): string {
     if (value === undefined || value === '') continue
     params.set(key, String(value))
   }
+  if (search.sort && search.sort !== 'curated') params.set('sort', search.sort)
   const query = params.toString()
   return showcasePath(`/properties${query ? `?${query}` : ''}`)
 }
@@ -75,22 +88,89 @@ function searchableText(property: Searchable): string {
   ].filter(Boolean).join(' ').toLocaleLowerCase('en-GB')
 }
 
-function matchesKeyword(property: Searchable, q?: string): boolean {
-  const words = (q ?? '').toLocaleLowerCase('en-GB').split(/\s+/).filter(Boolean)
-  if (!words.length) return true
-  const text = searchableText(property)
-  return words.every((word) => text.includes(word))
+/**
+ * The few fields a filter needs, small enough to hand to the search form so it
+ * can count matches while a buyer is still choosing.
+ */
+export interface ShowcaseSearchIndexItem {
+  country: string
+  city: string
+  community: string
+  masterDevelopment?: string
+  unitType: string
+  bedrooms?: number
+  /** Lower-cased keyword haystack. */
+  text: string
+  /** Set on a community overview and on each of its collections. */
+  communityId?: string
+  overview?: boolean
+}
+
+export function showcaseSearchIndexItem(
+  property: Searchable,
+  community?: { id: string; overview: boolean },
+): ShowcaseSearchIndexItem {
+  return {
+    country: property.country,
+    city: property.city,
+    community: property.community,
+    masterDevelopment: property.masterDevelopment,
+    unitType: property.unitType,
+    bedrooms: property.bedrooms,
+    text: searchableText(property),
+    ...(community ? { communityId: community.id, overview: community.overview } : {}),
+  }
+}
+
+function matchesIndexItem(item: ShowcaseSearchIndexItem, search: ShowcaseSearch): boolean {
+  if (!matchesPropertyLocation(item, search)) return false
+  if (search.type && item.unitType.toLocaleLowerCase('en-GB') !== search.type.toLocaleLowerCase('en-GB')) return false
+  if (search.beds !== undefined) {
+    if (typeof item.bedrooms !== 'number') return false
+    if (search.beds === 0 ? item.bedrooms !== 0 : item.bedrooms < search.beds) return false
+  }
+  const words = (search.q ?? '').toLocaleLowerCase('en-GB').split(/\s+/).filter(Boolean)
+  return words.every((word) => item.text.includes(word))
 }
 
 /** Collections and ready homes match on location, type, minimum bedrooms and keyword. */
 export function matchesShowcaseSearch(property: Searchable, search: ShowcaseSearch): boolean {
-  if (!matchesPropertyLocation(property, search)) return false
-  if (search.type && property.unitType.toLocaleLowerCase('en-GB') !== search.type.toLocaleLowerCase('en-GB')) return false
-  if (search.beds !== undefined) {
-    if (typeof property.bedrooms !== 'number') return false
-    if (search.beds === 0 ? property.bedrooms !== 0 : property.bedrooms < search.beds) return false
+  return matchesIndexItem(showcaseSearchIndexItem(property), search)
+}
+
+/**
+ * How many homes (collections and existing homes) a search would show. It
+ * follows the catalogue rule: a community whose overview matches a place or
+ * keyword search shows all its collections when none match on their own.
+ */
+export function countShowcaseHomes(index: readonly ShowcaseSearchIndexItem[], search: ShowcaseSearch): number {
+  const homes = index.filter((item) => !item.overview)
+  const matched = homes.filter((item) => matchesIndexItem(item, search))
+  let count = matched.length
+  if (search.type === undefined && search.beds === undefined) {
+    for (const overview of index.filter((item) => item.overview && matchesIndexItem(item, search))) {
+      if (matched.some((item) => item.communityId === overview.communityId)) continue
+      count += homes.filter((item) => item.communityId === overview.communityId).length
+    }
   }
-  return matchesKeyword(property, search.q)
+  return count
+}
+
+/** The count if one filter were set to `value`, with narrower place filters cleared. */
+export function countShowcaseHomesWith(
+  index: readonly ShowcaseSearchIndexItem[],
+  search: ShowcaseSearch,
+  key: 'country' | 'city' | 'area' | 'type' | 'beds',
+  value: string | number,
+): number {
+  const next: ShowcaseSearch = { ...showcaseSearchWithout(search, key) }
+  if (key === 'beds') next.beds = Number(value)
+  else next[key] = String(value)
+  return countShowcaseHomes(index, next)
+}
+
+export function homesLabel(count: number): string {
+  return `${count} ${count === 1 ? 'home' : 'homes'}`
 }
 
 export interface ShowcaseActiveFilter {

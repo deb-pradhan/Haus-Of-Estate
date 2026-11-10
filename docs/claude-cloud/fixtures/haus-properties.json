@@ -186,7 +186,11 @@
         "areaLabel": "Built-up area",
         "areaSourceLabel": "The brochure labels this figure sellable area.",
         "interiorNotice": "Brochure interior illustrations. Buyer-selectable finishes and inclusions are not confirmed.",
-        "brochureMode": "simulated-only"
+        "brochureMode": "simulated-only",
+        "provenance": {
+          "source": "the developer's brochures and project renders supplied to Haus of Estate",
+          "snapshotDate": "2026-11-05"
+        }
       }
     },
     {
@@ -417,7 +421,11 @@
         "areaLabel": "Built-up area",
         "areaSourceLabel": "The brochure labels this figure sellable area.",
         "interiorNotice": "Brochure interior illustrations. Buyer-selectable finishes and inclusions are not confirmed.",
-        "brochureMode": "simulated-only"
+        "brochureMode": "simulated-only",
+        "provenance": {
+          "source": "the developer's brochures and project renders supplied to Haus of Estate",
+          "snapshotDate": "2026-11-05"
+        }
       }
     },
     {
@@ -648,7 +656,11 @@
         "areaLabel": "Built-up area",
         "areaSourceLabel": "The brochure labels this figure sellable area.",
         "interiorNotice": "Brochure interior illustrations. Buyer-selectable finishes and inclusions are not confirmed.",
-        "brochureMode": "simulated-only"
+        "brochureMode": "simulated-only",
+        "provenance": {
+          "source": "the developer's brochures and project renders supplied to Haus of Estate",
+          "snapshotDate": "2026-11-05"
+        }
       }
     },
     {
@@ -925,7 +937,11 @@
         "areaLabel": "Built-up area",
         "areaSourceLabel": "The brochure labels this figure sellable area.",
         "interiorNotice": "Brochure interior illustrations. Buyer-selectable finishes and inclusions are not confirmed.",
-        "brochureMode": "simulated-only"
+        "brochureMode": "simulated-only",
+        "provenance": {
+          "source": "the developer's brochures and project renders supplied to Haus of Estate",
+          "snapshotDate": "2026-11-05"
+        }
       }
     },
     {
@@ -1334,7 +1350,11 @@
         "areaLabel": "Built-up area",
         "areaSourceLabel": "The brochure labels this figure sellable area.",
         "interiorNotice": "Brochure interior illustrations. Buyer-selectable finishes and inclusions are not confirmed.",
-        "brochureMode": "simulated-only"
+        "brochureMode": "simulated-only",
+        "provenance": {
+          "source": "the developer's brochures and project renders supplied to Haus of Estate",
+          "snapshotDate": "2026-11-05"
+        }
       }
     },
     {
@@ -1840,7 +1860,11 @@
         "areaLabel": "Built-up area",
         "areaSourceLabel": "The brochure labels this figure sellable area.",
         "interiorNotice": "Brochure interior illustrations. Buyer-selectable finishes and inclusions are not confirmed.",
-        "brochureMode": "simulated-only"
+        "brochureMode": "simulated-only",
+        "provenance": {
+          "source": "the developer's brochures and project renders supplied to Haus of Estate",
+          "snapshotDate": "2026-11-05"
+        }
       }
     },
     {
@@ -1990,9 +2014,13 @@
       },
       "display": {
         "inventoryNotice": "Public listing content sampled on 6 November 2026. Confirm current availability with sales.",
-        "imageNotice": "AFTER images are AI-assisted proposed interiors, not completed renovations. Preserve BEFORE/AFTER labels and captions.",
+        "imageNotice": "AFTER images are AI-assisted proposed interiors, not completed renovations.",
         "areaLabel": "Approximate gross internal floor area",
-        "brochureMode": "not-supplied"
+        "brochureMode": "not-supplied",
+        "provenance": {
+          "source": "Haus of Estate's published listing",
+          "snapshotDate": "2026-11-06"
+        }
       }
     }
   ]

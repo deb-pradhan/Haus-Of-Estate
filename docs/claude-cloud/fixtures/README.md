@@ -22,7 +22,7 @@ Florence facts and image associations come from the prepared property snapshot d
 
 ## Adapting the fixture
 
-Read the JSON's `properties` array. Each entry contains `document` (property fields), `media.hero` / `media.gallery` (resolved image URLs), and `display` (notices and labels). Design and floor-plan images also have resolved `src`, `alt`, dimensions and labels. Reuse existing property/detail components through an adapter rather than inventing a second production content model. Never feed these showcase IDs into a production write/import script.
+Read the JSON's `properties` array. Each entry contains `document` (property fields), `media.hero` / `media.gallery` (resolved image URLs), and `display` (notices and labels). `display.provenance` names where a record's facts come from and the date of the snapshot (`source`, `snapshotDate`); show it beside the facts. It records the snapshot date only: the brochures' own publication dates are not known and must not be implied. Design and floor-plan images also have resolved `src`, `alt`, dimensions and labels. Reuse existing property/detail components through an adapter rather than inventing a second production content model. Never feed these showcase IDs into a production write/import script.
 
 The fixture needs no Sanity token, local drive paths or image download step. Allow image requests to `cdn.sanity.io`; the existing Next image configuration already permits it. Images remain dependent on the external CDN and may need replacement if an asset is later removed.
 

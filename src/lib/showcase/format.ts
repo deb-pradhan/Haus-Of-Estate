@@ -1,15 +1,23 @@
+import { formatAreaRangeWithMetric, formatAreaWithMetric, formatSquareFeet, formatSquareFeetRange } from '@/lib/format-area'
 import type { ShowcaseDesign } from './fixture'
 
 /** Client-safe presentation helpers shared by server views and the design explorer. */
 
-const areaFormatter = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 0 })
-
 export function formatArea(value: number): string {
-  return `${areaFormatter.format(value)} sq ft`
+  return formatSquareFeet(value)
+}
+
+/** Source figure with its metric conversion, for places with room for both. */
+export function formatAreaDual(value: number): string {
+  return formatAreaWithMetric(value)
 }
 
 export function formatAreaRange(min: number, max: number): string {
-  return min === max ? formatArea(min) : `${areaFormatter.format(min)}–${areaFormatter.format(max)} sq ft`
+  return formatSquareFeetRange(min, max)
+}
+
+export function formatAreaRangeDual(min: number, max: number): string {
+  return formatAreaRangeWithMetric(min, max)
 }
 
 /** "4-, 5- and 6-bedroom" from a set of collections, so counts are never read as a bedroom number. */

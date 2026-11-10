@@ -94,6 +94,8 @@ for (const viewport of viewports) {
       }
     }
   }
+  // A failed expectation fails its step, and so the whole audit.
+  const expectThat = (condition, message) => { if (!condition) throw new Error(`expected ${message}`) }
   const step = async (name, fn) => {
     try { await fn() } catch (error) { failures.push({ step: name, error: String(error).split('\n')[0] }); console.error(`[${vp}] ${name} failed:`, String(error).split('\n')[0]) }
   }
@@ -125,7 +127,18 @@ for (const viewport of viewports) {
     await audit(page, '2-catalogue-filtered', record)
     record['2-catalogue-filtered'].url = page.url()
     record['2-catalogue-filtered'].status = await page.locator('p[role="status"]').first().textContent()
+    // The visible heading states the count, and each choice says what it would leave.
+    record['2-catalogue-filtered'].heading = await page.locator('#results-title').textContent()
+    expectThat(/^2 homes match$/.test(record['2-catalogue-filtered'].heading ?? ''), `a "2 homes match" heading, got "${record['2-catalogue-filtered'].heading}"`)
+    record['2-catalogue-filtered'].typeOption = await page.locator('select[name="type"] option[value="Townhouse"]').textContent()
+    expectThat(record['2-catalogue-filtered'].typeOption === 'Townhouse (2)', `the Townhouse option to read "Townhouse (2)", got "${record['2-catalogue-filtered'].typeOption}"`)
+    expectThat((await page.locator('form[role="search"] button[type="submit"]').textContent())?.includes('Show 2 homes'), 'the search button to say "Show 2 homes"')
     await shot(page, `${vp}-02-catalogue-filtered.png`)
+    await page.getByRole('link', { name: 'Largest first' }).click()
+    await page.waitForURL((url) => url.searchParams.get('sort') === 'size-desc' && url.searchParams.get('type') === 'Townhouse')
+    record['2-catalogue-filtered'].sortedHeading = await page.locator('#results-title').textContent()
+    expectThat(record['2-catalogue-filtered'].sortedHeading === record['2-catalogue-filtered'].heading, 'sorting to keep the same homes')
+    expectThat(await page.getByRole('link', { name: 'Largest first' }).getAttribute('aria-current') === 'true', 'the chosen sort to be marked current')
   })
 
   await step('2b-catalogue-empty', async () => {
@@ -133,6 +146,10 @@ for (const viewport of viewports) {
     await waitImages()
     await audit(page, '2b-catalogue-empty', record)
     record['2b-catalogue-empty'].status = await page.locator('p[role="status"]').first().textContent()
+    // The empty state says what each wider search would show, and the form blocks the dead end.
+    record['2b-catalogue-empty'].widenings = await page.locator('ul[aria-label="Wider searches"] a').allTextContents()
+    expectThat(record['2b-catalogue-empty'].widenings.includes('Without 5+ bedrooms · 1 home'), `a counted "Without 5+ bedrooms · 1 home" suggestion, got ${JSON.stringify(record['2b-catalogue-empty'].widenings)}`)
+    expectThat(await page.locator('select[name="type"] option[value="Villa"]').evaluate((option) => option.disabled), 'the Villa option to be unavailable for a United Kingdom search')
     await shot(page, `${vp}-02b-catalogue-empty.png`)
     await page.getByRole('link', { name: 'Remove filter 5+ bedrooms' }).click()
     await page.waitForURL(/country=United\+Kingdom$/)
@@ -145,6 +162,10 @@ for (const viewport of viewports) {
     await waitImages()
     await audit(page, '3-community', record)
     record['3-community'].sections = await page.evaluate(() => [...document.querySelectorAll('section[id]')].map((s) => s.id))
+    record['3-community'].provenance = await page.locator('[data-provenance]').first().textContent()
+    expectThat(/Content snapshot 5 November 2026/.test(record['3-community'].provenance ?? ''), `a dated source line, got "${record['3-community'].provenance}"`)
+    record['3-community'].illustrationLabels = await page.getByText('Illustration', { exact: true }).count()
+    expectThat(record['3-community'].illustrationLabels >= 10, `every render labelled in its frame, found ${record['3-community'].illustrationLabels}`)
     await shot(page, `${vp}-03-community.png`)
   })
 
@@ -153,6 +174,20 @@ for (const viewport of viewports) {
     await page.waitForURL(/azizi-florence-4-bedroom-townhouses/)
     await waitImages()
     await audit(page, '4-collection', record)
+    // Gallery, image count and facts share the first screen; the count follows the image shown.
+    const firstScreen = await page.evaluate(() => {
+      const top = (selector) => document.querySelector(selector)?.getBoundingClientRect().top ?? Infinity
+      return { count: top('[data-image-count]'), facts: top('#collection-title ~ * dl, section[aria-labelledby="collection-title"] dl'), height: innerHeight }
+    })
+    record['4-collection'].firstScreen = firstScreen
+    expectThat(firstScreen.count < firstScreen.height, 'the image count in the first screen')
+    expectThat(firstScreen.facts < firstScreen.height, `the facts block in the first screen (top ${Math.round(firstScreen.facts)} of ${firstScreen.height})`)
+    const counter = page.locator('[data-image-count]').first()
+    record['4-collection'].imageCount = await counter.textContent()
+    expectThat(/^Image 1 of \d+$/.test(record['4-collection'].imageCount ?? ''), `an "Image 1 of N" count, got "${record['4-collection'].imageCount}"`)
+    await page.getByRole('group', { name: 'Collection images' }).getByRole('button').nth(1).click()
+    expectThat(/^Image 2 of \d+$/.test((await counter.textContent()) ?? ''), 'the count to follow the image shown')
+    expectThat(await page.locator('[data-provenance]').count() >= 1, 'a source line on the collection page')
     await shot(page, `${vp}-04-collection.png`)
   })
 
@@ -172,6 +207,11 @@ for (const viewport of viewports) {
     await page.getByRole('button', { name: 'Novoli - 4-home row - corner' }).click()
     await page.waitForFunction(() => new URL(location.href).searchParams.get('design') === 'novoli-4-home-corner')
     record['5-design'].withheld = await page.locator('#designs').textContent().then((t) => /Withheld/.test(t ?? ''))
+    record['5-design'].nextSteps = await page.locator('[aria-label^="Next steps for"] a').allTextContents()
+    expectThat(record['5-design'].nextSteps.length === 3, `three next steps for the design, got ${JSON.stringify(record['5-design'].nextSteps)}`)
+    const plans = await page.locator('#designs figure:has(a:has-text("Open full size"))').count()
+    record['5-design'].plansWithNote = await page.locator('#designs [data-plan-note]').count()
+    expectThat(plans > 0 && record['5-design'].plansWithNote === plans, `a measurement note under each of ${plans} plans, found ${record['5-design'].plansWithNote}`)
     await page.getByRole('button', { name: 'Spada - 4-home row - corner' }).click()
     await page.waitForFunction(() => new URL(location.href).searchParams.get('design') === 'spada-4-home-corner')
   })
@@ -188,7 +228,11 @@ for (const viewport of viewports) {
     await page.getByRole('button', { name: 'Preview the brochure email' }).click()
     await page.waitForSelector('[role="alert"]')
     record['6-request-form'].errors = await page.locator('[role="alert"] li').allTextContents()
-    record['6-request-form'].focusedAfterError = await page.evaluate(() => document.activeElement?.id || document.activeElement?.tagName)
+    record['6-request-form'].focusedAfterError = await page.evaluate(() => document.activeElement?.hasAttribute('data-error-summary') ? 'error-summary' : document.activeElement?.id || document.activeElement?.tagName)
+    expectThat(record['6-request-form'].focusedAfterError === 'error-summary', `focus on the error summary, got ${record['6-request-form'].focusedAfterError}`)
+    record['6-request-form'].errorLinks = await page.locator('[data-error-summary] a').count()
+    expectThat(record['6-request-form'].errorLinks >= 3, 'each problem to link to its field')
+    expectThat(await page.getByText('(required)').count() >= 3, 'required fields to be marked')
     await shot(page, `${vp}-07-request-errors.png`)
   })
 
@@ -254,6 +298,12 @@ for (const viewport of viewports) {
     await waitImages()
     await audit(page, '9-london', record)
     record['9-london'].price = await page.locator('text=£500,000').first().textContent()
+    record['9-london'].imageLink = await page.locator('a[data-image-count]').textContent()
+    expectThat(/Image 1 of \d+ · view all \d+ images/.test(record['9-london'].imageLink ?? ''), `a counted link to every image, got "${record['9-london'].imageLink}"`)
+    expectThat(await page.getByText('Existing view and AI concept', { exact: true }).count() >= 1, 'the concept board labelled in its frame')
+    expectThat(/Content snapshot 6 November 2026/.test((await page.locator('[data-provenance]').first().textContent()) ?? ''), 'a dated source line on the existing home')
+    record['9-london'].nextSteps = await page.locator('[aria-label="Next steps for this home"] a').allTextContents()
+    expectThat(record['9-london'].nextSteps.length === 2, 'a viewing request and a question for the existing home')
     await shot(page, `${vp}-10-london.png`)
   })
 

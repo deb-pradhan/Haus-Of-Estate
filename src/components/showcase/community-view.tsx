@@ -1,10 +1,11 @@
 import Link from 'next/link'
-import { ArrowRight, Check } from 'lucide-react'
+import { ArrowRight, Check, Mail } from 'lucide-react'
 import { showcasePath } from '@/lib/showcase/access'
+import { SHOWCASE_SALES_EMAIL, showcaseMailto } from '@/lib/showcase/contact'
 import type { ShowcaseCommunity } from '@/lib/showcase/fixture'
 import { bedroomList } from '@/lib/showcase/format'
 import { CollectionCard } from './cards'
-import { Breadcrumbs, FactGrid, FixtureImage, Notice, SectionHeading, TextBlocks } from './primitives'
+import { Breadcrumbs, FactGrid, FixtureImage, Notice, ProvenanceLine, SectionHeading, TextBlocks } from './primitives'
 
 function bedroomSpan(collections: ShowcaseCommunity['collections']): string {
   return bedroomList(collections)
@@ -29,10 +30,7 @@ export function CommunityView({ community }: { community: ShowcaseCommunity }) {
           <div className="relative aspect-[4/3] sm:aspect-[16/9] lg:aspect-[21/9]">
             <FixtureImage image={overview.media.hero} sizes="(min-width: 1280px) 1216px, 100vw" preload />
           </div>
-          <figcaption className="flex flex-wrap items-center justify-between gap-2 bg-surface px-4 py-2.5 text-xs text-muted-foreground">
-            <span>{overview.media.hero.alt}</span>
-            <span className="font-medium text-estate-700">Artist’s impression</span>
-          </figcaption>
+          <figcaption className="bg-surface px-4 py-2.5 text-xs text-muted-foreground">{overview.media.hero.alt}</figcaption>
         </figure>
         <div className="mt-8 grid gap-8 lg:grid-cols-[1.4fr_1fr] lg:gap-12">
           <div>
@@ -52,6 +50,7 @@ export function CommunityView({ community }: { community: ShowcaseCommunity }) {
               { label: 'Home designs', value: `${community.designCount} brochure designs` },
               ...groups.map((group) => ({ label: group.title, value: `${bedroomSpan(group.collections)} designs`, note: `${group.collections.length} ${group.collections.length === 1 ? 'collection' : 'collections'}, one per bedroom count` })),
             ]} />
+            <ProvenanceLine provenance={overview.display.provenance} />
           </div>
         </div>
       </section>
@@ -108,7 +107,7 @@ export function CommunityView({ community }: { community: ShowcaseCommunity }) {
       {overview.media.gallery.length > 0 && (
         <section id="gallery" className="scroll-mt-24 px-4 pb-16 md:px-6" aria-labelledby="gallery-title">
           <div className="mx-auto max-w-7xl">
-            <SectionHeading id="gallery-title" eyebrow="Renders" title="Around the community" intro="Architectural renders supplied for the community. They illustrate the designs and are not photographs of completed homes." />
+            <SectionHeading id="gallery-title" eyebrow={`${overview.media.gallery.length} illustrations`} title="Around the community" intro="Architectural renders supplied for the community. They illustrate the designs and are not photographs of completed homes." />
             <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {overview.media.gallery.map((image) => (
                 <li key={image.src}>
@@ -121,8 +120,10 @@ export function CommunityView({ community }: { community: ShowcaseCommunity }) {
             </ul>
             <div className="mt-10 flex flex-col gap-3 sm:flex-row">
               {groups[0] && <a href={`#${groups[0].id}`} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-estate-700 px-6 text-sm font-semibold text-white hover:bg-estate-600">Back to the collections <ArrowRight aria-hidden className="size-4" /></a>}
+              <a href={showcaseMailto(`Question — ${overview.title}`)} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-estate-700/25 px-6 text-sm font-semibold text-estate-700 hover:bg-estate-700/5"><Mail aria-hidden className="size-4" /> Email a question</a>
               <Link href={showcasePath('/properties')} className="inline-flex min-h-12 items-center justify-center rounded-xl border border-estate-700/25 px-6 text-sm font-semibold text-estate-700 hover:bg-estate-700/5">Back to search</Link>
             </div>
+            <p className="mt-3 text-xs leading-5 text-muted-foreground">The email link opens your own email app addressed to {SHOWCASE_SALES_EMAIL}; the showcase itself sends nothing.</p>
           </div>
         </section>
       )}

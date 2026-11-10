@@ -1,27 +1,58 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronRight, ExternalLink, Info } from 'lucide-react'
-import type { ShowcaseImage, ShowcaseTextBlock } from '@/lib/showcase/fixture'
+import { DEFAULT_PLAN_NOTE, formatSnapshotDate, showcaseImageBadge, showcaseImageBadgePosition } from '@/lib/showcase/captions'
+import type { ShowcaseImage, ShowcaseProvenance, ShowcaseTextBlock } from '@/lib/showcase/fixture'
 import { cn } from '@/lib/utils'
 
-/** Fixture images are existing CDN derivatives, so they render without the optimizer. */
-export function FixtureImage({ image, sizes, className, fit = 'cover', preload = false }: {
+/** The in-frame label for an image that is not a photograph. */
+export function ImageBadge({ children, position = 'bottom', className }: { children: React.ReactNode; position?: 'top' | 'bottom'; className?: string }) {
+  return (
+    <span className={cn('pointer-events-none absolute left-2.5 z-10 rounded-md bg-surface/95 px-2.5 py-1 text-[11px] font-semibold leading-4 text-estate-700 shadow-sm', position === 'top' ? 'top-2.5' : 'bottom-2.5', className)}>
+      {children}
+    </span>
+  )
+}
+
+/**
+ * Fixture images are existing CDN derivatives, so they render without the
+ * optimizer. Renders and concepts are labelled inside the frame by default;
+ * pass `badge` to reword the label, or `false` for a thumbnail too small to carry one.
+ */
+export function FixtureImage({ image, sizes, className, fit = 'cover', preload = false, badge }: {
   image: ShowcaseImage
   sizes: string
   className?: string
   fit?: 'cover' | 'contain'
   preload?: boolean
+  badge?: string | false
 }) {
+  const label = badge === false ? undefined : badge ?? showcaseImageBadge(image)
   return (
-    <Image
-      src={image.src}
-      alt={image.alt}
-      fill
-      unoptimized
-      preload={preload}
-      sizes={sizes}
-      className={cn(fit === 'contain' ? 'object-contain' : 'object-cover', className)}
-    />
+    <>
+      <Image
+        src={image.src}
+        alt={image.alt}
+        fill
+        unoptimized
+        preload={preload}
+        sizes={sizes}
+        className={cn(fit === 'contain' ? 'object-contain' : 'object-cover', className)}
+      />
+      {label && <ImageBadge position={showcaseImageBadgePosition(image)}>{label}</ImageBadge>}
+    </>
+  )
+}
+
+/** Where the facts on a page come from and when they were sampled. */
+export function ProvenanceLine({ provenance, className }: { provenance?: ShowcaseProvenance; className?: string }) {
+  if (!provenance) return null
+  return (
+    <p data-provenance className={cn('text-xs leading-5 text-muted-foreground', className)}>
+      <span className="font-semibold text-estate-700">Source.</span>{' '}
+      Facts as published in {provenance.source}. Content snapshot{' '}
+      <time dateTime={provenance.snapshotDate}>{formatSnapshotDate(provenance.snapshotDate)}</time>.
+    </p>
   )
 }
 
@@ -98,7 +129,7 @@ export function PlanFigure({ plan, headingLevel: Heading = 'h4' }: { plan: Showc
           Open full size <ExternalLink aria-hidden className="size-3.5" />
           <span className="sr-only">: {plan.label ?? plan.alt} (opens in a new tab)</span>
         </a>
-        {plan.caption && <p className="basis-full text-sm leading-6 text-muted-foreground">{plan.caption}</p>}
+        <p data-plan-note className="basis-full text-sm leading-6 text-muted-foreground">{plan.caption ?? DEFAULT_PLAN_NOTE}</p>
       </figcaption>
     </figure>
   )
