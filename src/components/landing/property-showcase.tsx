@@ -73,6 +73,28 @@ function PropertyCard({
 }) {
   const conceptImage = isConceptMedia(property.featuredImage);
   const mediaCaption = propertyMediaCaption(property.featuredImage);
+  const statusLabel = property.completionStatus
+    ? COMPLETION_LABEL[property.completionStatus] ?? property.completionStatus
+    : property.availability?.includes("ready") ? "Ready" : undefined;
+  const saleRent = saleRentLabel(property.listingType);
+  // Badges sit over photographs but below concept boards, whose BEFORE/AFTER
+  // labels must stay readable.
+  const badges = (statusLabel || saleRent) ? (
+    <div className={conceptImage
+      ? "flex flex-wrap items-center gap-1.5 px-4 pt-3"
+      : "absolute left-3 top-3 flex max-w-[calc(100%-4.25rem)] flex-wrap items-center gap-1.5"}>
+      {statusLabel && (
+        <span className="rounded-full bg-surface/95 px-3 py-1 text-[11px] font-semibold text-estate-700 shadow-sm">
+          {statusLabel}
+        </span>
+      )}
+      {saleRent && (
+        <span className="rounded-full bg-estate-700/90 px-3 py-1 text-[11px] font-semibold text-white shadow-sm">
+          {saleRent}
+        </span>
+      )}
+    </div>
+  ) : null;
 
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-estate-700/5">
@@ -100,20 +122,9 @@ function PropertyCard({
               </div>
             )}
             {property.featuredImage && <PropertyPhotoBranding enabled={property.showHausLogo} />}
-            <div className="absolute left-3 top-3 flex max-w-[calc(100%-4.25rem)] flex-wrap items-center gap-1.5">
-              {property.completionStatus && (
-                <span className="rounded-full bg-surface/95 px-3 py-1 text-[11px] font-semibold text-estate-700 shadow-sm">
-                  {COMPLETION_LABEL[property.completionStatus] ??
-                    property.completionStatus}
-                </span>
-              )}
-              {saleRentLabel(property.listingType) && (
-                <span className="rounded-full bg-estate-700/90 px-3 py-1 text-[11px] font-semibold text-white shadow-sm">
-                  {saleRentLabel(property.listingType)}
-                </span>
-              )}
-            </div>
+            {!conceptImage && badges}
           </div>
+          {conceptImage && badges}
           {mediaCaption && (
             <figcaption className="border-b border-border px-4 py-2 text-xs leading-relaxed text-muted-foreground">
               {mediaCaption}

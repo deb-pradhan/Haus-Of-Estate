@@ -5,6 +5,7 @@ import { Suspense } from 'react'
 import { ChevronRight, Clock, CalendarDays } from 'lucide-react'
 import { COMPANY_IDENTITY } from '@/lib/company-identity'
 import { sanityFetch } from '@/sanity/live'
+import { resolveBlogCover, blogCoverQuality } from '@/lib/blog-cover'
 import { POST_BY_SLUG_QUERY, RELATED_POSTS_QUERY, SEO_QUERY } from '@/sanity/queries'
 import {
   PortableTextRenderer,
@@ -40,7 +41,7 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
 
   const title = data.seo?.seoTitle || data.title
   const description = data.seo?.seoDesc || data.subtitle || ''
-  const images = [data.image || DEFAULT_OG_IMAGE]
+  const images = [resolveBlogCover(slug, data.image || DEFAULT_OG_IMAGE, title).url]
 
   return {
     title,
@@ -73,7 +74,7 @@ export async function generateStaticParams() {
 function getPostImageUrl(post: Post): { url: string; alt: string } {
   if (post.featuredImage) {
     const sanityUrl = post.featuredImage?.url || post.featuredImage?.asset?.url
-    if (sanityUrl) return { url: sanityUrl, alt: post.featuredImage.alt || post.title }
+    if (sanityUrl) return resolveBlogCover(post.slug, sanityUrl, post.featuredImage.alt || post.title)
   }
   const fallbackUrl = FALLBACK_IMAGES[post.slug]
   if (fallbackUrl) return { url: fallbackUrl, alt: FALLBACK_ALTS[post.slug] || post.title }
@@ -113,7 +114,7 @@ async function PostContent({ slug }: { slug: string }) {
     '@type': 'BlogPosting',
     headline: post.title,
     ...(post.subtitle ? { description: post.subtitle } : {}),
-    ...(imageUrl ? { image: [imageUrl] } : {}),
+    ...(imageUrl ? { image: [new URL(imageUrl, 'https://hausofestate.com').href] } : {}),
     ...(post.publishedAt
       ? { datePublished: post.publishedAt, dateModified: post.publishedAt }
       : {}),
@@ -218,9 +219,10 @@ async function PostContent({ slug }: { slug: string }) {
           <div className="relative mt-8 aspect-video overflow-hidden rounded-2xl bg-stone-100 md:rounded-3xl">
             <Image
               src={imageUrl}
+              quality={blogCoverQuality(imageUrl)}
               alt={alt}
               fill
-              priority
+              preload
               sizes="(max-width: 1152px) 100vw, 1152px"
               className="object-contain"
             />

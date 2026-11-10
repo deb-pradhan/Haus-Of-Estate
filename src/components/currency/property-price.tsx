@@ -1,19 +1,16 @@
 "use client";
 
 import { convertPrice, formatPriceNumber, isDisplayCurrency, resolvePriceQuote, sourcePriceText } from "@/lib/currency";
+import { DirhamSymbol, PropertyPriceText } from "@/components/properties/PropertyPriceText";
 import { useCurrency } from "./currency-provider";
 
-export function DirhamSymbol() {
-  // The viewBox removes only transparent canvas around CBUAE's original PNG.
-  // Its outline and proportions are unchanged; the source asset stays intact.
-  // Give the artwork a small descent to align with the numerals. Both metrics
-  // scale with the text, including the smaller original-price conversion note.
-  return <><span className="sr-only">AED </span><svg viewBox="191 190 368 322" aria-hidden="true" className="mx-[0.15em] inline-block h-[0.8em] w-auto align-[-0.1em] [.text-white_&]:invert"><image href="/currency/uae-dirham.png" width="700" height="700" /></svg></>;
-}
+// One implementation of the dirham artwork and supplied-price text, shared with
+// server components.
+export { DirhamSymbol };
 
 // Replace only the ISO label before a numeral; never infer an amount from copy.
 export function OriginalPriceText({ text }: { text: string }) {
-  return <>{text.split(/\bAED\s*(?=\d)/).map((part, index) => <span key={index} className="lining-nums">{index > 0 && <DirhamSymbol />}{part}</span>)}</>;
+  return <PropertyPriceText text={text} />;
 }
 
 export function PropertyPrice({ amount, currency: sourceCurrency, displayText, period, fallback = "Price on application", prefix = "" }: {

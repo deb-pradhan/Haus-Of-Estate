@@ -20,6 +20,7 @@ import { isLocalCataloguePreviewEnabled, loadCataloguePreviewGroups } from '@/li
 import { groupDevelopmentResults, type PropertyDevelopment } from '@/lib/property-developments'
 import { isConceptMedia, propertyMediaCaption, type PropertyImageMetadata } from '@/lib/property-media'
 import { PropertyDevelopmentCard } from './property-development'
+import { matchesPropertyBedrooms, type PropertyHomeType } from '@/lib/property-home-types'
 import {
   type Category,
   type Availability,
@@ -49,6 +50,7 @@ interface PropertyCard extends PropertyPricing {
   listingType?: string[]
   unitType: string
   bedrooms?: number
+  homeTypes?: PropertyHomeType[]
   priceDisplay?: string
   rentPriceDisplay?: string
   sizeDisplay?: string
@@ -158,9 +160,8 @@ export async function PropertyListing({
     if (!matchesPropertySearch(p, { q, minPrice, maxPrice, currency, intent })) return false
     if (!matchesPropertyLocation(p, { country, city, area, location })) return false
     if (minBeds !== null) {
-      if (typeof p.bedrooms !== 'number') return false
-      if (minBeds === 0 && p.bedrooms !== 0) return false
-      if (p.bedrooms < minBeds) return false
+      // A development without one bedroom count matches through its supplied home types.
+      if (!matchesPropertyBedrooms(p, minBeds)) return false
     }
     return true
   })
@@ -413,6 +414,28 @@ export async function PropertyListing({
                   <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                     {items.map((p) => {
                       const badge = saleRentLabel(p.listingType)
+                      const conceptImage = isConceptMedia(p.featuredImage)
+                      const statusLabel = p.completionStatus
+                        ? COMPLETION_LABEL[p.completionStatus] ?? p.completionStatus
+                        : p.availability?.includes('ready') ? 'Ready' : undefined
+                      // Badges sit over photographs but below concept boards, whose
+                      // BEFORE/AFTER labels must stay readable.
+                      const badges = (statusLabel || badge) ? (
+                        <div className={conceptImage
+                          ? 'flex flex-wrap items-center gap-1.5 px-5 pt-3'
+                          : 'absolute left-3 top-3 flex max-w-[calc(100%-4.25rem)] flex-wrap items-center gap-1.5'}>
+                          {statusLabel && (
+                            <span className="rounded-full bg-surface/95 px-3 py-1 text-[11px] font-semibold text-estate-700 shadow-sm">
+                              {statusLabel}
+                            </span>
+                          )}
+                          {badge && (
+                            <span className="rounded-full bg-estate-700/90 px-3 py-1 text-[11px] font-semibold text-white shadow-sm">
+                              {badge}
+                            </span>
+                          )}
+                        </div>
+                      ) : null
                       const cardRentContext =
                         rentContextGlobal ||
                         (p.listingType?.includes('rent') &&
@@ -446,20 +469,9 @@ export async function PropertyListing({
                                 </div>
                               )}
                               {p.featuredImage && <PropertyPhotoBranding enabled={p.showHausLogo} />}
-                              <div className="absolute left-3 top-3 flex max-w-[calc(100%-4.25rem)] flex-wrap items-center gap-1.5">
-                                {p.completionStatus && (
-                                  <span className="rounded-full bg-surface/95 px-3 py-1 text-[11px] font-semibold text-estate-700 shadow-sm">
-                                    {COMPLETION_LABEL[p.completionStatus] ??
-                                      p.completionStatus}
-                                  </span>
-                                )}
-                                {badge && (
-                                  <span className="rounded-full bg-estate-700/90 px-3 py-1 text-[11px] font-semibold text-white shadow-sm">
-                                    {badge}
-                                  </span>
-                                )}
-                              </div>
+                              {!conceptImage && badges}
                             </div>
+                            {conceptImage && badges}
                             {propertyMediaCaption(p.featuredImage) && <p className="border-b border-border px-5 py-3 text-sm leading-relaxed text-estate-700">{propertyMediaCaption(p.featuredImage)}</p>}
                             <div className="flex flex-1 flex-col p-5">
                               <p className="font-serif text-[11px] font-semibold uppercase tracking-widest text-gold-500">

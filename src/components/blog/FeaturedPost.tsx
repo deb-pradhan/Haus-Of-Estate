@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
 import { COMPANY_IDENTITY } from '@/lib/company-identity'
+import { resolveBlogCover, blogCoverQuality } from '@/lib/blog-cover'
 import { blogThumbnailPosition } from '@/lib/blog-thumbnail'
 import { FALLBACK_IMAGES, FALLBACK_ALTS } from '@/sanity/fallbackImages'
 import { SaveContentButton } from '@/components/saved-content'
@@ -29,7 +30,7 @@ interface FeaturedPostProps {
 function getImageUrl(post: FeaturedPostProps['post']): { url: string; alt: string } {
   if (post.featuredImage) {
     const sanityUrl = post.featuredImage?.url || post.featuredImage?.asset?.url
-    if (sanityUrl) return { url: sanityUrl, alt: post.featuredImage.alt || post.title }
+    if (sanityUrl) return resolveBlogCover(post.slug, sanityUrl, post.featuredImage.alt || post.title)
   }
   const fallbackUrl = FALLBACK_IMAGES[post.slug]
   if (fallbackUrl) return { url: fallbackUrl, alt: FALLBACK_ALTS[post.slug] || post.title }
@@ -68,6 +69,7 @@ export function FeaturedPost({ post }: FeaturedPostProps) {
           {imageUrl && (
             <Image
               src={imageUrl}
+              quality={blogCoverQuality(imageUrl)}
               alt={alt}
               fill
               priority

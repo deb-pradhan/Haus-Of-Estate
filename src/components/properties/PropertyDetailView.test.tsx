@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { createElement, type ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -389,7 +391,8 @@ describe('shared property details', () => {
     expect(html).toContain('Local draft preview')
     expect(html).toContain('Awaiting confirmation')
     expect(html).toContain('View the Florence community overview')
-    expect(html).toContain('Community amenities')
+    // Off-plan facilities are headed as planned, matching the live site.
+    expect(html).toContain('Planned community amenities')
     expect(html).toContain(media.hero.src)
     expect(html).toContain(media.gallery[0].src)
     expect(html).toContain('Enquiries disabled in preview')
@@ -510,3 +513,66 @@ describe('shared property details', () => {
     expect(controls.lead).toHaveBeenCalledTimes(1)
   })
 })
+
+describe('details carried over from the live site', () => {
+  it('renders the Kore schedule, target date and qualified payment plan without invented imagery or figures', () => {
+    const draft = JSON.parse(readFileSync(join(process.cwd(), 'scripts/kore-wellness-residence.staging-draft.ndjson'), 'utf8'))
+    const kore: PropertyDetail = { ...draft, _id: 'kore-wellness-residence', slug: draft.slug.current }
+    const html = renderToStaticMarkup(<PropertyDetailView property={kore} media={{ gallery: [] }} />)
+    expect(html).toMatch(/<table[^>]*table-fixed/)
+    for (const figure of ['406', '669', '1,406', '679,000', '1,100,000', '1,550,000']) expect(html).toContain(figure)
+    expect(html).toContain('Starting size')
+    expect(html).toContain('Starting price')
+    expect(html).toContain('Target completion')
+    expect(html).toContain('Q4 2028')
+    expect(html).toContain('Payment plans')
+    expect(html).toContain('10% price increase')
+    expect(html).toContain('Project imagery unavailable')
+    expect(html).not.toMatch(/<img|>Bedrooms<|>Size<|>Floor area<|>Payment<|Built-up area|On application/)
+  })
+
+  it('labels a ready home as Ready and names its measured area, without planned-development wording', () => {
+    const london: PropertyDetail = {
+      _id: 'north-london', title: 'Three-bedroom terraced house in North London', slug: 'north-london-three-bedroom-property',
+      community: 'North London', city: 'London', country: 'United Kingdom', unitType: 'Terraced House',
+      availability: ['ready'], listingType: ['sale'], bedrooms: 3, priceDisplay: '£500,000',
+      sizeDisplay: 'Approx. Gross Internal Floor Area: 889.9 sq ft / 82.67 m²',
+      summary: 'A three-bedroom terraced house.', amenities: ['Planned gym'],
+      floorPlans: [{ src: '/plan.jpg', alt: 'Supplied floor plan', caption: 'Measurements are approximate and for guidance only.', mediaKind: 'floor-plan' }],
+    }
+    const html = renderToStaticMarkup(<PropertyDetailView property={london} media={{ gallery: [] }} />)
+    expect(html).toContain('Terraced House · Ready')
+    expect(html).toContain('>Floor area<')
+    expect(html).toContain('£500,000')
+    expect(html).toContain('Measurements are approximate and for guidance only.')
+    expect(html).not.toMatch(/Plans and images describe a proposed development|Planned community amenities/)
+    expect(html).toContain('Planned gym')
+  })
+
+  it('identifies an off-plan home as proposed and its amenities as planned, but not a part-ready one', () => {
+    const offPlan: PropertyDetail = { ...property, _id: 'off-plan-home', amenities: ['Planned swimming pool', 'Clubhouse'] }
+    const html = renderToStaticMarkup(<PropertyDetailView property={offPlan} media={media} />)
+    expect(html).toContain('Plans and images describe a proposed development')
+    expect(html).toContain('Planned community amenities')
+    expect(html).toContain('>swimming pool<')
+    expect(html).not.toContain('Planned swimming pool')
+
+    const mixed = renderToStaticMarkup(<PropertyDetailView property={{ ...offPlan, availability: ['ready', 'off-plan'] }} media={media} />)
+    expect(mixed).not.toMatch(/Plans and images describe a proposed development|Planned community amenities/)
+  })
+
+  it('heads a mixed gallery plainly and captions only its concept image', () => {
+    const mixedMedia: PropertyMedia = { gallery: [
+      { src: '/photo.jpg', alt: 'Street view', mediaKind: 'photo' },
+      { src: '/concept.jpg', alt: 'Kitchen concept', mediaKind: 'concept' },
+    ] }
+    const html = renderToStaticMarkup(<PropertyDetailView property={{ ...property, availability: ['ready'] }} media={mixedMedia} />)
+    expect(html).toMatch(/<h2[^>]*>\s*Gallery\s*<\/h2>/)
+    expect(html.match(/AI-assisted concept; not completed works/g)).toHaveLength(1)
+
+    const concepts = renderToStaticMarkup(<PropertyDetailView property={{ ...property, availability: ['ready'] }}
+      media={{ gallery: [mixedMedia.gallery[1]] }} />)
+    expect(concepts).toMatch(/<h2[^>]*>\s*Proposed interiors\s*<\/h2>/)
+  })
+})
+

@@ -251,3 +251,49 @@ describe('property catalogue draft isolation', () => {
     expect(html).not.toContain('Clusters 1 &amp; 2')
   })
 })
+
+describe('catalogue cards carried over from the live site', () => {
+  const board = {
+    asset: { _ref: 'image-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-1600x900-jpg' }, mediaKind: 'concept-comparison',
+    alt: 'Existing view beside proposed interiors', caption: 'Panels marked AFTER are AI-assisted concepts, not completed works.',
+  }
+  const london = {
+    _id: 'london', title: 'North London house', slug: 'north-london-house', community: 'North London', city: 'London',
+    unitType: 'Terraced House', summary: 'Existing views and proposed concepts.', availability: ['ready'], listingType: ['sale'],
+    bedrooms: 3, priceDisplay: '£500,000', featuredImage: board,
+  }
+  const only = (data: unknown[]) => controls.fetch.mockImplementation(async ({ query }) => ({
+    data: query === PROPERTY_DEVELOPMENTS_QUERY ? [] : data,
+  }))
+
+  it('shows Ready beside a concept board instead of over its BEFORE/AFTER labels', async () => {
+    only([london])
+    const html = renderToStaticMarkup(await PropertyListing({ params: {} }))
+    expect(html).toContain('>Ready<')
+    expect(html).toContain(board.caption)
+    expect(html).not.toContain('absolute left-3 top-3')
+  })
+
+  it('keeps status badges over ordinary photographs and never calls an off-plan home Ready', async () => {
+    only([{ ...london, availability: ['off-plan'], completionStatus: 'off-plan', featuredImage: { ...board, mediaKind: undefined, caption: undefined } }])
+    const html = renderToStaticMarkup(await PropertyListing({ params: {} }))
+    expect(html).toContain('absolute left-3 top-3')
+    expect(html).toContain('>Off-plan<')
+    expect(html).not.toContain('>Ready<')
+  })
+
+  it('finds a mixed development by its supplied home types without inventing one bedroom count', async () => {
+    const kore = {
+      _id: 'kore', title: 'Kore by Imtiaz', slug: 'kore-wellness-residence', community: 'Dubai Land Residence Complex', city: 'Dubai',
+      unitType: 'Apartment', summary: 'Studios to two-bedroom homes.', listingType: ['sale'], availability: ['off-plan'],
+      homeTypes: [0, 1, 2].map((bedrooms) => ({
+        _key: `type-${bedrooms}`, label: bedrooms ? `${bedrooms} bedroom` : 'Studio', bedrooms,
+        startingSizeSqFt: 400 + bedrooms * 300, startingPrice: 679_000 + bedrooms * 400_000, priceCurrency: 'AED',
+      })),
+    }
+    only([kore])
+    expect(renderToStaticMarkup(await PropertyListing({ params: { beds: '2' } }))).toContain('Kore by Imtiaz')
+    expect(renderToStaticMarkup(await PropertyListing({ params: { beds: '3' } }))).not.toContain('Kore by Imtiaz')
+  })
+})
+

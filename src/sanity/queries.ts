@@ -135,11 +135,30 @@ export const ROLE_SLUGS_QUERY = `
 
 // ── Properties ────────────────────────────────────────────────────────
 
+// Never expose a draft or release version through a perspective that rewrites
+// _id to the published ID. Listings, community navigation, location options and
+// site search all use this strict guard, in Draft Mode too.
+const PUBLISHED_PROPERTY = `
+  status == "published" && !(_id in path("drafts.**")) && !(_id in path("versions.**"))
+  && !(coalesce(_originalId, _id) in path("drafts.**"))
+  && !(coalesce(_originalId, _id) in path("versions.**"))
+`
+
 // Older records pre-date listingState. Treat them as active until the
 // approval-gated taxonomy backfill has run.
-const DISCOVERABLE_PROPERTY = `
-  ${VISIBLE_EDITORIAL_DOCUMENT} &&
-  coalesce(listingState, "active") in ["active", "reserved", "under_offer"]
+const PUBLISHED_DISCOVERABLE_PROPERTY = `
+  ${PUBLISHED_PROPERTY}
+  && coalesce(listingState, "active") in ["active", "reserved", "under_offer"]
+`
+
+// Detail pages only: a published document, or the draft overlay a
+// reviewer sees in the authenticated draft perspective (where _id is the
+// published ID and _originalId names the draft). A raw draft, a raw version or
+// a release overlay never matches, whatever its workflow status.
+const VISIBLE_PROPERTY_DOCUMENT = `
+  !(_id in path("drafts.**")) && !(_id in path("versions.**"))
+  && !(coalesce(_originalId, _id) in path("versions.**"))
+  && (status == "published" || _originalId in path("drafts.**"))
 `
 
 const PROPERTY_CARD_FIELDS = `
@@ -168,6 +187,8 @@ const PROPERTY_CARD_FIELDS = `
   rentCurrency,
   rentPeriod,
   paymentPlan,
+  targetCompletion,
+  homeTypes[]{_key, label, bedrooms, startingSizeSqFt, startingPrice, priceCurrency},
   view,
   completionStatus,
   summary,
@@ -175,15 +196,6 @@ const PROPERTY_CARD_FIELDS = `
   publishedAt,
   showHausLogo,
   featuredImage
-`
-
-// Public community navigation must never reveal an unpublished parent or
-// collection, including when the caller is reviewing another document in Draft Mode.
-const PUBLISHED_DISCOVERABLE_PROPERTY = `
-  status == "published" &&
-  !(_id in path("drafts.**")) && !(_id in path("versions.**")) &&
-  !(coalesce(_originalId, _id) in path("drafts.**")) && !(coalesce(_originalId, _id) in path("versions.**")) &&
-  coalesce(listingState, "active") in ["active", "reserved", "under_offer"]
 `
 
 export const PROPERTY_DEVELOPMENTS_QUERY = `
@@ -219,7 +231,7 @@ export const SITE_SEARCH_QUERY = `
 `
 
 export const PROPERTIES_QUERY = `
-  *[_type == "property" && ${DISCOVERABLE_PROPERTY}]
+  *[_type == "property" && ${PUBLISHED_DISCOVERABLE_PROPERTY}]
     | order(featured desc, publishedAt desc) {
       ${PROPERTY_CARD_FIELDS}
     }
@@ -228,7 +240,7 @@ export const PROPERTIES_QUERY = `
 // Server-side filtered listing. Pass empty-string params to skip a filter.
 // $availability / $intent match against the array fields (membership).
 export const PROPERTIES_FILTERED_QUERY = `
-  *[_type == "property" && ${DISCOVERABLE_PROPERTY}
+  *[_type == "property" && ${PUBLISHED_DISCOVERABLE_PROPERTY}
     && ($category == "" || coalesce(category, "residential") == $category)
     && ($availability == "" || $availability in coalesce(availability, ["ready"]))
     && ($intent == "" || $intent in coalesce(listingType, ["sale"]))
@@ -239,7 +251,7 @@ export const PROPERTIES_FILTERED_QUERY = `
 `
 
 export const FEATURED_PROPERTIES_QUERY = `
-  *[_type == "property" && ${DISCOVERABLE_PROPERTY} && featured == true]
+  *[_type == "property" && ${PUBLISHED_DISCOVERABLE_PROPERTY} && featured == true]
     | order(publishedAt desc) [0...3] {
       ${PROPERTY_CARD_FIELDS}
     }
@@ -257,7 +269,7 @@ export const PROPERTY_LOCATION_OPTIONS_QUERY = `
 `
 
 export const PROPERTY_BY_SLUG_QUERY = `
-  *[_type == "property" && slug.current == $slug && ${VISIBLE_EDITORIAL_DOCUMENT}][0] {
+  *[_type == "property" && slug.current == $slug && ${VISIBLE_PROPERTY_DOCUMENT}][0] {
     ${PROPERTY_CARD_FIELDS},
     description,
     keyFeatures,
@@ -291,7 +303,7 @@ export const PROPERTY_BY_SLUG_QUERY = `
 `
 
 export const PROPERTY_SLUGS_QUERY = `
-  *[_type == "property" && ${VISIBLE_EDITORIAL_DOCUMENT} && defined(slug.current)] {
+  *[_type == "property" && ${PUBLISHED_PROPERTY} && defined(slug.current)] {
     "slug": slug.current,
     _updatedAt
   }

@@ -5,6 +5,7 @@ import { urlFor } from '@/sanity'
 import { PropertyPrice } from '@/components/currency/property-price'
 import { developmentHomeGroups, developmentStartingPrice, type DevelopmentProperty, type PropertyDevelopment } from '@/lib/property-developments'
 import type { PropertyMediaImage } from '@/lib/property-media'
+import { PropertyPriceText } from './PropertyPriceText'
 
 function developmentImage(property: DevelopmentProperty, design = false) {
   if (design && property.designImage?.src) return {
@@ -17,7 +18,14 @@ function developmentImage(property: DevelopmentProperty, design = false) {
   } : undefined
 }
 
+const SUPPLIED_PRICE = /(?:\b[A-Z]{3}|[£$€])\s?\d/
+
 function StartingPrice({ homes }: { homes: DevelopmentProperty[] }) {
+  // A single collection keeps its supplied wording, including any range or
+  // cluster scope. A scope-only note is not a price; it falls through.
+  if (homes.length === 1 && SUPPLIED_PRICE.test(homes[0].priceDisplay ?? '')) {
+    return <span className="font-serif text-estate-700"><PropertyPriceText text={homes[0].priceDisplay!} /></span>
+  }
   const price = developmentStartingPrice(homes)
   return price ? (
     <span><PropertyPrice amount={price.amount} currency={price.currency} prefix="From " />
@@ -26,12 +34,15 @@ function StartingPrice({ homes }: { homes: DevelopmentProperty[] }) {
   ) : <span className="text-sm text-muted-foreground">Pricing on enquiry</span>
 }
 
-export function PropertyDevelopmentCard({ development }: { development: PropertyDevelopment }) {
+export function PropertyDevelopmentCard({ development, basePath = '/properties' }: {
+  development: PropertyDevelopment
+  basePath?: string
+}) {
   const image = developmentImage(development)
   const groups = developmentHomeGroups(development.collections)
   return (
     <article className="group overflow-hidden rounded-2xl border border-border bg-surface shadow-sm transition-shadow hover:shadow-lg">
-      <Link href={`/properties/${development.slug}`} className="flex h-full flex-col focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-estate-700">
+      <Link href={`${basePath}/${development.slug}`} className="flex h-full flex-col focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-estate-700">
         <div className="relative aspect-[4/3] overflow-hidden bg-estate-700">
           {image ? <Image src={image.src} alt={image.alt} fill sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" className="object-cover" />
             : <Building2 aria-hidden className="absolute inset-0 m-auto h-12 w-12 text-white/40" />}
@@ -54,21 +65,23 @@ export function PropertyDevelopmentCard({ development }: { development: Property
   )
 }
 
-export function PropertyDevelopmentShowcase({ development, hero, preview = false }: {
+export function PropertyDevelopmentShowcase({ development, hero, preview = false, basePath = preview ? '/dev/property-previews' : '/properties' }: {
   development: PropertyDevelopment
   hero?: PropertyMediaImage
   preview?: boolean
+  basePath?: string
 }) {
   const image = hero ?? developmentImage(development)
   const groups = developmentHomeGroups(development.collections)
   return (
     <section className="mx-auto max-w-6xl px-4 pt-8 md:px-6 md:pt-12" aria-labelledby="development-title">
       <div className="overflow-hidden rounded-2xl border border-border bg-surface">
-        <div className="grid lg:grid-cols-[1.2fr_1fr]">
-          <div className="relative min-h-72 bg-estate-700 lg:min-h-[430px]">
-            {image ? <Image src={image.src} alt={image.alt} fill unoptimized={preview} preload sizes="(min-width: 1024px) 640px, 100vw" className="object-cover" />
+        <div>
+          <div className="relative aspect-[16/9] max-h-[520px] w-full bg-estate-700">
+            {image ? <Image src={image.src} alt={image.alt || development.title} fill unoptimized={preview} preload sizes="(min-width: 1280px) 1152px, 100vw" className="object-cover" />
               : <Building2 aria-hidden className="absolute inset-0 m-auto h-16 w-16 text-white/40" />}
           </div>
+          {hero?.caption && <p className="px-6 pt-4 text-sm leading-relaxed text-muted-foreground md:px-10">{hero.caption}</p>}
           <div className="flex flex-col justify-center p-6 md:p-10">
             <p className="text-xs uppercase tracking-[0.2em] text-gold-500">Community overview · {development.city}</p>
             <h1 id="development-title" className="mt-3 font-serif text-4xl font-medium text-estate-700 md:text-5xl">{development.title}</h1>
@@ -101,7 +114,7 @@ export function PropertyDevelopmentShowcase({ development, hero, preview = false
           <div className={`grid gap-6 md:grid-cols-2 ${homes.length > 2 ? 'lg:grid-cols-3' : ''}`}>
             {homes.map((home) => {
               const homeImage = preview ? home.designImage : developmentImage(home, true)
-              return <Link key={home._id} href={`${preview ? '/dev/property-previews' : '/properties'}/${home.slug}`} className="group overflow-hidden rounded-2xl border border-border bg-surface transition-shadow hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-estate-700">
+              return <Link key={home._id} href={`${basePath}/${home.slug}`} className="group overflow-hidden rounded-2xl border border-border bg-surface transition-shadow hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-estate-700">
                 <div className="relative aspect-[3/2] overflow-hidden bg-estate-700">
                   {homeImage ? <Image src={homeImage.src} alt={homeImage.alt || home.title} fill unoptimized={preview} sizes="(min-width: 1024px) 560px, (min-width: 768px) 50vw, 100vw" className="object-cover" />
                     : <Building2 aria-hidden className="absolute inset-0 m-auto h-10 w-10 text-white/40" />}

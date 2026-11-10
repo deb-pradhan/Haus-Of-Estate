@@ -232,6 +232,31 @@ export const property = defineType({
       description: 'e.g. "Standard", "60/40", "On handover".',
     }),
     defineField({
+      name: 'targetCompletion',
+      title: 'Target completion',
+      type: 'string',
+      description: 'Developer-supplied target only, e.g. "Q4 2028". Do not turn a target quarter into a guaranteed handover date.',
+      validation: (rule) => rule.max(80),
+    }),
+    defineField({
+      name: 'homeTypes',
+      title: 'Home types and starting figures',
+      type: 'array',
+      description: 'Optional schedule for a development offering several home types. These are starting figures, not individual available units. Keep the main Bedrooms field blank for a mixed offering.',
+      of: [defineArrayMember({
+        type: 'object', name: 'propertyHomeType',
+        fields: [
+          defineField({ name: 'label', title: 'Home type', type: 'string', validation: (rule) => rule.required().max(80) }),
+          defineField({ name: 'bedrooms', title: 'Bedrooms (0 for studio)', type: 'number', validation: (rule) => rule.required().integer().min(0).max(20) }),
+          defineField({ name: 'startingSizeSqFt', title: 'Starting size (sq ft)', type: 'number', description: 'Use the supplied measurement as stated; this does not identify plot or built-up area.', validation: (rule) => rule.required().positive() }),
+          defineField({ name: 'startingPrice', title: 'Starting price', type: 'number', validation: (rule) => rule.required().positive() }),
+          defineField({ name: 'priceCurrency', title: 'Source currency (ISO code)', type: 'string', validation: (rule) => rule.required().regex(/^[A-Z]{3}$/) }),
+        ],
+        preview: { select: { title: 'label', subtitle: 'priceCurrency' } },
+      })],
+      validation: (rule) => rule.max(20),
+    }),
+    defineField({
       name: 'bedrooms',
       title: 'Bedrooms',
       type: 'number',

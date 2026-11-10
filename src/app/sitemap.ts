@@ -3,13 +3,14 @@ import { connection } from 'next/server'
 import { getPublicSitemap } from '@/lib/public-sitemap'
 import { HAUS_SITE_ORIGIN } from '@/lib/share'
 
-export const revalidate = 60
-
 function modificationMetadata(updatedAt: string | null | undefined) {
   if (!updatedAt) return {}
   const date = new Date(updatedAt)
   return Number.isNaN(date.valueOf()) ? {} : { lastModified: date }
 }
+
+// New Sanity publications should enter the sitemap without a new deployment.
+export const revalidate = 60
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Metadata routes do not inherit the root layout's runtime boundary.

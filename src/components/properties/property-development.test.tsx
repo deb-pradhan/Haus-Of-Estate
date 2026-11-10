@@ -43,3 +43,41 @@ describe('public development presentation', () => {
     expect(html).not.toContain('Clusters')
   })
 })
+
+describe('merged live price wording and community hero', () => {
+  const villa = {
+    ...overview, _id: 'villa', title: 'Four-bedroom villas', slug: 'florence-villas', unitType: 'Villa', bedrooms: 4,
+    masterDevelopment: overview.title, priceAmount: 3_350_000, priceCurrency: 'AED',
+  }
+
+  it('keeps a single collection’s supplied range and scope instead of recomputing a starting price', () => {
+    const development = { ...overview, collections: [{ ...villa, priceDisplay: 'AED 3,350,000–5,115,000 · Clusters 1 & 2' }] }
+    const html = renderToStaticMarkup(<PropertyDevelopmentShowcase development={development} />)
+    expect(html).toContain('3,350,000–5,115,000 · Clusters 1 &amp; 2')
+    expect(html).toContain('href="/currency/uae-dirham.png"')
+    expect(html).not.toContain('Pricing on enquiry')
+  })
+
+  it('treats a scope-only note as a qualifier, never as the price', () => {
+    const development = { ...overview, collections: [{ ...villa, priceDisplay: 'Clusters 1 & 2' }] }
+    const html = renderToStaticMarkup(<PropertyDevelopmentShowcase development={development} />)
+    expect(html).toContain('From ')
+    expect(html).toContain('3,350,000')
+    expect(html).toContain('Clusters 1 &amp; 2')
+  })
+
+  it('shows one title under a wide hero with its caption, and keeps preview links inside the preview', () => {
+    const development = { ...overview, collections: [villa] }
+    const hero = { src: '/hero.jpg', alt: 'Community masterplan', caption: 'Artist’s impression of the masterplan.' }
+    const html = renderToStaticMarkup(<PropertyDevelopmentShowcase development={development} hero={hero} />)
+    expect(html.match(/<h1\b/g)).toHaveLength(1)
+    expect(html).toContain('aspect-[16/9] max-h-[520px]')
+    expect(html).toContain('Artist’s impression of the masterplan.')
+    expect(html).toContain('id="villas"')
+
+    const preview = renderToStaticMarkup(<PropertyDevelopmentShowcase development={development} preview basePath="/dev/florence-preview" />)
+    expect(preview).toContain('href="/dev/florence-preview/florence-villas"')
+    expect(renderToStaticMarkup(<PropertyDevelopmentCard development={development} basePath="/dev/florence-preview" />))
+      .toContain('href="/dev/florence-preview/azizi-florence"')
+  })
+})

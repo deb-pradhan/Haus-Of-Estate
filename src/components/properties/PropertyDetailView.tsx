@@ -14,10 +14,12 @@ import { sanityDocumentIdSchema } from '@/lib/saved-content/contracts'
 import { canonicalHausUrl } from '@/lib/share'
 import { PropertyPrice } from '@/components/currency/property-price'
 import { propertyPriceInput, type PropertyPricing } from '@/lib/currency'
-import type { PropertyDesign, PropertyInteriorScheme } from '@/lib/property-designs'
+import { preparePublicDesigns, preparePublicInteriorSchemes, type PropertyDesign, type PropertyInteriorScheme } from '@/lib/property-designs'
+import { preparePublicHomeTypes, type PropertyHomeType } from '@/lib/property-home-types'
 import { isConceptMedia, propertyMediaCaption, type PropertyImageMetadata, type PropertyMediaImage } from '@/lib/property-media'
 import { PropertyPhotoBranding } from './property-photo-branding'
 import { PropertyDesignExplorer } from './PropertyDesignExplorer'
+import { PropertyHomeTypes } from './PropertyHomeTypes'
 import { PropertyDevelopmentShowcase } from './property-development'
 import type { PropertyDevelopment } from '@/lib/property-developments'
 
@@ -45,6 +47,8 @@ export interface PropertyDetail extends PropertyPricing {
   plotSizeDisplay?: string
   priceDisplay?: string
   paymentPlan?: string
+  targetCompletion?: string
+  homeTypes?: PropertyHomeType[]
   view?: string
   completionStatus?: string
   summary: string
@@ -73,10 +77,12 @@ const COMPLETION_LABEL: Record<string, string> = {
   'completed-offplan': 'Completed & off-plan',
 }
 
-export function PropertyDetailView({ property, media, preview, draftPreview = false, development, parentDevelopment }: {
+export function PropertyDetailView({ property, media, preview, previewBasePath = '/dev/property-previews', draftPreview = false, development, parentDevelopment }: {
   property: PropertyDetail
   media: PropertyMedia
   preview?: { kind: 'development' | 'home-type' | 'property'; brochureDemo?: boolean }
+  /** Where a local draft preview lives; its breadcrumb and community links stay inside it. */
+  previewBasePath?: string
   draftPreview?: boolean
   development?: PropertyDevelopment
   parentDevelopment?: Pick<PropertyDevelopment, 'title' | 'slug'>
@@ -95,22 +101,37 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
       : `/dev/property-previews/${property.slug}/brochure-demo`
     : undefined
   const canonicalUrl = canonicalHausUrl(`/properties/${property.slug}`)
-  const hasDesigns = Boolean(property.designVariants?.length)
+  // Whitelist on the server before any design data crosses the client boundary.
+  const designs = preparePublicDesigns(property.designVariants)
+  const interiorSchemes = preparePublicInteriorSchemes(property.interiorSchemes)
+  const homeTypes = preparePublicHomeTypes(property.homeTypes)
+  const hasDesigns = designs.length > 0
+  const collection = hasDesigns || Boolean(parentDevelopment)
+  const plannedOnly = Boolean(property.availability?.includes('off-plan')) && !property.availability?.includes('ready')
+  const statusLabel = property.completionStatus
+    ? COMPLETION_LABEL[property.completionStatus] ?? property.completionStatus
+    : !development && !collection && property.availability?.includes('ready') ? 'Ready' : undefined
   const collectionStartingPrice = hasDesigns && typeof property.priceAmount === 'number' && Boolean(property.priceCurrency)
-  const firstDesign = property.designVariants?.[0]
+  // A community or collection page without a supplied price shows no price line.
+  const showPrice = Boolean(property.priceDisplay?.trim() || property.priceAmount)
+    || (!development && !collection && homeTypes.length === 0)
+  const firstDesign = designs[0]
   const hero: PropertyMediaImage | undefined = firstDesign?.images[0] ?? media.hero
   const heroCaption = propertyMediaCaption(hero)
   const individualPreview = preview?.kind === 'property'
   const breadcrumbs: { label: string; href?: string }[] = [
     { label: 'Home', href: '/' },
     { label: 'Properties', href: '/properties' },
-    ...(preview ? [{ label: 'Draft previews', href: '/dev/property-previews' }] : []),
-    ...(preview?.kind === 'home-type'
-      ? [{ label: 'Azizi Florence', href: '/dev/property-previews/azizi-florence' }]
-      : parentDevelopment ? [{ label: parentDevelopment.title, href: `/properties/${parentDevelopment.slug}` }] : []),
+    ...(preview ? [{ label: 'Draft previews', href: previewBasePath }] : []),
+    ...(parentDevelopment
+      ? [{ label: parentDevelopment.title, href: `${preview ? previewBasePath : '/properties'}/${parentDevelopment.slug}` }]
+      : preview?.kind === 'home-type'
+        ? [{ label: 'Azizi Florence', href: `${previewBasePath}/azizi-florence` }]
+        : []),
     { label: property.title },
   ]
-  const hasConceptGallery = media.gallery.some(isConceptMedia)
+  // A mixed gallery keeps its plain heading; each concept image carries its own caption.
+  const hasConceptGallery = media.gallery.length > 0 && media.gallery.every(isConceptMedia)
   const floorPlans = property.floorPlans?.filter((plan) => Boolean(plan.src)) ?? []
   const enquiryInterest =
     property.listingType?.length === 1 && property.listingType[0] === 'rent'
@@ -152,11 +173,14 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
       value: String(property.bathrooms),
     })
   }
-  facts.push({
-    icon: Maximize2,
-    label: 'Size',
-    value: hasDesigns ? 'Varies by design' : property.sizeDisplay || (preview ? 'Awaiting confirmation' : 'On application'),
-  })
+  // A schedule of home types carries its own starting sizes.
+  if (hasDesigns || property.sizeDisplay || homeTypes.length === 0) {
+    facts.push({
+      icon: Maximize2,
+      label: !hasDesigns && floorPlans.length > 0 ? 'Floor area' : 'Size',
+      value: hasDesigns ? 'Varies by design' : property.sizeDisplay || (preview ? 'Awaiting confirmation' : 'On application'),
+    })
+  }
   if (property.unitType || !individualPreview) {
     facts.push({
       icon: Building2,
@@ -185,7 +209,7 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
       value: property.unitNumber,
     })
   }
-  if (property.paymentPlan) {
+  if (property.paymentPlan && homeTypes.length === 0) {
     facts.push({
       icon: Check,
       label: 'Payment',
@@ -240,8 +264,8 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
       </div>
 
       {/* Hero image */}
-      {development ? <PropertyDevelopmentShowcase development={development} hero={hero} preview={Boolean(preview)} /> : <>
-      <div className="relative aspect-[16/9] max-h-[460px] w-full overflow-hidden bg-estate-700">
+      {development ? <PropertyDevelopmentShowcase development={development} hero={hero} preview={Boolean(preview)} basePath={preview ? previewBasePath : '/properties'} /> : <>
+      <div className={`relative w-full overflow-hidden bg-estate-700 ${hero ? 'aspect-[16/9] max-h-[460px]' : 'h-36 sm:h-44'}`}>
         {hero ? (
           <Image
             src={hero.src}
@@ -253,8 +277,9 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
             unoptimized={Boolean(preview)}
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-estate-600 to-estate-800">
-            <Building2 className="h-16 w-16 text-white/25" />
+          <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-gradient-to-br from-estate-600 to-estate-800 px-4 text-white/80">
+            <Building2 aria-hidden="true" className="h-10 w-10" />
+            <p className="text-sm">Project imagery unavailable</p>
           </div>
         )}
         {hero && <PropertyPhotoBranding enabled={property.showHausLogo} />}
@@ -274,9 +299,7 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
             {!development && <>
             <p className="font-serif text-xs font-medium uppercase tracking-[0.22em] text-gold-500">
               {property.unitType || (individualPreview ? property.listingType?.includes('sale') ? 'For sale' : 'Individual property' : preview ? 'Master community' : '')}
-              {property.completionStatus
-                ? ` · ${COMPLETION_LABEL[property.completionStatus] ?? property.completionStatus}`
-                : ''}
+              {statusLabel ? ` · ${statusLabel}` : ''}
             </p>
             <div className="mt-2 flex flex-wrap items-start justify-between gap-4">
               <h1 className="min-w-0 flex-1 font-serif text-3xl font-medium text-estate-700 md:text-4xl">
@@ -306,12 +329,12 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
             </p>
 
             {preview?.kind === 'home-type' && (
-              <Link href="/dev/property-previews/azizi-florence" className="mt-4 inline-flex text-sm text-estate-700 underline underline-offset-4">View the Florence community overview</Link>
+              !parentDevelopment && <Link href={`${previewBasePath}/azizi-florence`} className="mt-4 inline-flex text-sm text-estate-700 underline underline-offset-4">View the Florence community overview</Link>
             )}
-            {parentDevelopment && <Link href={`/properties/${parentDevelopment.slug}`} className="mt-4 inline-flex text-sm text-estate-700 underline underline-offset-4">View the {parentDevelopment.title} community overview</Link>}
+            {parentDevelopment && <Link href={`${preview ? previewBasePath : '/properties'}/${parentDevelopment.slug}`} className="mt-4 inline-flex text-sm text-estate-700 underline underline-offset-4">View the {parentDevelopment.title} community overview</Link>}
             {hasDesigns && <nav aria-label="Explore this collection" className="mt-5 flex flex-wrap gap-x-5 gap-y-2 border-y border-border py-3 text-sm text-estate-700">
               <a href="#home-designs" className="inline-flex min-h-11 items-center underline underline-offset-4">Compare designs & areas</a>
-              {Boolean(property.interiorSchemes?.length) && <a href="#interior-schemes" className="inline-flex min-h-11 items-center underline underline-offset-4">View interior schemes</a>}
+              {interiorSchemes.length > 0 && <a href="#interior-schemes" className="inline-flex min-h-11 items-center underline underline-offset-4">View interior schemes</a>}
             </nav>}
             </>}
 
@@ -344,10 +367,14 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
               ))}
             </div>}
 
+            {plannedOnly && <p className="mt-8 rounded-xl border border-border bg-surface px-4 py-3 text-sm leading-relaxed text-muted-foreground">
+              Plans and images describe a proposed development. Completion and included facilities should be confirmed for the chosen home.
+            </p>}
+
             {hasDesigns && (
               <PropertyDesignExplorer
-                designs={property.designVariants!}
-                interiorSchemes={property.interiorSchemes}
+                designs={designs}
+                interiorSchemes={interiorSchemes}
                 project={projectContext}
                 interactionsEnabled={publicActionsEnabled}
                 preview={Boolean(preview)}
@@ -366,6 +393,22 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
                 {property.summary}
               </p>
             )}
+
+            <PropertyHomeTypes rows={homeTypes} />
+
+            {(property.targetCompletion || (homeTypes.length > 0 && property.paymentPlan)) && <section className="mt-10" aria-labelledby="property-purchase-information-heading">
+              <h2 id="property-purchase-information-heading" className="font-serif text-xl font-medium text-estate-700">Purchase information</h2>
+              <dl className="mt-4 space-y-5 rounded-2xl border border-border bg-surface p-4 sm:p-5">
+                {property.targetCompletion && <div>
+                  <dt className="text-sm font-medium text-estate-700">Target completion</dt>
+                  <dd className="mt-1 text-sm leading-relaxed text-muted-foreground">{property.targetCompletion}</dd>
+                </div>}
+                {homeTypes.length > 0 && property.paymentPlan && <div>
+                  <dt className="text-sm font-medium text-estate-700">Payment plans</dt>
+                  <dd className="mt-1 text-sm leading-relaxed text-muted-foreground">{property.paymentPlan}</dd>
+                </div>}
+              </dl>
+            </section>}
 
             {purchaseReadiness && (
               <PurchaseReadiness
@@ -396,14 +439,14 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
             {property.amenities && property.amenities.length > 0 && (
               <div className="mt-10">
                 <h2 className="font-serif text-xl font-medium text-estate-700">
-                  Community amenities
+                  {plannedOnly ? 'Planned community amenities' : 'Community amenities'}
                 </h2>
                 {(hasDesigns || preview?.kind === 'development') && <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Planned facilities shown in the community brochure. Current delivery and opening dates await confirmation.</p>}
                 <ul className="mt-4 grid gap-2 sm:grid-cols-2">
                   {property.amenities.map((a) => (
                     <li key={a} className="flex items-start gap-2 text-sm text-foreground">
                       <Check className="mt-0.5 h-4 w-4 shrink-0 text-estate-700" />
-                      {a}
+                      {plannedOnly ? a.replace(/^Planned /, '') : a}
                     </li>
                   ))}
                 </ul>
@@ -557,9 +600,9 @@ export function PropertyDetailView({ property, media, preview, draftPreview = fa
                   <p className="font-serif text-xs font-medium uppercase tracking-[0.22em] text-gold-500">
                     Enquire
                   </p>
-                  <p className="mt-2 font-serif text-2xl font-semibold text-estate-700">
+                  {showPrice && <p className="mt-2 font-serif text-2xl font-semibold text-estate-700">
                     {collectionStartingPrice ? <PropertyPrice amount={property.priceAmount} currency={property.priceCurrency} prefix="From " /> : <PropertyPrice {...propertyPriceInput(property)} />}
-                  </p>
+                  </p>}
                   {collectionStartingPrice && property.priceDisplay && <p className="mt-3 border-t border-border pt-3 text-sm leading-relaxed text-estate-700"><span className="mb-1 block text-xs text-muted-foreground">Supplied collection range</span><PropertyPrice {...propertyPriceInput(property)} /></p>}
                   {hasDesigns && <p className="mt-2 text-xs leading-relaxed text-muted-foreground">Prices apply to the bedroom collection. The price and availability of a particular design and plot need confirmation.</p>}
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">

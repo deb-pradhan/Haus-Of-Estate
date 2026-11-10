@@ -19,6 +19,9 @@ export default defineConfig({
       "src/**/*.test.tsx",
       "tests/unit/**/*.test.ts",
       "tests/unit/**/*.test.tsx",
+      // Publication and release checks carried over from main. The other
+      // .mjs files under tests/unit are node:test scripts with their own runners.
+      "tests/unit/publication/**/*.test.mjs",
     ],
     clearMocks: true,
     restoreMocks: true,
