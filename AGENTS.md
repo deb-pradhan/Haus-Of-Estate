@@ -21,6 +21,13 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   branches or release to production. The historical release guidance below
   describes the original work and remains relevant to later integration.
 
+- Overhaul branch, 10 November 2026: `claude/epic-hamilton-kojczc` continues the
+  cloud handoff with `main` merged in and the UI/UX benchmark's "do now" list
+  applied to `/showcase` and the public pages. The owner's instruction is to
+  build and test the whole overhaul there and release it to `main` in one step
+  later. Read the last section of `docs/claude-cloud/CONTINUATION.md` and
+  `docs/questions-for-sonia.md`. The release boundaries below still apply.
+
 - Release 1 / PR #15 was merged into `main` at `20afdeeb` and deployed on 18 September 2026. The remote `suryak02/technical-seo-fixes` branch is retired; do not recreate it. Its SEO/consent implementation is live, but real analytics collection is not yet verified.
 - Release 2 is `suryak02/azizi-florence-content-scaffold`: the cumulative website overhaul, Florence, standalone Sanity setup, and subsequent personalised follow-up milestone. Continue review in draft PR #16 against `main`; closed PR #12 preserves the earlier history.
 - Continue all subsequent feature work on the existing Release 2 branch. Do not create a branch per feature or revive the superseded feature branches. Create a new branch only when Surya explicitly requests it.

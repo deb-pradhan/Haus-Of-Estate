@@ -443,3 +443,100 @@ Surya and is not recorded in this repository; it has not been emailed.
 Boundaries kept: no Sanity write or publication, no email, no database call,
 no migration, no production deployment, no change to the live Dubai IT
 article. Sonia's old share link was revoked and replaced, as instructed.
+
+## Overhaul branch — 10 to 15 November 2026 (cloud)
+
+Branch `claude/epic-hamilton-kojczc`, started from this handoff's head
+`45bf3a3c` with `main` (`5d30c03d`) merged in. `suryak02/claude-cloud-handoff`
+and draft PR #21 are untouched. The owner's decision for this round: build the
+whole overhaul on one branch, test it there and release it to the live site in
+one step later. Nothing here merges to `main`, deploys, publishes Sanity
+content, sends email or runs a migration.
+
+### What changed
+
+| Commit | Scope |
+| --- | --- |
+| `54a679ce` | Merge of `main`. All 21 conflicts resolved with the handoff components as the base and the live behaviour kept where the two sides disagreed on what the public sees. The commit message lists each decision. |
+| `6af419b3` | The benchmark's "do now" list on `/showcase`: source and snapshot date beside the facts, in-frame labels on renders and concepts, image counts, a measurement note under every plan, three plain next steps, count-aware filters with sorting, required-field marks and a focusable error summary, square feet with square metres. |
+| `9d233985` | The same on the public pages: counted gallery with a full-size viewer, in-frame labels, plan notes, an availability-checked date when an editor has set one, breadcrumb structured data, catalogue count and Featured/Newest sort, wider-search links on an empty result, the enquiry form's error summary, and an accessibility statement at `/legal/accessibility`. |
+
+Corrections to the earlier notes, found while merging:
+
+- Seven of the 21 conflicts were add/add, not eight; `src/lib/property-taxonomy.ts`
+  existed at the merge base.
+- Taking `main` wholesale for the add/add property components would have removed
+  the brochure request from the detail page. They were hand-merged instead.
+- The cherry-pick fallback in `docs/palm-springs-launch-page-2026-11-08.md`
+  does not work: `9faa62e7` onto `main` gives 18 conflicts, not one.
+
+Policy positions the merge settled, all in favour of what is live:
+
+- Listings, community navigation, location options, site search and static
+  slugs use `main`'s strict published guard plus `listingState`. Only the
+  detail query admits the draft overlay a reviewer sees through Draft Mode.
+- A single collection keeps its supplied price wording and cluster scope.
+- Design data is whitelisted before it reaches the browser. The opaque
+  `brochureKey` and the public area note stay; source evidence does not.
+- The Dubai cover keeps its live handling. The removal Sonia asked for is still
+  a Studio action and has not been run.
+
+Deliberately left alone, at the owner's instruction: the footer's "Rated 4.8",
+the homepage figures and the "within 2 hours" lines. They are listed with their
+locations in `docs/questions-for-sonia.md`, which also holds every other
+question that needs a business answer (redress scheme, registrations, Florence
+approval and stock, London particulars, Palm Springs, Kore).
+
+New editor capability, not yet used: an image can be marked "Architectural
+render / artist's impression" in Studio, and the site then labels it
+"Illustration" inside the picture. Images nobody has classified stay
+unlabelled. The registration slots in `src/lib/company-identity.ts` are empty
+and the footer block that shows them renders nothing until a value is added.
+
+### Checks at `9d233985` (actual results)
+
+| Check | Result |
+| --- | --- |
+| `npx tsc --noEmit` | Passed |
+| ESLint on every changed file | Passed, 0 problems |
+| `npm test` | 118 files, 926 tests passed (838 before the merge) |
+| `npm run test:seo`; `node --experimental-strip-types --test tests/site-search.test.mjs` | 9/9; 8/8 |
+| `npm run studio:validate` | 0 errors, 0 warnings |
+| `next build --webpack` with `HAUS_FIXTURE_SHOWCASE_ENABLED=true` | Passed, against live published content with no failed content requests |
+| `scripts/showcase-journey-audit.mjs` at 390 × 844 and 1440 × 900 | 0 failed steps, 0 overflow steps. The audit now asserts the provenance line, in-frame labels, image counts, plan notes, counted filters, sorting, next steps and error focus |
+| Browser check of the public site at the same two widths | `/properties`, an empty search, the North London and Monaco Mansions pages, the image viewer, `/legal/accessibility`, the footer and `/enquire`: all 200, no sideways overflow, no page errors; closing the viewer returns focus to the image that opened it |
+
+`main`'s nine Node-run test files: six now run under `npm test` from
+`tests/unit/publication/`; three that loaded components through hand-made stubs
+could not load the merged components and were rewritten as Vitest cases beside
+the components they cover.
+
+Not checked: the Playwright suites under `tests/e2e` (they need the test
+database flags), real enquiry submission, email delivery, and the Vercel
+preview, which still serves `b4293a53`.
+
+### Cloud environment
+
+The personal cloud environment `Haus-Of-Estate` now allows `cdn.sanity.io`,
+`jdxbkry4.api.sanity.io` and `jdxbkry4.apicdn.sanity.io` (read-only content),
+and has a setup script that runs `npm ci`, adds the five Linux build tools the
+Windows-written lockfile omits, and generates the Prisma client. The script was
+run by hand in this session; it is unproven until a fresh session starts on the
+environment. Node's built-in fetch ignores the session proxy unless
+`NODE_USE_ENV_PROXY=1` is set, so builds and `next start` need that variable to
+load content here. Use a `HAUS_NEXT_DIST_DIR` already listed in `tsconfig.json`
+(`.next-demo`, `.next-e2e`): any other name makes `next build` edit the file.
+
+### Before the one release to `main`
+
+1. Answers from `docs/questions-for-sonia.md`, at least sections 1 to 3.
+2. Deb confirms the merge decisions above and reviews the three commits.
+3. Run `tests/e2e` with its database flags; fix anything the merge moved.
+4. Decide whether the unverified claims stay.
+5. Deploy the Sanity schema (new "render" image option, design image context)
+   to the Studio, then tag renders.
+6. Hosted migrations, runtime secrets and the staging send test from
+   `docs/brochure-email-activation-2026-11-06.md` if enquiries or brochure
+   email are to go live in the same release; otherwise keep every flag off.
+7. A Linux-generated lockfile, or keep the extra install step in the host build.
+8. Open one pull request from this branch to `main`.
