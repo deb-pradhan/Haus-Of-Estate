@@ -512,8 +512,29 @@ could not load the merged components and were rewritten as Vitest cases beside
 the components they cover.
 
 Not checked: the Playwright suites under `tests/e2e` (they need the test
-database flags), real enquiry submission, email delivery, and the Vercel
-preview, which still serves `b4293a53`.
+database flags), real enquiry submission and email delivery.
+
+### Vercel preview — 15 November 2026
+
+Deployment `dpl_Ch94gZz5Cr5em9rRZ6aB1jn8WzB2`
+(`haus-of-estate-showcase-j3udxrbu1-suryak02s-projects.vercel.app`) on the
+existing `haus-of-estate-showcase` project: READY, preview target, Vercel
+Authentication on, built from `3489171e` in about three minutes.
+
+It was created through the Vercel connector, which cannot upload a source
+tree. Three small files were uploaded instead: a `vercel.json` that sets the
+install and build commands for this deployment only, a stub `package.json`, and
+a script that clones this public repository's branch, checks the commit is
+`3489171e`, and installs dependencies with the Linux build tools. The build
+command was `npx prisma generate && npx next build --webpack`. Project settings
+were not changed, so the CLI upload described above still works.
+
+Through protection, `/showcase` returned 200 with the "Start here" block and
+the noindex marker, and `/properties` returned 200 showing three published
+listings, the sort control and the accessibility link. A share link was created
+for Sonia on this deployment at the owner's request; it expires about 23 hours
+after creation and replaces her previous link. It is not recorded here. A link
+without an expiry comes from the dashboard's Share button.
 
 ### Cloud environment
 
