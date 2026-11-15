@@ -26,6 +26,9 @@ export function resolvePropertyMedia(property: {
       src: isConceptMedia(image)
         ? urlFor(image).ignoreImageParams().width(1200).fit('max').url()
         : urlFor(image).width(800).height(600).url(),
+      // The viewer shows a photograph whole, not the 4:3 crop used in the grid.
+      // A concept board is already uncropped.
+      ...(isConceptMedia(image) ? {} : { full: urlFor(image).ignoreImageParams().width(2000).fit('max').url() }),
       alt: image.alt || `${title} — image ${index + 1}`,
       caption: image.caption,
       mediaKind: image.mediaKind,

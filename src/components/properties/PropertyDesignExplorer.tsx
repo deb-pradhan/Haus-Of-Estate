@@ -7,13 +7,17 @@ import { Check, Expand, House } from 'lucide-react'
 import type { PropertyDesign, PropertyDesignImage, PropertyInteriorScheme } from '@/lib/property-designs'
 import type { LeadProjectContext } from '@/components/lead-eoi/types'
 import { PropertyBrochureRequestTrigger } from '@/components/lead-eoi/property-brochure-request-trigger'
+import { formatAreaWithMetric, formatSquareFeet } from '@/lib/format-area'
+import { DEFAULT_FLOOR_PLAN_NOTE } from '@/lib/property-media'
+import { PropertyMediaBadge } from './property-media-badge'
 import { PropertyPhotoBranding } from './property-photo-branding'
 
-const areaFormatter = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 })
+// Source figures keep up to two decimals; the square-metre figure is a whole-number conversion.
+const area = (squareFeet: number) => formatAreaWithMetric(squareFeet, 2)
 
 function plotAreaLabel(design: PropertyDesign) {
   return design.plotAreaStatus !== 'conflict' && typeof design.plotAreaSqFt === 'number'
-    ? `${areaFormatter.format(design.plotAreaSqFt)} sq ft`
+    ? area(design.plotAreaSqFt)
     : 'Awaiting confirmation'
 }
 
@@ -31,7 +35,13 @@ function DesignPhotos({ images, preview, showHausLogo }: {
       <figure>
         <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-estate-700/5">
           <Image src={selected.src} alt={selected.alt} fill sizes="(max-width: 1024px) 100vw, 700px" className="object-contain" unoptimized={preview} />
+          <PropertyMediaBadge image={selected} />
           <PropertyPhotoBranding enabled={showHausLogo} />
+          {images.length > 1 && (
+            <span data-image-count className="pointer-events-none absolute right-3 top-3 rounded-md bg-estate-700/85 px-2 py-1 text-[11px] font-semibold tabular-nums text-white">
+              <span className="sr-only">Image </span>{selectedIndex + 1} of {images.length}
+            </span>
+          )}
         </div>
         <figcaption className="mt-2 text-xs leading-relaxed text-muted-foreground">{selected.label || selected.alt}</figcaption>
       </figure>
@@ -41,7 +51,7 @@ function DesignPhotos({ images, preview, showHausLogo }: {
             <button
               key={`${image.src}-${index}`}
               type="button"
-              aria-label={`Show view ${index + 1}: ${image.label || image.alt}`}
+              aria-label={`Show view ${index + 1} of ${images.length}: ${image.label || image.alt}`}
               aria-pressed={selectedIndex === index}
               onClick={() => setSelectedIndex(index)}
               className={`relative h-16 w-24 shrink-0 overflow-hidden rounded-md border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-estate-700 ${selectedIndex === index ? 'border-estate-700' : 'border-transparent'}`}
@@ -114,7 +124,7 @@ export function PropertyDesignExplorer({ designs, interiorSchemes = [], project,
                 {active && <Check className="h-4 w-4 shrink-0" aria-hidden="true" />}
               </span>
               <span className="mt-auto block w-full px-3 pb-3 pt-2 text-xs leading-relaxed min-[480px]:px-4 min-[480px]:pb-4 min-[480px]:pt-3">
-                <span className="flex flex-wrap justify-between gap-x-2"><span className="text-muted-foreground">Built-up area</span><span className="font-medium tabular-nums text-estate-700">{areaFormatter.format(design.sellableAreaSqFt)} sq ft</span></span>
+                <span className="flex flex-wrap justify-between gap-x-2"><span className="text-muted-foreground">Built-up area</span><span className="font-medium tabular-nums text-estate-700">{formatSquareFeet(design.sellableAreaSqFt, 2)}</span></span>
                 <span className="mt-1 flex flex-wrap justify-between gap-x-2"><span className="text-muted-foreground">Plot area</span><span className="font-medium tabular-nums text-estate-700">{plotAreaLabel(design)}</span></span>
               </span>
             </button>
@@ -139,10 +149,10 @@ export function PropertyDesignExplorer({ designs, interiorSchemes = [], project,
           </div>
           <div className="rounded-xl border border-border bg-background p-4">
             <dt className="text-xs uppercase tracking-wider text-muted-foreground">Built-up area</dt>
-            <dd className="mt-1 text-lg font-medium text-estate-700">{areaFormatter.format(selected.sellableAreaSqFt)} sq ft</dd>
+            <dd className="mt-1 text-lg font-medium text-estate-700">{area(selected.sellableAreaSqFt)}</dd>
           </div>
         </dl>
-        <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{selected.plotAreaStatus === 'conflict' ? 'The brochure’s plot dimensions and area table differ. Plot area is awaiting confirmation.' : 'Areas shown are from the supplied brochure.'}{selected.plotAreaStatus !== 'conflict' && selected.areaNote ? ` ${selected.areaNote}` : ''}</p>
+        <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{selected.plotAreaStatus === 'conflict' ? 'The brochure’s plot dimensions and area table differ. Plot area is awaiting confirmation.' : 'Areas shown are from the supplied brochure; square-metre figures are conversions.'}{selected.plotAreaStatus !== 'conflict' && selected.areaNote ? ` ${selected.areaNote}` : ''}</p>
 
         <div className="mt-5 border-t border-border pt-5">
           {demoHref ? <Link
@@ -166,7 +176,7 @@ export function PropertyDesignExplorer({ designs, interiorSchemes = [], project,
         {selected.floorPlans.length > 0 && (
           <div className="mt-7">
             <h4 className="font-serif text-lg font-medium text-estate-700">Floor plans</h4>
-            <p className="mt-1 text-xs text-muted-foreground">Open a plan to zoom in. Each plan opens in a new tab.</p>
+            <p className="mt-1 text-xs text-muted-foreground">Open a plan to zoom in. Each plan opens in a new tab. <span data-plan-note>{DEFAULT_FLOOR_PLAN_NOTE}</span></p>
             <div className="mt-4 space-y-4">
               {selected.floorPlans.map((plan, index) => (
                 <a

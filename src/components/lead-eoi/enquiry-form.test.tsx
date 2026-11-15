@@ -128,3 +128,28 @@ describe("general and interiors enquiry submission", () => {
     expect(host.textContent).toContain("Confirm that you have read and understood the privacy notice.");
   });
 });
+
+describe("enquiry form guidance", () => {
+  it("marks what is required and, on a failed submit, lists every problem once with a link to its field", async () => {
+    await act(async () => root.render(<EnquiryForm />));
+    const label = (suffix: string) => host.querySelector(`label[for$="-${suffix}"]`)?.textContent;
+    expect(label("message")).toContain("(required)");
+    expect(label("firstName")).toContain("(required)");
+    expect(label("email")).toContain("(required)");
+    expect(label("phone")).toContain("(optional)");
+
+    await submit();
+    await act(async () => { await new Promise((resolve) => requestAnimationFrame(() => resolve(null))); });
+
+    const summary = host.querySelector<HTMLElement>("[data-error-summary]")!;
+    expect(summary).not.toBeNull();
+    expect(document.activeElement).toBe(summary);
+    const links = [...summary.querySelectorAll("a")];
+    expect(links.length).toBeGreaterThanOrEqual(3);
+    for (const link of links) expect(host.querySelector(link.getAttribute("href")!.replace(/:/g, "\\:"))).not.toBeNull();
+    // One announcement: the inline messages are tied to their fields, not separate alerts.
+    expect(host.querySelectorAll('[role="alert"]')).toHaveLength(1);
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+});
+

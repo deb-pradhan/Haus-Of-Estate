@@ -10,7 +10,7 @@ export type PropertySearchParams = { [Key in keyof PropertyQuery]?: string | str
 
 /** Next.js passes repeated query parameters as arrays; use the first value consistently. */
 export function normalizePropertySearchParams(params: PropertySearchParams): { [Key in keyof PropertyQuery]?: string } {
-  const keys = ["category", "availability", "intent", "type", "country", "city", "area", "location", "beds", "q", "minPrice", "maxPrice", "currency"] as const;
+  const keys = ["category", "availability", "intent", "type", "country", "city", "area", "location", "beds", "q", "minPrice", "maxPrice", "currency", "sort"] as const;
   return Object.fromEntries(keys.flatMap((key) => {
     const value = Array.isArray(params[key]) ? params[key][0] : params[key];
     return typeof value === "string" ? [[key, value.trim()]] : [];

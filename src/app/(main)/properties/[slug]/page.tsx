@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 import { urlFor } from '@/sanity'
 import { sanityFetch } from '@/sanity/live'
 import { PROPERTY_BY_SLUG_QUERY, PROPERTY_SLUGS_QUERY, PROPERTY_DEVELOPMENTS_QUERY } from '@/sanity/queries'
-import { DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGES } from '@/lib/seo'
+import { breadcrumbJsonLd, DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGES, serializeJsonLd } from '@/lib/seo'
 import { PropertyDetailView, type PropertyDetail } from '@/components/properties/PropertyDetailView'
 import { isConceptMedia } from '@/lib/property-media'
 import { resolvePropertyMedia } from '@/lib/property-detail-media'
@@ -110,13 +110,25 @@ export default async function PropertyDetailPage({
     })),
   }
 
+  const parentDevelopment = development && development._id !== property._id ? development : undefined
+  // The same trail the page shows: Home, Properties, the community if any, this page.
+  const breadcrumbs = breadcrumbJsonLd([
+    { name: 'Home', path: '/' },
+    { name: 'Properties', path: '/properties' },
+    ...(parentDevelopment ? [{ name: parentDevelopment.title, path: `/properties/${parentDevelopment.slug}` }] : []),
+    { name: property.title, path: `/properties/${property.slug}` },
+  ])
+
   return (
-    <PropertyDetailView
-      property={detail}
-      draftPreview={draftPreview}
-      development={development?._id === property._id ? development : undefined}
-      parentDevelopment={development && development._id !== property._id ? development : undefined}
-      media={resolvePropertyMedia(property)}
-    />
+    <>
+      {!draftPreview && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbs) }} />}
+      <PropertyDetailView
+        property={detail}
+        draftPreview={draftPreview}
+        development={development?._id === property._id ? development : undefined}
+        parentDevelopment={parentDevelopment}
+        media={resolvePropertyMedia(property)}
+      />
+    </>
   )
 }

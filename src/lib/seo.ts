@@ -13,3 +13,26 @@ export const DEFAULT_OG_IMAGES = [
     alt: "Haus of Estate — property, with proof.",
   },
 ];
+
+/**
+ * BreadcrumbList structured data. Pass the same trail the page shows, in order;
+ * every item needs the path of the page it names, including the current one.
+ */
+export function breadcrumbJsonLd(items: { name: string; path: string }[], origin = "https://hausofestate.com") {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      item: new URL(item.path, origin).toString(),
+    })),
+  };
+}
+
+/** Serialise structured data for an inline script without letting content close the tag. */
+export function serializeJsonLd(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, "\\u003c");
+}
+

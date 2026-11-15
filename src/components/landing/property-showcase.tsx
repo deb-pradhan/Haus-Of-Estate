@@ -11,6 +11,7 @@ import { SaveContentButton } from "@/components/saved-content";
 import { sanityDocumentIdSchema } from "@/lib/saved-content/contracts";
 import { PropertyPrice } from "@/components/currency/property-price";
 import { propertyPriceInput, type PropertyPricing } from "@/lib/currency";
+import { PropertyMediaBadge } from "@/components/properties/property-media-badge";
 import { PropertyPhotoBranding } from "@/components/properties/property-photo-branding";
 import { isConceptMedia, propertyMediaCaption, type PropertyImageMetadata } from "@/lib/property-media";
 
@@ -122,6 +123,7 @@ function PropertyCard({
               </div>
             )}
             {property.featuredImage && <PropertyPhotoBranding enabled={property.showHausLogo} />}
+            {property.featuredImage?.mediaKind === 'render' && <PropertyMediaBadge image={property.featuredImage} />}
             {!conceptImage && badges}
           </div>
           {conceptImage && badges}

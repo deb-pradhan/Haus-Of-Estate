@@ -297,3 +297,49 @@ describe('catalogue cards carried over from the live site', () => {
   })
 })
 
+describe('benchmark items on the public catalogue', () => {
+  const listing = (id: string, publishedAt: string, extra = {}) => ({
+    _id: id, title: `Home ${id}`, slug: `home-${id}`, community: `Community ${id}`, city: 'London', country: 'United Kingdom',
+    unitType: 'Apartment', summary: 'Summary.', listingType: ['sale'], availability: ['ready'], bedrooms: 2, publishedAt, ...extra,
+  })
+  const only = (data: unknown[]) => controls.fetch.mockImplementation(async ({ query }) => ({
+    data: query === PROPERTY_DEVELOPMENTS_QUERY ? [] : data,
+  }))
+
+  it('states the number of listings even when no filter is applied', async () => {
+    only([listing('a', '2026-01-01T00:00:00Z'), listing('b', '2026-02-01T00:00:00Z')])
+    const html = renderToStaticMarkup(await PropertyListing({ params: {} }))
+    expect(html).toMatch(/<p role="status"[^>]*>Showing 2 listings<\/p>/)
+  })
+
+  it('keeps the editorial order by default and orders by publication date on request', async () => {
+    only([listing('old', '2026-01-01T00:00:00Z'), listing('new', '2026-06-01T00:00:00Z'), listing('undated', '')])
+    const order = (html: string) => [...html.matchAll(/href="\/properties\/home-(\w+)"/g)].map((match) => match[1])
+    expect(order(renderToStaticMarkup(await PropertyListing({ params: {} })))).toEqual(['old', 'new', 'undated'])
+    const newest = renderToStaticMarkup(await PropertyListing({ params: { sort: 'newest' } }))
+    expect(order(newest)).toEqual(['new', 'old', 'undated'])
+    expect(newest).toMatch(/aria-current="true"[^>]*>Newest</)
+    expect(newest).toContain('href="/properties"')
+    expect(renderToStaticMarkup(await PropertyListing({ params: {} }))).toContain('href="/properties?sort=newest"')
+  })
+
+  it('offers a way out of an empty result: each filter removed, or all of them', async () => {
+    only([])
+    const html = renderToStaticMarkup(await PropertyListing({ params: { country: 'United Kingdom', beds: '5' } }))
+    const widenings = html.match(/<ul aria-label="Wider searches"[\s\S]*?<\/ul>/)![0]
+    expect(widenings).toContain('Without United Kingdom')
+    expect(widenings).toContain('href="/properties?beds=5"')
+    expect(widenings).toContain('Without 5+ bedrooms')
+    expect(widenings).toContain('href="/properties?country=United+Kingdom"')
+    expect(widenings).toMatch(/href="\/properties"[^>]*>Clear filters/)
+  })
+
+  it('labels a render on its card and leaves an unclassified image alone', async () => {
+    const image = { asset: { _ref: 'image-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-1600x900-jpg' }, alt: 'Front elevation' }
+    only([listing('render', '2026-01-01T00:00:00Z', { featuredImage: { ...image, mediaKind: 'render' } }), listing('plain', '2026-01-02T00:00:00Z', { featuredImage: image })])
+    const html = renderToStaticMarkup(await PropertyListing({ params: {} }))
+    expect(html.match(/data-media-badge/g)).toHaveLength(1)
+    expect(html).toContain('>Illustration<')
+  })
+})
+

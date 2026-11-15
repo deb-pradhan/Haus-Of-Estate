@@ -24,10 +24,11 @@ const propertyImageContext = [
     name: 'mediaKind',
     title: 'Image context',
     type: 'string',
-    description: 'Optional for existing photos. Mark concept images so the full image and a visible concept label are shown.',
+    description: 'Optional for existing photos. Mark renders and concept images: the website labels them inside the image, and shows concept images uncropped.',
     options: {
       list: [
         { title: 'Photograph', value: 'photo' },
+        { title: 'Architectural render / artist’s impression', value: 'render' },
         { title: 'Proposed interiors / AI-assisted concept', value: 'concept' },
         { title: 'Existing view and proposed interiors comparison', value: 'concept-comparison' },
       ],
@@ -41,6 +42,14 @@ const designImage = defineArrayMember({
   fields: [
     defineField({ name: 'alt', title: 'Alt text', type: 'string', validation: (rule) => rule.required() }),
     defineField({ name: 'label', title: 'Caption', type: 'string' }),
+    defineField({
+      name: 'mediaKind', title: 'Image context', type: 'string',
+      description: 'Mark a render so the website labels it “Illustration” inside the image. Leave empty for a floor plan.',
+      options: { list: [
+        { title: 'Photograph', value: 'photo' },
+        { title: 'Architectural render / artist’s impression', value: 'render' },
+      ] },
+    }),
   ],
 })
 

@@ -51,3 +51,29 @@ describe('concept image disclosure', () => {
     expect(isConceptMedia({ mediaKind: 'floor-plan' })).toBe(false)
   })
 })
+
+describe('gallery media for the detail page', () => {
+  it('gives a photograph a whole, uncropped image for the viewer and leaves a concept board as it is', async () => {
+    const { vi } = await import('vitest')
+    vi.resetModules()
+    vi.doMock('@/sanity', () => ({
+      urlFor: () => {
+        const calls: string[] = []
+        const builder = {
+          ignoreImageParams: () => { calls.push('whole'); return builder },
+          width: (value: number) => { calls.push(`w${value}`); return builder },
+          height: (value: number) => { calls.push(`h${value}`); return builder },
+          fit: (value: string) => { calls.push(value); return builder },
+          url: () => `/${calls.join('-')}.jpg`,
+        }
+        return builder
+      },
+    }))
+    const { resolvePropertyMedia } = await import('./property-detail-media')
+    const media = resolvePropertyMedia({ title: 'Home', gallery: [{ alt: 'Street', mediaKind: 'photo' }, { alt: 'Kitchen', mediaKind: 'concept' }] })
+    expect(media.gallery[0]).toMatchObject({ src: '/w800-h600.jpg', full: '/whole-w2000-max.jpg' })
+    expect(media.gallery[1].src).toBe('/whole-w1200-max.jpg')
+    expect(media.gallery[1].full).toBeUndefined()
+    vi.doUnmock('@/sanity')
+  })
+})

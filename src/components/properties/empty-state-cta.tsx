@@ -1,14 +1,21 @@
 "use client";
 
+import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { useLeadModals } from "@/components/lead-modal/modal-context";
 
 export function EmptyStateCTA({
   category,
   intent,
+  clearHref,
+  widenings = [],
 }: {
   category?: string;
   intent?: string;
+  /** Where "Clear filters" goes; omitted when there is nothing to clear. */
+  clearHref?: string;
+  /** One wider search per active filter: the same search without that filter. */
+  widenings?: { label: string; href: string }[];
 }) {
   const { openBuyer } = useLeadModals();
   const isRent = intent === "rent";
@@ -38,6 +45,24 @@ export function EmptyStateCTA({
       <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground md:text-base">
         {body}
       </p>
+      {(widenings.length > 0 || clearHref) && (
+        <ul aria-label="Wider searches" className="mx-auto mt-5 flex max-w-2xl flex-wrap justify-center gap-2">
+          {widenings.map((widening) => (
+            <li key={widening.href + widening.label}>
+              <Link href={widening.href} className="inline-flex min-h-11 items-center rounded-full border border-border bg-background px-4 text-sm font-medium text-estate-700 transition-colors hover:border-estate-700/40">
+                Without {widening.label}
+              </Link>
+            </li>
+          ))}
+          {clearHref && (
+            <li>
+              <Link href={clearHref} className="inline-flex min-h-11 items-center rounded-full border border-estate-700/40 bg-background px-4 text-sm font-semibold text-estate-700 transition-colors hover:bg-estate-700/5">
+                Clear filters
+              </Link>
+            </li>
+          )}
+        </ul>
+      )}
       <button
         type="button"
         onClick={openBuyer}

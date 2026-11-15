@@ -1,8 +1,12 @@
+import type { PropertyMediaKind } from './property-media'
+
 /** Media is resolved by the server from either Sanity or the local preview bundle. */
 export interface PropertyDesignImage {
   src: string
   alt: string
   label?: string
+  /** Set by an editor when the image is a render rather than a photograph. */
+  mediaKind?: PropertyMediaKind
 }
 
 export interface PropertyDesign {
@@ -33,7 +37,7 @@ const positiveArea = (value: unknown): value is number =>
 
 function publicImages(images: PropertyDesignImage[] | undefined): PropertyDesignImage[] {
   return (images ?? []).filter((image) => typeof image.src === 'string' && image.alt?.trim())
-    .map(({ src, alt, label }) => ({ src, alt, ...(label ? { label } : {}) }))
+    .map(({ src, alt, label, mediaKind }) => ({ src, alt, ...(label ? { label } : {}), ...(mediaKind ? { mediaKind } : {}) }))
 }
 
 /** Whitelist client props: never serialize source evidence or review notes.

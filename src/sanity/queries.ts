@@ -289,14 +289,15 @@ export const PROPERTY_BY_SLUG_QUERY = `
       "areaNote": select(plotAreaStatus == "conflict" => null, areaNote),
       summary,
       brochureKey,
-      images[]{"src": asset->url, alt, label},
+      images[]{"src": asset->url, alt, label, mediaKind},
       floorPlans[]{"src": asset->url, alt, label}
     },
     interiorSchemes[]{
       _key,
       label,
-      images[]{"src": asset->url, alt, label}
+      images[]{"src": asset->url, alt, label, mediaKind}
     },
+    availabilityCheckedAt,
     videoUrl,
     enquiryEmail
   }

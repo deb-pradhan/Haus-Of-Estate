@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { CollectionCard, CommunityIntro, ReadyHomeCard } from './cards'
 import { CollectionView } from './collection-view'
 import { CommunityView } from './community-view'
-import { ErrorSummary } from './form-parts'
+import { ErrorSummary } from '@/components/forms/form-parts'
 import { ReadyHomeView } from './ready-home-view'
 import { ShowcaseSearchForm } from './showcase-search-form'
 import {

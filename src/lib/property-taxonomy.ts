@@ -157,7 +157,15 @@ export interface PropertyQuery {
   minPrice?: string | number
   maxPrice?: string | number
   currency?: string
+  /** Order of results. `featured` is the default and is left out of the URL. */
+  sort?: string
 }
+
+export type PropertySort = 'featured' | 'newest'
+export const PROPERTY_SORTS: { value: PropertySort; label: string }[] = [
+  { value: 'featured', label: 'Featured' },
+  { value: 'newest', label: 'Newest' },
+]
 
 /**
  * Build a canonical `/properties` href from a taxonomy selection.
@@ -189,6 +197,7 @@ export function buildPropertiesHref(query: PropertyQuery = {}): string {
   if (query.minPrice !== undefined && query.minPrice !== '') params.set('minPrice', String(query.minPrice))
   if (query.maxPrice !== undefined && query.maxPrice !== '') params.set('maxPrice', String(query.maxPrice))
   if (query.currency) params.set('currency', query.currency)
+  if (query.sort === 'newest') params.set('sort', 'newest')
 
   const qs = params.toString()
   return qs ? `/properties?${qs}` : '/properties'

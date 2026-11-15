@@ -576,3 +576,74 @@ describe('details carried over from the live site', () => {
   })
 })
 
+describe('benchmark items on the public property page', () => {
+  const home: PropertyDetail = {
+    _id: 'home', title: 'Example home', slug: 'example-home', community: 'Example', city: 'London', country: 'United Kingdom',
+    unitType: 'Terraced House', availability: ['ready'], listingType: ['sale'], bedrooms: 3, priceDisplay: '£500,000', summary: 'An example.',
+    floorPlans: [{ src: '/plan.jpg', alt: 'Supplied floor plan', mediaKind: 'floor-plan' }],
+  }
+  const gallery: PropertyMedia = {
+    hero: { src: '/hero.jpg', alt: 'Front elevation render', mediaKind: 'render' },
+    gallery: [
+      { src: '/one.jpg', alt: 'Street view', mediaKind: 'photo' },
+      { src: '/two.jpg', alt: 'Garden render', mediaKind: 'render' },
+      { src: '/three.jpg', alt: 'Kitchen concept', mediaKind: 'concept' },
+    ],
+  }
+
+  it('labels renders and concepts in the frame and leaves photographs alone', () => {
+    const html = renderToStaticMarkup(<PropertyDetailView property={home} media={gallery} />)
+    const badges = [...html.matchAll(/data-media-badge[^>]*>([^<]+)</g)].map((match) => match[1])
+    expect(badges).toEqual(['Illustration', 'Illustration', 'Illustration · AI concept'])
+    // A concept's label sits at the top, clear of any BEFORE/AFTER tags along its bottom edge.
+    expect(html).toMatch(/data-media-badge="true" class="[^"]*top-3[^"]*">Illustration · AI concept/)
+  })
+
+  it('states how many images there are, from the hero and in the gallery, with every image on the page', () => {
+    const html = renderToStaticMarkup(<PropertyDetailView property={home} media={gallery} />)
+    expect(html).toContain('href="#gallery"')
+    expect(html).toContain('View all 3 images')
+    expect(html).toMatch(/id="gallery"[\s\S]*>3 images</)
+    for (const image of gallery.gallery) expect(html).toContain(image.src)
+    expect(html).toContain('View image 2 of 3 full size: Garden render')
+  })
+
+  it('puts a measurement note under a plan that arrives without one, and keeps a supplied note', () => {
+    const html = renderToStaticMarkup(<PropertyDetailView property={home} media={gallery} />)
+    expect(html).toContain('Shown as supplied. Measurements are approximate and for guidance only.')
+    const supplied = renderToStaticMarkup(<PropertyDetailView media={gallery}
+      property={{ ...home, floorPlans: [{ ...home.floorPlans![0], caption: 'Supplied note.' }] }} />)
+    expect(supplied).toContain('Supplied note.')
+    expect(supplied).not.toContain('Shown as supplied.')
+  })
+
+  it('shows when availability was last checked only for a real, past date', () => {
+    const checked = renderToStaticMarkup(<PropertyDetailView property={{ ...home, availabilityCheckedAt: '2026-11-05T09:30:00Z' }} media={gallery} />)
+    expect(checked).toContain('Availability last checked by Haus of Estate on <time dateTime="2026-11-05">5 November 2026</time>.')
+    for (const value of [undefined, 'not a date', '2999-01-01T00:00:00Z']) {
+      const html = renderToStaticMarkup(<PropertyDetailView property={{ ...home, availabilityCheckedAt: value }} media={gallery} />)
+      expect(html, String(value)).not.toContain('Availability last checked')
+    }
+  })
+
+  it('emits breadcrumb data that matches the visible trail, and none in Draft Mode', async () => {
+    const builder = { ignoreImageParams: vi.fn().mockReturnThis(), width: vi.fn().mockReturnThis(), height: vi.fn().mockReturnThis(), fit: vi.fn().mockReturnThis(), url: () => '/x.jpg' }
+    controls.urlFor.mockReturnValue(builder)
+    controls.fetch.mockImplementation(async ({ query }: { query: string }) => ({ data: query === PROPERTY_DEVELOPMENTS_QUERY ? [] : home }))
+    const html = renderToStaticMarkup(await PropertyDetailPage({ params: Promise.resolve({ slug: home.slug }) }))
+    const data = JSON.parse(html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)![1])
+    expect(data['@type']).toBe('BreadcrumbList')
+    expect(data.itemListElement.map((item: { name: string; item: string }) => [item.name, item.item])).toEqual([
+      ['Home', 'https://hausofestate.com/'],
+      ['Properties', 'https://hausofestate.com/properties'],
+      ['Example home', 'https://hausofestate.com/properties/example-home'],
+    ])
+    const trail = html.match(/<nav aria-label="Breadcrumb">[\s\S]*?<\/nav>/)![0]
+    for (const name of ['Home', 'Properties', 'Example home']) expect(trail).toContain(name)
+
+    controls.draftMode.mockResolvedValue({ isEnabled: true })
+    const draft = renderToStaticMarkup(await PropertyDetailPage({ params: Promise.resolve({ slug: home.slug }) }))
+    expect(draft).not.toContain('application/ld+json')
+  })
+})
+

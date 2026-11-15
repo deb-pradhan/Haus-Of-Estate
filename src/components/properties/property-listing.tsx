@@ -7,6 +7,7 @@ import { sanityFetch } from '@/sanity/live'
 import { PROPERTIES_FILTERED_QUERY, PROPERTY_DEVELOPMENTS_QUERY } from '@/sanity/queries'
 import { EmptyStateCTA } from '@/components/properties/empty-state-cta'
 import { Breadcrumbs } from '@/components/properties/breadcrumbs'
+import { PropertyMediaBadge } from './property-media-badge'
 import { PropertyPhotoBranding } from './property-photo-branding'
 import { SaveContentButton } from '@/components/saved-content'
 import { PropertyAssistantSearchEntry } from '@/components/property-assistant/property-assistant-search-entry'
@@ -34,6 +35,8 @@ import {
   isIntent,
   bedroomsHidden,
   buildPropertiesHref,
+  PROPERTY_SORTS,
+  type PropertySort,
 } from '@/lib/property-taxonomy'
 
 interface PropertyCard extends PropertyPricing {
@@ -57,6 +60,7 @@ interface PropertyCard extends PropertyPricing {
   completionStatus?: string
   summary: string
   featured?: boolean
+  publishedAt?: string
   featuredImage?: PropertyImageMetadata & { alt?: string } & Record<string, unknown>
   showHausLogo?: boolean
 }
@@ -166,7 +170,13 @@ export async function PropertyListing({
     return true
   })
 
-  const { groups: developmentGroups, properties: individualProperties } = groupDevelopmentResults(list, developments ?? [])
+  const sort: PropertySort = params.sort === 'newest' ? 'newest' : 'featured'
+  const { groups: developmentGroups, properties: grouped } = groupDevelopmentResults(list, developments ?? [])
+  // "Featured" keeps the editorial order from the query. "Newest" orders by
+  // publication date; listings without one keep their place at the end.
+  const individualProperties = sort === 'newest'
+    ? [...grouped].sort((a, b) => (Date.parse(b.publishedAt ?? '') || 0) - (Date.parse(a.publishedAt ?? '') || 0))
+    : grouped
   const resultCount = individualProperties.length + developmentGroups.length
 
   // ── Active-filter chips ───────────────────────────────────────────────
@@ -218,6 +228,22 @@ export async function PropertyListing({
       maxPrice: remove === 'intent' || remove === 'maxPrice' ? undefined : maxPrice,
       currency: remove !== 'intent' && (minPrice || maxPrice) ? currency : undefined,
     })
+  }
+
+  const currentQuery = {
+    category: forceCategory ?? (category || undefined),
+    availability: availability || undefined,
+    intent: intent || undefined,
+    type: type || undefined,
+    country: country || undefined,
+    city: city || undefined,
+    area: area || undefined,
+    location: location || undefined,
+    beds: minBeds === null ? undefined : minBeds,
+    q,
+    minPrice,
+    maxPrice,
+    currency: minPrice || maxPrice ? currency : undefined,
   }
 
   const clearAllHref = forceCategory
@@ -284,15 +310,27 @@ export async function PropertyListing({
             />
           )}
 
-          {/* Result summary + active filters */}
-          {hasFilters && (
+          {/* Result summary, sort and active filters. The count is always stated. */}
+          {(hasFilters || resultCount > 0) && (
             <div className="mb-10 flex flex-wrap items-center gap-3">
-              <p className="text-sm font-medium text-estate-700">
+              <p role="status" className="text-sm font-medium text-estate-700">
                 {resultCount === 0
                   ? `No ${localCataloguePreview ? 'published ' : ''}${rentContextGlobal ? 'rentals' : 'listings'} match your filters`
                   : `Showing ${resultCount} ${localCataloguePreview ? 'published ' : ''}${resultCount === 1 ? 'listing' : 'listings'}${rentContextGlobal ? ' to rent' : ''}`}
               </p>
-              <div className="flex flex-wrap items-center gap-2">
+              {individualProperties.length > 1 && (
+                <nav aria-label="Sort listings" className="flex flex-wrap items-center gap-1.5 text-xs sm:ml-auto sm:order-last">
+                  <span className="text-muted-foreground">Sort</span>
+                  {PROPERTY_SORTS.map((option) => (
+                    <Link key={option.value} href={buildPropertiesHref({ ...currentQuery, sort: option.value })} scroll={false}
+                      aria-current={sort === option.value ? 'true' : undefined}
+                      className={`inline-flex min-h-11 items-center rounded-full border px-3.5 font-medium transition-colors ${sort === option.value ? 'border-estate-700 bg-estate-700 text-white' : 'border-border bg-surface text-estate-700 hover:border-estate-700/40'}`}>
+                      {option.label}
+                    </Link>
+                  ))}
+                </nav>
+              )}
+              {hasFilters && <div className="flex flex-wrap items-center gap-2">
                 {activeFilters.map((f) => (
                   <Link
                     key={f.key}
@@ -309,7 +347,7 @@ export async function PropertyListing({
                 >
                   Clear all
                 </Link>
-              </div>
+              </div>}
             </div>
           )}
 
@@ -385,6 +423,8 @@ export async function PropertyListing({
               <EmptyStateCTA
                 category={category || undefined}
                 intent={intent || undefined}
+                clearHref={hasFilters ? clearAllHref : undefined}
+                widenings={activeFilters.map((filter) => ({ label: filter.label, href: hrefWithout(filter.key) }))}
               />
             ) : (
               <div className="rounded-2xl border border-dashed border-border bg-surface p-10 text-center">
@@ -469,6 +509,7 @@ export async function PropertyListing({
                                 </div>
                               )}
                               {p.featuredImage && <PropertyPhotoBranding enabled={p.showHausLogo} />}
+                              {p.featuredImage?.mediaKind === 'render' && <PropertyMediaBadge image={p.featuredImage} />}
                               {!conceptImage && badges}
                             </div>
                             {conceptImage && badges}

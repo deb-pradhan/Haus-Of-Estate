@@ -15,6 +15,7 @@ import { SocialProfileLinks } from "@/components/social/social-profile-links";
 import { CookieSettingsButton } from "@/components/analytics/consent-manager";
 import { useLeadEoi } from "@/components/lead-eoi/lead-eoi-controller";
 import { COMPANY_IDENTITY } from "@/lib/company-identity";
+import { RegulationBlock } from "@/components/legal/regulation-block";
 import { CAREERS_PUBLIC_ENABLED, isCareersContactPath } from "@/lib/careers-availability";
 
 const COMPANY_PHONE_DISPLAY = "+44 7496 033321";
@@ -91,6 +92,7 @@ export function Footer({ careersEmail }: { careersEmail: string }) {
               </a>
             </p>
           </div>
+          <RegulationBlock tone="dark" className="mt-4 max-w-sm" />
 
           <Image
             src="/badges/policybee-insured-white.png"
@@ -149,6 +151,7 @@ export function Footer({ careersEmail }: { careersEmail: string }) {
           <FooterLink href="/legal/privacy-policy">Privacy policy</FooterLink>
           <FooterLink href="/legal/terms-of-service">Terms of service</FooterLink>
           <FooterLink href="/legal/cookie-policy">Cookie policy</FooterLink>
+          <FooterLink href="/legal/accessibility">Accessibility</FooterLink>
           <FooterLink href="/sitemap">Sitemap</FooterLink>
         </FooterCol>
 

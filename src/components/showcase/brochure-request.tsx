@@ -18,7 +18,7 @@ import {
 } from '@/lib/showcase/request'
 import { formatArea, formatAreaDual } from '@/lib/showcase/format'
 import { cn } from '@/lib/utils'
-import { ErrorSummary, RequiredMark } from './form-parts'
+import { ErrorSummary, RequiredMark } from '@/components/forms/form-parts'
 
 export interface RequestDesign {
   id: string

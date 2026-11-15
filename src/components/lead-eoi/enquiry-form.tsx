@@ -12,6 +12,7 @@ import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ErrorSummary, RequiredMark } from "@/components/forms/form-parts";
 import { Textarea } from "@/components/ui/textarea";
 import { PhoneInput, isValidMobile } from "@/components/ui/phone-input";
 import {
@@ -65,6 +66,9 @@ const INITIAL_VALUES = {
 };
 type FieldErrors = Record<string, string | undefined>;
 
+/** The order problems are listed in, which is the order of the fields on the page. */
+const ERROR_ORDER = ["interest", "message", "market", "location", "firstName", "email", "phone", "privacyAcknowledged"] as const;
+
 export function EnquiryForm({ interiors }: { interiors?: InteriorEnquiryContext }) {
   const id = useId();
   const initialValues = () => ({
@@ -82,6 +86,7 @@ export function EnquiryForm({ interiors }: { interiors?: InteriorEnquiryContext 
   const viewed = useRef(false);
   const started = useRef(false);
   const responseRef = useRef<HTMLDivElement>(null);
+  const summaryRef = useRef<HTMLDivElement>(null);
   const supportsMatches = ["buy", "rent", "invest"].includes(values.interest);
   const isPropertyQuestion = values.interest !== "general_enquiry";
   const isInteriorEnquiry = Boolean(interiors) && !isPropertyQuestion;
@@ -190,17 +195,13 @@ export function EnquiryForm({ interiors }: { interiors?: InteriorEnquiryContext 
     }
     if (Object.keys(nextErrors).length) {
       setErrors(nextErrors);
-      const firstField = [
-        "interest",
-        "message",
-        "market",
-        "location",
-        "firstName",
-        "email",
-        "phone",
-        "privacyAcknowledged",
-      ].find((field) => nextErrors[field]);
-      if (firstField) document.getElementById(`${id}-${firstField}`)?.focus();
+      const firstField = ERROR_ORDER.find((field) => nextErrors[field]);
+      // Announce every problem once; each one links to its field. Fall back to
+      // the first field if the summary is not on the page yet.
+      window.requestAnimationFrame(() => {
+        if (summaryRef.current) summaryRef.current.focus();
+        else if (firstField) document.getElementById(`${id}-${firstField}`)?.focus();
+      });
       return;
     }
     sending.current = true;
@@ -240,7 +241,6 @@ export function EnquiryForm({ interiors }: { interiors?: InteriorEnquiryContext 
     return errors[field] ? (
       <p
         id={`${id}-${field}-error`}
-        role="alert"
         className="text-sm text-destructive"
       >
         {errors[field]}
@@ -305,6 +305,8 @@ export function EnquiryForm({ interiors }: { interiors?: InteriorEnquiryContext 
         className="min-w-0 space-y-6 border-0 p-0"
       >
         <legend className="sr-only">Your question and contact details</legend>
+        <ErrorSummary ref={summaryRef} errors={ERROR_ORDER.flatMap((field) => errors[field] ? [[field, errors[field]] as [string, string]] : [])}
+          fieldIds={Object.fromEntries(ERROR_ORDER.map((field) => [field, `${id}-${field}`]))} />
         <div className="space-y-2">
           <Label htmlFor={`${id}-interest`}>What’s it about?</Label>
           <select
@@ -376,7 +378,7 @@ export function EnquiryForm({ interiors }: { interiors?: InteriorEnquiryContext 
           </fieldset>
         ) : null}
         <div className="space-y-2">
-          <Label htmlFor={`${id}-message`}>{isInteriorEnquiry ? "Tell us a little about your project" : "What would you like to know?"}</Label>
+          <Label htmlFor={`${id}-message`}>{isInteriorEnquiry ? "Tell us a little about your project" : "What would you like to know?"}<RequiredMark /></Label>
           <Textarea
             id={`${id}-message`}
             value={values.message}
@@ -433,7 +435,7 @@ export function EnquiryForm({ interiors }: { interiors?: InteriorEnquiryContext 
           </h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor={`${id}-firstName`}>First name</Label>
+              <Label htmlFor={`${id}-firstName`}>First name<RequiredMark /></Label>
               <Input
                 id={`${id}-firstName`}
                 value={values.firstName}
@@ -447,7 +449,7 @@ export function EnquiryForm({ interiors }: { interiors?: InteriorEnquiryContext 
               {fieldError("firstName")}
             </div>
             <div className="space-y-2">
-              <Label htmlFor={`${id}-email`}>Email address</Label>
+              <Label htmlFor={`${id}-email`}>Email address<RequiredMark /></Label>
               <Input
                 id={`${id}-email`}
                 value={values.email}
@@ -489,7 +491,7 @@ export function EnquiryForm({ interiors }: { interiors?: InteriorEnquiryContext 
               aria-describedby={describedBy("privacyAcknowledged")}
               className="mt-1 h-4 w-4 shrink-0 accent-estate-700"
             />
-            <span>{PRIVACY_ACKNOWLEDGEMENT_WORDING}</span>
+            <span>{PRIVACY_ACKNOWLEDGEMENT_WORDING}<RequiredMark /></span>
           </label>
           {fieldError("privacyAcknowledged")}
           <Link

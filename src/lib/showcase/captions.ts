@@ -1,4 +1,4 @@
-import { propertyMediaCaption } from '@/lib/property-media'
+import { DEFAULT_FLOOR_PLAN_NOTE, propertyMediaBadge, propertyMediaBadgePosition, propertyMediaCaption } from '@/lib/property-media'
 import type { ShowcaseImage } from './fixture'
 
 /** Reuse the site's concept/comparison captions; renders carry their own alt text. */
@@ -10,28 +10,17 @@ export function showcaseImageCaption(image?: ShowcaseImage): string | undefined 
   })
 }
 
-/**
- * The short label shown inside the frame of any image that is not a photograph,
- * so a reader never has to find a caption to learn what they are looking at.
- * Photographs and floor plans carry none.
- */
+/** The in-frame label for a render or concept; photographs and plans carry none. */
 export function showcaseImageBadge(image?: Pick<ShowcaseImage, 'mediaKind'>): string | undefined {
-  if (image?.mediaKind === 'render') return 'Illustration'
-  if (image?.mediaKind === 'concept') return 'Illustration · AI concept'
-  if (image?.mediaKind === 'concept-comparison') return 'Existing view and AI concept'
-  return undefined
+  return propertyMediaBadge(image)
 }
 
-/**
- * Concept boards carry their own BEFORE and AFTER tags along the bottom of each
- * panel, so their label sits at the top where it covers nothing.
- */
 export function showcaseImageBadgePosition(image?: Pick<ShowcaseImage, 'mediaKind'>): 'top' | 'bottom' {
-  return image?.mediaKind === 'concept' || image?.mediaKind === 'concept-comparison' ? 'top' : 'bottom'
+  return propertyMediaBadgePosition(image)
 }
 
 /** Shown under a floor plan that arrives without its own measurement note. */
-export const DEFAULT_PLAN_NOTE = 'Shown as supplied. Measurements are approximate and for guidance only.'
+export const DEFAULT_PLAN_NOTE = DEFAULT_FLOOR_PLAN_NOTE
 
 const snapshotDate = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
 

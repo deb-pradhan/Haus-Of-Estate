@@ -54,6 +54,7 @@ export function publicSitemapPages(): PublicPage[] {
     { path: '/legal/privacy-policy', title: 'Privacy policy', changeFrequency: 'yearly', priority: 0.3 },
     { path: '/legal/terms-of-service', title: 'Terms of service', changeFrequency: 'yearly', priority: 0.3 },
     { path: '/legal/cookie-policy', title: 'Cookie policy', changeFrequency: 'yearly', priority: 0.3 },
+    { path: '/legal/accessibility', title: 'Accessibility statement', changeFrequency: 'yearly', priority: 0.3 },
   ]
 }
 

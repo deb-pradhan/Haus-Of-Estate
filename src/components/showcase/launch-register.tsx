@@ -15,7 +15,7 @@ import {
   type SimulatedLaunchResult,
 } from '@/lib/showcase/launch-request'
 import { cn } from '@/lib/utils'
-import { ErrorSummary, RequiredMark } from './form-parts'
+import { ErrorSummary, RequiredMark } from '@/components/forms/form-parts'
 
 interface FormValues {
   interest: 'buy' | 'invest'

@@ -16,7 +16,9 @@ import { PropertyPrice } from '@/components/currency/property-price'
 import { propertyPriceInput, type PropertyPricing } from '@/lib/currency'
 import { preparePublicDesigns, preparePublicInteriorSchemes, type PropertyDesign, type PropertyInteriorScheme } from '@/lib/property-designs'
 import { preparePublicHomeTypes, type PropertyHomeType } from '@/lib/property-home-types'
-import { isConceptMedia, propertyMediaCaption, type PropertyImageMetadata, type PropertyMediaImage } from '@/lib/property-media'
+import { DEFAULT_FLOOR_PLAN_NOTE, isConceptMedia, propertyMediaCaption, type PropertyImageMetadata, type PropertyMediaImage } from '@/lib/property-media'
+import { PropertyGallery } from './property-gallery'
+import { PropertyMediaBadge } from './property-media-badge'
 import { PropertyPhotoBranding } from './property-photo-branding'
 import { PropertyDesignExplorer } from './PropertyDesignExplorer'
 import { PropertyHomeTypes } from './PropertyHomeTypes'
@@ -64,11 +66,23 @@ export interface PropertyDetail extends PropertyPricing {
   interiorSchemes?: PropertyInteriorScheme[]
   videoUrl?: string
   enquiryEmail?: string
+  /** ISO date-time an editor last confirmed availability; shown only when set. */
+  availabilityCheckedAt?: string
 }
 
 export interface PropertyMedia {
   hero?: PropertyMediaImage
   gallery: PropertyMediaImage[]
+}
+
+const checkedDate = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
+
+/** A valid past check date as its ISO day and "5 November 2026"; nothing for a missing or future one. */
+function formatCheckedDate(value: string | undefined): { iso: string; label: string } | undefined {
+  if (!value) return undefined
+  const date = new Date(value)
+  if (Number.isNaN(date.valueOf()) || date.valueOf() > Date.now()) return undefined
+  return { iso: date.toISOString().slice(0, 10), label: checkedDate.format(date) }
 }
 
 const COMPLETION_LABEL: Record<string, string> = {
@@ -116,6 +130,7 @@ export function PropertyDetailView({ property, media, preview, previewBasePath =
   const showPrice = Boolean(property.priceDisplay?.trim() || property.priceAmount)
     || (!development && !collection && homeTypes.length === 0)
   const firstDesign = designs[0]
+  const checkedOn = formatCheckedDate(property.availabilityCheckedAt)
   const hero: PropertyMediaImage | undefined = firstDesign?.images[0] ?? media.hero
   const heroCaption = propertyMediaCaption(hero)
   const individualPreview = preview?.kind === 'property'
@@ -282,8 +297,16 @@ export function PropertyDetailView({ property, media, preview, previewBasePath =
             <p className="text-sm">Project imagery unavailable</p>
           </div>
         )}
+        {hero && <PropertyMediaBadge image={hero} />}
         {hero && <PropertyPhotoBranding enabled={property.showHausLogo} />}
       </div>
+      {!hasDesigns && media.gallery.length > 0 && (
+        <p className="mx-auto max-w-6xl px-4 pt-3 md:px-6">
+          <a href="#gallery" data-image-count className="inline-flex min-h-11 items-center text-sm font-medium text-estate-700 underline underline-offset-4">
+            View all {media.gallery.length} {media.gallery.length === 1 ? 'image' : 'images'}
+          </a>
+        </p>
+      )}
       {heroCaption && (
         <p className="mx-auto max-w-6xl px-4 pt-3 text-sm leading-relaxed text-estate-700 md:px-6">{heroCaption}</p>
       )}
@@ -495,7 +518,7 @@ export function PropertyDetailView({ property, media, preview, previewBasePath =
                         </span>
                         <span className="block border-t border-border px-4 py-3 text-sm font-medium text-estate-700">Open full-size floor plan</span>
                       </a>
-                      {plan.caption && <figcaption className="border-t border-border px-4 py-3 text-sm leading-relaxed text-muted-foreground">{plan.caption}</figcaption>}
+                      <figcaption data-plan-note className="border-t border-border px-4 py-3 text-sm leading-relaxed text-muted-foreground">{plan.caption?.trim() || DEFAULT_FLOOR_PLAN_NOTE}</figcaption>
                     </figure>
                   ))}
                 </div>
@@ -525,33 +548,13 @@ export function PropertyDetailView({ property, media, preview, previewBasePath =
               )
             })()}
 
-            {!hasDesigns && media.gallery.length > 0 && (
-              <div className="mt-10">
-                <h2 className="font-serif text-xl font-medium text-estate-700">
-                  {hasConceptGallery ? 'Proposed interiors' : 'Gallery'}
-                </h2>
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  {media.gallery.map((img, i) => (
-                    <figure key={`${img.src}-${i}`} className="overflow-hidden rounded-xl border border-border bg-surface">
-                      <div className="relative aspect-[4/3] bg-estate-700/5">
-                        <Image
-                          src={img.src}
-                          alt={img.alt}
-                          fill
-                          sizes="(max-width: 640px) 100vw, 50vw"
-                          unoptimized={Boolean(preview)}
-                          className={isConceptMedia(img) ? 'object-contain' : 'object-cover'}
-                        />
-                        <PropertyPhotoBranding enabled={property.showHausLogo} />
-                      </div>
-                      {propertyMediaCaption(img) && (
-                        <figcaption className="px-3 py-3 text-sm leading-relaxed text-estate-700">{propertyMediaCaption(img)}</figcaption>
-                      )}
-                    </figure>
-                  ))}
-                </div>
-              </div>
-            )}
+            {!hasDesigns && <PropertyGallery
+              images={media.gallery}
+              title={property.title}
+              heading={hasConceptGallery ? 'Proposed interiors' : 'Gallery'}
+              showHausLogo={property.showHausLogo}
+              unoptimized={Boolean(preview)}
+            />}
           </div>
 
           {/* Enquiry aside */}
@@ -610,6 +613,11 @@ export function PropertyDetailView({ property, media, preview, previewBasePath =
                     enquiry. We&apos;ll connect you with a vetted agent for this
                     community — no obligation.
                   </p>
+                  {checkedOn && (
+                    <p data-provenance className="mt-3 border-t border-border pt-3 text-xs leading-relaxed text-muted-foreground">
+                      Availability last checked by Haus of Estate on <time dateTime={checkedOn.iso}>{checkedOn.label}</time>.
+                    </p>
+                  )}
                   {publicActionsEnabled ? (
                     <>
                       <LeadEoiTrigger

@@ -50,6 +50,7 @@ export function ShowcaseFooter() {
             <li><Link href="/legal/privacy-policy" className={linkClass}>Privacy policy</Link></li>
             <li><Link href="/legal/terms-of-service" className={linkClass}>Terms of service</Link></li>
             <li><Link href="/legal/cookie-policy" className={linkClass}>Cookie policy</Link></li>
+            <li><Link href="/legal/accessibility" className={linkClass}>Accessibility statement</Link></li>
           </ul>
         </nav>
         <div>
